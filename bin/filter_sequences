@@ -1,0 +1,306 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+use Getopt::Long;
+use File::Basename;
+
+
+# read in parameters
+my $infile       = '';
+
+my $fasta_infile = '';
+my $fastq_infile = '';
+
+my $filter_ln    = '';
+my $filter_ambig = '';
+my $min_ln       = '';
+my $max_ln       = '';
+my $max_ambig    = '';
+my $per_ambig    = '';
+
+my $min_qual     = '';
+my $max_lqb      = '';
+
+my $fasta_out    = '';
+my $fasta_reject = '';
+
+GetOptions ( 
+	     'i=s'          => \$infile ,
+
+	     'filter_ln'    => \$filter_ln,
+	     'filter_ambig' => \$filter_ambig,
+	     'min_ln:i'     => \$min_ln,
+	     'max_ln:i'     => \$max_ln,
+	     'max_ambig:i'  => \$max_ambig,
+	     'per_ambig:i'  => \$per_ambig,
+
+	     'min_qual:i'   => \$min_qual,
+	     'max_lqb:i'    => \$max_lqb,
+
+	     'o=s'          => \$fasta_out,
+	     'r=s'          => \$fasta_reject,
+	   );
+
+my $usage = "
+  usage:  filter_sequences -i input_fasta -o output_fasta -r reject_fasta [-filter_ln -min_ln=XXX -max_ln=XXX] [-filter_ambig -max_ambig=XXX -per_ambig=XXX]
+
+  filter fasta file based on sequence length and/or on number of ambiguity characters (Ns)
+  skipping both filters is equivalent to copying the file, but slower
+  
+    -i             input fasta/fastq file (required)
+    -o             output fasta file (required)
+
+  Options for fasta input file:
+    -filter_ln     flag to request filtering on sequence length
+    -min_ln        minimum sequence length that is not rejected
+    -max_ln        maximum sequence length that is not rejected
+    -filter_ambig  flag to request filtering on ambiguity characters
+    -max_ambig     maximum number of ambiguity characters (Ns) in a sequence which will not be rejected
+    -per_ambig     percent number of ambiguity characters (Ns) in a sequence which will not be rejected
+    -r             reject fasta file, sequences which are filtered out will get written to the specified file
+
+  Options for fastq input file:
+    -min_qual      quality threshold for low-quality bases (required)
+    -max_lqb       maximum number of low-quality bases per read (required)
+
+";
+
+# identify file type from extension
+&check_filenames($usage, $infile, $fasta_out, $fasta_reject);
+if ( $infile =~ /\.fn?a$|\.fasta$/i) { 
+  $fasta_infile = 1;
+}
+elsif ( $infile =~ /\.fastq$|\.fq$/i) {
+  $fastq_infile = 1;
+}
+
+# check that input arguments are OK
+if ( $fasta_infile ) {
+  if ( $filter_ln ) {
+    &check_length_args($usage, $min_ln, $max_ln);
+  }
+  if ( $filter_ambig ) {
+    &check_ambig_args($usage, $max_ambig, $per_ambig);
+  }
+  &filter_fasta($infile, $fasta_out, $fasta_reject, $min_ln, $max_ln, $max_ambig, $per_ambig);
+}
+elsif ( $fastq_infile ) {
+  my $run_trimmer = &check_fastq_options($usage, $min_qual, $max_lqb);
+  if ($run_trimmer) {
+    my ($trimmed_fq, $rejected_fq) = &filter_fastq($infile, $min_qual, $max_lqb);
+    &reformat_fastq($trimmed_fq, $fasta_out);
+    &reformat_fastq($rejected_fq, $fasta_reject);
+    unlink($trimmed_fq, $rejected_fq);
+  }
+  else {
+    &reformat_fastq($infile, $fasta_out);
+    system("touch $fasta_reject");
+  }
+}
+else {
+  die "Input filename must end in .fasta, .fa, .fna, or .fastq\n\n$usage";
+}
+
+sub filter_fastq {
+  my($infile, $min_qual, $max_lqb) = @_;
+
+  my $output;
+  eval {
+    $output = `DynamicTrimmer.pl $infile -h $min_qual -n $max_lqb -454`;
+  };
+  if ($@) {
+    print "Problem running script 'DynamicTrimmer.pl', exiting: $@, $output\n";
+    exit;
+  }
+  return ("$infile.trimmed.fastq", "$infile.rejected.fastq");
+}
+
+sub reformat_fastq {
+  my($fastq_in, $fasta_out) = @_;
+
+  my $output;
+  my ($fn, $dir, $ext) = fileparse($fasta_out, qr/\.[^.]*/);
+  my $fn_fasta_out = $fn . $ext; # path stripped out, if present
+  
+  eval {
+    $output = `fastq2fasta --fastq $fastq_in --fasta $fn_fasta_out --destination $dir`;
+  };
+  if ( $@ ) {
+    print "Problem running script 'fastq2fasta', exiting: $@, $output\n";
+    exit;
+  }
+}
+
+sub filter_fasta {
+    my($infile, $fasta_out, $fasta_reject, $min_ln, $max_ln, $max_ambig, $per_ambig) = @_;
+    
+    my $old_eol = $/;
+    $/ = "\n>";
+    
+    open(IN,  "<$infile") or die "could not open file '$infile': $!";
+    open(OUT, ">$fasta_out") or die "could not open file '$fasta_out': $!";
+    
+    if ( $fasta_reject )
+    {
+	open(REJECT, ">$fasta_reject") or die "could not open file '$fasta_reject': $!";
+    }
+    
+    my $rec;
+    while ( defined($rec = <IN>) )
+    {
+	$rec =~ s/^>*//;
+	chomp $rec;
+	
+	my $id = "";
+	my ($id_line, @seq_lines) = split("\n", $rec);
+
+	if ( $id_line =~ /^(\S+)/ ) {
+	  $id = $1;
+	}
+	unless ($id) { next; }
+	
+	my $seq = \join('', @seq_lines);  # scalar reference to the sequence string
+	
+	my $ln_ok    = &length_is_ok($filter_ln, $seq, $min_ln, $max_ln);
+	my $ambig_ok = &ambig_chars_is_ok($filter_ambig, $seq, $max_ambig, $per_ambig);
+	
+	if ( $ln_ok and $ambig_ok )
+	{
+	    print OUT join("\n", ">$id", @seq_lines), "\n";
+	}
+	else
+	{
+	    if ( $fasta_reject )
+	    {
+		print REJECT join("\n", ">$id", @seq_lines), "\n";
+	    }
+	}
+    }
+    
+    if ( $fasta_reject )
+    {
+	close(REJECT) or die "could not close file '$fasta_reject': $!";
+    }
+    
+    close(OUT) or die "could not close file '$fasta_out': $!";
+    close(IN) or die "could not close file '$infile': $!";
+    
+    $/ = $old_eol;
+}
+
+sub length_is_ok {
+    my($filter_ln, $seq, $min_ln, $max_ln) = @_;
+
+    my $ln_ok = 0;
+
+    if ( $filter_ln )
+    {
+	my $seq_ln = length($$seq);
+	if ( $min_ln <= $seq_ln and $seq_ln <= $max_ln )
+	{
+	    # length is OK
+	    $ln_ok = 1;
+	}
+	else
+	{
+	    # length is not OK
+	    $ln_ok = 0;
+	}
+    }
+    else
+    {
+	# no filtering on length
+	$ln_ok = 1;
+    }
+
+    return $ln_ok;
+}
+    
+sub ambig_chars_is_ok {
+    my($filter_ambig, $seq, $max_ambig, $per_ambig) = @_;
+
+    my $ambig_ok = 1;
+
+    if ( $filter_ambig ) {
+      my $n_ambig = ($$seq =~ tr/[nN]/N/);
+
+      if ($max_ambig ne '') {
+	if ($n_ambig > $max_ambig) { $ambig_ok = 0; }
+      }
+      if ($per_ambig ne '') {
+	my $seq_ln = length($$seq);
+	if ((100 * ($n_ambig / $seq_ln)) > $per_ambig) { $ambig_ok = 0; }
+      }
+      if (($max_ambig eq '') && ($per_ambig eq '')) {
+	if ($n_ambig > 0) { $ambig_ok = 0; }
+      }
+    }
+    
+    return $ambig_ok;
+}
+
+sub check_filenames {
+    my($usage, $infile, $fasta_out, $fasta_reject) = @_;
+
+    if ( ! $infile )
+    {
+	die "input file not specified\n$usage";
+    }
+    
+    if ( ! -e $infile )
+    {
+	die "input file not found -- $infile\n$usage";
+    }
+    
+    if ( ! $fasta_out )
+    {
+	die "output file not specified\n$usage";
+    }
+    
+    if ( ! $fasta_reject )
+    {
+	die "output reject file not specified\n$usage";
+    }
+    
+    my %files = map {$_ => 1} ($infile, $fasta_out, $fasta_reject);
+    if ( scalar keys %files != 3 )
+    {
+	die "filenames are not distinct -- in = $infile, out = $fasta_out, reject = $fasta_reject\n$usage";
+    }
+}
+
+sub check_length_args {
+    my($usage, $min_ln, $max_ln) = @_;
+
+    if ( $min_ln =~ /^\d+$/ and $max_ln =~ /^\d+$/ )
+    {
+	if ( $min_ln > $max_ln )
+	{
+	    die "min_ln ($min_ln) must be less than or equal to max_ln ($max_ln)\n$usage";
+	}
+    }
+    else
+    {
+	die "min_ln ($min_ln) and max_ln ($max_ln) must be integers\n$usage";
+    }
+}
+    
+sub check_ambig_args {
+    my($usage, $max_ambig, $per_ambig) = @_;
+    
+    if (($max_ambig ne '') && ($max_ambig !~ /^\d+$/)) { die "max_ambig ($max_ambig) must be an integer\n$usage"; }
+    if (($per_ambig ne '') && ($per_ambig !~ /^\d+$/)) { die "per_ambig ($per_ambig) must be a integer\n$usage"; }
+    if (($max_ambig eq '') && ($per_ambig eq ''))      { print STDERR "No max_num or max_per inputed, all sequences with Ns will removed\n"; }
+}
+
+sub check_fastq_options {
+    my($usage, $min_qual, $max_lqb) = @_;
+
+    if (($min_qual ne '') && ($min_qual !~ /^\d+$/)) { die "min_qual ($min_qual) must be an integer\n$usage"; }
+    if (($max_lqb ne '')  && ($max_lqb  !~ /^\d+$/)) { die "max_lqb ($max_lqb) must be an integer\n$usage"; }
+    if (($min_qual eq '') || ($max_lqb eq ''))       { print STDOUT "No min_qual or max_lqb inputed, skipping dynamic trimming\n"; return 0; }
+    return 1;
+}

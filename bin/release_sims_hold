@@ -1,0 +1,14 @@
+#!/bin/sh 
+
+JOB=$1
+
+if [ $JOB ]; then
+	QID=`qstat | grep -w ${JOB}.sims | cut -f1 -d'.' | head -1`
+	if [ $QID ]; then
+		qrls $QID 
+	else
+		echo "Could not find torque id for "$JOB
+	fi
+else
+	echo "[usage] "`basename $0`" <Job #>"
+fi

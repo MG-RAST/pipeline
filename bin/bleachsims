@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+
+import os, sys, operator, re, gzip
+from optparse import OptionParser
+
+usage = "usage: %prog -s <sims_file> [options]"
+parser = OptionParser(usage)
+parser.add_option('-s', '--sims', dest="sims_file", help="sorted sims input to be bleached. use '-' or 'stdin' to read from STDIN")
+parser.add_option('-o', '--out', dest="out_file", help="bleached sims output. use '-' or 'stdout' to write to STDOUT")
+parser.add_option('-m', '--min', type="int", dest="min", help="minimum # of results per query, default=20", default=20)
+parser.add_option('-r', '--range', type="int", dest="range", help="best evalue plus this exponent that will be returned (0 means no range), default=10", default=10)
+parser.add_option('-c', '--cutoff', type="int", dest="cutoff", help="remove all evalues with an exponent lower than cutoff, default=3", default=3)
+
+(options, args) = parser.parse_args()
+if not ( options.sims_file and options.out_file ):
+    parser.print_help()
+    print "sims file and/or output file name required"
+    sys.exit(0)
+
+def bleach(sims, out):
+    eval    = re.compile(r"^(\d\.\d)e([-+])(\d+)$")
+    count   = 0
+    no_zero = 1
+    min_num = options.min
+    cutoff  = options.cutoff
+    e_range = 0
+
+    if options.range > 0:
+        e_range = options.range
+
+    sims.sort(cmp=lambda a,b: cmp(float(a), float(b)), key=operator.itemgetter(11), reverse=True)
+    e_match = eval.match(sims[0][10])
+    if not e_match:
+        return
+
+    base_num = e_match.group(1)
+    best_exp = e_match.group(3)
+    if (base_num == '0.0') and (best_exp == '00'):
+        no_zero = 0
+        min_num = 2 * min_num
+
+    best_exp = int(best_exp)
+    for s in sims:
+        cur_match = eval.match(s[10])
+        if not cur_match:
+            continue
+        cur_exp = int(cur_match.group(3))
+        if no_zero and ((cur_match.group(2) == '+') or (cur_exp < cutoff)):
+            continue
+        elif count < min_num:
+            out.write("%s\n" % ("\t".join(s)))
+            count += 1
+        elif no_zero and (e_range > 0) and ((best_exp - cur_exp) <= e_range):
+            out.write("%s\n" % ("\t".join(s)))
+            
+if __name__ == "__main__":
+    if (options.sims_file == '-') or (options.sims_file == 'stdin'):
+        sims_handle = sys.stdin
+    else:
+        sims_handle = open(options.sims_file, "Ur")
+    if (options.out_file == '-') or (options.out_file == 'stdout'):
+        out_handle = sys.stdout
+    else:
+        out_handle = open(options.out_file, "w")
+
+    curid = None
+    cursims = []
+    for l in sims_handle:
+        v = l[:-1].split("\t")
+        if curid == None:
+            curid = v[0]
+        if v[0] == curid:
+            cursims.append(v)
+        else:
+            bleach(cursims, out_handle)
+            curid = v[0]
+            cursims = [v]
+
+    if len(cursims) > 0:
+        bleach(cursims, out_handle)
+
+    sims_handle.close()
+    out_handle.close()
+
+        
+            
+        

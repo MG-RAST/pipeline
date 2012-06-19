@@ -1,0 +1,215 @@
+#!/usr/bin/env python
+
+__doc__ = """
+Script to use jellyfish to get kmer information
+Input: fasta/fastq file
+Output: kmer information, one of:
+  1. hash: binary hash of counts
+  2. stats: summary stats
+  3. dump: profile (kmer seq - count)
+  4. histo: histogram (count - abundance)
+  5. histo ranked: count, abundance, count*abundance, reverse-sum(abundance), reverse-sum(count*abundance), ratio-to-largest"""
+
+import sys, os, glob, string, random, math, re
+import itertools, subprocess
+from optparse import OptionParser
+from Bio import SeqIO
+
+fa_re   = re.compile('^>')
+BUFFER  = 2 * math.pow(1024, 3)  # 2 Gb seq buffer
+TYPES   = ['fasta', 'fastq', 'hash']
+FORMATS = ['hash', 'stats', 'dump', 'histo']
+
+def run_cmd(cmd):
+  proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+  stdout, stderr = proc.communicate()
+  if proc.returncode != 0:
+    raise IOError("%s\n%s"%(" ".join(cmd), stderr))
+  return stdout, stderr
+
+def random_str(size=6):
+  chars = string.ascii_letters + string.digits
+  return ''.join(random.choice(chars) for x in range(size))
+
+def split_fasta(in_file, fhdl_set, max_size):
+  curr_size = 0
+  curr_buff = 0
+  curr_file = 0
+  strbuffer = ''
+  for line in open(in_file):
+    head = fa_re.match(line)
+    if head and ((curr_size + curr_buff) >= max_size):
+      fhdl_set[curr_file].write(strbuffer)
+      curr_size = 0
+      curr_buff = 0
+      curr_file += 1
+      strbuffer = ''
+    if head and (curr_buff > BUFFER):
+      fhdl_set[curr_file].write(strbuffer)
+      curr_size += curr_buff
+      curr_buff = 0
+      strbuffer = ''
+    strbuffer += line
+    curr_buff += len(line)
+  if strbuffer != '':
+    fhdl_set[curr_file].write(strbuffer)
+
+def split_fastq(in_file, fhdl_set, max_size):
+  curr_size = 0
+  curr_buff = 0
+  curr_file = 0
+  strbuffer = ''
+  with open(in_file) as f:
+    for lines in itertools.izip_longest(*[f]*4):
+      if (curr_size + curr_buff) >= max_size:
+        fhdl_set[curr_file].write(strbuffer)
+        curr_size = 0
+        curr_buff = 0
+        curr_file += 1
+        strbuffer = ''
+      if curr_buff > BUFFER:
+        fhdl_set[curr_file].write(strbuffer)
+        curr_size += curr_buff
+        curr_buff = 0
+        strbuffer = ''
+      rec_str = ''.join(lines)
+      strbuffer += rec_str
+      curr_buff += len(rec_str)
+  if strbuffer != '':
+    fhdl_set[curr_file].write(strbuffer)
+
+def split_seq_file(seq_file, max_size, seq_type, tmpdir):
+  split_num = int(os.path.getsize(seq_file) / max_size) + 1
+  if split_num == 1:
+    return [seq_file]
+  file_base = os.path.join(tmpdir, "%s.%s"%(random_str(), seq_type))
+  file_set  = map(lambda x: "%s.%d"%(file_base, x+1), range(split_num))
+  fhdl_set  = map(lambda x: open(x, 'w'), file_set)
+  if seq_type == 'fasta':
+    split_fasta(seq_file, fhdl_set, max_size)
+  elif seq_type == 'fastq':
+    split_fastq(seq_file, fhdl_set, max_size)
+  for h in fhdl_set:
+    h.close()
+  return file_set
+
+def merge_hash_set(hash_set, tmpdir):
+  if len(hash_set) == 1:
+    return hash_set[0]
+  merge_file = os.path.join(tmpdir, random_str()+'.js')
+  merge_cmd  = ['jellyfish', 'merge', '-o', merge_file]
+  merge_cmd.extend(hash_set)
+  _sout, _serr = run_cmd(merge_cmd)
+  for h in hash_set:
+    os.remove(h)
+  if not os.path.isfile(merge_file):
+    sys.stderr.write("[error] jellyfish count returned no results")
+    sys.stderr.write(_serr)
+    sys.exit(0)
+  return merge_file
+
+def ranked_histo(data_str):
+  sum_col_1   = 0
+  sum_col_2   = 0
+  data_matrix = []
+  for rrow in reversed(data_str.strip().split("\n")):
+    num, count  = rrow.strip().split()
+    product_0_1 = int(num) * int(count)
+    sum_col_1  += int(count)
+    sum_col_2  += product_0_1
+    data_matrix.append([ num, count, product_0_1, sum_col_1, sum_col_2 ])
+  for i in range(len(data_matrix)):
+    ratio = data_matrix[i][4] * 1.0 / sum_col_2
+    data_matrix[i].append("%.4f"%ratio)
+  data_matrix.reverse()
+  return data_matrix
+
+def kmer_count(input, procs, length, size, count, tmpdir):
+  jf_base = os.path.join(tmpdir, random_str()+'.js.part')
+  jf_cmd  = ['jellyfish', 'count', '-C', '-t', str(procs), '-m', str(length), '-c', str(count), '-s', size, '-o', jf_base, input]
+  _sout, _serr = run_cmd(jf_cmd)
+  parts   = glob.glob(jf_base+'_*')
+  return merge_hash_set(parts, tmpdir)
+
+def main(args):
+  usage  = "usage: %prog [options] -i <input file> -o <output file>"
+  parser = OptionParser(usage)
+  parser.add_option("-i", "--input", dest="input", default=None, help="Input file, sequence (fasta/fastq) or binary count hash.")
+  parser.add_option("-o", "--output", dest="output", default=None, help="Output file.")
+  parser.add_option("-t", "--type", dest="type", default='fasta', help="Input file type, one of: %s [default 'fasta']"%(", ".join(TYPES)))
+  parser.add_option("-m", "--max", dest="max", default=10.0, type="float", help="Maximum size (in Gb) to count, files larger are split [default 10.0].")
+  parser.add_option("-p", "--procs", dest="procs", default=4, type="int", help="Number of processors to use [default 4].")
+  parser.add_option("-l", "--length", dest="length", default=None, type="int", help="Length of kmer to use.")
+  parser.add_option("-s", "--size", dest="size", default="1G", help="Size of hash to use, number of unique kmers [default '1G']")
+  parser.add_option("-c", "--count", dest="count", default=12, type="int", help="Count size in bits [default '12']")
+  parser.add_option("-f", "--format", dest="format", default='histo', help="Output format, one of: %s [default 'histo']"%(", ".join(FORMATS)))
+  parser.add_option("--histo_max", dest="histo_max", default=10000000, type="int", help="Max count value for histogram [default 10000000]")
+  parser.add_option("-r", "--ranked", dest="ranked", action="store_true", default=False, help="histo output includes additional transformations for ranked plot")
+  parser.add_option("-d", "--tmpdir", dest="tmpdir", default=None, help="Dir to store intermediate files [default is dir of output file]")
+  
+  (opts, args) = parser.parse_args()  
+  if not (opts.input and os.path.isfile(opts.input) and opts.output):
+    parser.error("[error] missing input/output files")
+  if not (opts.type and (opts.type in TYPES)):
+    parser.error("[error] missing input type, use one of: %s"%(", ".join(TYPES)))
+  if not (opts.format and (opts.format in FORMATS)):
+    parser.error("[error] missing output format, use one of: %s"%(", ".join(FORMATS)))
+  if (opts.type != 'hash') and (not opts.length or (opts.length < 2)):
+    parser.error("[error] missing / invalid kmer length")
+  if (opts.type == 'hash') and (opts.format == 'hash'):
+    parser.error("[error] both input and output is binary hash")
+    
+  if opts.procs < 1:  opts.procs = 1
+  if opts.count < 2:  opts.count = 2
+  if not opts.tmpdir: opts.tmpdir = os.path.dirname(opts.output)
+
+  # get kmer count hash
+  if opts.type == 'hash':
+    jf_hash = opts.input
+  else:
+    # check file size, split if too large
+    max_size  = opts.max * math.pow(1024, 3)
+    input_set = split_seq_file(opts.input, max_size, opts.type, opts.tmpdir)
+    # get hash set
+    hash_set = []
+    for ifile in input_set:
+      if (os.path.getsize(ifile) > 0) and os.path.isfile(ifile):
+        hash_set.append( kmer_count(ifile, opts.procs, opts.length, opts.size, opts.count, opts.tmpdir) )
+    jf_hash = merge_hash_set(hash_set, opts.tmpdir)
+    # cleanup
+    if len(input_set) > 1:
+      for f in input_set:
+        os.remove(f)
+    if opts.format == 'hash':
+      os.rename(jf_hash, opts.output)
+      return 0
+
+  output_cmd = ['jellyfish', opts.format]
+  if opts.format == 'histo':
+    output_cmd.extend(['-t', str(opts.procs), '-h', str(opts.histo_max)])
+  elif opts.format == 'dump':
+    output_cmd.extend(['-c', '-t'])
+  output_cmd.append(jf_hash)
+  sout, serr = run_cmd(output_cmd)
+
+  ohdl = open(opts.output, 'w')
+  if opts.ranked:
+    extra_data = ranked_histo(sout)
+    for row in extra_data:
+      line = "\t".join( map(lambda x: str(x), row) ) + "\n"
+      ohdl.write(line)
+  else:
+    ohdl.write(sout)
+  ohdl.close()
+
+  if opts.type != 'hash':
+    os.remove(jf_hash)
+  if not os.path.isfile(opts.output):
+    sys.stderr.write("[error] jellyfish %s returned no results"%(opts.format))
+    sys.stderr.write(serr)
+    return 1
+  
+  return 0
+
+if __name__ == "__main__":
+  sys.exit(main(sys.argv))

@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+import os, sys
+from optparse import OptionParser
+
+__doc__ = """
+Script to index a tab-deliminated file.
+Index will include name, seek, length for every chunck.
+Each chunk will contain the same value for the inputed field,
+this is the name of the index"""
+
+def get_seek_sets (file, col):
+    seeks = []
+    start = 0
+    byte  = 0
+    size  = 0
+    curr  = ''
+    fhdl  = open(file, 'r')
+    try:
+        for line in fhdl:
+            tabs = line.strip().split("\t")
+            key  = tabs[col]
+            if curr != key:
+                if size > 0:
+                    seeks.append([ curr, start, size ])
+                curr  = key
+                start = byte
+                size  = 0
+            byte += len(line)
+            size += len(line)
+        if size > 0:
+            seeks.append([ curr, start, size ])
+    finally:        
+        fhdl.close()
+    return seeks
+
+usage = "%prog [options] InputFile\n" + __doc__
+
+def main (args):
+    parser = OptionParser(usage=usage)
+    parser.add_option("-f", "--field", dest="field", metavar="INT", type="int", default=1, help="Number of field to index by [default is first field: 1]")
+    parser.add_option("-o", "--outfile", dest="outfile", metavar="FILE", default=None, help="Tab index outfile [default is InputFile.index]")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Use verbose output [default is off]")
+    opts, args = parser.parse_args()
+
+    if len(args) < 1:
+        parser.error("Incorrect number of arguments.")
+    if opts.field < 1:
+        parser.error("Field must be an integer, 1 or greater.")
+    if opts.outfile is None:
+        opts.outfile = args[0] + '.index'
+
+    seeks = get_seek_sets(args[0], opts.field - 1)
+    fhdl  = open(opts.outfile, 'w')
+
+    for chunk in seeks:
+        name, seek, length = chunk
+        fhdl.write("%s\t%d\t%d\n"%(name, seek, length))
+    fhdl.close()
+    return 0
+    
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

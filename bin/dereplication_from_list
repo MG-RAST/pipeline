@@ -1,0 +1,184 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+# use vars qw($opt_f $opt_c $opt_d $opt_v);
+# use Getopt::Std;
+use Getopt::Long;
+use Digest::MD5;
+
+use Data::Dumper;
+use FileHandle; 
+  
+
+# read in parameters
+
+my $file        = '';         # input [ md5 , id , lenth , sequence ] file
+my $verbose     = 0 ;
+my $destination = "";         # destination for output files
+my $option      = "longest";   
+my $cutoff      = '';
+my $debug       = 0;
+my $suffix      = '';
+
+GetOptions ( 'file=s'          => \$file ,
+	     'cutoff=i'        => \$cutoff ,
+	     'verbose'         => \$verbose ,
+	     'destination=s'   => \$destination ,
+	     'option=s'        => \$option,
+	     'suffix=s'        => \$suffix,
+	     'debug'           => \$debug,
+	   );
+
+
+
+sub usage{
+  my ($message) = @_;
+  print "$0 -file list\n";
+  exit(1);
+}
+
+
+# check options
+
+unless($file and -f $file){
+  &usage("No file " . ($file || '') );
+}
+
+#
+# set output files
+#
+# define output directory and filenames
+my ($tdir)  = $file =~ /(.*)\/[^\/]+$/;
+my ($fname) = $file =~ /([^\/]+)$/;
+ 
+$fname = $suffix if ($suffix);
+ 
+$tdir = "./" unless($tdir) ;
+
+my $outfiles = { dereplicated_fasta => { name => ( $destination || $tdir ) . "/$fname.derep.fasta" } ,  
+		 removed_fasta      => { name =>  ($destination || $tdir ) . "/$fname.removed.fasta" },
+		 dereplicated_ids   => { name => ( $destination || $tdir ) . "/$fname.derep.ids" },
+		 removed_ids        => { name => ( $destination || $tdir ) . "/$fname.removed.ids" } ,
+		 };
+
+if ($verbose or $debug) {
+  foreach my $key (keys %$outfiles){    
+    print STDERR "Output for $key\t \t$tdir\t". $outfiles->{ $key }->{name} ."\n"
+  }
+};
+
+# open files
+
+foreach my $type (keys %$outfiles){
+  print "Open file for type $type \n" if ($verbose);
+  my $fh = FileHandle->new;
+  if ($fh->open(">" . $outfiles->{ $type }->{ name } )) {
+    # save filehandle
+    $outfiles->{ $type }->{ fh } = $fh ;  
+  }
+
+}
+
+open (FILE , $file) or die "Can't open file $file for reading\n";
+
+my $block       = [];
+my $current_md5 = '';
+
+while( my $line = <FILE>){
+
+  print STDERR $line if ($debug);
+
+  chomp $line;
+  my ($md5 , $id , $length , $fasta) = split "\t" , $line ;
+
+  if ($current_md5 eq $md5){
+    
+    push @$block , { length => $length,
+		     fasta  => $fasta,
+		     id     => $id,
+		     md5    => $md5,
+		   };
+    
+
+  }
+  else{
+
+    my $error = check_block($current_md5 , $option , $block , $outfiles) if (scalar @$block);
+
+    # set new current md5
+    $current_md5 = $md5;
+    
+    # set new block;
+
+    $block = [ { length => $length,
+		 fasta  => $fasta,
+		 id     => $id,
+		 md5    => $md5,
+	       }
+	     ];
+    
+  }
+  
+ 
+}
+
+exit(0);
+
+sub check_block{
+  my ($current_md5 , $option , $block , $outfiles) = @_;
+
+  if ( $option eq "longest"){
+
+    print STDERR "Option = $option \n" if ($debug);
+    print STDERR "Elements in block = " . scalar @$block . "\n" if ($debug);
+
+    my @sorted = sort { $a->{length} <=> $b->{length} } @$block ;
+    foreach my $entry ( @sorted ) {
+      
+      print join "\t" , "Sorted" , $entry->{md5}  , $entry->{id} , $entry->{length} , "\n" if ($debug);
+      
+    }
+    
+    
+    my @good;
+    push @good ,  pop @sorted;
+
+    foreach my $entry (@good){
+      print join "\t" , "Good" , $entry->{md5}  , $entry->{id} , $entry->{length} , "\n" if ($debug);
+    }
+
+    write_fasta_file(\@good   , $outfiles->{dereplicated_fasta}->{fh} );
+    write_fasta_file(\@sorted , $outfiles->{removed_fasta}->{fh} );
+
+    write_ids_file(\@good   , $outfiles->{dereplicated_ids}->{fh} );
+    write_ids_file(\@sorted , $outfiles->{removed_ids}->{fh} );
+
+  }
+  else{
+    &usage("Option $option not defined");
+  }
+}
+
+
+
+
+sub write_fasta_file{
+  my ($block , $fh) = @_;
+  
+  foreach my $entry (@$block){
+
+    print $fh ">" . $entry->{id} . "\n" . $entry->{fasta} . "\n";
+
+  }
+}
+
+
+sub write_ids_file{
+  my ($block , $fh) = @_;
+  
+  foreach my $entry (@$block){
+
+    print $fh  $entry->{id} . "\n" ;
+
+  }
+}

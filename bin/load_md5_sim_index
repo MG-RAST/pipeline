@@ -1,0 +1,96 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Getopt::Long;
+use Data::Dumper;
+
+my $verbose        = 0;
+my $filename       = '';
+my $data_type      = '';
+my $seq_db_name    = 'M5NR';
+my $seq_db_version = '1';
+my $pipeline       = "mg-rast v3";
+my $jobID   = '';
+my $type    = "protein";
+my $dbtype  = "Pg";
+my $dbname  = "";
+my $dbhost  = "";
+my $dbuser  = "";
+my $usage   = qq($0
+load precomputed index for md5 into job_protein table.
+
+  --filename        source data    Required. Tabbed file: md5, seek, length
+  --job             job id         Required.
+  --seq-db-name     nr db name     Optional. Default is '$seq_db_name'
+  --seq-db-version  nr db version  Optional. Default is '$seq_db_version'
+  --pipeline        pipline used   Optional. Default is '$pipeline'
+  --dbhost          db user        Required. Server of database
+  --dbname          db name        Required. Name of database
+  --dbtype          db type        Optional. Type (pg|mysql) of database. Default is '$dbtype'
+  --dbuser          db user        Required. Owner of database
+  --verbose                        Optional. Verbose output.
+  --reload                         Optional. Overwrite table if exists with new data.
+
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! &GetOptions ('verbose!'         => \$verbose, 
+		    'filename=s'       => \$filename,
+		    'seq-db-name:s'    => \$seq_db_name,
+		    'seq-db-version:s' => \$seq_db_version,
+		    'pipeline:s'       => \$pipeline,
+		    'job=i'            => \$jobID,
+		    'dbhost:s'         => \$dbhost,
+		    'dbname:s'         => \$dbname,
+		    'dbtype:s'         => \$dbtype,
+		    'dbuser:s'         => \$dbuser
+		   ) )
+  { print STDERR $usage; exit 1; }
+
+unless ($filename && $jobID) {
+  print STDERR $usage . "Missing parmater.\n"; exit 1;
+}
+
+my $dbh = DBI->connect("DBI:$dbtype:dbname=$dbname;host=$dbhost", $dbuser, '', {AutoCommit => 0 , RaiseError => 1});
+unless ($dbh) { print STDERR "Error: " , DBI->error , "\n"; exit 1; }
+
+# check if table exists for provided inputs
+my $tbl = $dbh->selectcol_arrayref(qq(SELECT table_name FROM job_tables
+                                      WHERE job_id=$jobID AND table_type='$type' AND seq_db_name='$seq_db_name' AND
+                                            seq_db_version='$seq_db_version' AND pipeline='$pipeline'));
+
+unless ($tbl && (@$tbl == 1)) {
+  print STDERR "MD5 Table for job $jobID does not exist.\n"; exit 1;
+}
+my $table_name = $tbl->[0];
+
+my %md5s = ();
+my $tmp  = $dbh->selectcol_arrayref("SELECT DISTINCT md5 FROM $table_name");
+if ($tmp && (@$tmp > 0)) {
+  %md5s = map { $_, 1 } @$tmp;
+}
+
+my $count  = 0;
+my $update = 0;
+open (FILE, "<$filename") or die "Can't open file $filename\n";
+if ($verbose) { print "Parsing $filename ... \n"; }
+while (my $line = <FILE>) {
+  chomp $line;
+  my ($md5, $seek, $len) = split(/\t/, $line);
+  $count += 1;
+
+  if (exists $md5s{$md5}) {
+    $update += 1;
+    my $return = $dbh->do("UPDATE $table_name SET (seek, length) = ($seek, $len) WHERE md5 = '$md5'");
+    unless ($return && ($return == 1)) {
+      print STDERR "ERROR:\t$line\n"; exit 1;
+    }
+  }
+}
+
+$dbh->commit;
+$dbh->disconnect;
+if ($verbose) { print "Done - $update out of $count md5s updated.\n"; }
+exit 0;

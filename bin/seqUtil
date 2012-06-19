@@ -1,0 +1,207 @@
+#!/usr/bin/env python
+import os, sys, random, string, tempfile, subprocess as sub
+from Bio import SeqIO
+from Bio.Alphabet import generic_dna
+from optparse import OptionParser, OptionGroup
+
+usage = "usage: %prog -i <input> -o <out> <command options>"
+parser = OptionParser(usage)
+parser.add_option('-i', '--input', dest="input", help="input file: must be fasta for truncate|fasta2tab|fastastd|sortbyid|sortbyid2tab, tabfile for tab2fasta")
+parser.add_option('-o', '--output', dest="out", help="output file")
+group = OptionGroup(parser, "Command Options")
+group.add_option('--fastq', dest="fastq", action="store_true", default=False, help="input file is fastq: for fasta2tab|sortbyid2tab|uniquefasta")
+group.add_option('--bowtie_truncate', dest="bowtie_truncate", action="store_true", default=False, help="truncate reads to 1024 bp for bowtie")
+group.add_option('--fastq2uniquefasta', dest="fastq2uniquefasta", action="store_true", default=False, help="convert fastq to fasta file and replace ids with compact unique strings")
+group.add_option('--uniquefasta', dest="uniquefasta", action="store_true", default=False, help="replace ids with compact unique strings")
+group.add_option('--fastq2fasta', dest="fastq2fasta", action="store_true", default=False, help="convert fastq to fasta. fast with no qual parsing")
+group.add_option('--fasta2tab', dest="fasta2tab", action="store_true", default=False, help="convert fasta to tab file")
+group.add_option('--tab2fasta', dest="tab2fasta", action="store_true", default=False, help="convert tab to fasta file")
+group.add_option('--seqstats', dest="seqstats", action="store_true", default=False, help="fasta stats")
+group.add_option('--stdfasta', dest="stdfasta", action="store_true", default=False, help="convert fasta to standard fasta file")
+group.add_option('--sortbyid', dest="sortbyid", action="store_true", default=False, help="sort fasta file by sequence ids")
+group.add_option('--sortbyid2tab', dest="sortbyid2tab", action="store_true", default=False, help="sort fasta file by sequence ids and return as tab file")
+group.add_option('--remove_seqs', dest="remove_seqs", action="store_true", default=False, help="remove a list of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
+group.add_option('--subset_seqs', dest="subset_seqs", action="store_true", default=False, help="return a subset of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
+group.add_option('-t', '--tmp_dir', dest="tmp_dir", default="/tmp", help="sort temp dir, default is '/tmp'")
+group.add_option('-l', '--list', dest="list", help="list of sequences sorted")
+group.add_option('-c', '--check_sort', dest="check", action="store_true", default=False, help="checks each fasta id / list id when doing --remove_seqs or --subset_seqs to see if it sorted.      NOTE: this uses python sort algorithm, results may be inconsistant if fasta file and list are sorted by unix or other sort algorithm.")
+parser.add_option_group(group)
+(options, args) = parser.parse_args()
+
+if not ( options.input or options.out ):
+    parser.print_help()
+    print ""
+    print "[error] missing input and/or output files"
+    sys.exit(1);
+
+def fasta2tab(input, output, is_fastq):
+    seqtype = 'fastq' if is_fastq else 'fasta'
+    SeqIO.convert(input, seqtype, output, "tab")
+    
+def tab2fasta(input, output):
+    SeqIO.convert(input, "tab", output, "fasta")
+
+def fastq2fasta(input, output):
+    SeqIO.convert(input, "fastq", output, "fasta")
+
+def bowtie_truncate(input, output):
+    input_handle = open(input, "rU")
+    output_handle = open(output, "w")
+    for record in SeqIO.parse(input_handle, "fasta") :
+        seq = ""
+        if len(record.seq) > 1024:
+            seq = record.seq[0:1023]
+        else:
+            seq = record.seq
+        output_handle.write(">%s\n%s\n" % (record.id, seq))
+    input_handle.close()
+    output_handle.close()
+
+def sortbyid(input, output, tmp_dir):
+    fasta2tab(input, "%s.tmp" % output, 0)
+    sortedtab = open("%s.tmp.sorted" % output, "w")
+    args = ["sort", "-T", tmp_dir, "-t","\t","-k", "1,1", "%s.tmp" % output]
+    p1 = sub.Popen(args, stdout=sortedtab)
+    p1.communicate()
+    sortedtab.close()
+    tab2fasta("%s.tmp.sorted" % output, output)
+    os.remove("%s.tmp" % output)
+    os.remove("%s.tmp.sorted" % output)
+
+def sortbyid2tab(input, output, tmp_dir, is_fastq):
+    fasta2tab(input, "%s.tmp" % output, is_fastq)
+    sortedtab = open(output, "w")
+    args = ["sort", "-T", tmp_dir, "-t","\t","-k", "1,1", "%s.tmp" % output]
+    p1 = sub.Popen(args, stdout=sortedtab)
+    p1.communicate()
+    sortedtab.close()
+    os.remove("%s.tmp" % output)
+    
+def remove_seqs(fasta_input, list, output, check):
+    fasta_handle = open(fasta_input, "rU")
+    list_handle = open(list, "rU") 
+    output_handle = open(output, "w")
+    current = list_handle.readline()[:-1]
+    for r in SeqIO.parse(fasta_handle, "fasta"):
+        if current == "":
+            output_handle.write(">%s\n%s\n" % (r.id, r.seq))
+            continue
+        if check:
+            if cmp(r.id, current) == 0:
+                current = list_handle.readline()[:-1]
+                continue
+            elif cmp(r.id, current) < 0:
+                output_handle.write(">%s\n%s\n" % (r.id, r.seq))
+                continue
+            elif cmp(r.id, current) > 0 and current != "":
+                print "[error] out of order sequence found: %s, %s. please verify fasta and list are sorted" %(r.id.lower(), current.lower()) 
+                sys.exit(1)
+        else:
+            if r.id == current:
+                current = list_handle.readline()[:-1]
+                continue
+            else:
+                output_handle.write(">%s\n%s\n" % (r.id, r.seq))
+                continue
+
+    fasta_handle.close()
+    list_handle.close()
+    output_handle.close()
+
+def subset_seqs(fasta_input, list, output, check):
+    fasta_handle = open(fasta_input, "rU")
+    list_handle = open(list, "rU") 
+    output_handle = open(output, "w")
+    current = list_handle.readline()[:-1]
+    for r in SeqIO.parse(fasta_handle, "fasta"):
+        if check:
+            if cmp(r.id, current) == 0:
+                output_handle.write(">%s\n%s\n" % (r.id, r.seq))
+                current = list_handle.readline()[:-1]
+                continue
+            elif cmp(r.id.lower(), current.lower()) > 0 and current != "":
+                print "[error] out of order sequence found. please verify fasta and list are sorted" 
+                sys.exit(1)
+        else:
+            if r.id == current:
+                output_handle.write(">%s\n%s\n" % (r.id, r.seq))
+                current = list_handle.readline()[:-1]
+                continue
+
+    fasta_handle.close()
+    list_handle.close()
+    output_handle.close()
+
+def fastastd(input, output):
+    input_handle = open(input, "rU")
+    output_handle = open(output, "w")
+    for record in SeqIO.parse(input_handle, "fasta", generic_dna):
+        if len(record.seq) > 0:
+            output_handle.write(">%s\n%s\n" % (record.id, record.seq.ungap("-").ungap(".")))
+    input_handle.close()
+    output_handle.close()
+
+def fastq2uniquefasta(inputf, outputf):
+    input_handle = open(inputf, "rU")
+    output_handle = open(outputf, "w")
+    for record in SeqIO.parse(input_handle, "fastq"):
+        newid = random_str()
+        output_handle.write(">%s\n%s\n" % (newid, record.seq.ungap("-").ungap(".")))
+    input_handle.close()
+    output_handle.close()
+
+def uniquefasta(inputf, outputf, is_fastq):
+    seqtype = 'fastq' if is_fastq else 'fasta'
+    input_handle = open(inputf, "rU")
+    output_handle = open(outputf, "w")
+    for record in SeqIO.parse(input_handle, seqtype):
+        newid = random_str()
+        if is_fastq:
+            record.id = newid
+            record.description = newid
+            output_handle.write(record.format('fastq'))
+        else:
+            output_handle.write(">%s\n%s\n" % (newid, record.seq.ungap("-").ungap(".")))
+    input_handle.close()
+    output_handle.close()
+
+def random_str(size=8):
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choice(chars) for x in range(size))
+
+def seq_stats(input, output):
+    fasta_handle = open(input, "rU")
+    stats = {}
+    for rec in SeqIO.parse(fasta_handle, "fasta"):
+        pass
+        
+if __name__ == '__main__':
+    if options.fasta2tab:
+        fasta2tab(options.input, options.out, options.fastq)
+    elif options.tab2fasta:
+        tab2fasta(options.input, options.out)
+    elif options.fastq2fasta:
+        fastq2fasta(options.input, options.out)
+    elif options.bowtie_truncate:
+        bowtie_truncate(options.input, options.out)
+    elif options.stdfasta:
+        fastastd(options.input, options.out)
+    elif options.seqstats:
+        seq_stats(options.input, options.out)
+    elif options.sortbyid:
+        sortbyid(options.input, options.out, options.tmp_dir)
+    elif options.sortbyid2tab:
+        sortbyid2tab(options.input, options.out, options.tmp_dir, options.fastq)
+    elif options.fastq2uniquefasta:
+        fastq2uniquefasta(options.input, options.out)
+    elif options.uniquefasta:
+        uniquefasta(options.input, options.out, options.fastq)
+    elif options.remove_seqs:
+        remove_seqs(options.input, options.list, options.out, options.check)
+    elif options.subset_seqs:
+        subset_seqs(options.input, options.list, options.out, options.check)
+    else:
+        parser.print_help()
+        print "[error] must give valid command"
+        sys.exit(1);
+    sys.exit(0)

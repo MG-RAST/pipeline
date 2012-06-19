@@ -1,0 +1,471 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Data::Dumper;
+use Getopt::Long;
+use Cache::Memcached;
+
+my $verbose   = 0;
+my $in_file   = '';
+my $filt_file = '';
+my $exp_file  = '';
+my $ont_file  = '';
+my $rna_file  = '';
+my $lca_file  = '';
+my $get_rna   = 0;
+my $get_lca   = 0;
+my $frag_num  = 5000;
+my $memhost   = "";
+my $memkey    = '_ach';
+my $usage     = qq($0
+Input:  m8 format blast / blat file - sorted by query | top hit
+Output: top hit for eaach query (protein or rna formats)
+    1. filtered sims: same format as m8
+    2. rna expanded sims: see below
+    3. lca expanded (rna): see below
+  OR
+    1. filtered sims: same format as m8
+    2. expanded sims: see below
+    3. ontology sims: see below
+    4. lca expanded (protein): see below
+
+m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
+rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
+ontology: md5|query, fragment|subject, identity, length, evalue, function, id, source
+LCA:      md5|query list, fragment|subject, identity list, length list, evalue list, lca string, depth of lca (1-8)
+
+  --in_sim       file name      Required. Name of input sim file
+  --out_filter   file name      Required. Name of filtered sim file.
+  --out_expand   file name      Name of output expanded protein sim file (protein mode only).
+  --out_ontology file name      Name of output expanded ontology sim file (protein mode only).
+  --out_rna      file name      Name of output expanded rna sim file (rna mode only).
+  --out_lca      file name      Name of output expanded LCA file (protein and rna mode).
+  --frag_num     int            Optional. Number of fragment chunks to load in memory at once before processing. Default is '$frag_num'
+  --mem_host     memcache host  Required. Server of memcache
+  --mem_key      key extension  Optional. Extension to md5sum to use as memcache key. Default is '$memkey'
+  --verbose                     Optional. Verbose output.
+
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! GetOptions( "verbose!"       => \$verbose,
+		   "in_sim=s"       => \$in_file,
+		   "out_filter=s"   => \$filt_file,
+		   "out_expand:s"   => \$exp_file,
+		   "out_ontology:s" => \$ont_file,
+		   "out_rna:s"      => \$rna_file,
+		   "out_lca:s"      => \$lca_file,
+		   "frag_num:i"     => \$frag_num,
+		   'mem_host:s'     => \$memhost,
+		   'mem_key:s'      => \$memkey
+		 ) )
+  { print STDERR $usage; exit 1; }
+
+unless ($in_file && (-s $in_file) && $filt_file) {
+  print STDERR $usage . "Missing input and/or filter files.\n"; exit 1;
+}
+if ($rna_file) {
+  print "Running in rna sim mode.\n" if ($verbose);
+  $get_rna = 1;
+}
+elsif ($exp_file && $ont_file) {
+  print "Running in protein sim mode.\n" if ($verbose);
+}
+else {
+  print STDERR "Output filenames required: (out_expand and out_ontology) or out_rna"; exit 1;
+}
+if ($lca_file) {
+  print "Running in lca mode.\n" if ($verbose);
+  $get_lca = 1;
+}
+
+my $mch = new Cache::Memcached {'servers' => [$memhost], 'debug' => 0, 'compress_threshold' => 10_000};
+unless ($mch) { print STDERR "Error: Unable to connect to memcache\n"; exit 1; }
+
+my $data  = {};
+my $count = 0;
+my $frags = 0;
+my $curr  = '';
+my ($filt_fh, $exp_fh, $ont_fh, $rna_fh, $lca_fh, $filt_t, $exp_t, $ont_t, $rna_t, $lca_t);
+my $ann_map = {};
+
+# ann_map: { 'source' => id => [ name, type ], 'function' => id => name, 'organism' => id => [ name, tax_id ] }
+print "Loading memcache ach data for mapping ... " if ($verbose);
+foreach my $ann (('source', 'function', 'organism')) {
+  my $rand = int(rand(60)) + 10;  # random 10-60
+  sleep($rand);
+  my $data = $mch->get($ann.$memkey);
+  if ($data && ref($data)) {
+    $ann_map->{$ann} = $data;
+  } else {
+    print STDERR "Error: Unable to get $ann data from memcache\n"; exit 1;
+  }
+}
+print "Done\n" if ($verbose);
+
+print "Parsing file $in_file in $frag_num fragment size chunks ... " if ($verbose);
+open(INFILE, "<$in_file") or die "Can't open file $in_file!\n";
+open($filt_fh, ">$filt_file") or die "Can't open file $filt_file!\n";
+if ($get_rna) {
+  open($rna_fh, ">$rna_file") or die "Can't open file $rna_file!\n";
+} else {
+  open($exp_fh, ">$exp_file") or die "Can't open file $exp_file!\n";
+  open($ont_fh, ">$ont_file") or die "Can't open file $ont_file!\n";
+}
+if ($get_lca) {
+  open($lca_fh, ">$lca_file") or die "Can't open file $lca_file!\n";
+}
+
+while (my $line = <INFILE>) {
+  chomp $line;
+  my ($frag, $md5, @rest) = split(/\t/, $line);
+  my $score = $rest[-1];
+
+  unless ($line && $frag && (length($md5) == 32) && (scalar(@rest) == 10)) { next; }
+  if ($curr eq '') { $curr = $frag; }
+  
+  # get top hits for each fragment
+  if ($curr ne $frag) {
+    if ($frags >= $frag_num) {
+      #print STDERR "." if ($verbose);
+      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($ann_map, $data, $mch, $get_rna, $get_lca);
+      print $filt_fh $filt_t if ($filt_t);
+      print $exp_fh $exp_t   if ($exp_t);
+      print $ont_fh $ont_t   if ($ont_t);
+      print $rna_fh $rna_t   if ($rna_t);
+      print $lca_fh $lca_t   if ($lca_t);
+      $data = {};
+      $frags = 0;
+    }
+    $curr = $frag;
+    $count += 1;
+    $frags += 1;
+  }
+  $md5 =~ s/lcl\|//;
+
+  # set of md5s per frag score
+  if (! exists $data->{$frag}{$score}{$md5}) {
+    $data->{$frag}{$score}{$md5} = \@rest;
+  }
+}
+close(INFILE);
+
+if (scalar(keys %$data) > 0) {
+  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($ann_map, $data, $mch, $get_rna, $get_lca);
+  print $filt_fh $filt_t if ($filt_t);
+  print $exp_fh $exp_t   if ($exp_t);
+  print $ont_fh $ont_t   if ($ont_t);
+  print $rna_fh $rna_t   if ($rna_t);
+  print $lca_fh $lca_t   if ($lca_t);
+}
+
+close($filt_fh);
+if ($get_rna) {
+  close($rna_fh)
+} else {
+  close($exp_fh);
+  close($ont_fh);
+}
+if ($lca_file) {
+  close ($lca_fh);
+}
+
+print "Done - $count fragments parsed\n" if ($verbose);
+exit 0;
+
+sub get_top_hits {
+  my ($ann_map, $data, $mch, $get_rna, $get_lca) = @_;
+  
+  my $filter_text   = '';
+  my $protein_text  = '';
+  my $ontology_text = '';
+  my $rna_text      = '';
+  my $lca_text      = '';
+  my $data_min_md5  = {};
+  my $total_min_md5 = {};
+  my $total_md5s    = {};
+  my $frag_srcs     = {};
+  my $frag_md5s     = {};
+  my $frag_lca      = {};
+
+  # get total md5s: {md5}
+  # get md5 per frag: frag => [ md5, exp, sim ]  # for all exps 0 and less
+  foreach my $frag (keys %$data) {
+    foreach my $score (keys %{$data->{$frag}}) {
+      foreach my $md5 (keys %{$data->{$frag}{$score}}) {
+	$total_md5s->{$md5} = 1;
+	if ($get_lca) {
+	  my $exp = &get_exp( $data->{$frag}{$score}{$md5}[8] );
+	  if (defined $exp) { push @{ $frag_md5s->{$frag} }, [ $md5, $exp, $data->{$frag}{$score}{$md5} ]; }
+	}
+      }
+    }
+  }
+  unless (scalar(keys %$total_md5s) > 0) { return; }
+
+  # get data for md5s from memcache
+  # ach: md5 => source => function => [organism | ontology_id]
+  # lca: md5 => [lca]
+  my ($md5_ach, $md5_lca) = &get_md5_data($mch, [keys %$total_md5s], $get_lca);
+
+  # get sources per frag: frag => {source}
+  foreach my $frag (keys %$data) {
+    foreach my $score (keys %{$data->{$frag}}) {
+      foreach my $md5 (grep {exists $md5_ach->{$_}} keys %{$data->{$frag}{$score}}) {
+	map { $frag_srcs->{$frag}{$_} = 1 } keys %{$md5_ach->{$md5}};
+      }
+    }
+  }
+
+  # get lca per frag: frag => { md5s => [md5], sims => [sim], lca => [lca] }
+  if ($get_lca) {
+    foreach my $frag (keys %$frag_md5s) {
+      my %md5s_lca  = map { $_->[0], $_->[2] } grep { $_->[1] == 0 } @{$frag_md5s->{$frag}};
+      my @sort_md5s = sort { $a->[1] <=> $b->[1] } grep { $_->[1] < 0 } @{$frag_md5s->{$frag}};
+
+      if (@sort_md5s > 0) {   
+	my $cutoff = $sort_md5s[0][1] - int($sort_md5s[0][1] * 0.2);
+	foreach my $set (@sort_md5s) {
+	  if ($set->[1] <= $cutoff) { $md5s_lca{ $set->[0] } = $set->[2]; }
+	}
+      }
+      if (scalar(keys %md5s_lca) > 0) {
+	my @lca = &get_lca([keys %md5s_lca], $md5_lca);
+	if (@lca == 9) {
+	  $frag_lca->{$frag} = {md5s => [keys %md5s_lca], sims => [values %md5s_lca], lca => \@lca};
+	}
+      }
+    }
+  }
+
+  # get min md5s for max sources, ordered by score: frag => score => md5 => {source}
+  foreach my $frag (keys %$data) {
+    my $seen_srcs = {};
+    my $seen_md5s = {};
+    foreach my $score (keys %{$data->{$frag}}) {
+      if (scalar(keys %$seen_srcs) >= scalar(keys %{$frag_srcs->{$frag}})) { last; }
+      my ($min_md5, $srcs) = &get_min_md5s_by_source($md5_ach, [keys %{$data->{$frag}{$score}}], $seen_srcs, $seen_md5s);
+      $data_min_md5->{$frag}{$score} = $min_md5;
+      map { $total_min_md5->{$_} = 1 } keys %$min_md5;
+      map { $seen_md5s->{$_} = 1 } keys %$min_md5;
+      map { $seen_srcs->{$_} = 1 } @$srcs;
+    }
+  }
+
+  # output expanded info
+  foreach my $frag (keys %$data) {
+    if ($get_lca && exists($frag_lca->{$frag})) {
+      my $level = pop @{$frag_lca->{$frag}{lca}};
+      $lca_text .= join("\t", ( join(";", @{$frag_lca->{$frag}{md5s}}),               # md5s
+				$frag,
+				join(";", map {$_->[0]} @{$frag_lca->{$frag}{sims}}), # identity
+				join(";", map {$_->[1]} @{$frag_lca->{$frag}{sims}}), # length
+				join(";", map {$_->[8]} @{$frag_lca->{$frag}{sims}}), # evalue
+				join(";", @{$frag_lca->{$frag}{lca}}),                # taxa
+				$level
+			      )) . "\n";
+    }
+    next unless (exists $data_min_md5->{$frag});
+    foreach my $score ( keys %{$data_min_md5->{$frag}} ) {
+      foreach my $md5 ( keys %{$data_min_md5->{$frag}{$score}} ) {
+	# sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
+	my $sim = $data->{$frag}{$score}{$md5};
+
+	# filter sim output
+	$filter_text .= join("\t", ($frag, $md5, @$sim)) . "\n";
+
+	# md5_ach: md5 => source => function => [organism | ontology_id]
+	# ann_map: { 'source' => id => [ name, type ], 'function' => id => name, 'organism' => id => [ name, tax_id ] }
+	foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
+	  next unless (exists($md5_ach->{$md5}{$src}) && exists($ann_map->{source}{$src}));
+	  my ($sname, $stype) = @{$ann_map->{source}{$src}};
+
+	  foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
+	    my $fname = exists($ann_map->{function}{$func}) ? $ann_map->{function}{$func} : "";
+
+	    foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}} ) {
+	      my ($oname, $tid) = exists($ann_map->{organism}{$other}) ? @{$ann_map->{organism}{$other}} : ('','');
+	      if (($stype eq 'rna') && $oname && $get_rna) {
+		$rna_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
+	      }
+	      elsif (($stype eq 'protein') && $oname && (! $get_rna)) {
+		$protein_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
+	      }
+	      elsif (($stype eq 'ontology') && (! $get_rna)) {
+		$ontology_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $other, $sname)) . "\n";
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return ($filter_text, $protein_text, $ontology_text, $rna_text, $lca_text);
+}
+
+sub get_md5_data {
+  my ($mch, $md5s, $get_lca) = @_;
+  
+  my $ach   = {};
+  my $lca   = {};
+  my %keys  = map { $_ . $memkey, $_ } @$md5s;
+  my %cache = ();
+  my $step  = 5000;
+  my $total = scalar(@$md5s);
+  my $max   = 3;
+
+  for (my $i = 0; $i < $total; $i += $step) {    
+    if (($i + $step) >= $total) {
+      my @set = map { $_ . $memkey } @$md5s[$i..($total-1)];
+      my $tmp = $mch->get_multi(@set);
+      my $try = 1;
+      while ( ($try <= $max) && ((! $tmp) || (! ref ($tmp))) ) {
+      #while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
+	#if (! $tmp) {
+	print STDERR "Warning (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
+	#} else {
+	#  print STDERR "Warning (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
+	#  @cache{ keys %$tmp } = values %$tmp;
+	#  @set = grep {! exists $tmp->{$_}} @set;
+	#  print STDERR "Missing keys: ".join(",", @set)."\n";
+	#}
+	$tmp = $mch->get_multi(@set);
+	$try += 1;
+      }
+      unless ($tmp && ref($tmp)) {
+      #unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
+	#if (! $tmp) {
+	print STDERR "Error (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
+	#} else {
+	#  print STDERR "Error (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
+	#  print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
+	#}
+      }
+      @cache{ keys %$tmp } = values %$tmp;
+      last;
+    }
+    my @set = map { $_ . $memkey } @$md5s[$i..($i+$step-1)];
+    my $tmp = $mch->get_multi(@set);
+    my $try = 1;
+    while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
+      if (! $tmp) {
+	print STDERR "Warning (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
+      } else {
+	print STDERR "Warning (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
+	@cache{ keys %$tmp } = values %$tmp;
+	@set = grep {! exists $tmp->{$_}} @set;
+	print STDERR "Missing keys: ".join(",", @set)."\n";
+      }
+      $tmp = $mch->get_multi(@set);
+      $try += 1;
+    }
+    unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
+      if (! $tmp) {
+	print STDERR "Error (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
+      } else {
+	print STDERR "Error (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
+	print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
+      }
+    }
+    @cache{ keys %$tmp } = values %$tmp;
+  }
+  
+  foreach my $k (keys %keys) {
+    if (exists $cache{$k}) {
+      foreach my $src (keys %{$cache{$k}}) {
+	if (($src eq 'lca') && $get_lca) {
+	  $lca->{$keys{$k}} = $cache{$k}{$src};
+	} elsif ($src ne 'lca') {
+	  $ach->{$keys{$k}}{$src} = $cache{$k}{$src};
+	}
+      }
+    }
+  }
+  return ($ach, $lca);
+}
+
+sub get_min_md5s_by_source {
+  my ($all_md5_srcs, $md5s, $seen_srcs, $seen_md5s) = @_;
+
+  my %sub_md5s  = ();
+  my %avil_srcs = ();
+  foreach my $md5 (@$md5s) {
+    next if ((exists $seen_md5s->{$md5}) || (! exists $all_md5_srcs->{$md5}));
+    foreach my $src (keys %{$all_md5_srcs->{$md5}}) {
+      next if (exists $seen_srcs->{$src});
+      $sub_md5s{$md5}{$src} = 1;
+      $avil_srcs{$src} = 1;
+    }
+  }
+  
+  my $max_srcs = scalar(keys %avil_srcs);
+  my %cur_md5s = ();
+  my %cur_srcs = ();
+
+  foreach my $md5 (sort {scalar(keys %{$sub_md5s{$b}}) <=> scalar(keys %{$sub_md5s{$a}})} keys %sub_md5s) {
+    foreach my $src (keys %{$sub_md5s{$md5}}) {
+      if (! exists $cur_srcs{$src}) {
+	$cur_md5s{$md5}{$src} = 1;
+	$cur_srcs{$src} = 1;
+      }
+    }
+    last if (scalar(keys %cur_srcs) >= $max_srcs);
+  }
+  
+  return (\%cur_md5s, [keys %cur_srcs]);
+}
+
+sub get_exp {
+  my ($evalue) =  @_;
+
+  my $value = undef;
+  if ($evalue =~ /^(\d\.\d)e([-+])(\d+)$/) {
+    my ($int, $pos, $exp) = ($1, $2, $3);
+    my $is_zero = (($int eq '0.0') && ($exp eq '00')) ? 1 : 0;
+    unless (($pos eq '+') && (! $is_zero)) {
+      $value = $is_zero ? 0 : ($pos eq '-') ? -1 * $exp : $exp;
+    }
+  }
+
+  return $value;
+}
+
+sub get_lca {
+  my ($md5s, $md5_lca) = @_;
+
+  my @taxa = map { $md5_lca->{$_} } grep { exists $md5_lca->{$_} } @$md5s;
+
+  my $coverage = {};
+  foreach my $t (@taxa) {
+    for (my $i = 0; $i < scalar(@$t); $i++) {
+      $coverage->{$i+1}->{ $t->[$i] }++ if ($t->[$i]);
+    }
+  }
+
+  if ((scalar(keys %$coverage) < 8) || (scalar(keys %{$coverage->{1}}) > 1)) {
+    return ();
+  }
+
+  my @lca = ();
+  my $pos = 0;
+  my $max = 0;
+  
+  foreach my $key (sort { $a <=> $b } keys %$coverage) {
+    my $num = scalar keys %{$coverage->{$key}};
+    if (($num <= $max) || ($max == 0)) {
+      $max = $num;
+      $pos = $key;
+    }
+  }
+
+  if ( scalar(keys %{$coverage->{$pos}}) == 1 ) {
+    @lca = map { keys %{$coverage->{$_}} } (1 .. $pos);
+    push @lca, ( map {'-'} ($pos + 1 .. 8) ) if ($pos < 8);
+    push @lca, $pos;
+  }
+  
+  return @lca;
+}

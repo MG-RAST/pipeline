@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+# usage: bowtie <working_dir> <input.fa> <screening_idexes> [<threads>]
+# VERSION: $Id$
+
+# author: jared@mcs.anl.gov
+# purpose: run bowtie to filter for some organism (eg. human)
+#
+
+#optional number of threads
+threads=${4-1}
+
+#bowtie -f -t $3 $2 $1/bowtie.out --shmem -p $threads
+INPUT=`basename $2`
+INDEX=`basename $3`
+echo INPUT $INPUT > $1/REPORT
+echo INDEX $INDEX >> $1/REPORT
+echo CALL bowtie --suppress 5,6 -p ${threads} --shmem --al $1/aligned_reads.fasta --un $1/unaligned_reads.fasta -f -t $3 $2 $1/bowtie.out >> $1/REPORT
+
+ln -s $2 $1/input
+ln -s $3 $1/index
+
+bowtie --suppress 5,6 -p ${threads} --shmem --al $1/aligned_reads.fasta --un $1/unaligned_reads.fasta -f -t $3 $2 $1/bowtie.out

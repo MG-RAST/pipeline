@@ -1,0 +1,95 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+use Getopt::Long;
+
+
+my $verbose      = 0    ;
+my $in_file      = ''   ;
+my $fasta_file   = ''   ;
+my $quality_file = ''   ;
+my $dir          = "./" ;
+
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { &usage(); }
+if ( ! GetOptions( 
+	   "verbose!"      => \$verbose,
+	   "fastq=s"       => \$in_file,
+	   "fasta=s"       => \$fasta_file,
+	   "quality=s"     => \$quality_file ,
+	   "destination=s" => \$dir ,
+     ) )
+  { print &usage("Missing option"); }
+
+unless ($in_file && (-s $in_file)) {
+  &usage("No file $in_file.\n");
+}
+
+my $file_eol = "\n" ;
+
+if (-f $in_file){
+    $fasta_file = $in_file.".fasta" unless ($fasta_file) ;
+    extract_fasta_from_fastq($in_file, $fasta_file , $dir, $file_eol)
+}
+else{
+    print STDERR "No input file $in_file!\n";
+}
+
+
+sub extract_fasta_from_fastq {
+   my($fastq, $fasta, $dir, $file_eol) = @_;
+
+   # call fq2fa which will do the extraction. 
+   # this code is from fq_all2std.pl from the Maq package and has been modified to 
+   # deal with unusual end-of-line characters
+
+   # If necessary, we can pull this and call the Maq script directly
+
+   return &fq2fa($fastq, $fasta, $dir, $file_eol);
+}
+
+sub fq2fa {
+   my($fastq, $fasta, $dir, $file_eol) = @_;
+   # modified code from fq_all2std.pl from Maq package
+
+   my $old_eol = $/;
+   $/ = $file_eol;
+
+   open(FASTQ, "<$fastq") or die "could not open fastq file '$fastq': $!";
+   open(FASTA, ">$dir/$fasta") or die "could not open fasta file '$dir/$fasta': $!";
+
+   my $line;
+
+   while ( defined($line = <FASTQ>) ) 
+   {
+
+       chomp $line;
+       
+       if ( $line =~ /^@(\S+)/ ) 
+       {
+           print FASTA ">$1\n";
+           $line = <FASTQ>;
+           chomp $line;
+           print FASTA "$line\n";
+           <FASTQ>; 
+           <FASTQ>;
+       }
+   }
+
+   close(FASTA) or die "could not close fasta file '$dir/$fasta': $!";
+   close(FASTQ) or die "could not close fastq file '$dir/$fastq': $!";
+
+   $/ = $old_eol;
+
+   return 1;
+}
+
+
+
+sub usage{
+    my ($msg) = @_ ;
+    print STDERR "Error: " , ( $msg || -1 ) , "\n";
+    exit;
+}

@@ -1,0 +1,166 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Getopt::Long;
+use Digest::MD5;
+use Data::Dumper;
+use FileHandle; 
+use File::Basename;
+
+# read in parameters
+
+my $file            = '';         # input fasta file
+my $input_dir       = '';         # input directory
+my $file_pattern    = '';         # search for all files in input directory for pattern 
+my $verbose         = 0 ;
+my $cutoff          = 50;         # default prefix length
+my $destination     = "";         # destination for output files
+my $no_header       = 0 ;
+my $find            = '';
+my $screen          = 0;
+my $help            = 0;
+
+ 
+GetOptions ( 'file=s'          => \$file ,
+	     'dir=s'           => \$input_dir,
+	     'pattern=s'       => \$file_pattern,
+	     'prefix_length=i' => \$cutoff,
+	     'verbose'         => \$verbose,
+	     'destination=s'   => \$destination,
+	     'screen'          => \$screen,
+	     'help'            => \$help,
+	   );
+
+# getopts('f:c:d:v');
+
+# my $file = $opt_f;
+
+sub usage {
+  my ($message) = @_;
+  print "$0 -file \"fasta file\" -prefix_length \"number\" -destination \"directory\" \n";
+  print "$message\n" if ($message);
+  exit(1);
+}
+
+
+&usage if ($help);
+
+my @files ;
+
+if ($file and -f $file){
+  push @files , $file;
+}
+
+if ($file_pattern) {
+
+  if ($input_dir and -d $input_dir){
+
+    $find = "find $input_dir -name '$file_pattern'";
+    push @files , `$find` ; 
+
+  }
+  
+}
+
+unless(scalar @files){
+  print STDERR "No files\n";
+  print STDERR "File\t=\t$file\n";
+  print STDERR "Dir\t=\t" . $input_dir . "\n";
+  print STDERR "Pattern\t=\t" . $file_pattern . "\n";
+  print STDERR "Find\t=\t$find\n";
+  &usage('no fasta file');
+}
+
+
+my $nrfiles = scalar @files; 
+
+my $eol = $/;
+
+foreach my $file (@files){
+  chomp $file;
+  print "Reading $file for md5 prefix creation\n" if ($verbose);
+
+  unless (-f $file){
+    print STDERR "No valid fasta file $file\n";
+    &usage("No valid fasta file $file");
+    exit(1);
+  }
+
+  my ($fname, $tdir, undef) = fileparse($file);
+  
+  my $outfile = ( $destination || $tdir ) . "/$fname.prefix_$cutoff"; 
+  # $tdir = "./" unless ($tdir and -d $tdir); 
+  print "$tdir\t$fname\t$cutoff\t$outfile\n";
+
+
+#  open (MD5  ,   ">$outfile") or die "Can't open $outfile for writing\n";
+
+  my $outfiles = {};
+  my $c        = $cutoff;
+  
+  print "Open file for cutoff $c\n" if ($verbose);
+  my $fh = FileHandle->new;
+  if ($fh->open(">" .  ( $destination || $tdir ) . "/$fname.prefix_$c" )) {
+    # save filehandle
+    $outfiles->{ $c } = $fh ;  
+  }
+  else{
+    print STDERR "Can't open file " . ( $destination || $tdir ) . "/$fname.prefix_$c for writing\n";
+    exit(1);
+  }
+  
+
+  open(FASTA , $file )      or die "Can't open file $file \n!";
+  
+  # set line end
+  $/         = ">";
+  
+  while (my $line = <FASTA> ){
+  
+    # read fasta entry
+    my @entries = split "\n" , $line;
+    my $end     = pop @entries;
+    my $fasta   = '';
+
+    unless ($end) { 
+      $fasta = $end if ( $end =~ /[ATGC]+/i);
+    }
+
+    my $tid  = shift @entries;
+    $fasta   = join "" , @entries;
+    next unless ($fasta);
+
+
+    # get sequence length
+    my $length = length $fasta ;
+    my ($id) = $tid =~/^([^\s]+)/;
+
+    # get prefix
+    my $prefix = substr( $fasta , 0 , $cutoff);
+    
+    # compute md5 and add ID to the group of sequences with same prefix
+    my $md5 = Digest::MD5::md5_hex( lc $prefix );
+    
+    {
+
+      if ($screen){
+	print "$md5\t$id\t$cutoff\t$fname\n";
+      }
+      else{
+	my $fh =  $outfiles->{ $cutoff };
+	print  $fh "$md5\t$id\t$length\t$fasta\n";
+      }
+   
+    }
+  }
+  
+  # set end of line character to default
+  $/ = $eol ;
+  
+}
+
+exit(0);
+
+
+
+

@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+
+import os, sys, re, math
+import subprocess
+from optparse import OptionParser
+from multiprocessing import Pool
+
+__doc__ = """
+Script to sort given tab-deliminated sims file
+(blast/blat m8 or expanded sim), based on given field names.
+
+Available fields to sort by:
+m8: fragment|query, md5|subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+expand: md5|subject, fragment|query, identity, length, evalue, function, organism, source"""
+
+# global variables
+M8_MAP = { 'fragment'  : [1, ''],
+           'query'     : [1, ''],
+           'md5'       : [2, ''],
+           'subject'   : [2, ''],
+           'identity'  : [3, 'nr'],
+           'length'    : [4, 'nr'],
+           'mismatch'  : [5, 'n'],
+           'gaps'      : [6, 'n'],
+           'q_start'   : [7, 'n'],
+           'q_end'     : [8, 'n'],
+           's_start'   : [9, 'n'],
+           's_end'     : [10, 'n'],
+           'evalue'    : [11, 'g'],
+           'bit_score' : [12, 'nr']
+           }
+EXP_MAP = { 'md5'      : [1, ''],
+            'subject'  : [1, ''],
+            'fragment' : [2, ''],
+            'query'    : [2, ''],
+            'identity' : [3, 'nr'],
+            'length'   : [4, 'nr'],
+            'evalue'   : [5, 'g'],
+            'function' : [6, ''],
+            'organism' : [7, ''],
+            'source'   : [8, '']
+            }
+IN_FILE    = ''
+OUT_FILE   = ''
+TMP_DIR    = ''
+MEM_SIZE   = ''
+MEM_MERGE  = ''
+SORT_ORDER = []
+
+def run_cmd(cmd):
+    p = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    stdout, stderr = p.communicate()
+    if p.returncode != 0:
+        raise IOError(stderr)
+    return stdout, stderr
+
+def file_size(fname):
+    result, err = run_cmd(['wc', '-l', '-c', fname])
+    info = result.strip().split()
+    return int(info[0]), int(info[1])
+
+def split_file(fname, split_num, max_split_bytes):
+    lines, bytes = file_size(fname)
+    
+    ## lines_per_split should be min of split_num or max_split_bytes
+    bytes_per_line  = (bytes * 1.0) / lines
+    lines_per_split = int( math.ceil((lines * 1.0) / split_num) )
+    bytes_per_split = lines_per_split * bytes_per_line
+    if bytes_per_split > max_split_bytes:
+        lines_per_split = int( math.ceil(max_split_bytes / bytes_per_line) )
+    
+    empty, result = run_cmd(['split', '--verbose', '-a', '3', '-l', str(lines_per_split), fname, fname+'.']);
+    suffixes = map( lambda x: x.split('.')[-1].rstrip("'"), result.strip().split("\n") )
+    return suffixes
+
+def run_sort(suffix):
+    insort  = IN_FILE + '.' + suffix
+    outsort = OUT_FILE + '.' + suffix
+    sort_cmd = ['sort', '-S', MEM_SIZE, '-t', "\t", '-T', TMP_DIR, '-o', outsort]
+    if len(SORT_ORDER) > 0:
+        for field in map( lambda x: "%d,%d%s"%(x[0], x[0], x[1]), SORT_ORDER ):
+            sort_cmd.append('-k')
+            sort_cmd.append(field)
+    sort_cmd.append(insort)
+    run_cmd(sort_cmd)
+    return outsort
+
+def merge_sort(files):
+    sort_cmd = ['sort', '-m', '-t', "\t", '-T', TMP_DIR, '-o', OUT_FILE]
+    if len(SORT_ORDER) > 0:
+        for field in map( lambda x: "%d,%d%s"%(x[0], x[0], x[1]), SORT_ORDER ):
+            sort_cmd.append('-k')
+            sort_cmd.append(field)
+    for f in files:
+        sort_cmd.append(f)
+    run_cmd(sort_cmd)
+    return    
+
+def clean_files(suffixes):
+    for s in suffixes:
+        os.remove(IN_FILE + '.' + s)
+        os.remove(OUT_FILE + '.' + s)
+    return
+    
+usage = "usage: %prog [options] input_file output_file\n" + __doc__
+
+def main(args):
+    global IN_FILE, OUT_FILE, TMP_DIR, MEM_SIZE, SORT_ORDER
+    parser = OptionParser(usage=usage)
+    parser.add_option("-f", "--format", dest="format", metavar="FORMAT", default="m8",
+                      help="FORMAT inputed file is in. Must be one of following: m8, expand [default is 'm8']")
+    parser.add_option("-s", "--sort_by", dest="sort_by", metavar="SORT_ORDER", default=None,
+                      help="Comma seperated list of fields to sort by, order of list is order of sort [default is first field]")
+    parser.add_option("-p", "--processes", dest="processes", metavar="NUM_PROCESSES", type="int", default=4,
+                      help="Number of processes to run sort on [default is '4']")
+    parser.add_option("-m", "--max_mem", dest="max_mem", metavar="MAX_MEMORY", type="float", default=2.0,
+                      help="Maximum memory for sort to use per thread in GB [default is '2.0']")
+    parser.add_option("-t", "--tmp_dir", dest="tmpdir", metavar="DIR", default="/tmp", help="DIR for sort temp files [default is '/tmp']")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default is off]")
+    
+    (opts, args) = parser.parse_args()
+    if len(args) != 2:
+        parser.error("Incorrect number of arguments")
+
+    (IN_FILE, OUT_FILE) = args
+    TMP_DIR   = opts.tmpdir
+    MEM_SIZE  = str( int(opts.max_mem * 1024) ) + 'M'
+    MEM_MERGE = str( int(opts.max_mem * 1024 * opts.processes) ) + 'M'
+    mem_byte  = opts.max_mem * math.pow(1024, 3)
+
+    my_map = {}
+    if opts.format == 'm8':
+        my_map = M8_MAP
+    elif opts.format == 'expand':
+        my_map = EXP_MAP
+
+    if opts.sort_by:
+        for name in opts.sort_by.split(','):
+            if name in my_map:
+                SORT_ORDER.append( my_map[name] )
+            else:
+                parser.error("Incorrect sort_by field: "+name)
+
+    if opts.processes < 2:
+        if opts.verbose: sys.stdout.write("Sorting using no threades ... ")
+        run_cmd(['cp', IN_FILE, IN_FILE+'.tmp'])
+        run_sort('tmp')
+        run_cmd(['cp', OUT_FILE+'.tmp', OUT_FILE])
+        clean_files(['tmp'])
+        if opts.verbose: sys.stdout.write("Done\n")
+        return 0
+
+    if opts.verbose: sys.stdout.write("Splitting file %s ... "%IN_FILE)
+    suffixes = split_file(IN_FILE, opts.processes, mem_byte)
+    if opts.verbose: sys.stdout.write("Done - %d splits\n"%len(suffixes))
+
+    if opts.verbose: sys.stdout.write("Sorting using %d threades ... "%opts.processes)
+    pool  = Pool(processes=opts.processes)
+    files = pool.map(run_sort, suffixes, 1)
+    pool.close()
+    pool.join()
+    if opts.verbose: sys.stdout.write("Done - files:\n\t" + "\n\t".join(files) + "\n")
+
+    if opts.verbose: sys.stdout.write("Merging %d files ... "%len(files))
+    merge_sort(files)    
+    clean_files(suffixes)
+    if opts.verbose: sys.stdout.write("Done\n")
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

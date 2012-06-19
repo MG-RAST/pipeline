@@ -1,0 +1,71 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Getopt::Long;
+
+# read in parameters
+
+my $file        = '';         # input [ md5 , id , lenth , sequence ] file
+my $verbose     = 0 ;
+my $destination = "";         # destination for output files
+my $option      = "longest";   
+my $cutoff      = 50;
+my $debug       = 0;
+my $memory      = "4G";       # memory allocation for sort
+my $tmpdir      = "/tmp";
+
+GetOptions ( 'file=s'          => \$file,
+	     'prefix_length=i' => \$cutoff,
+	     'verbose'         => \$verbose,
+	     'destination=s'   => \$destination,
+	     'memory=s'        => \$memory,
+	     'tempdir=s'       => \$tmpdir,
+	     'option=s'        => \$option,
+	     'debug'           => \$debug,
+	   );
+
+
+unless (-f $file ){ 
+  &usage("Missing fasta file " . ($file || '') );
+}
+
+unless ( -d $destination ) {
+  &usage("No directory " . ( $destination || '') );
+}
+
+# create md5 list
+print STDERR "Creating md5 prefix file\n" if ($verbose);
+system( "dereplication_create_prefix_file -file $file -destination $destination -prefix $cutoff") == 0  
+  or die "system 'dereplication_create_prefix_file -file $file -destination $destination -prefix $cutoff' failed: $?" ;
+
+# sort md5 list
+
+print STDERR "Sorting md5 prefix file\n" if ($verbose);
+
+my ($fname) = $file =~ /([^\/]+)$/;
+my $input  = "$destination/$fname.prefix_$cutoff";
+my $output = $input . ".sorted" ;
+
+system( "sort $input -S $memory -T $tmpdir -o $output") == 0  
+  or die "system 'sort $input -S $memory -T $tmpdir -o $output' failed: $?" ;
+
+# dump fasta 
+print STDERR "Dumping fasta files of dereplicated and removed sequences\n" if ($verbose);
+
+$input = $output;
+
+system( "dereplication_from_list -file $input -destination $destination -option $option -suffix $fname") == 0  
+  or die "system 'dereplication_from_list -file $input -destination $destination -option $option' failed: $?" ;
+
+#perl mg_create_prefix_file.pl -file ~/data/kevin/6181/4446306.3.fa.unformatted -dest ./ -prefix 50	
+#sort 4446306.3.fa.unformatted.prefix_50.md5 -S 4G -o 4446306.3.fa.unformatted.prefix_50.md5.sorted
+# perl mg_dereplication_from_list.pl -file 4446306.3.fa.unformatted.prefix_50.md5.sorted  -option longest
+
+exit(0);
+
+sub usage{
+  my ($message) = @_; 
+  print STDERR "$0 -file fasta -destination DIR -prefix_length INT\n";
+  print STDERR $message , "\n";
+  exit -1;
+}

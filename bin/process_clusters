@@ -1,0 +1,73 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Getopt::Long;
+
+# options
+my $file = "";
+my $prefix = "";
+my $mapping = "";
+my $fasta = "";
+my $help = "";
+my $options = GetOptions ("uclust=s" => \$file,
+			  "prefix=s" => \$prefix,
+			  "mapping=s" => \$mapping,
+			  "fasta=s" => \$fasta,
+			  "help" => \$help,
+			 );
+
+if ( $help or !($file or $mapping or $prefix or $fasta) or !(-e $file) ){
+    print STDERR "Usage: process_clusters -u <uclust clusters/hits fna> -p <cluster prefix> -m <mapping out> -f <fasta out>\n";
+    exit(1);
+} 
+
+open IN, "<".$file or die $!;
+open MAP, ">".$mapping or die $!;
+open FNA, ">".$fasta or die $!;
+
+my $cur_cluster = "";
+my $cur_seq_id = "";
+my $cur_seq = "";
+my @ids = ();
+my @pids = ();
+
+$/ = ">";
+my $junk = <IN>; # kill first line
+while (my $l = <IN>) {
+  chomp $l;
+  my @lines = split "\n", $l;
+  my $id_line = shift @lines;
+  my $seq = join "", @lines;
+
+  if ($id_line =~ /^(\d+)\|(\d+\.\d%|\*)\|(\S+)$/){
+    my ($cid,$pid,$seq_id) = ($1,$2,$3);
+    if ($pid ne "*") {
+      push @ids, $seq_id;
+      push @pids, $pid;
+      next;
+    } else {
+      unless (scalar @ids) {
+	if ($cur_seq_id) {
+	  print FNA ">$cur_seq_id\n$cur_seq\n";
+	} else {
+	  print FNA ">$seq_id\n$seq\n"
+	}
+      } else {
+	print MAP $prefix.$cur_cluster."\t".$cur_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
+	print FNA ">".$prefix.$cur_cluster."\n$cur_seq\n";
+      }	
+    }
+    $cur_cluster = $cid;
+    $cur_seq_id = $seq_id;
+    $cur_seq = $seq;
+    @ids = ();
+    @pids = ();	
+  }
+}
+
+close(IN);
+close(MAP);
+close(FNA);

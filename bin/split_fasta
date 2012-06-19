@@ -1,0 +1,127 @@
+#!/usr/bin/perl -w
+# VERSION: $Id$
+
+# author: dsouza@mcs.anl.gov
+# purpose: basic fasta splitting script 
+#
+
+use strict;
+use Data::Dumper;
+
+use File::Basename;
+use Cwd 'abs_path';
+
+##########################################
+#                                        #
+# Chunk a fasta file into smaller pieces #
+#                                        #
+##########################################
+
+my $usage = "$0 [-n num-seqs] [-N num-chars] -f fasta [-f fasta...]";
+
+my $max_seqs;
+my $max_chars;
+my $max_splits;
+my @fasta_files;
+
+while (@ARGV)
+{
+    my $opt = shift;
+    
+    if ($opt eq '-n')
+    {
+	$max_seqs = shift;
+    }
+    elsif ($opt eq '-N')
+    {
+	$max_chars = shift;
+    }
+    elsif ($opt eq '-f')
+    {
+	my $file = shift;
+	
+	if (-f $file and -s $file)
+	{
+	    push @fasta_files, $file;
+	}
+    }
+    elsif ($opt eq '-m')
+    {
+	$max_splits = shift
+    }
+    else
+    {
+	print "Invalid option: $opt\n\n$usage\n\n";
+	exit;
+    }
+}
+
+if (@fasta_files == 0)
+{
+    die "No fasta files specified\n$usage\n";
+}
+
+if (!defined($max_seqs) and !defined($max_chars))
+{
+    die "Must pass either -n or -N option\n";
+}
+
+my $next_task = 1;
+
+for my $file (@fasta_files)
+{
+    my $cur_size  = 0;
+    my $cur_count = 0;
+    my $cur_input = '';
+    
+    open(F, "<$file") or die "Cannot open $file: $!\n";
+    
+    print STDERR "Splitting file $file:\n";
+    
+    while (<F>)
+    {
+	if (defined $max_splits and $next_task > $max_splits)
+	{
+	    exit(0);
+	}
+	if (/^>/)
+	{
+	    if ((defined($max_seqs) and ($cur_count >= $max_seqs)) or
+		(defined($max_chars) and ($cur_size >= $max_chars)))
+	    {
+		&write_chunk($cur_input, $cur_count, $cur_size, $file);
+		$cur_size  = 0;
+		$cur_count = 0;
+		$cur_input = '';
+	    }
+	    $cur_input .= $_;
+	    $cur_count++;
+	}
+	else
+	{
+	    $cur_input .= $_;
+	    $cur_size  += length($_);
+	}
+    }
+    if ($cur_count >= 0)
+    {
+	&write_chunk($cur_input, $cur_count, $cur_size, $file);
+	$cur_size  = 0;
+	$cur_input = '';
+	$cur_count = 0;
+    }
+    close(F);
+}
+
+sub write_chunk {
+    my($fasta, $count, $size, $file) = @_;
+
+    my $task = $next_task++;
+    my $chunk_name = $file . '.' . $task;
+
+    print STDERR "\t$chunk_name\t$count sequences, $size bp\n";
+    
+    open(CHUNK, ">$chunk_name") or die "Cannot write file '$chunk_name': $!";
+    print CHUNK $fasta;
+    close(CHUNK);
+}

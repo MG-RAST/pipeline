@@ -1,0 +1,79 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Getopt::Long;
+
+my $verbose = 0;
+my $job_dir = "";
+my $sims    = "analysis/900.loadDB.sims.filter.seq";
+my $jobs    = '';
+my $md5s    = '';
+my $dbname  = "";
+my $dbhost  = "";
+my $dbuser  = "";
+my $usage   = qq($0
+load precomputed job data into database.
+
+  --jobs       file path    Required. List of job ids to get data for
+  --md5s       file path    Optional. List of md5s to filter by, default is all md5s
+  --dir        dir path     Dir where jobs are
+  --dbhost     db user      Server of database
+  --dbname     db name      Name of database
+  --dbuser     db user      Owner of database
+  --verbose                 Optional. Verbose output.
+
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! &GetOptions ('verbose!' => \$verbose, 
+		    'jobs=s'   => \$jobs,
+		    'md5s=s'   => \$md5s,
+		    'dir=s'    => \$job_dir,
+		    'dbhost:s' => \$dbhost,
+		    'dbname:s' => \$dbname,
+		    'dbuser:s' => \$dbuser
+		   ) )
+  { print STDERR $usage; exit 1; }
+
+unless ($jobs && (-s $jobs)) {
+  print STDERR $usage . "Missing job list.\n"; exit 1;
+}
+
+my @md5s = ();
+my @jobs = `cat $jobs`;
+chomp @jobs;
+print STDERR "Processing ".scalar(@jobs)." jobs\n" if ($verbose);
+
+if ($md5s && (-s $md5s)) {
+  @md5s = `cat $md5s`;
+  chomp @md5s;
+  print STDERR "Filtering each job by ".scalar(@md5s)." md5s\n" if ($verbose);
+}
+
+my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, '', {AutoCommit => 0 , RaiseError => 1});
+unless ($dbh) { print STDERR "Error: ".DBI->errstr."\n"; exit 1; }
+
+foreach my $j (@jobs) {
+  my $file  = $job_dir."/".$j."/".$sims;
+  my $where = (@md5s > 0) ? "WHERE md5 IN (" . join(",", map {"'$_'"} @md5s) . ")" : "";
+  my $sql   = "SELECT md5, seek, length FROM j".$j."_protein_m5nr $where ORDER BY seek";
+  my $rows  = $dbh->selectall_arrayref($sql);
+  if ($rows && (@$rows > 0)) {
+    print STDERR "Processing ".scalar(@$rows)." md5s for job ".$j."\n" if ($verbose);
+    open(FSIM, "<$file") || next;
+    foreach my $row (@$rows) {
+      my ($md5, $seek, $len) = @$row;
+      my $rec = '';
+      seek(FSIM, $seek, 0);
+      read(FSIM, $rec, $len);
+      chomp $rec;
+      foreach my $line ( split(/\n/, $rec) ) {
+	my @tabs = split(/\t/, $line);
+	print STDOUT join("\t", ($j, $tabs[0], $md5)) . "\n";
+      }
+    }
+    close FSIM;
+  }
+}

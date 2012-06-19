@@ -1,0 +1,264 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Getopt::Long;
+
+my $verbose        = 0;
+my $filename       = '';
+my $data_type      = '';
+my $seq_db_name    = 'M5NR';
+my $seq_db_version = '1';
+my $pipeline       = "mg-rast v3";
+my $jobID   = '';
+my $reload  = 0 ;
+my $dbname  = "";
+my $dbhost  = "";
+my $dbuser  = "";
+my $options  = { md5      => 1,
+		 ontology => 1,
+		 function => 1,
+		 organism => 1,
+		 lca      => 1
+	       };
+my $opt_str = join(" | ", sort keys %$options);
+my $usage   = qq($0
+load precomputed job data into database.
+
+  --filename        source data    Required.
+  --job             job id         Required.
+  --type            data type      Required. $opt_str
+  --seq-db-name     nr db name     Optional. Default is '$seq_db_name'
+  --seq-db-version  nr db version  Optional. Default is '$seq_db_version'
+  --pipeline        pipline used   Optional. Default is '$pipeline'
+  --dbhost          db user        Required. Server of database
+  --dbname          db name        Required. Name of database
+  --dbuser          db user        Required. Owner of database
+  --verbose                        Optional. Verbose output.
+  --reload                         Optional. Overwrite table if exists with new data.
+
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! &GetOptions ('verbose!'         => \$verbose, 
+		    'filename=s'       => \$filename,
+		    'type=s'           => \$data_type,
+		    'seq-db-name:s'    => \$seq_db_name,
+		    'seq-db-version:s' => \$seq_db_version,
+		    'pipeline:s'       => \$pipeline,
+		    'job=i'            => \$jobID,
+		    'dbhost:s'         => \$dbhost,
+		    'dbname:s'         => \$dbname,
+		    'dbuser:s'         => \$dbuser,
+		    'reload!'          => \$reload
+		   ) )
+  { print STDERR $usage; exit 1; }
+
+unless ($filename && $jobID && $data_type) {
+  print STDERR $usage . "Missing parmater.\n"; exit 1;
+}
+unless (exists $options->{$data_type}) {
+  print STDERR $usage . "Unknown type '$data_type'.\n"; exit 1;
+}
+
+if ($data_type eq 'md5') { $data_type = 'protein'; }
+
+my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, '', {AutoCommit => 0 , RaiseError => 1});
+unless ($dbh) { print STDERR "Error: ".DBI->errstr."\n"; exit 1; }
+
+# create entry in table summary
+my $table_name = lc("j" . join("_", ($jobID, $data_type, $seq_db_name, $seq_db_version)));
+print "Table: $table_name\n" if ($verbose);
+
+# check if a table already exists for provided inputs
+my $where   = "job_id=$jobID AND table_type='$data_type' AND seq_db_name='$seq_db_name' AND pipeline='$pipeline'";
+my $where_v = "$where AND seq_db_version='$seq_db_version'";
+my $tbl     = $dbh->selectcol_arrayref("SELECT table_name FROM job_tables WHERE $where_v");
+my $has_tbl = ($tbl && (@$tbl > 0)) ? 1 : 0;
+
+if ($has_tbl && (! $reload)) {
+  print STDERR "Table " . $tbl->[0] . " already exists for job: $where_v\n";
+  exit 1;
+}
+elsif (! $has_tbl) {
+  &make_current($dbh, $table_name, $where);
+  &update_job_tables($dbh, $jobID, $table_name, $data_type, $seq_db_name, $seq_db_version, $pipeline);
+}
+elsif ($has_tbl && $reload) {
+  print "Reloading $table_name, set as not loaded ... " if ($verbose);
+  $dbh->do("UPDATE job_tables SET loaded='false', indexed='false' WHERE table_name='$table_name'");
+  $dbh->commit;
+  print "Done.\n" if ($verbose);
+}
+
+&create_table($dbh, $table_name, $data_type);
+&load_table($dbh, $filename, $table_name, $data_type);
+&create_index($dbh, $table_name, $data_type);
+
+print "Setting table $table_name as loaded ... " if ($verbose);
+$dbh->do("UPDATE job_tables SET _ctime=LOCALTIMESTAMP, loaded='true' WHERE table_name='$table_name'");
+$dbh->commit;
+print "Done.\n" if ($verbose);
+
+$dbh->disconnect;
+exit 0;
+
+sub update_job_tables {
+  my ($dbh, $jobID, $table_name, $data_type, $db_name, $db_version, $pipeline) = @_;
+  $dbh->do("INSERT INTO job_tables (job_id, table_name, table_type, seq_db_name, seq_db_version, pipeline, loaded, indexed)
+            VALUES ('$jobID', '$table_name', '$data_type', '$db_name', '$db_version', '$pipeline', 'false', 'false')");
+  $dbh->commit;
+}
+
+sub load_table {
+  my ($dbh, $file, $table, $data_type) = @_;
+  
+  my ($num, $name, $end);
+  my $columns = "abundance,eval_min,eval_max,exp_avg,exp_stdv,evals,len_min,len_max,len_avg,len_stdv,lens,ident_min,ident_max,ident_avg,ident_stdv,idents";
+  
+  if    ($data_type eq "protein")  { $columns = "md5,".$columns.",seek,length"; }
+  elsif ($data_type eq "ontology") { $columns = "id,".$columns.",md5s,source,annotation"; }
+  elsif ($data_type eq "organism") { $columns = "organism,".$columns.",md5s,source,ncbi_tax_id"; }
+  elsif ($data_type eq "function") { $columns = "function,".$columns.",md5s,source"; }
+  elsif ($data_type eq "lca")      { $columns = "lca,".$columns.",md5s,level"; }
+  else { print STDERR "ERROR:\tinvalid table type: $data_type"; exit 1; }
+
+  my $copy_cmd = "COPY $table ($columns) FROM STDIN WITH NULL AS ''";
+
+  if ( open(DATA, "<$file") ) {
+    print "Running $copy_cmd ... " if ($verbose);
+    $dbh->do($copy_cmd);
+    while (my $line = <DATA>) {
+      $dbh->pg_putcopydata($line) if $line;
+    }
+    my $res = $dbh->pg_putcopyend();
+    unless ($res) {
+      print STDERR "Error with COPY: ".DBI->errstr."\n"; exit 1;
+    }
+    $dbh->commit;
+    close(DATA);
+    print " Done\n" if ($verbose);
+  }
+  else {
+    print STDERR "Error: can not read file $file: $!\n"; exit 1;
+  }
+}
+
+# creates data table for a given job and data type
+sub create_table {
+  my ($dbh, $table_name, $type) = @_;
+  
+  my ($name, $end);
+  if ($verbose) { print "Creating table $table_name ... \n"; }
+
+  if ($type eq "protein") {
+    $name = "md5 char(32) NOT NULL";
+    $end  = "seek bigint, length bigint";
+  }
+  elsif ($type eq "ontology") {
+    $name = "id text NOT NULL";
+    $end  = "md5s char(32)[], source text NOT NULL, annotation text";
+  }
+  elsif ($type eq "function") {
+    $name = "function text NOT NULL";
+    $end  = "md5s char(32)[], source text NOT NULL";
+  }
+  elsif ($type eq "organism") {
+    $name = "organism text NOT NULL";
+    $end  = "md5s char(32)[], source text NOT NULL, ncbi_tax_id integer";
+  }
+  elsif ($type eq "lca") {
+    $name = "lca text NOT NULL";
+    $end  = "md5s integer, level integer";
+  }
+  else {
+    print STDERR "ERROR:\tinvalid table type: $data_type";
+    exit 1;
+  }
+  
+  my $create = qq(CREATE TABLE $table_name (
+_id SERIAL PRIMARY KEY,
+$name,
+abundance integer NOT NULL, 
+eval_min varchar(9),
+eval_max varchar(9),
+exp_avg real,
+exp_stdv real,
+evals integer[5],
+len_min real,
+len_max real,
+len_avg real,
+len_stdv real,
+lens integer[5],
+ident_min real,
+ident_max real,
+ident_avg real,
+ident_stdv real,
+idents integer[5],
+$end
+));
+
+  $dbh->do("DROP TABLE IF EXISTS $table_name");
+  $dbh->do($create);
+  $dbh->commit;
+}
+
+# creates data table index for a given job and data type
+sub create_index {
+  my ($dbh, $table_name, $type) = @_;
+  
+  if ($verbose) { print "Creating indexes for $table_name ...\n"; }
+
+  if ($type eq "protein") {
+    $dbh->do("CREATE INDEX ${table_name}_md5 ON $table_name (md5)");
+    $dbh->do("CREATE INDEX ${table_name}_exp_avg ON $table_name (exp_avg)");
+    $dbh->do("CREATE INDEX ${table_name}_seek_length ON $table_name (seek,length)");
+  }
+  elsif ($type eq "ontology") {
+    $dbh->do("CREATE INDEX ${table_name}_id ON $table_name (id)");
+    $dbh->do("CREATE INDEX ${table_name}_md5s ON $table_name USING gin(md5s)");
+    $dbh->do("CREATE INDEX ${table_name}_source ON $table_name (source)");
+  }
+  elsif ($type eq "function") {
+    $dbh->do("CREATE INDEX ${table_name}_function ON $table_name (function)");
+    $dbh->do("CREATE INDEX ${table_name}_md5s ON $table_name USING gin(md5s)");
+    $dbh->do("CREATE INDEX ${table_name}_source ON $table_name (source)");
+  }
+  elsif ($type eq "organism") {
+    $dbh->do("CREATE INDEX ${table_name}_organism ON $table_name (organism)");
+    $dbh->do("CREATE INDEX ${table_name}_md5s ON $table_name USING gin(md5s)");
+    $dbh->do("CREATE INDEX ${table_name}_source ON $table_name (source)");
+  }
+  elsif ( $type eq "lca" ) {
+    $dbh->do("CREATE INDEX ${table_name}_lca ON $table_name (lca)");
+    $dbh->do("CREATE INDEX ${table_name}_level ON $table_name (level)");
+  }
+  else {
+    print STDERR "ERROR:\tinvalid table type: $data_type";
+    exit 1;
+  }
+  $dbh->commit;
+}
+
+sub make_current {
+  my ($dbh, $table, $where) = @_;
+
+  my $rows = $dbh->selectall_arrayref("SELECT table_name, seq_db_version FROM job_tables WHERE $where");
+  unless ($rows && (@$rows > 0)) {
+    if ($verbose) { print "$table is already current. No old versions.\n"; }
+    return;
+  }
+  my %tables = map { $_->[0], $_->[1] } @$rows;
+
+  unless ( exists $tables{$table} ) {
+    if ($verbose) { print "$table is already current. Old versions: " . join(", ", keys %tables) . "\n"; }
+    return;
+  }
+
+  my $prev_table = $table . "_" . $tables{$table};
+  if ($verbose) { print "Moving old version $table to $prev_table.\n"; }
+  $dbh->do("ALTER TABLE $table RENAME TO $prev_table");
+  $dbh->do("UPDATE job_tables SET table_name='$prev_table' WHERE table_name='$table'");
+  $dbh->commit;
+}

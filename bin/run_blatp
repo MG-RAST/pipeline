@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+# usage: run_blatp <working_dir> <input.faa> <nr_blat_dir>
+# VERSION: $Id$
+
+# author: jared@mcs.anl.gov
+# purpose: run blatp against a set of  pre-built 2bit files via blatp
+#
+
+# we need a workaround for a problem with multiple 2bit files in the
+# current blatp binary
+for i in `find $3 -name "*2bit"`;
+do
+    blat -prot -minMatch=3 -tileSize=3 -dots=100 -out=blast8 $i $2 $1/`basename $i`.m8
+done
+ 
+# we can merge the multiple input files since blatp sorts via
+# the bitscores (for matchin IDs sort by bitscore)
+sort -t $'\t' -k 1,1 -k 12,12gr $1/*.m8 > $1/blatp.nr.m8

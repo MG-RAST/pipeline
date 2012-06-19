@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# usage: clusterDNA <working_dir> <input.fna>
+
+uclust --sort $2 --output $1/out.sorted
+uclust --nucleo --input $1/out.sorted --uc $1/results.uc --id 0.98 --rev
+uclust --nucleo --input $1/out.sorted --uc2fasta $1/results.uc --types S --output $1/out.nt.fasta
