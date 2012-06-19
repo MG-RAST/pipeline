@@ -1,0 +1,75 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Pipeline;
+use Pipeline_Conf;
+
+use Getopt::Long;
+use File::Copy;
+use File::Basename;
+use POSIX qw(strftime);
+umask 000;
+
+my $stage_name="resims";
+my $revision = "0";
+my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
+
+# options
+my $job_num = "";
+my $ver     = "";
+my $help    = "";
+my $options = GetOptions ("job=i"    => \$job_num,
+			  "version!" => \$ver,
+			  "help!"    => \$help,
+			 );
+
+if ( $ver ) {
+  print STDERR "$stage_name - $version\n";
+  exit(0);
+} 
+
+my $log = Pipeline::logger($job_num);
+
+$log->info("Starting $stage_name on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name, "running");
+
+my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
+my $job_suffix = substr $job_num, -2;
+$job_suffix = "0".$job_suffix if length($job_suffix) == 1;
+my $results_dir = $Pipeline_Conf::recompute_dir."/jobs/".$job_suffix;
+my $hostname    = `hostname`;
+chomp $hostname;
+
+unless (-d $results_dir) {
+    mkdir($results_dir) or fail($log, "Could not mkdir: $results_dir, $!");
+}
+
+$log->info("Running on host $hostname, using dir $results_dir");
+
+# get AWE results
+my $awe_results_dir = $Pipeline_Conf::AWEdata."/".$job_num.".results";
+my $sims_file = "$results_dir/$job_num.recompute.sims.gz";
+system("cat $awe_results_dir/* | gzip > $sims_file") == 0 or fail($log, 'AWE cat $awe_results_dir/* | gzip > $sims_file failed');
+if (-s $sims_file && $job_num ne "") {
+    system("rm -rf ".$Pipeline_Conf::AWEdata."/".$job_num."*") == 0 or fail($log, "failed to rm -rf ".$Pipeline_Conf::AWEdata."/".$job_num."*")
+}
+
+$log->info("Finished $stage_name on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name, "completed");
+
+exit(0);
+
+sub fail {
+  my ($log, $message) = @_;
+  Pipeline::update_stage_info($job_num, $stage_name, "error");
+  $log->error($message);
+  exit(1);
+}
+

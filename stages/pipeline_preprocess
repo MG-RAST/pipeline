@@ -1,0 +1,188 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Pipeline;
+use Pipeline_Conf;
+
+use Getopt::Long;
+use File::Copy;
+use File::Basename;
+use POSIX qw(strftime);
+umask 000;
+
+my $stage_name="preprocess";
+my $stage;
+for my $s (@{$Pipeline_Conf::pipeline->{'default'}}){
+  $stage = $s if $s->{name} eq $stage_name; 
+}
+my $stage_id = $stage->{id};
+my $revision = "0";
+my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
+my $runcmd   = "filter_sequences";
+
+# options
+my $job_num = "";
+my $fasta_file = "";
+my $filter_options = "";
+my $ver     = "";
+my $help    = "";
+my $options = GetOptions ("job=i"     => \$job_num,
+			  "fasta=s"   => \$fasta_file,
+			  "options=s" => \$filter_options,
+			  "version"   => \$ver,
+			  "help"      => \$help,
+			 );
+if ( $ver ) {
+  print STDERR "$stage_name - $version - $stage_id\n";
+  exit(0);
+} elsif ( $help or !($job_num and $fasta_file) ) {
+  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta file> [-o <filter_options>]\n";
+  exit(1);
+} 
+
+my $log = Pipeline::logger($job_num);
+
+unless (-s $fasta_file) {
+  $log->error("file: $fasta_file does not exist or is empty");
+  exit(1);
+}
+
+$log->info("Starting $stage_name on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name, "running");
+
+my $job_dir      = $Pipeline_Conf::global_job_dir."/".$job_num;
+my $proc_dir    = $job_dir."/proc";
+my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
+my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
+my $run_dir     = $stage_dir;
+my $hostname    = `hostname`;
+chomp $hostname;
+
+# create directories
+if (-d $stage_dir) {
+  my $t = time;
+  $log->info("found $stage_dir, moving to $stage_dir.$t");
+  move($stage_dir, $stage_dir.".".$t) or fail($log, "$!");
+}
+mkdir($stage_dir) or fail($log, "Could not mkdir: $stage_dir, $!");
+
+# set cluster workspace dir
+if (-d $Pipeline_Conf::cluster_workspace) {
+  $run_dir = $Pipeline_Conf::cluster_workspace . "/$job_num.$stage_id.$stage_name";
+  if (-d $run_dir) {
+    system("rm -rf $run_dir");
+  }
+  system("echo $hostname > $stage_dir/hostname");
+  mkdir($run_dir) or fail($log, "Could not mkdir: $run_dir, $!");
+}
+$log->info("Running on host $hostname, using dir $run_dir");
+
+my (undef, undef, $type) = fileparse($fasta_file, qr/\.[^.]*/);
+my $input_fasta = $stage_id.".".$stage_name.".input".$type;
+my $passed_seq  = $stage_id.".".$stage_name.".passed.fna";
+my $removed_seq = $stage_id.".".$stage_name.".removed.fna";
+my $cmd_options = "";
+
+# get filter options
+# default => filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5
+unless ($filter_options) {
+  my $tag  = 'filter_options';
+  my $info = Pipeline::get_job_attributes($job_num, [$tag]);
+  if (exists $info->{$tag}) {
+    $filter_options = $info->{$tag};
+  }
+  elsif ( $fasta_file =~ /\.fn?a$|\.fasta$/i ) {
+    my @out = `seq_length_stats --fasta_file $fasta_file --length_only | cut -f2`;
+    chomp @out;
+    my $mean = $out[2];
+    my $stdv = $out[3];
+    my $min  = int( $mean - (2 * $stdv) );
+    my $max  = int( $mean + (2 * $stdv) );
+    if ($min < 0) { $min = 0; }
+    $filter_options = "filter_ln:min_ln=".$min.":max_ln=".$max.":filter_ambig:max_ambig=5";
+  }
+  elsif ( $fasta_file =~ /\.(fq|fastq)$/i ) {
+    $filter_options = "dynamic_trim:min_qual=15:max_lqb=5";
+  }
+  else {
+    $filter_options = "skip";
+  }
+}
+
+unless ( $filter_options =~ /^skip$/i ) {
+  for my $ov (split ":", $filter_options) {
+    if ($ov =~ /=/) {
+      my ($option, $value) = split "=", $ov;
+      $cmd_options .= "-".$option." ".$value." ";
+    } else {
+      $cmd_options .= "-".$ov." ";
+    }
+  }
+
+  # run cmd
+  system("cp $fasta_file $run_dir/$input_fasta >> $run_dir/$runcmd.out 2>&1") == 0 or fail($log, "Preprocess failed on job: $job_num, see $stage_dir/$runcmd.out for details.");
+  system("$runcmd -i $run_dir/$input_fasta -o $run_dir/$passed_seq -r $run_dir/$removed_seq $cmd_options >> $run_dir/$runcmd.out 2>&1") == 0 or fail($log, "Preprocess failed on job: $job_num, see $stage_dir/$runcmd.out for details."); 
+
+  # copy output to somewhere
+  unless (-f $run_dir."/".$passed_seq)  { system("touch $run_dir/$passed_seq"); }
+  unless (-f $run_dir."/".$removed_seq) { system("touch $run_dir/$removed_seq"); }
+  move($run_dir."/".$passed_seq, $results_dir."/".$passed_seq) or fail($log, "Failed copy file: $passed_seq - $!");
+  move($run_dir."/".$removed_seq, $results_dir."/".$removed_seq) or fail($log, "Failed copy file: $removed_seq - $!");
+
+  if ($run_dir ne $stage_dir) {
+    move("$run_dir/$runcmd.out", "$stage_dir/$runcmd.out") or fail($log, "Failed copy file: $runcmd.out - $!");
+    system("rm -rf $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
+  } else {
+    my @run_files = `ls $run_dir`;
+    chomp @run_files;
+    map { system("rm $run_dir/$_") } grep { $_ !~ /\.out$/ } @run_files;
+  }
+}
+else {
+  if ( $fasta_file =~ /\.fn?a$|\.fasta$/i ) {
+    copy($fasta_file, $results_dir."/".$passed_seq) or fail($log, "Failed copy $!");
+  } elsif ( $fasta_file =~ /\.(fq|fastq)$/i ) {
+    system("seqUtil --fastq2fasta -i $fasta_file -o $results_dir/$passed_seq") == 0 or fail($log, "seqUtil: unable to translate fastq to fasta");
+  } else {
+    fail($log, "[error] invalid file type: $fasta_file");
+  }
+  system("touch $run_dir/$removed_seq");
+  move("$run_dir/$removed_seq", $results_dir."/".$removed_seq) or fail($log, "Failed copy $!");
+  if ($run_dir ne $stage_dir) {
+    system("rmdir $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
+  }
+}
+
+open(INFO, ">".$results_dir."/".$stage_id.".".$stage_name.".info");
+print INFO "# MG-RAST - ".$stage_name." v".$version." - (".(strftime "%b %e %Y", localtime).")\n";
+print INFO "# site : metagenomics.anl.gov\n# email: mg-rast\@mcs.anl.gov\n";
+print INFO "# ".$runcmd." ".$cmd_options."\n";
+print INFO (($filter_options =~ /^skip$/i) ? "skipped $stage_name" : "Sequences in the uploaded file(s) have been filtered based on length and number of ambiguous bases. Sequences adhering to the following preprocessing parameters are removed from file:\nLength < 0 OR if number of ambiguous base calls within sequences is >10") . "\n";
+close(INFO);
+
+chmod 0666, $results_dir."/".$stage_id.".".$stage_name.".info";
+chmod 0666, $results_dir."/".$passed_seq; 
+chmod 0666, $results_dir."/".$removed_seq; 
+
+$log->info("Finished $stage_name on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name, "completed");
+
+exit(0);
+
+sub fail {
+  my ($log, $message) = @_;
+  Pipeline::update_stage_info($job_num, $stage_name, "error");
+  $log->error($message);
+  if ($run_dir ne $stage_dir) {
+    system("mv $run_dir/* $stage_dir/.");
+    system("rmdir $run_dir");
+  }
+  exit(1);
+}

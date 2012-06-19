@@ -1,0 +1,195 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Pipeline;
+use Pipeline_Conf;
+
+use Getopt::Long;
+use File::Copy;
+use File::Basename;
+umask 000;
+
+my $stage_name = "fix_simseq";
+my $stage_id = "900";
+
+# options
+my $max_seq  = 500000;
+my $job_num  = "";
+my $fasta    = "";
+my $nodes    = 4;
+my $sort_mem = 2.0;
+my $gzip     = 0;
+my $help     = 0;
+my $options  = GetOptions ( "job=i" => \$job_num,
+			    "fasta=s" => \$fasta,
+			    "nodes:i" => \$nodes,
+			    "smem:f" => \$sort_mem,
+			    "gzip!" => \$gzip,
+			    "help!" => \$help,
+			  );
+if ( $help or !($job_num and $fasta) ) {
+  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta file> [-g (boolean: is gziped) -n <node # (default $nodes)> -s <sort memory in GB (default $sort_mem)>]\n";
+  exit(1);
+}
+
+my $log = Pipeline::logger($job_num);
+unless ($fasta && (-s $fasta)) {
+  fail($log, "file: $fasta does not exist or is empty");
+}
+if ($nodes < 1) { $nodes = 1; }
+if ($nodes > 8) { $nodes = 8; }
+$log->info("Starting $stage_name on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name, "running");
+
+my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
+my $proc_dir    = $job_dir."/proc";
+my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
+my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
+my $run_dir     = $stage_dir;
+my $params      = "--verbose --seq-db-name M5NR --seq-db-version ".$Pipeline_Conf::ach_annotation_ver;
+my $dboptions   = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user;
+my $hostname    = `hostname`;
+chomp $hostname;
+
+# create directories
+if (-d $stage_dir) {
+  my $t = time;
+  $log->info("found $stage_dir, moving to $stage_dir.$t");
+  move($stage_dir, $stage_dir.".".$t) or fail($log, "$!");
+}
+mkdir($stage_dir) or fail($log, "Could not mkdir: $stage_dir, $!");
+
+# set cluster workspace dir (use local if large job)
+my $work_dir = (($nodes > 4) && (-d $Pipeline_Conf::local_workspace)) ? $Pipeline_Conf::local_workspace : $Pipeline_Conf::cluster_workspace;
+if (-d $work_dir) {
+  $run_dir = "$work_dir/$job_num.$stage_id.$stage_name";
+  if (-d $run_dir) {
+    system("rm -rf $run_dir");
+  }
+  mkdir($run_dir) or fail($log, "Could not mkdir: $run_dir, $!");
+  system("echo $hostname > $stage_dir/hostname");
+}
+$log->info("Running on host $hostname, using dir $run_dir");
+
+my $sort_dir = (-d $Pipeline_Conf::local_tmp) ? $Pipeline_Conf::local_tmp : ((-d $Pipeline_Conf::cluster_tmp) ? $Pipeline_Conf::cluster_tmp : $run_dir);
+my $prefix   = $stage_id.".".$stage_name;
+my $err_file = $stage_dir."/".$prefix.".err";
+my $message  = "$stage_name failed on job: $job_num, see $err_file for details.";
+
+my $prot_file = "$results_dir/650.superblat.sims.filter" . ($gzip ? '.gz' : '');
+my $rna_file  = "$results_dir/450.rna.sims.filter" . ($gzip ? '.gz' : '');
+my $prot_map  = "$results_dir/550.cluster.aa90.mapping";
+my $rna_map   = "$results_dir/440.cluster.rna97.mapping";
+
+my $sims_filter  = "$run_dir/$prefix.sims.filter";
+my $cluster_file = "$run_dir/$prefix.mapping";
+my $raw_fasta    = $run_dir.'/'.basename($fasta);
+$raw_fasta =~ s/\.gz$//;
+
+my $cat = $gzip ? 'zcat' : 'cat';
+system("$cat $fasta > $raw_fasta") == 0 or fail($log, "$cat: ".$message);
+if ((-s $prot_file) && (-s $rna_file)) {
+  system("$cat $prot_file $rna_file > $sims_filter") == 0 or fail($log, "$cat: ".$message);
+  if ((-s $prot_map) && (-s $rna_map)) {
+    system("cat $prot_map $rna_map > $cluster_file") == 0 or fail($log, 'cat: '.$message);
+  }
+  elsif (-s $prot_map) {
+    system("cp $prot_map $cluster_file") == 0 or fail($log, 'cp: '.$message);
+  }
+  elsif (-s $rna_map) {
+    system("cp $rna_map $cluster_file") == 0 or fail($log, 'cp: '.$message);
+  }
+}
+elsif (-s $prot_file) {
+  system("$cat $prot_file > $sims_filter")  == 0 or fail($log, "$cat: ".$message);
+  if (-s $prot_map) {
+    system("cp $prot_map $cluster_file") == 0 or fail($log, 'cp: '.$message);
+  }
+}
+elsif (-s $rna_file) {
+  system("$cat $rna_file > $sims_filter") == 0 or fail($log, "cat: ".$message);
+  if (-s $rna_map) {
+    system("cp $rna_map $cluster_file") == 0 or fail($log, 'cp: '.$message);
+  }
+}
+else {
+  fail($log, "Need one of $results_dir/$prot_file or $results_dir/$rna_file");
+}
+
+unless (-s $sims_filter) {
+  fail($log, "file: $sims_filter is empty");
+}
+
+my $outf  = "$run_dir/filter_sims.out";
+$sort_mem = int($sort_mem * 1024 * $nodes);
+
+# get max seq size
+my $format = ($raw_fasta =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+my @out    = `seq_length_stats.py -f -t $format -i $raw_fasta | cut -f2`;
+chomp @out;
+my $max = $out[5];
+
+# index filter seqs
+system("uncluster_sims -v -c $cluster_file -i $sims_filter -o $sims_filter.unclust >> $run_dir/uncluster_sims.out 2> $err_file") == 0 or fail($log, 'uncluster_sims: '.$message);
+if ($max < $max_seq) {
+  my $seq_opt = ($format eq 'fastq') ? '--fastq' : '';
+  system("seqUtil -t $sort_dir -i $raw_fasta -o $run_dir/$prefix.seq.tab --sortbyid2tab $seq_opt >> $outf 2> $err_file") == 0 or fail($log, 'seqUtil sortbyid2tab: '.$message);
+  system("sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 1,1 -o $sims_filter.sort $sims_filter.unclust >> $outf 2> $err_file") == 0 or fail($log, "sort sims-query: ".$message);
+  system("add_seq2sims -v -i $sims_filter.sort -o $sims_filter.seq -s $run_dir/$prefix.seq.tab >> $outf 2> $err_file") == 0 or fail($log, 'add_seq2sims: '.$message);
+  system("sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 2,2 -o $sims_filter.seq.sort $sims_filter.seq >> $outf 2> $err_file") == 0 or fail($log, "sort sims-md5: ".$message);
+  system("mv $sims_filter.seq.sort $sims_filter.seq") == 0 or fail($log, 'mv: '.$message);
+  system("index_tab_file -v -f 2 -o $sims_filter.seq.index $sims_filter.seq >> $outf 2> $err_file") == 0 or fail($log, 'index_tab_file: '.$message);
+  system("load_md5_sim_index $params $dboptions --job $job_num --filename $sims_filter.seq.index") == 0 or fail($log, 'load_md5_sim_index '.$message);
+  system("rm $run_dir/$prefix.seq.tab $sims_filter.sort");
+}
+else {
+  $log->info("Skipping adding of sequences to index sims file, max sequence length is $max bps");
+  system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 2,2 -o $sims_filter.seq $sims_filter.unclust >> $outf 2> $err_file") == 0 or fail($log, "sort sims-md5: ".$message);
+}
+system("rm $sims_filter.unclust");
+
+# update DB
+my $ann_read = `cut -f1 $sims_filter.seq | sort -u | wc -l`;
+chomp $ann_read;
+my $res = Pipeline::set_job_statistics($job_num, [['read_count_annotated', $ann_read]]);
+unless ($res) {
+  fail($log, "$stage_name failed on job: $job_num, loading JobDB stats");
+}  
+
+# move files / cleanup
+move("$sims_filter.seq", "$results_dir/900.loadDB.sims.filter.seq") or fail($log, "Failed copy: 900.loadDB.sims.filter.seq - $!");
+chmod 0666, "$results_dir/900.loadDB.sims.filter.seq";
+
+# move run_dir to stage_dir if on local
+if ($run_dir ne $stage_dir) {
+  system("mv $run_dir/*.out $stage_dir/.");
+  system("mv $run_dir/*.err $stage_dir/.");
+  system("rm -rf $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
+} else {
+  my @run_files = `ls $run_dir`;
+  chomp @run_files;
+  map { system("rm $run_dir/$_") } grep { $_ !~ /\.(out|err)$/ } @run_files;
+}
+
+$log->info("Finished $stage_name on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name, "completed");
+
+exit(0);
+
+sub fail {
+  my ($log, $message) = @_;
+  Pipeline::update_stage_info($job_num, $stage_name, "error");
+  $log->error($message);
+  if ($run_dir ne $stage_dir) {
+    system("mv $run_dir/* $stage_dir/.");
+    system("rmdir $run_dir");
+  }
+  exit(1);
+}
