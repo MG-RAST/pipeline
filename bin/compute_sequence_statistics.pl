@@ -1,5 +1,4 @@
-#!/usr/bin/env perl 
-
+#!/soft/packages/perl/5.12.1/bin/perl
 use warnings;
 use strict;
 
@@ -48,11 +47,11 @@ if ( $stats[0] =~ /^ERROR/i ) {
 # count unique ids
 my $unique_ids = 0;
 if ($file_format eq 'fasta') {
-  $unique_ids = `grep '>' $dir/$file | cut -f1 -d' ' | sort -T $dir -u | wc -l`;
+  $unique_ids = `grep '>' $dir/$file | cut -f1 -d' ' | sort -T $dir/.tmp -u | wc -l`;
   chomp $unique_ids;
 }
 elsif ($file_format eq 'fastq') {
-  $unique_ids = `awk '0 == (NR + 3) % 4' $dir/$file | cut -f1 -d' ' | sort -T $dir -u | wc -l`;
+  $unique_ids = `awk '0 == (NR + 3) % 4' $dir/$file | cut -f1 -d' ' | sort -T $dir/.tmp -u | wc -l`;
   chomp $unique_ids;
 }
 
