@@ -4,6 +4,7 @@ import os, sys, copy, pprint
 import urllib, urllib2, json
 import datetime
 import gspread
+import xlrd
 from optparse import OptionParser
 from collections import defaultdict
 from lepl.apps.rfc3696 import Email, HttpUrl
@@ -122,7 +123,15 @@ def mgrast_api(request):
 def validate_type(key, val, atype):
     ### return string of valid value, else None
     if atype == 'text':
-        return unicode(val)
+        try:
+            intVal = int(val)
+            floatVal = float(val)
+            if intVal == floatVal:
+                return str(intVal)
+            else:
+                return str(floatVal)
+        except ValueError:
+            return unicode(val)
     elif atype == 'int':
         try:
             intVal = int(val)
@@ -188,8 +197,16 @@ def validate_type(key, val, atype):
         except ValueError:
             return convert_coordinate(val)
         return floatVal
-    elif (atype == 'select') and (key in CV_PARAM['select']) and (str(val).lower() in CV_PARAM['select'][key]):
-        return str(val).lower()
+    elif (atype == 'select') and (key in CV_PARAM['select']):
+        try:
+            cleanVal = int(val)
+            cleanVal = str(cleanVal)
+        except ValueError:
+            cleanVal = str(val).lower()
+        if cleanVal in CV_PARAM['select'][key]:
+            return cleanVal
+        else:
+            return None
     else:
         return None
 
@@ -216,20 +233,33 @@ def google_to_mdraw(url, login, password):
     tables  = dict([(x.title, sheet_to_table(x, 'google')) for x in gbook.worksheets()])
     return tables_to_mdraw(tables)
 
-def xlxs_to_mdraw(xfile):
-    xbook  = load_workbook(filename = xfile)
-    tables = dict([(x, sheet_to_table(xbook.get_sheet_by_name(x), 'excel')) for x in xbook.get_sheet_names()])
+def xlsx_to_mdraw(xxfile):
+    xxbook = load_workbook(filename = xxfile)
+    tables = dict([(x, sheet_to_table(xxbook.get_sheet_by_name(x), 'xlsx')) for x in xxbook.get_sheet_names()])
+    return tables_to_mdraw(tables)
+
+def xls_to_mdraw(xfile):
+    xbook  = xlrd.open_workbook(xfile)
+    tables = dict([(x, sheet_to_table(xbook.sheet_by_name(x), 'xls')) for x in xbook.sheet_names()])
     return tables_to_mdraw(tables)
 
 def sheet_to_table(sheet, source):
     table = []
-    if source == 'excel':
+    if source == 'xlsx':
         maxRow = sheet.get_highest_row()
         maxCol = sheet.get_highest_column()
         for r in range(maxRow):
             row = []
             for c in range(maxCol):
                 row.append( sheet.cell(row=r,column=c).value )
+            table.append(row)
+    if source == 'xls':
+        maxRow = sheet.nrows
+        maxCol = sheet.ncols
+        for r in range(maxRow):
+            row = []
+            for c in range(maxCol):
+                row.append( sheet.cell_value(r, c) )
             table.append(row)
     elif source == 'google':
         maxRow = sheet.row_count
@@ -393,7 +423,7 @@ def validate_data(cat, name, data, template, skip):
     dataMap = template[cat]
     for key in data.iterkeys():
         # add any misc_param_# to template if has misc_param
-        if key.startswith('misc_param_') and ('misc_param' in dataMap):
+        if key and key.startswith('misc_param_') and ('misc_param' in dataMap):
             dataMap[key] = copy.deepcopy(dataMap['misc_param'])
     for key, items in dataMap.iteritems():
         items['required'] = int(items['required'])
@@ -449,7 +479,7 @@ version = "%prog 1.1"
 def main(args):
     global LOG_FILE, JSON_FILE, HEADER, TEMPLATE, CV_PARAM
     parser = OptionParser(usage=usage, version=version)
-    parser.add_option("-f", "--format", dest="format", default='excel', help="Format of input spreadsheet: excel or google (default 'excel')")
+    parser.add_option("-f", "--format", dest="format", default='xlsx', help="Format of input spreadsheet: xlsx, xls, or google (default 'xlsx')")
     parser.add_option("--login", dest="login", default=None, help="For 'google' format: google email")
     parser.add_option("--password", dest="password", default=None, help="For 'google' format: google password")
     parser.add_option("-l", "--log", dest="log", default=None, help="File to output validation messages (succes/error). default is STDOUT/STDERR")
@@ -463,10 +493,12 @@ def main(args):
     md_source = args[0]
     LOG_FILE  = opts.log
     JSON_FILE = opts.json
-    if (opts.format == 'excel') and (not (os.path.isfile(md_source) and (os.path.splitext(md_source)[1][1:].strip() == 'xlsx'))):
-        parser.error("Invalid input file: %s"%md_source)
+    if (opts.format == 'xlsx') and (not (os.path.isfile(md_source) and (os.path.splitext(md_source)[1][1:].strip() == 'xlsx'))):
+        parser.error("Invalid %s file: %s"%(opts.format, md_source))
+    if (opts.format == 'xls') and (not (os.path.isfile(md_source) and (os.path.splitext(md_source)[1][1:].strip() == 'xls'))):
+        parser.error("Invalid %s file: %s"%(opts.format, md_source))
     if (opts.format == 'google') and (not valid_http_url(md_source)):
-        parser.error("Invalid input url: %s"%md_source)
+        parser.error("Invalid %s url: %s"%(opts.format, md_source))
 
     # get template / controled vocab from mgrast
     TEMPLATE = mgrast_api('template')
@@ -477,8 +509,10 @@ def main(args):
         errorMsg("Ontology lookup service '%s' is currently unavailable"%ONT_URL, 1)
     
     # object from source (xlsx file or google link): create hierarchy / test connections
-    if opts.format == 'excel':
-        mdraw = xlxs_to_mdraw(md_source)
+    if opts.format == 'xlsx':
+        mdraw = xlsx_to_mdraw(md_source)
+    elif opts.format == 'xls':
+        mdraw = xls_to_mdraw(md_source)
     elif opts.format == 'google':
         mdraw = google_to_mdraw(md_source, opts.login, opts.password)
     else:
