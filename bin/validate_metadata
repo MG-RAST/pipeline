@@ -325,7 +325,7 @@ def tables_to_mdraw(tables):
         if len(libs) == 0:
             continue
         if len(eps) == 0:
-            eps[0] = { 'name': "%s: %s"%(sampName, s_ep), 'type': s_ep, 'data': {'sample_name': sampName} }
+            eps.append( {'name': "%s: %s"%(sampName, s_ep), 'type': s_ep, 'data': {'sample_name': sampName}} )
         mdraw['samples'].append({ 'name': sampName,
                                   'data': sampData,
                                   'id': id_from_data(sampData, MGRASTID),
