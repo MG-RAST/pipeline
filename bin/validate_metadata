@@ -152,8 +152,8 @@ def validate_type(key, val, atype):
             return 0
     elif (atype == 'email') and valid_email(val):
         return val
-    elif (atype == 'url') and valid_http_url(val):
-        return val
+    elif atype == 'url':
+        return str(val)
     elif atype == 'date':
         if isinstance(val, datetime.datetime):
             return str(val.date())
