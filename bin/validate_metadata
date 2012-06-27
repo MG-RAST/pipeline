@@ -64,11 +64,11 @@ def obj_from_url(url):
         res = urllib2.urlopen(req)
     except urllib2.HTTPError:
         if SRCH_URL in url:
-            errorMsg("Bioportal inaccessable: can not connect to: %s"%url, 1)
+            errorMsg("Bioportal inaccessable for ontology term lookup: can not connect to: %s\nPlease try again in 30 mins."%url, 1)
         elif MGRAST_URL in url:
-            errorMsg("MG-RAST API inaccessable: can not connect to: %s"%url, 1)
+            errorMsg("MG-RAST API inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%url, 1)
         else:
-            errorMsg("Malformed url: %s"%url, 1)
+            errorMsg("Malformed url, there was a problem connecting to this site: %s\nPlease try again in 30 mins."%url, 1)
     if not res:
         return None
     obj = json.loads(res.read())
