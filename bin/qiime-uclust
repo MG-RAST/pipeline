@@ -46,7 +46,10 @@ def uc2fasta(infasta, inclust, outfasta, types, nameonly, tmpdir):
         if ctype not in typeSet:
             continue
         while sname != curFasta.id:
-            curFasta = fastaItr.next()
+            try:
+                curFasta = fastaItr.next()
+            except StopIteration:
+                break
             if not curFasta:
                 break
         if nameonly:
