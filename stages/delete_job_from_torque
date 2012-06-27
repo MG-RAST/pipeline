@@ -1,0 +1,21 @@
+#!/bin/sh 
+
+JOB=$1
+USER=`whoami`
+HOSTNAME=`hostname`
+
+if [ $USER != "mgrastprod" ] || [ $HOSTNAME != "berlin.mcs.anl.gov" ]; then
+    echo 'probably want to run this as mgrastprod on berlin'
+    exit 1
+fi
+
+if [ $JOB ]; then
+    echo -n "deleting"
+    for QID in `qstat -u mgrastprod | grep " $JOB\." | cut -f1 -d'.'`; do
+	echo -n " $QID"
+	qdel $QID
+    done;
+    echo ""
+else
+    echo "[usage] "`basename $0`" <Job #>"
+fi
