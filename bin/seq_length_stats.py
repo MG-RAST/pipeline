@@ -103,34 +103,41 @@ def main(args):
     in_hdl = open(opts.input, "rU")
 
     # parse sequences
-    for rec in SeqIO.parse(in_hdl, opts.type):
+    try:
+      for rec in SeqIO.parse(in_hdl, opts.type):
         seqnum += 1
         seq  = str(rec.seq).upper()
         slen = len(seq)
         lengths[slen] += 1
         
         if not opts.fast:
-            char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
-            for c in seq:
-                if c in char:
-                    char[c] += 1
-            atgc  = char['A'] + char['T'] + char['G'] + char['C']
-            ambig = slen - atgc;
-            gc_p  = "0"
-            gc_r  = "0"
-            if atgc > 0:
-                gc_p = "%.1f"%((1.0 * (char['G'] + char['C']) / atgc) * 100)
-            if (char['G'] + char['C']) > 0:
-                gc_r = "%.1f"%(1.0 * (char['A'] + char['T']) / (char['G'] + char['C']))
-            gc_perc[gc_p] += 1
-            gc_ratio[gc_r] += 1
-            if ambig > 0:
-                ambig_char += ambig
-                ambig_seq += 1
+          char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
+          for c in seq:
+            if c in char:
+              char[c] += 1
+          atgc  = char['A'] + char['T'] + char['G'] + char['C']
+          ambig = slen - atgc;
+          gc_p  = "0"
+          gc_r  = "0"
+          if atgc > 0:
+            gc_p = "%.1f"%((1.0 * (char['G'] + char['C']) / atgc) * 100)
+          if (char['G'] + char['C']) > 0:
+            gc_r = "%.1f"%(1.0 * (char['A'] + char['T']) / (char['G'] + char['C']))
+          gc_perc[gc_p] += 1
+          gc_ratio[gc_r] += 1
+          if ambig > 0:
+            ambig_char += ambig
+            ambig_seq += 1
         if opts.seq_type and (slen >= kmer_len):
-            prefix_map[ seq[:kmer_len] ] += 1
+          prefix_map[ seq[:kmer_len] ] += 1
+    except ValueError as e:
+      sys.stderr.write("[error] possible file truncation: %s\n"%e)
+      os._exit(1)
 
     # get stats
+    if seqnum == 0:
+      sys.stderr.write("[error] invalid %s file, unable to find sequence records\n"%opts.type)
+      os._exit(1)
     len_mean, len_stdev = get_mean_stdev(seqnum, lengths)
     min_len   = min( lengths.iterkeys() )
     max_len   = max( lengths.iterkeys() )
