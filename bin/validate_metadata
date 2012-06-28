@@ -127,9 +127,9 @@ def validate_type(key, val, atype):
             intVal = int(val)
             floatVal = float(val)
             if intVal == floatVal:
-                return str(intVal)
+                return unicode(intVal)
             else:
-                return str(floatVal)
+                return unicode(floatVal)
         except ValueError:
             return unicode(val)
     elif atype == 'int':
@@ -145,7 +145,7 @@ def validate_type(key, val, atype):
             return None
         return floatVal
     elif atype == 'boolean':
-        strVal = str(val).lower()
+        strVal = unicode(val).lower()
         if (strVal == '1') or (strVal == 'yes') or (strVal == 'true'):
             return 1
         else:
@@ -156,39 +156,39 @@ def validate_type(key, val, atype):
         return str(val)
     elif atype == 'date':
         if isinstance(val, datetime.datetime):
-            return str(val.date())
+            return unicode(val.date())
         elif isinstance(val, basestring):
             try:
                 dVal = datetime.datetime.strptime(val, "%Y-%m-%d")
             except ValueError:
                 return None
-            return str(dVal.date())
+            return unicode(dVal.date())
         elif isinstance(val, int):
             try:
                 dVal = datetime.datetime.strptime(str(val), "%Y")
             except ValueError:
                 return None
-            return str(dVal.date())
+            return unicode(dVal.date())
         else:
             return None
     elif atype == 'time':
         if isinstance(val, datetime.datetime):
-            return str(val.time())
+            return unicode(val.time())
         elif isinstance(val, datetime.time):
-            return str(val)
+            return unicode(val)
         elif isinstance(val, basestring):
             try:
                 tVal = datetime.datetime.strptime(val, "%H:%M:%S")
             except ValueError:
                 return None
-            return str(tVal.time())
+            return unicode(tVal.time())
         else:
             try:
                 floatVal = float(val)
             except ValueError:
                 return None
             secsVal = int(floatVal * 86400)
-            return str(datetime.timedelta(seconds=secsVal))
+            return unicode(datetime.timedelta(seconds=secsVal))
     elif (atype == 'timezone') and val.startswith('UTC'):
         return val
     elif atype == 'coordinate':
@@ -200,9 +200,9 @@ def validate_type(key, val, atype):
     elif (atype == 'select') and (key in CV_PARAM['select']):
         try:
             cleanVal = int(val)
-            cleanVal = str(cleanVal)
+            cleanVal = unicode(cleanVal)
         except ValueError:
-            cleanVal = str(val).lower()
+            cleanVal = unicode(val).lower()
         if cleanVal in CV_PARAM['select'][key]:
             return cleanVal
         else:
@@ -437,7 +437,7 @@ def validate_data(cat, name, data, template, skip):
             errorMsg("%s '%s' missing required field '%s'"%(cat, name, key))
         if has_value:
             if items['type'] == 'ontology':
-                validVal = str(data[key])
+                validVal = data[key]
                 if validVal not in ONT_MAP:
                     ONT_MAP[validVal] = defaultdict(list)
                 ONT_MAP[validVal][CV_PARAM['ontology'][key]].append([cat, key, name])
@@ -447,7 +447,7 @@ def validate_data(cat, name, data, template, skip):
                     bad_type = 'found in %s ontology'%key if items['type'] == 'ontology' else 'type '+items['type']
                     bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
                     add_invalid(cat, key, name, data[key], 'not '+bad_type)
-                    errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, str(data[key])))
+                    errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key])))
             validData[key] = copy.deepcopy(items)
             validData[key]['value'] = validVal
     return validData
