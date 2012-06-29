@@ -1,0 +1,179 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Pipeline;
+use Pipeline_Conf;
+
+use File::stat;
+use Getopt::Long;
+use File::Copy;
+use POSIX qw(strftime);
+umask 000;
+
+my $stage_name = "cluster";
+my $revision   = "0";
+my $version    = $Pipeline_Conf::pipeline_version.".".$revision;
+my $runcmd     = "parallel_cluster";
+
+# options
+my $job_num    = "";
+my $fasta_file = "";
+my $nodes   = 4;
+my $size    = 250;
+my $dna     = 0;
+my $aa      = 0;
+my $rna     = 0;
+my $pid     = 0;
+my $ver     = 0;
+my $help    = 0;
+my $options = GetOptions ("job=i"   => \$job_num,
+			  "fasta=s" => \$fasta_file,
+			  "nodes=i" => \$nodes,
+			  "size=i"  => \$size,
+			  "dna"     => \$dna,
+			  "aa"      => \$aa,
+			  "rna"     => \$rna,
+			  "pid=i"   => \$pid,
+			  "version" => \$ver,
+			  "help"    => \$help
+			 );
+
+if ( $ver ) {
+  print STDERR "$stage_name - $version\n";
+  exit(0);
+} elsif ( $help or !($job_num and $fasta_file) ) {
+  print STDERR "Usage: pipeline_${stage_name}_parallel -j <job number> -f <fasta file> -pid <percent identity> -<aa|dna|rna>\n";
+  exit(1);
+} elsif ( !($dna xor $aa xor $rna) ) {
+  print STDERR "Usage: pipeline_${stage_name}_parallel -j <job number> -f <fasta file> -pid <percent identity> -<aa|dna|rna>\n";
+  print STDERR "       must select either -aa, -dna or -rna\n";
+  exit(1);
+} elsif ( ! $pid ) {
+  print STDERR "Usage: pipeline_${stage_name}_parallel -j <job number> -f <fasta file> -pid <percent identity> -<aa|dna|rna>\n";
+  print STDERR "       must enter -pid as int, eg. 80 for 80% identity.\n";
+  exit(1);
+}
+
+my $log = Pipeline::logger($job_num);
+
+unless (-e $fasta_file) {
+  $log->error("file: $fasta_file does not exist");
+  exit(1);
+}
+
+my ($code, $fext);
+if ($dna) {
+  ($code, $fext) = ("dna", "fna");
+} elsif ($aa) {
+  ($code, $fext) = ("aa", "faa");
+} elsif ($rna) {
+  ($code, $fext) = ("rna", "fna");
+}
+
+my $stage;
+for my $s (@{$Pipeline_Conf::pipeline->{'default'}}) {
+  $stage = $s if $s->{name} eq $stage_name."_$code$pid";
+}
+unless ($stage) {
+  for my $s (@{$Pipeline_Conf::pipeline->{'16s'}}) {
+    $stage = $s if $s->{name} eq $stage_name."_$code$pid";
+  }
+}
+my $stage_id = $stage->{id};
+
+$log->info("Starting ".$stage_name."_$code$pid on job: $job_num");
+
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name."_".$code.$pid, "running");
+
+my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
+my $proc_dir    = $job_dir."/proc";
+my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
+my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
+my $run_dir     = $stage_dir;
+my $hostname    = `hostname`;
+chomp $hostname;
+
+# create directories
+if (-d $stage_dir) {
+  my $t = time;
+  $log->info("found $stage_dir, moving to $stage_dir.$t");
+  move($stage_dir, $stage_dir.".".$t) or fail($log, "$!");
+}
+mkdir($stage_dir) or fail($log, "Could not mkdir: $stage_dir, $!");
+
+# set cluster workspace dir
+if (-d $Pipeline_Conf::cluster_workspace) {
+  $run_dir = $Pipeline_Conf::cluster_workspace . "/$job_num.$stage_id.$stage_name";
+  if (-d $run_dir) {
+    system("rm -rf $run_dir");
+  }
+  mkdir($run_dir) or fail($log, "Could not mkdir: $run_dir, $!");
+  system("echo $hostname > $stage_dir/hostname");
+}
+$log->info("Running on host $hostname, using dir $run_dir");
+
+my $message  = "";
+my $tmp_base = (-d $Pipeline_Conf::local_tmp) ? $Pipeline_Conf::local_tmp : ((-d $Pipeline_Conf::cluster_tmp) ? $Pipeline_Conf::cluster_tmp : $run_dir);
+my $input_fasta = $stage_id.".".$stage_name.".input.fna";
+my $prefix  = $stage_id.".".$stage_name.".$code$pid";
+my $tmp_dir = $tmp_base."/$job_num.$stage_id.$stage_name";
+mkdir($tmp_dir);
+
+# run cmd
+if ((-s $fasta_file) > $Pipeline_Conf::min_gene_size) {
+  system("cp $fasta_file $run_dir/$input_fasta >> $run_dir/cp.out 2>&1") == 0 or fail($log, "Cluster: cp failed on job: $job_num, see $stage_dir/cp.out for details.");
+  system("$runcmd -v -p $nodes -s $size -i $pid -d $tmp_dir -t $code $run_dir/$input_fasta $run_dir/$prefix >> $run_dir/$runcmd.out 2>&1") == 0 or fail($log, $message);
+  $message = "process_clusters successful";
+}
+else {
+  # to small
+  system("touch $run_dir/$prefix.$fext");
+  system("touch $run_dir/$prefix.mapping");
+  $message = "$fasta_file to small: process_clusters skipped";
+}
+
+copy($run_dir."/$prefix.$fext", $results_dir."/$prefix.$fext");
+copy($run_dir."/$prefix.mapping", $results_dir."/$prefix.mapping");
+
+system("rm -rf $tmp_dir");
+if ($run_dir ne $stage_dir) {
+  system("mv $run_dir/*.out $stage_dir/.");
+  system("rm -rf $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
+} else {
+  my @run_files = `ls $run_dir`;
+  chomp @run_files;
+  map { system("rm $run_dir/$_") } grep { $_ !~ /\.out$/ } @run_files;
+}
+
+open(INFO, ">".$results_dir."/$prefix.info");
+print INFO "# MG-RAST - ".$stage_name." v".$version." - (".(strftime "%b %e %Y", localtime).")\n";
+print INFO "# site : metagenomics.anl.gov\n# email: mg-rast\@mcs.anl.gov\n";
+print INFO "qiime-uclust --sort\n";
+print INFO "qiime-uclust --uc --id 0.$pid --rev\n";
+print INFO "qiime-uclust --uc2fasta --types SH\n";
+print INFO $message."\n";
+close(INFO);
+
+chmod 0666, $results_dir."/$prefix.info";
+chmod 0666, $results_dir."/$prefix.$fext"; 
+chmod 0666, $results_dir."/$prefix.mapping"; 
+
+$log->info("Finished ".$stage_name."_$code$pid on job: $job_num");
+# update jobcache stage status
+Pipeline::update_stage_info($job_num, $stage_name."_".$code.$pid, "completed");
+exit(0);
+
+sub fail {
+  my ($log, $message) = @_;
+  Pipeline::update_stage_info($job_num, $stage_name."_".$code.$pid, "error");
+  $log->error($message);
+  if ($run_dir ne $stage_dir) {
+    system("mv $run_dir/* $stage_dir/.");
+    system("rmdir $run_dir");
+  }
+  exit(1);
+}
