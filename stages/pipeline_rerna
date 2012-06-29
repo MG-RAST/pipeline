@@ -11,7 +11,7 @@ use Getopt::Long;
 use File::Copy;
 umask 000;
 
-my $stage_name = "rerna";
+my $stage_name = "rna";
 my $revision = "0";
 my $stage_id = '450';
 my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
@@ -52,12 +52,10 @@ unless ((-e $fasta) && (-e $rna_nr)) {
 # update jobcache stage status
 Pipeline::update_stage_info($job_num, $stage_name, "running");
 
-my $job_suffix = substr $job_num, -2;
-$job_suffix = "0".$job_suffix if length($job_suffix) == 1;
 my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
 my $proc_dir    = $job_dir."/proc";
 my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
-my $results_dir = $Pipeline_Conf::recompute_dir."/jobs/".$job_suffix;
+my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
 my $run_dir     = $stage_dir;
 my $hostname    = `hostname`;
 chomp $hostname;
@@ -95,10 +93,17 @@ system("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr $fasta_file stdout | ble
 Pipeline::set_job_attributes($job_num, [['m5rna_sims_version', $Pipeline_Conf::ach_sequence_ver]]);
 
 # cleanup
-my $final_file = "$results_dir/$job_num.recompute.rna.sims.gz";
-system("gzip $sims_file") == 0 or fail($log, "gzip: ".$message);
-system("cp $sims_file.gz $final_file") == 0 or fail($log, "cp $sims_file.gz: ".$message);
-system("rm -rf $run_dir");
+move($sims_file, "$results_dir/$prefix.sims") or fail($log, "Failed copy: $prefix.sims - $!");
+chmod 0666, "$results_dir/$prefix.sims";
+if ($run_dir ne $stage_dir) {
+  system("mv $run_dir/*.out $stage_dir/.");
+  system("mv $run_dir/*.err $stage_dir/.");
+  system("rm -rf $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
+} else {
+  my @run_files = `ls $run_dir`;
+  chomp @run_files;
+  map { system("rm $run_dir/$_") } grep { $_ !~ /\.(out|err)$/ } @run_files;
+}
 
 $log->info("Finished $stage_name on job: $job_num");
 
