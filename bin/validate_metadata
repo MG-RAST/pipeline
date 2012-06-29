@@ -211,10 +211,17 @@ def validate_type(key, val, atype):
         return None
 
 def convert_coordinate(coord):
-    geodir = coord[-1]
-    coord  = coord[:-1].strip()
-    if (geodir not in GEO_DIR) or (coord == ''):
+    if coord == '':
         return None
+    elif coord[0] in GEO_DIR:
+        geodir = coord[0]
+        coord  = coord[1:].strip()
+    elif coord[-1] in GEO_DIR:
+        geodir = coord[-1]
+        coord  = coord[:-1].strip()
+    else:
+        return None
+
     try:
         fCoord = float(coord)
     except ValueError:
