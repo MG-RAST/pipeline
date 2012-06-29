@@ -535,6 +535,7 @@ sub get_compress_suffixes {
 	   'fna',
 	   'faa',
 	   'sims',
+	   'mapping',
 	   'filter',
 	   'protein',
 	   'ontology',
