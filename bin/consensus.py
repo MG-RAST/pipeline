@@ -11,10 +11,13 @@ t = array.array('L')
 n = array.array('L')
 
 def countseqs(infile, type):
-  headchar = '>'
-  if type == 'fastq':
-    headchar = '@'
-  cmd  = ['grep', '-c', "^%s"%headchar, infile]
+  if type = 'fasta':
+    cmd = ['grep', '-c', '^>', infile]
+  elif type == 'fastq':
+    cmd = ['wc', '-l', infile]
+  else:
+    sys.stderr.write("%s is invalid %s file\n"%(infile, type))
+    exit(1)
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   stdout, stderr = proc.communicate()
   if proc.returncode != 0:
@@ -23,7 +26,10 @@ def countseqs(infile, type):
   if not slen:
     sys.stderr.write("%s is invalid %s file\n"%(infile, type))
     exit(1)
-  return int(slen)
+  slenNum = int(slen)
+  if type == 'fastq':
+    slenNum = slenNum / 4  
+  return slenNum
 
 def initialize(Nmax):
   for i in range(0, Nmax):
