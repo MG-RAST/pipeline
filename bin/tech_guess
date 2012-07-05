@@ -27,8 +27,14 @@ my $options  = GetOptions ("verbose!"   => \$verbose,
 			   "help!"      => \$help
 			  );
 
-if ($help or !($header && $seq_num && $avg_len && $max_len)) {
-  print STDERR "Usage: tech_guess.pl -f <fasta header> -s <seq number> -a <avg length> -d <stdev length> -m <max length> [-o <outfile> -c <boolean: full output>]\n";
+my $usage = "Usage: tech_guess.pl -f <fasta header> -s <seq number> -a <avg length> -d <stdev length> -m <max length> [-o <outfile> -c <boolean: full output>]\n";
+if ($help) {
+  print STDOUT $usage;
+  exit(0);
+}
+unless ($header && $seq_num && $avg_len && $max_len) {
+  print STDERR "[error] ".$usage;
+  exit(1);
 }
 
 # (tech_guess, num_reads_guess, avg_length_guess, avg_length_stdev_guess, max_length_guess)

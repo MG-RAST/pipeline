@@ -126,7 +126,7 @@ mkdir($tmp_dir);
 # run cmd
 if ((-s $fasta_file) > $Pipeline_Conf::min_gene_size) {
   system("cp $fasta_file $run_dir/$input_fasta >> $run_dir/cp.out 2>&1") == 0 or fail($log, "Cluster: cp failed on job: $job_num, see $stage_dir/cp.out for details.");
-  system("$runcmd -v -p $nodes -s $size -i $pid -d $tmp_dir -t $code $run_dir/$input_fasta $run_dir/$prefix >> $run_dir/$runcmd.out 2>&1") == 0 or fail($log, $message);
+  system("$runcmd -v -p $nodes -s $size -i $pid -d $tmp_dir -t $code $run_dir/$input_fasta $run_dir/$prefix >> $run_dir/$runcmd.out 2>&1") == 0 or fail($log, "$runcmd failed on job: $job, see $stage_dir/$runcmd.out");
   $message = "process_clusters successful";
 }
 else {
