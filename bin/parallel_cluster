@@ -126,9 +126,9 @@ def main(args):
         parser.print_help()
         print "[error] type must be one of: aa, dna, rna"
         return 1
-    if not os.path.isdir(opts.tmp_dir):
+    if not os.path.isdir(opts.tmpdir):
         parser.print_help()
-        print "[error] invalid tmp_dir"
+        print "[error] invalid tmpdir"
         return 1
 
     (in_fasta, out_name) = args

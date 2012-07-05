@@ -34,12 +34,10 @@ def get_mean_stdev(count, data):
     total = sum_map(data)
     mean  = (total * 1.0) / count
     tmp   = 0
-
     for k, v in data.iteritems():
         for i in range(0, v):
             dev  = float(k) - mean
             tmp += (dev * dev)
-
     return mean, math.sqrt(tmp / count)
 
 def get_seq_type(size, data):
@@ -87,9 +85,11 @@ def main(args):
     # check options
     (opts, args) = parser.parse_args()
     if not opts.input:
-        parser.error("Missing input file")
+        sys.stderr.write("[error] missing input file\n")
+        os._exit(1)
     if (opts.type != 'fasta') and (opts.type != 'fastq'):
-        parser.error("File type '%s' is invalid" %opts.type)
+        sys.stderr.write("[error] file type '%s' is invalid\n" %opts.type)
+        os._exit(1)
 
     # set variables
     seqnum   = 0
