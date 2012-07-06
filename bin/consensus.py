@@ -11,7 +11,7 @@ t = array.array('L')
 n = array.array('L')
 
 def countseqs(infile, type):
-  if type = 'fasta':
+  if type == 'fasta':
     cmd = ['grep', '-c', '^>', infile]
   elif type == 'fastq':
     cmd = ['wc', '-l', infile]
