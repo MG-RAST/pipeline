@@ -7,6 +7,7 @@ no warnings('once');
 use Pipeline;
 use Pipeline_Conf;
 
+use List::Util qw(first max min sum);
 use Getopt::Long;
 use File::Copy;
 umask 000;
@@ -121,8 +122,23 @@ system("echo 'running drisee ... ' >> $log_file ");
 system("drisee -v -p $procs -t $format -d $run_dir -l $log_file -f $infile $d_stats > $basename.drisee.info 2>&1") == 0 or fail($log, "drisee: ".$message);
 
 # create consensus table
+my $max_ln = 600;
+my $stats  = Pipeline::get_job_statistics($job_num);
+if ($stats && $stats->{length_max_raw}) {
+  $max_ln = min ($max_ln, $stats->{length_max_raw});
+} else {
+  my @new_stats = `seq_length_stats.py -i $infile -t $format -f`;
+  if (@new_stats) {
+    chomp @new_stats;
+    my $max_line   = first { $_ =~ /^length_max/ } @new_stats;
+    my $new_max_ln = (split(/\t/, $max_line))[1];
+    $max_ln = min ($max_ln, $new_max_ln);
+  } else {
+    $max_ln = 100;
+  }
+}
 system("echo 'running consensus ... ' >> $log_file ");
-system("consensus.py -v -t $format -i $infile -o $basename.consensus.stats >> $log_file 2>&1") == 0 or fail($log, "consensus: ".$message);
+system("consensus.py -v -b $max_ln -t $format -i $infile -o $basename.consensus.stats >> $log_file 2>&1") == 0 or fail($log, "consensus: ".$message);
 
 # create kmer profile
 foreach my $len (@kmers) {
