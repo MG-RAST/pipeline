@@ -26,9 +26,10 @@ def countseqs(infile, type):
   if not slen:
     sys.stderr.write("%s is invalid %s file\n"%(infile, type))
     exit(1)
-  slenNum = int(slen)
   if type == 'fastq':
-    slenNum = slenNum / 4  
+    slenNum = int( slen.split()[0] ) / 4
+  else:
+    slenNum = int(slen)
   return slenNum
 
 def initialize(Nmax):
