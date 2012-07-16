@@ -109,7 +109,7 @@ my $basename = $run_dir."/".$stage_id;
 my $log_file = $basename.".qc.out";
 my $infile   = $basename.".input.".$format;
 my $d_stats  = $basename.".drisee.stats";
-my $message  = "$stage_name failed on job: $job_num, see $log_file for details.";
+my $message  = "$stage_name failed on job: $job_num, see $stage_dir/$stage_id.qc.out for details.";
 
 if ($gzipped) {
   system("zcat $seqs > $infile") == 0 or fail($log, "gunzip $seqs: ".$message);
