@@ -13,7 +13,6 @@ from openpyxl.reader.excel import load_workbook
 __doc__ = """Script to validate metadata from filled out MG-RAST v3 xlsx template"""
 
 MGRAST_URL = 'http://api.metagenomics.anl.gov/'
-#MGRAST_URL = 'http://dunkirk.mcs.anl.gov/~tharriso/mgrast/api.cgi/'
 BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
 VIEW_URL = 'http://bioportal.bioontology.org/ontologies'
 SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
@@ -307,10 +306,17 @@ def tables_to_mdraw(tables):
     lnum = 0
     enum = 0
     missing = []
+    snMap = defaultdict(list)
+    nDupe = False
+    # test for missing sheets
     for l in ldata:
-        if ldata[l]: lnum += 1
+        if ldata[l]:
+            lnum += 1
+            snMap['library '+l] = map(lambda x: x[0], ldata[l])
     for e in edata:
-        if edata[e]: enum += 1
+        if edata[e]:
+            enum += 1
+            snMap['ep '+e] = map(lambda x: x[0], edata[e])
     if not pdata: missing.append('project')
     if not sdata: missing.append('sample')
     if lnum == 0: missing.append('library')
@@ -319,16 +325,19 @@ def tables_to_mdraw(tables):
         for m in missing:
             errorMsg("no %s entries found (sheet is empty starting at row %d)"%(m, HEADER+1))
         errorMsg("too many errors, unable to continue validation", 1)
-    
-    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
+    snMap['sample'] = map(lambda x: x[0], sdata)
+
+    mName = []
+    fName = []
+    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }    
     for sampName, sampData in sdata:
         if 'env_package' not in sampData:
             errorMsg("sample '%s' missing required field 'env_package'"%sampName)
             add_invalid('sample', 'env_package', sampName, '', 'required field empty')
             continue
         s_ep = sampData['env_package'].lower()
-        libs = find_sample_sub(sampName, ldata, None)
-        eps  = find_sample_sub(sampName, edata, s_ep)
+        libs = find_sample_sub(sampName, ldata, None, mName, fName)
+        eps  = find_sample_sub(sampName, edata, s_ep, mName, fName)
         if len(libs) == 0:
             continue
         if len(eps) == 0:
@@ -342,6 +351,19 @@ def tables_to_mdraw(tables):
     sampNum = len(mdraw['samples'])
     if sampNum == 0:
         errorMsg("no sample entries found with matching library")
+        errorMsg("too many errors, unable to continue validation", 1)
+    # test for duplicate names
+    for dtype, dnames in snMap.iteritems():
+        if has_name_dupe(dnames):
+            nDupe = True
+            errorMsg("'sample_name' values in sheet '%s' are not unique"%dtype)
+    if has_name_dupe(mName):
+        nDupe = True
+        errorMsg("'metagenome_name' values in library are not unique")
+    if has_name_dupe(fName):
+        nDupe = True
+        errorMsg("'file_name' values in library are not unique")
+    if nDupe:
         errorMsg("too many errors, unable to continue validation", 1)
     mdraw['sampleNum'] = sampNum
     return mdraw
@@ -379,7 +401,7 @@ def id_from_data(data, id_name):
     else:
         return None
 
-def find_sample_sub(sname, inData, ep_name):
+def find_sample_sub(sname, inData, ep_name, mName, fName):
     outData = []
     for typeName, typeData in inData.iteritems():
         if typeData is None:
@@ -391,6 +413,9 @@ def find_sample_sub(sname, inData, ep_name):
                 if ('metagenome_name' in data) and ('investigation_type' in data):
                     data['investigation_type'] = typeName
                     outData.append({'name': data['metagenome_name'], 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
+                    mName.append( data['metagenome_name'] )
+                    if 'file_name' in data:
+                        fName.append( data['file_name'] )
             elif ep_name == typeName:
                 outData.append({'name': "%s: %s"%(sname,typeName), 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
     if len(outData) == 0:
@@ -474,6 +499,13 @@ def validate_ontology():
                     if cat not in ONT_NEW:
                         ONT_NEW[cat] = defaultdict(dict)
                     ONT_NEW[cat][name][key] = oterm
+
+def has_name_dupe(nameList):
+    nameDict = dict([(x,1) for x in nameList])
+    if len(nameList) > len(nameDict.keys()):
+        return True
+    else:
+        return False
 
 def get_max_rows(table, row_start):
     num = 0
