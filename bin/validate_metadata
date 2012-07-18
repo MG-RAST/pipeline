@@ -233,21 +233,21 @@ def convert_coordinate(coord):
         return fdms * GEO_DIR[geodir]
     return fCoord * GEO_DIR[geodir]
 
-def google_to_mdraw(url, login, password):
+def google_to_mdraw(url, dupe, login, password):
     gclient = gspread.login(login, password)
     gbook   = gclient.open_by_url(url)
     tables  = dict([(x.title, sheet_to_table(x, 'google')) for x in gbook.worksheets()])
-    return tables_to_mdraw(tables)
+    return tables_to_mdraw(tables, dupe)
 
-def xlsx_to_mdraw(xxfile):
+def xlsx_to_mdraw(xxfile, dupe):
     xxbook = load_workbook(filename = xxfile)
     tables = dict([(x, sheet_to_table(xxbook.get_sheet_by_name(x), 'xlsx')) for x in xxbook.get_sheet_names()])
-    return tables_to_mdraw(tables)
+    return tables_to_mdraw(tables, dupe)
 
-def xls_to_mdraw(xfile):
+def xls_to_mdraw(xfile, dupe):
     xbook  = xlrd.open_workbook(xfile)
     tables = dict([(x, sheet_to_table(xbook.sheet_by_name(x), 'xls')) for x in xbook.sheet_names()])
-    return tables_to_mdraw(tables)
+    return tables_to_mdraw(tables, dupe)
 
 def sheet_to_table(sheet, source):
     table = []
@@ -290,7 +290,7 @@ def update_header_size(tables):
         else:
             break
 
-def tables_to_mdraw(tables):
+def tables_to_mdraw(tables, dupe):
     ## keep only sheets / rows that have primary ids, map library / env_package to samples
     ## MDraw:  { name:<proj_name: str>, data:<proj_data: dict>, sampleNum:<number_samples: int>, samples:<list of sample objs> }
     ## data (raw):   { key: <value: str|int|float|time|datetime> }
@@ -357,7 +357,7 @@ def tables_to_mdraw(tables):
         if has_name_dupe(dnames):
             nDupe = True
             errorMsg("'sample_name' values in sheet '%s' are not unique"%dtype)
-    if has_name_dupe(mName):
+    if has_name_dupe(mName) and (not dupe):
         nDupe = True
         errorMsg("'metagenome_name' values in library are not unique")
     if has_name_dupe(fName):
@@ -527,6 +527,7 @@ def main(args):
     parser.add_option("-l", "--log", dest="log", default=None, help="File to output validation messages (succes/error). default is STDOUT/STDERR")
     parser.add_option("-j", "--json", dest="json", default=None, help="File to output json structure of parsed spreadsheet.  default no output")
     parser.add_option("-s", "--skip_required", dest="skip", action="store_true", default=False, help="Skip checking for required metadata (other than needed for mapping)")
+    parser.add_option("-d", "--allow_duplicate", dest="dupe", action="store_true", default=False, help="Allow duplicate metagenome_name values")
 
     (opts, args) = parser.parse_args()
     if len(args) < 1:
@@ -552,11 +553,11 @@ def main(args):
     
     # object from source (xlsx file or google link): create hierarchy / test connections
     if opts.format == 'xlsx':
-        mdraw = xlsx_to_mdraw(md_source)
+        mdraw = xlsx_to_mdraw(md_source, opts.dupe)
     elif opts.format == 'xls':
-        mdraw = xls_to_mdraw(md_source)
+        mdraw = xls_to_mdraw(md_source, opts.dupe)
     elif opts.format == 'google':
-        mdraw = google_to_mdraw(md_source, opts.login, opts.password)
+        mdraw = google_to_mdraw(md_source, opts.dupe, opts.login, opts.password)
     else:
         mdraw = None
     #pprint.pprint(mdraw)
