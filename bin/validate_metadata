@@ -14,7 +14,7 @@ __doc__ = """Script to validate metadata from filled out MG-RAST v3 xlsx templat
 
 MGRAST_URL = 'http://api.metagenomics.anl.gov/'
 BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
-VIEW_URL = 'http://bioportal.bioontology.org/ontologies'
+VIEW_URL = 'http://bioportal.bioontology.org/visualize'
 SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
 ONT_URL  = 'http://rest.bioontology.org/bioportal/virtual/ontology/'
 MGRASTID = 'mgrast_id'
@@ -39,12 +39,6 @@ def errorMsg(err, exit=0):
     else:
         sys.stderr.write("[error] "+err+"\n")
     if exit:
-        if JSON_FILE:
-            if 'http' in err:
-                INVALID.append(['HTTP error','','','',err])
-            else:
-                INVALID.append(['Non validation error','','','',err])
-            write_json(JSON_FILE, {'is_valid': 0, 'data': INVALID})
         os._exit(1)
 
 def write_json(fname, object):
@@ -83,11 +77,14 @@ def test_ontology():
             return False
     return True
         
-def check_ontology(ontID, term):
+def check_ontology(ontID, term, subID):
     part = term.split(':',1)
     # test if term is ID
     if (len(part) == 2) and part[1].isdigit():
-        url = ONT_URL+ontID+'?'+urllib.urlencode({'conceptid':term, 'apikey':BIOP_KEY})
+        params = {'conceptid':term, 'apikey':BIOP_KEY}
+        if subID != 'none':
+            params['subtreerootconceptid'] = subID
+        url = ONT_URL+ontID+'?'+urllib.urlencode(params)
         obj = obj_from_url(url)
         if obj and ('success' in obj):
             try:
@@ -99,15 +96,18 @@ def check_ontology(ontID, term):
                 return name
     # test if term is name
     base = part[1] if len(part) == 2 else part[0]
-    url  = SRCH_URL+'?'+urllib.urlencode({'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'query':base})
+    params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'query':base}
+    if subID != 'none':
+        params['subtreerootconceptid'] = subID
+    url  = SRCH_URL+'?'+urllib.urlencode(params)
     obj  = obj_from_url(url)
     if not (obj and ('success' in obj)):
         errorMsg("ontology ID %s is not available from %s"%(ontID, url), 1)
     try:
-        contents = obj['success']['data'][0]['page']['contents']
+        contents = obj['success']['data'][0]['page']['contents']['ontologyHitList']['ontologyHitBean']
     except (KeyError, TypeError, IndexError, AttributeError):
          errorMsg("ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
-    if int(contents['numHitsTotal']) > 0:
+    if int(contents['numHits']) > 0:
         return base
     else:
         return None
@@ -233,21 +233,21 @@ def convert_coordinate(coord):
         return fdms * GEO_DIR[geodir]
     return fCoord * GEO_DIR[geodir]
 
-def google_to_mdraw(url, login, password):
+def google_to_mdraw(url, dupe, login, password):
     gclient = gspread.login(login, password)
     gbook   = gclient.open_by_url(url)
     tables  = dict([(x.title, sheet_to_table(x, 'google')) for x in gbook.worksheets()])
-    return tables_to_mdraw(tables)
+    return tables_to_mdraw(tables, dupe)
 
-def xlsx_to_mdraw(xxfile):
+def xlsx_to_mdraw(xxfile, dupe):
     xxbook = load_workbook(filename = xxfile)
     tables = dict([(x, sheet_to_table(xxbook.get_sheet_by_name(x), 'xlsx')) for x in xxbook.get_sheet_names()])
-    return tables_to_mdraw(tables)
+    return tables_to_mdraw(tables, dupe)
 
-def xls_to_mdraw(xfile):
+def xls_to_mdraw(xfile, dupe):
     xbook  = xlrd.open_workbook(xfile)
     tables = dict([(x, sheet_to_table(xbook.sheet_by_name(x), 'xls')) for x in xbook.sheet_names()])
-    return tables_to_mdraw(tables)
+    return tables_to_mdraw(tables, dupe)
 
 def sheet_to_table(sheet, source):
     table = []
@@ -290,7 +290,7 @@ def update_header_size(tables):
         else:
             break
 
-def tables_to_mdraw(tables):
+def tables_to_mdraw(tables, dupe):
     ## keep only sheets / rows that have primary ids, map library / env_package to samples
     ## MDraw:  { name:<proj_name: str>, data:<proj_data: dict>, sampleNum:<number_samples: int>, samples:<list of sample objs> }
     ## data (raw):   { key: <value: str|int|float|time|datetime> }
@@ -303,45 +303,53 @@ def tables_to_mdraw(tables):
     sdata = data_from_table(tables, 'sample')
     ldata = dict([(x, data_from_table(tables,'library '+x)) for x in TEMPLATE['library']])
     edata = dict([(x, data_from_table(tables,'ep '+x)) for x in TEMPLATE['ep']])
-    lnum = 0
-    enum = 0
-    missing = []
     snMap = defaultdict(list)
     nDupe = False
-    # test for missing sheets
+    
+    # test for missing sheets (all but ep)
+    libNames = []
+    missing  = []
+    lnum = 0
     for l in ldata:
         if ldata[l]:
             lnum += 1
+            libNames.append("'library "+l+"'")
             snMap['library '+l] = map(lambda x: x[0], ldata[l])
     for e in edata:
         if edata[e]:
-            enum += 1
             snMap['ep '+e] = map(lambda x: x[0], edata[e])
     if not pdata: missing.append('project')
     if not sdata: missing.append('sample')
     if lnum == 0: missing.append('library')
-    if enum == 0: missing.append('enviromental package')
     if len(missing) > 0:
         for m in missing:
             errorMsg("no %s entries found (sheet is empty starting at row %d)"%(m, HEADER+1))
-        errorMsg("too many errors, unable to continue validation", 1)
+        os._exit(1)
     snMap['sample'] = map(lambda x: x[0], sdata)
 
     mName = []
     fName = []
     mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }    
     for sampName, sampData in sdata:
+        # ep is messy - look for existance of vaild ep term, if no ep sheet make obj from just term
         if 'env_package' not in sampData:
             errorMsg("sample '%s' missing required field 'env_package'"%sampName)
             add_invalid('sample', 'env_package', sampName, '', 'required field empty')
             continue
-        s_ep = sampData['env_package'].lower()
-        libs = find_sample_sub(sampName, ldata, None, mName, fName)
-        eps  = find_sample_sub(sampName, edata, s_ep, mName, fName)
-        if len(libs) == 0:
+        s_ep = validate_type('env_package', sampData['env_package'], 'select')
+        if s_ep is None:
+            bad_type = 'not one of: %s'%', '.join(CV_PARAM['select']['env_package'])
+            errorMsg("sample '%s' field 'env_package' %s: '%s'"%(sampName, bad_type, unicode(sampData['env_package'])))
+            add_invalid('sample', 'env_package', sampName, sampData['env_package'], bad_type)
             continue
+        eps = find_sample_sub(sampName, edata, s_ep, None, None)
         if len(eps) == 0:
             eps.append( {'name': "%s: %s"%(sampName, s_ep), 'type': s_ep, 'data': {'sample_name': sampName}} )
+        # find libs
+        libs = find_sample_sub(sampName, ldata, None, mName, fName)
+        if len(libs) == 0:
+            continue
+        # create samp obj
         mdraw['samples'].append({ 'name': sampName,
                                   'data': sampData,
                                   'id': id_from_data(sampData, MGRASTID),
@@ -350,21 +358,20 @@ def tables_to_mdraw(tables):
                                   'envPackage': eps[0] })
     sampNum = len(mdraw['samples'])
     if sampNum == 0:
-        errorMsg("no sample entries found with matching library")
-        errorMsg("too many errors, unable to continue validation", 1)
+        errorMsg("no sample entries found with matching library", 1)
     # test for duplicate names
     for dtype, dnames in snMap.iteritems():
         if has_name_dupe(dnames):
             nDupe = True
             errorMsg("'sample_name' values in sheet '%s' are not unique"%dtype)
-    if has_name_dupe(mName):
+    if has_name_dupe(mName) and (not dupe):
         nDupe = True
-        errorMsg("'metagenome_name' values in library are not unique")
+        errorMsg("'metagenome_name' values in %s are not unique"%' and '.join(libNames))
     if has_name_dupe(fName):
         nDupe = True
-        errorMsg("'file_name' values in library are not unique")
+        errorMsg("'file_name' values in %s are not unique"%' and '.join(libNames))
     if nDupe:
-        errorMsg("too many errors, unable to continue validation", 1)
+        os._exit(1)
     mdraw['sampleNum'] = sampNum
     return mdraw
 
@@ -418,13 +425,9 @@ def find_sample_sub(sname, inData, ep_name, mName, fName):
                         fName.append( data['file_name'] )
             elif ep_name == typeName:
                 outData.append({'name': "%s: %s"%(sname,typeName), 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
-    if len(outData) == 0:
-        if ep_name:
-            errorMsg("sample '%s' missing environmental package %s"%(sname, ep_name))
-            add_invalid('environmental package', 'sample_name', sname, '', "sample '%s' missing environmental package %s"%(sname, ep_name))
-        else:
-            errorMsg("sample '%s' missing library"%sname)
-            add_invalid('library', 'sample_name', sname, '', "sample '%s' missing library"%sname)
+    if (len(outData) == 0) and (not ep_name):
+        errorMsg("sample '%s' missing library"%sname)
+        add_invalid('library', 'sample_name', sname, '', "sample '%s' missing library"%sname)
     return outData
 
 def validate_mdraw(mdraw, skip):
@@ -472,7 +475,8 @@ def validate_data(cat, name, data, template, skip):
                 validVal = data[key]
                 if validVal not in ONT_MAP:
                     ONT_MAP[validVal] = defaultdict(list)
-                ONT_MAP[validVal][CV_PARAM['ontology'][key]].append([cat, key, name])
+                ont_branch = CV_PARAM['ont_id'][key] if key in CV_PARAM['ont_id'] else 'none'
+                ONT_MAP[validVal][ont_branch+'||'+CV_PARAM['ontology'][key]].append([cat, key, name])
             else:
                 validVal = validate_type(key, data[key], items['type'])
                 if validVal is None:
@@ -486,15 +490,18 @@ def validate_data(cat, name, data, template, skip):
 
 def validate_ontology():
     for value in ONT_MAP.iterkeys():
-        for oid in ONT_MAP[value].iterkeys():
-            oterm = check_ontology(oid, value)
+        for oset in ONT_MAP[value].iterkeys():
+            subid, oid = oset.split('||')
+            oterm = check_ontology(oid, value, subid)
             if oterm is None:
-                for items in ONT_MAP[value][oid]:
+                for items in ONT_MAP[value][oset]:
                     (cat, key, name) = items
-                    add_invalid(cat, key, name, value, 'not found in %s ontology (%s): see %s/%s'%(key, oid, VIEW_URL, oid))
-                    errorMsg("%s '%s' field '%s' value '%s' not found in ontology %s: see %s/%s"%(cat, name, key, value, oid, VIEW_URL, oid))
+                    url = "%s/%s"%(VIEW_URL, oid)
+                    url += "?conceptid=%s"%subid if subid != 'none' else ""
+                    add_invalid(cat, key, name, value, 'not found in %s ontology (%s): see %s'%(key, oid, url))
+                    errorMsg("%s '%s' field '%s' value '%s' not found in ontology %s: see %s"%(cat, name, key, value, oid, url))
             elif oterm != value:
-                for items in ONT_MAP[value][oid]:
+                for items in ONT_MAP[value][oset]:
                     (cat, key, name) = items
                     if cat not in ONT_NEW:
                         ONT_NEW[cat] = defaultdict(dict)
@@ -527,6 +534,7 @@ def main(args):
     parser.add_option("-l", "--log", dest="log", default=None, help="File to output validation messages (succes/error). default is STDOUT/STDERR")
     parser.add_option("-j", "--json", dest="json", default=None, help="File to output json structure of parsed spreadsheet.  default no output")
     parser.add_option("-s", "--skip_required", dest="skip", action="store_true", default=False, help="Skip checking for required metadata (other than needed for mapping)")
+    parser.add_option("-d", "--allow_duplicate", dest="dupe", action="store_true", default=False, help="Allow duplicate metagenome_name values")
 
     (opts, args) = parser.parse_args()
     if len(args) < 1:
@@ -552,11 +560,11 @@ def main(args):
     
     # object from source (xlsx file or google link): create hierarchy / test connections
     if opts.format == 'xlsx':
-        mdraw = xlsx_to_mdraw(md_source)
+        mdraw = xlsx_to_mdraw(md_source, opts.dupe)
     elif opts.format == 'xls':
-        mdraw = xls_to_mdraw(md_source)
+        mdraw = xls_to_mdraw(md_source, opts.dupe)
     elif opts.format == 'google':
-        mdraw = google_to_mdraw(md_source, opts.login, opts.password)
+        mdraw = google_to_mdraw(md_source, opts.dupe, opts.login, opts.password)
     else:
         mdraw = None
     #pprint.pprint(mdraw)
