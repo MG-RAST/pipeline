@@ -14,7 +14,7 @@ __doc__ = """Script to validate metadata from filled out MG-RAST v3 xlsx templat
 
 MGRAST_URL = 'http://api.metagenomics.anl.gov/'
 BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
-VIEW_URL = 'http://bioportal.bioontology.org/visualize'
+BIOP_URL = 'http://bioportal.bioontology.org'
 SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
 ONT_URL  = 'http://rest.bioontology.org/bioportal/virtual/ontology/'
 MGRASTID = 'mgrast_id'
@@ -56,10 +56,10 @@ def obj_from_url(url):
         req = urllib2.Request(url, headers={'Accept': 'application/json'})
         res = urllib2.urlopen(req)
     except urllib2.HTTPError:
-        if SRCH_URL in url:
-            errorMsg("Bioportal inaccessable for ontology term lookup: can not connect to: %s\nPlease try again in 30 mins."%url, 1)
+        if (ONT_URL in url) or (SRCH_URL in url):
+            errorMsg("Bioportal (%s) inaccessable for ontology term lookup: can not connect to: %s\nPlease try again in 30 mins."%(BIOP_URL,url), 1)
         elif MGRAST_URL in url:
-            errorMsg("MG-RAST API inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%url, 1)
+            errorMsg("MG-RAST API (%s) inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%(MGRAST_URL,url), 1)
         else:
             errorMsg("Malformed url, there was a problem connecting to this site: %s\nPlease try again in 30 mins."%url, 1)
     if not res:
@@ -91,7 +91,7 @@ def check_ontology(ontID, term, subID):
                 oid  = obj['success']['data'][0]['classBean']['id']
                 name = obj['success']['data'][0]['classBean']['label']
             except (KeyError, TypeError, IndexError, AttributeError):
-                errorMsg("ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+                errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
             if oid == term:
                 return name
     # test if term is name
@@ -102,11 +102,11 @@ def check_ontology(ontID, term, subID):
     url  = SRCH_URL+'?'+urllib.urlencode(params)
     obj  = obj_from_url(url)
     if not (obj and ('success' in obj)):
-        errorMsg("ontology ID %s is not available from %s"%(ontID, url), 1)
+        errorMsg("Bioportal ontology ID %s is not available from %s"%(ontID, url), 1)
     try:
         contents = obj['success']['data'][0]['page']['contents']['ontologyHitList']['ontologyHitBean']
     except (KeyError, TypeError, IndexError, AttributeError):
-         errorMsg("ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+         errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
     if int(contents['numHits']) > 0:
         return base
     else:
@@ -314,7 +314,6 @@ def tables_to_mdraw(tables, dupe):
         if ldata[l]:
             lnum += 1
             libNames.append("'library "+l+"'")
-            snMap['library '+l] = map(lambda x: x[0], ldata[l])
     for e in edata:
         if edata[e]:
             snMap['ep '+e] = map(lambda x: x[0], edata[e])
@@ -496,7 +495,7 @@ def validate_ontology():
             if oterm is None:
                 for items in ONT_MAP[value][oset]:
                     (cat, key, name) = items
-                    url = "%s/%s"%(VIEW_URL, oid)
+                    url = "%s/visualize/%s"%(BIOP_URL, oid)
                     url += "?conceptid=%s"%subid if subid != 'none' else ""
                     add_invalid(cat, key, name, value, 'not found in %s ontology (%s): see %s'%(key, oid, url))
                     errorMsg("%s '%s' field '%s' value '%s' not found in ontology %s: see %s"%(cat, name, key, value, oid, url))
