@@ -19,19 +19,20 @@ ORDER   = ['project', 'sample', 'library', 'ep']
 README  = [ 'MG-RAST Metadata Template',
             '',
             'project tab: enter values for one project in first row',
-            'sample tab: enter values for one or more samples, one sample per row',
-            'library tab: enter values for each sample (including sample name) in appropriate library type, one library per row',
-            'ep (environmental package) tab: enter values for each sample (including sample name) in appropriate ep type, one ep per row',
+            "sample tab: enter values for one or more samples, one sample per row. 'sample_name' field must unique",
+            "library tab: enter values for each sample (including sample name) in appropriate library tab ('library metagenome' or 'library mimarks-survey'), one library per row",
+            "ep (environmental package) tab: enter values for each sample (including sample name) in appropriate ep tab, one sample and environmental descriptor per row",
             '',
             'pre-filled rows:',
-            '1. metadata label - required fields are in red',
-            '2. label description - includes units if applicable',
+            "1. metadata label - required fields are in red",
+            "2. label description - includes instructions, examples, and units if applicable",
 	    '',
 	    'NOTE:',
-	    '1. Please enter data starting with first empty row, do not overwrite pre-filled rows',
-	    '2. Each sample must have only one enviromental package associated with it',
-	    '3. Each sample must have one, but may have more than one, library associated with it',
-	    '4. Library field metagenome_name must be unique for each library, and will be the name of the MG-RAST metagenome'
+	    "1. Please do not change tab names",
+	    "2. Please enter data starting with first empty row, do not edit or overwrite pre-filled rows",
+	    "3. Each sample must have only one enviromental package associated with it",
+	    "4. Each sample must have one, but may have more than one, library associated with it",
+	    "5. Library field 'metagenome_name' must be unique for each library, and will be the name of the MG-RAST metagenome"
            ]
 
 def errorMsg(err, exit=0):
