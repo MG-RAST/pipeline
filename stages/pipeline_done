@@ -272,15 +272,14 @@ my $aa_ratio      = $qc_aa_seqs ? ($aa_sims - $aa_clusts + $aa_clust_seq) / $qc_
 my $rna_ratio     = $qc_rna_seqs ? ($rna_sims - $rna_clusts + $rna_clust_seq) / $qc_rna_seqs : 0;
 load_stats($job_num, [['ratio_reads_aa', sprintf("%.3f", $aa_ratio)], ['ratio_reads_rna', sprintf("%.3f", $rna_ratio)]]);
 
-my $seq_guess   = exists($data_set->{sequence_type_guess}) ? $data_set->{sequence_type_guess} : '';
-my $ratio_guess = 'Unknown';
-
-if    ($rna_ratio > 0.5) { $ratio_guess = 'Amplicon'; }
-elsif ($rna_ratio < 0.3) { $ratio_guess = 'WGS'; }
-
-if ($seq_guess && ($seq_guess !~ /^$ratio_guess$/i)) {
-  Pipeline::set_jobcache_info($job_num, 'sequence_type', 'Unknown');
-} else {
+# trust amplicon
+my $seq_guess = exists($data_set->{sequence_type_guess}) ? $data_set->{sequence_type_guess} : '';
+if ($seq_guess eq 'Amplicon') {
+  Pipeline::set_jobcache_info($job_num, 'sequence_type', 'Amplicon');
+}
+# use ratio for WGS or MT
+else {
+  my $ratio_guess = ($rna_ratio > 0.25) ? 'MT' : 'WGS';
   Pipeline::set_jobcache_info($job_num, 'sequence_type', $ratio_guess);
 }
 
