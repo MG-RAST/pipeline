@@ -491,7 +491,10 @@ def validate_ontology():
     for value in ONT_MAP.iterkeys():
         for oset in ONT_MAP[value].iterkeys():
             subid, oid = oset.split('||')
-            oterm = check_ontology(oid, value, subid)
+            # exception for country handling
+            oterm = validate_type('country', oid, 'select') if 'country' in oid else None
+            if oterm is None:
+                oterm = check_ontology(oid, value, subid)
             if oterm is None:
                 for items in ONT_MAP[value][oset]:
                     (cat, key, name) = items
