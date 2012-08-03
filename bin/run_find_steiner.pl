@@ -53,7 +53,7 @@ ML: for ($i = 1; $i <= $max_iter; $i++) {
     system("cp $fasta_file $fa_file");
   }
 
-  # get uclust score and seed seq
+  # get qiime-uclust score and seed seq
   system("qiime-uclust --sort $fa_file --output $fa_file.sort --tmpdir $tmp_dir > /dev/null 2>&1");
   $log_text .= `qiime-uclust --input $fa_file.sort --uc $uc_file --id 0 --tmpdir $tmp_dir --rev 2>&1`;
   ($score, $seed_seq) = &get_steiner($fasta_hash, $seed_head, $seed_seq, $uc_file);
@@ -200,7 +200,7 @@ sub write_file {
 sub usage {
   print STDERR "Usage: " . (split(/\//, $0))[-1] . qq(
 
-Runs uclust sort, uclust search, find Stiener on given fasta file
+Runs qiime-uclust sort, qiime-uclust search, find Stiener on given fasta file
 for given number of iterations (or until converges).
 
 Result to out_file:
@@ -211,8 +211,8 @@ line 2+: count for each bp, each position on one line
     --out_file   (string,       required)  file for output (score matrix for bin)
     --tmp_dir    (string,       required)  dir to store intermediate results (cleaned at end)
     --log_file   (string,       optional)  file for log data
-    --max_iter   (integer,  default = 10)  maximum number of uclust iterations if no convergence
-    --min_conv   (integer,   default = 3)  minimum number of iterations to identify convergence (and stop uclust)
+    --max_iter   (integer,  default = 10)  maximum number of qiime-uclust iterations if no convergence
+    --min_conv   (integer,   default = 3)  minimum number of iterations to identify convergence (and stop qiime-uclust)
 
 );
   exit;

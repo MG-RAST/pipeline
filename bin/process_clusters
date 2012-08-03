@@ -42,7 +42,7 @@ while (my $l = <IN>) {
   my $id_line = shift @lines;
   my $seq = join "", @lines;
 
-  if ($id_line =~ /^(\d+)\|(\d+\.\d%|\*)\|(\S+)$/){
+  if ($id_line =~ /^(\d+)\|(\d+\.\d\%|\*)\|(\S+)/) {
     my ($cid,$pid,$seq_id) = ($1,$2,$3);
     if ($pid ne "*") {
       push @ids, $seq_id;
@@ -53,18 +53,18 @@ while (my $l = <IN>) {
 	if ($cur_seq_id) {
 	  print FNA ">$cur_seq_id\n$cur_seq\n";
 	} else {
-	  print FNA ">$seq_id\n$seq\n"
+	  print FNA ">$seq_id\n$seq\n";
 	}
       } else {
 	print MAP $prefix.$cur_cluster."\t".$cur_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
 	print FNA ">".$prefix.$cur_cluster."\n$cur_seq\n";
-      }	
+      }
     }
     $cur_cluster = $cid;
     $cur_seq_id = $seq_id;
     $cur_seq = $seq;
     @ids = ();
-    @pids = ();	
+    @pids = ();
   }
 }
 
