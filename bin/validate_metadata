@@ -188,8 +188,15 @@ def validate_type(key, val, atype):
                 return None
             secsVal = int(floatVal * 86400)
             return unicode(datetime.timedelta(seconds=secsVal))
-    elif (atype == 'timezone') and val.startswith('UTC'):
-        return val
+    elif atype == 'timezone':
+        try:
+            intVal = int(val)
+            return None
+        except ValueError:
+            if val.startswith('UTC'):
+                return val
+            else:
+                return None
     elif atype == 'coordinate':
         try:
             floatVal = float(val)
