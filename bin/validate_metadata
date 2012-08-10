@@ -188,14 +188,24 @@ def validate_type(key, val, atype):
                 return None
             secsVal = int(floatVal * 86400)
             return unicode(datetime.timedelta(seconds=secsVal))
-    elif (atype == 'timezone') and val.startswith('UTC'):
-        return val
+    elif atype == 'timezone':
+        try:
+            intVal = int(val)
+            return None
+        except ValueError:
+            if val.startswith('UTC'):
+                return val
+            else:
+                return None
     elif atype == 'coordinate':
         try:
             floatVal = float(val)
         except ValueError:
-            return convert_coordinate(val)
-        return floatVal
+            floatVal = convert_coordinate(val)
+        if coordinate_in_range(key, floatVal):
+            return floatVal
+        else:
+            return None
     elif (atype == 'select') and (key in CV_PARAM['select']):
         try:
             cleanVal = int(val)
@@ -209,6 +219,16 @@ def validate_type(key, val, atype):
     else:
         return None
 
+def coordinate_in_range(pos, coord):
+    if coord is None:
+        return False
+    elif (pos == 'latitude') and (coord >= -90) and (coord <= 90):
+        return True
+    elif (pos == 'longitude') and (coord >= -180) and (coord <= 180):
+        return True
+    else:
+        return False
+
 def convert_coordinate(coord):
     if coord == '':
         return None
@@ -220,7 +240,6 @@ def convert_coordinate(coord):
         coord  = coord[:-1].strip()
     else:
         return None
-
     try:
         fCoord = float(coord)
     except ValueError:
@@ -482,7 +501,7 @@ def validate_data(cat, name, data, template, skip):
                     bad_type = 'found in %s ontology'%key if items['type'] == 'ontology' else 'type '+items['type']
                     bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
                     add_invalid(cat, key, name, data[key], 'not '+bad_type)
-                    errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key])))
+                    errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key]).encode('ascii','replace')))
             validData[key] = copy.deepcopy(items)
             validData[key]['value'] = validVal
     return validData
