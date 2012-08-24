@@ -20,9 +20,11 @@ my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 # options
 my $job_num = "";
 my $uncomp  = 0;
+my $stages  = "";
 my $ver     = "";
 my $help    = "";
 my $options = GetOptions ("job=i"       => \$job_num,
+			  "stage:s"     => \$stages,
 			  "uncompress!" => \$uncomp,
 			  "version"     => \$ver,
 			  "help"        => \$help
@@ -33,7 +35,7 @@ if ($ver) {
   exit(0);
 }
 if ($help or (! $job_num)) {
-  print STDERR "Usage: $stage -j <job number> [-u (bool: uncompress job)]\n";
+  print STDERR "Usage: $stage -j <job number> [-u (bool: uncompress job) -s <comma-seperated list of stage ids>]\n";
   exit(1);
 }
 
@@ -45,10 +47,27 @@ my $raw_dir     = $job_dir."/raw";
 my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
 my %to_compress = map { $_, 1 } @{ Pipeline::get_compress_suffixes() };
 
+# get stage subset
+my @stage_set = split(/,/, $stages);
+
 # get file list
 my @to_process = ();
-push @to_process, glob "$raw_dir/*";
-push @to_process, glob "$results_dir/*";
+my @raw_files  = glob "$raw_dir/*";
+my @res_files  = glob "$results_dir/*";
+
+# get process list
+if (scalar(@stage_set) == 0) {
+  @to_process = (@raw_files, @res_files);
+}
+else {
+  if ( grep(/^raw$/, @stage_set) ) {
+    push @to_process, @raw_files;
+  }
+  foreach my $sid (sort @stage_set) {
+    my @stage_files = grep { $_ =~ /^$results_dir\/$sid/ } @res_files;
+    push @to_process, @stage_files;
+  }
+}
 
 # process files
 foreach my $file (@to_process) {
