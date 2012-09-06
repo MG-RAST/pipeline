@@ -259,7 +259,7 @@ load_stats($job_num, [['alpha_diversity_shannon', $alpha]]);
 my $tag_names = ['sequence_count_sims_rna','cluster_count_processed_rna','clustered_sequence_count_processed_rna','sequence_count_preprocessed_rna',
 		 'sequence_count_sims_aa','cluster_count_processed_aa','clustered_sequence_count_processed_aa','sequence_count_preprocessed'];
 my $stat_set      = Pipeline::get_job_statistics($job_num, $stat_tags);
-my $data_set      = Pipeline::get_job_statistics($job_num, ['sequence_type_guess']);
+my $data_set      = Pipeline::get_job_attributes($job_num, ['sequence_type_guess']);
 my $qc_aa_seqs    = exists($stat_set->{sequence_count_preprocessed}) ? $stat_set->{sequence_count_preprocessed} : 0;
 my $aa_sims       = exists($stat_set->{sequence_count_sims_aa}) ? $stat_set->{sequence_count_sims_aa} : 0;
 my $aa_clusts     = exists($stat_set->{cluster_count_processed_aa}) ? $stat_set->{cluster_count_processed_aa} : 0;
