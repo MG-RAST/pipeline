@@ -147,7 +147,7 @@ def main(args):
 
     if size_bytes > file_bytes:
         if opts.verbose: sys.stdout.write("File %s smaller than %d Mb, running with 1 processor\n"%(in_fasta, opts.size))
-        copyfile(in_fasta, in_fasta+'.tmp')
+        shutil.copyfile(in_fasta, in_fasta+'.tmp')
         sfiles   = [in_fasta+'.tmp']
         min_proc = 1
     else:
