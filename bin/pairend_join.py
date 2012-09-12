@@ -2,6 +2,8 @@
 
 import sys, os, shlex, string, random, subprocess
 from optparse import OptionParser
+from Bio.Seq import Seq
+from Bio.Alphabet import generic_dna
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 __doc__ = """
@@ -37,7 +39,8 @@ def stitch_seqs(outfile, file1, file2, blen):
     rec2 = itr2.next()
     outh = open(outfile, 'w')
     while 1:
-        outh.write("@%s\n%s%s%s\n+\n%s%s%s\n" %(random_str(8), rec1[1], bseq, rec2[1], rec1[2], bqual, rec2[2]))
+        seq2 = Seq(rec2[1], generic_dna)
+        outh.write("@%s\n%s%s%s\n+\n%s%s%s\n" %(random_str(8), rec1[1], bseq, str(seq2.reverse_complement()), rec1[2], bqual, rec2[2][::-1]))
         try:
             rec1 = itr1.next()
             rec2 = itr2.next()
