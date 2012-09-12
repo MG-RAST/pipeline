@@ -5,6 +5,7 @@ import subprocess
 import cStringIO
 import string, random
 from Bio import SeqIO
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from random import randrange
 from optparse import OptionParser
 from multiprocessing import Pool
@@ -41,6 +42,18 @@ def run_cmd(cmd, in_pipe=None, output=None):
     if proc.returncode != 0:
         raise IOError("%s\n%s"%(" ".join(cmd), stderr))
     return stdout, stderr
+
+def seq_iter(file_hdl, stype):
+    if stype == 'fastq':
+        return FastqGeneralIterator(file_hdl)
+    else:
+        return SeqIO.parse(file_hdl, stype)
+    
+def split_rec(rec, stype):
+    if stype == 'fastq':
+        return rec[0].split()[0], rec[1].upper(), rec[2]
+    else:
+        return rec.id, str(rec.seq).upper(), None
 
 def random_truncate(items, cutoff):
     if (cutoff < 1) or (len(items) < 2) or (len(items) <= cutoff):
@@ -83,20 +96,21 @@ def filter_seqs(in_file, out_file, stats, seqper, ambig_max, stdev_multi, filter
     input_hdl  = open(in_file, 'rU')
     new_num = 0
     try:
-        for rec in SeqIO.parse(input_hdl, fformat):
+        for rec in seq_iter(input_hdl, fformat):
+            head, seq, qual = split_rec(rec, fformat)
             rnd_num = random.random()
             if seqper < rnd_num:
                 continue
             ambig = 0
-            slen  = len(rec.seq)
+            slen  = len(seq)
             if (slen < min_len) or (slen > max_len):
                 continue
-            for char in rec.seq:
-                if (char == 'n') or (char == 'N'): ambig += 1
+            for char in seq:
+                if char == 'N': ambig += 1
             if ambig > ambig_max:
                 continue
             new_num += 1
-            output_hdl.write(">%s\n%s\n" %(random_str(), rec.seq))
+            output_hdl.write(">%s\n%s\n" %(random_str(8), seq))
     finally:
         input_hdl.close()
         output_hdl.close()
@@ -107,10 +121,12 @@ def bin_replicate_seqs(in_file, out_file, tmp_dir, prefix_len, nodes):
     tmp_hdl   = open(tmp_file, 'w')
     input_hdl = open(in_file, 'rU')
     try:
-        for rec in SeqIO.parse(input_hdl, 'fasta'):
-            seq = str(rec.seq).upper()
+        for rec in seq_iter(input_hdl, 'fasta'):
+            head, seq, qual = split_rec(rec, 'fasta')
+            if len(seq) <= prefix_len:
+                continue
             md5 = hashlib.md5( seq[:prefix_len] ).hexdigest()
-            tmp_hdl.write("%s\t%s\n" %(md5, rec.id))
+            tmp_hdl.write("%s\t%s\n" %(md5, head))
     finally:
         input_hdl.close()
         tmp_hdl.close()
@@ -141,15 +157,17 @@ def get_sub_fasta(ids, index_seq, seq_file, sub_fasta):
     # get min length
     seq_lens = []
     str_hdl  = cStringIO.StringIO(stdo)
-    for rec in SeqIO.parse(str_hdl, 'fasta'):
-        seq_lens.append( len(rec.seq) )
+    for rec in seq_iter(str_hdl, 'fasta'):
+        head, seq, qual = split_rec(rec, 'fasta')
+        seq_lens.append( len(seq) )
     str_hdl.close()
     # truncate all to min
     min_seq = min(seq_lens)
     out_hdl = open(sub_fasta, 'w')
     str_hdl = cStringIO.StringIO(stdo)
-    for rec in SeqIO.parse(str_hdl, 'fasta'):
-        out_hdl.write(">%s\n%s\n"%(rec.id, rec.seq[:min_seq]))
+    for rec in seq_iter(str_hdl, 'fasta'):
+        head, seq, qual = split_rec(rec, 'fasta')
+        out_hdl.write(">%s\n%s\n"%(head, seq[:min_seq]))
     str_hdl.close()
     out_hdl.close()
 
@@ -291,11 +309,12 @@ def main(args):
         out_hdl  = open(out_file, 'w')
         in_hdl   = open(in_seq, 'rU')
         try:
-            for rec in SeqIO.parse(in_hdl, fformat):
+            for rec in seq_iter(in_hdl, fformat):
+                head, seq, qual = split_rec(rec, fformat)
                 rnd_num = random.random()
                 if seqper >= rnd_num:
                     seqmax += 1
-                    out_hdl.write(">%s\n%s\n" %(random_str(), rec.seq))
+                    out_hdl.write(">%s\n%s\n" %(random_str(8), seq))
         finally:
             in_hdl.close()
             out_hdl.close()

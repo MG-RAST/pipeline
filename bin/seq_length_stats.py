@@ -4,6 +4,7 @@ import os, sys, math, subprocess
 from collections import defaultdict
 from optparse import OptionParser
 from Bio import SeqIO
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 __doc__ = """
 Calculate statistics for fasta files.
@@ -25,10 +26,22 @@ OUTPUT:
   sequence_type"""
 
 def sum_map(aMap):
-    total = 0
-    for k, v in aMap.iteritems():
-        total += (float(k) * v)
-    return total
+  total = 0
+  for k, v in aMap.iteritems():
+    total += (float(k) * v)
+  return total
+
+def seq_iter(file_hdl, stype):
+  if stype == 'fastq':
+    return FastqGeneralIterator(file_hdl)
+  else:
+    return SeqIO.parse(file_hdl, stype)
+
+def split_rec(rec, stype):
+  if stype == 'fastq':
+    return rec[0].split()[0], rec[1].upper(), rec[2]
+  else:
+    return rec.id, str(rec.seq).upper(), None
 
 def get_mean_stdev(count, data):
     total = sum_map(data)
@@ -103,37 +116,36 @@ def main(args):
     in_hdl = open(opts.input, "rU")
 
     # parse sequences
-    try:
-      for rec in SeqIO.parse(in_hdl, opts.type):
-        seqnum += 1
-        seq  = str(rec.seq).upper()
-        slen = len(seq)
-        lengths[slen] += 1
+    for rec in seq_iter(in_hdl, opts.type):
+      head, seq, qual = split_rec(rec, opts.type)
+      slen = len(seq)
+      if (qual is not None) and (len(qual) != slen):
+        sys.stderr.write("[error] possible file truncation: sequence length (%d) does not match qual score length (%d)\n"%(slen, len(qual)))
+        os._exit(1)
+      seqnum += 1
+      lengths[slen] += 1
         
-        if not opts.fast:
-          char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
-          for c in seq:
-            if c in char:
-              char[c] += 1
-          atgc  = char['A'] + char['T'] + char['G'] + char['C']
-          ambig = slen - atgc;
-          gc_p  = "0"
-          gc_r  = "0"
-          if atgc > 0:
-            gc_p = "%.1f"%((1.0 * (char['G'] + char['C']) / atgc) * 100)
-          if (char['G'] + char['C']) > 0:
-            gc_r = "%.1f"%(1.0 * (char['A'] + char['T']) / (char['G'] + char['C']))
-          gc_perc[gc_p] += 1
-          gc_ratio[gc_r] += 1
-          if ambig > 0:
-            ambig_char += ambig
-            ambig_seq += 1
-        if opts.seq_type and (slen >= kmer_len):
-          prefix_map[ seq[:kmer_len] ] += 1
-    except ValueError as e:
-      sys.stderr.write("[error] possible file truncation: %s\n"%e)
-      os._exit(1)
-
+      if not opts.fast:
+        char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
+        for c in seq:
+          if c in char:
+            char[c] += 1
+        atgc  = char['A'] + char['T'] + char['G'] + char['C']
+        ambig = slen - atgc;
+        gc_p  = "0"
+        gc_r  = "0"
+        if atgc > 0:
+          gc_p = "%.1f"%((1.0 * (char['G'] + char['C']) / atgc) * 100)
+        if (char['G'] + char['C']) > 0:
+          gc_r = "%.1f"%(1.0 * (char['A'] + char['T']) / (char['G'] + char['C']))
+        gc_perc[gc_p] += 1
+        gc_ratio[gc_r] += 1
+        if ambig > 0:
+          ambig_char += ambig
+          ambig_seq += 1
+      if opts.seq_type and (slen >= kmer_len):
+        prefix_map[ seq[:kmer_len] ] += 1
+    
     # get stats
     if seqnum == 0:
       sys.stderr.write("[error] invalid %s file, unable to find sequence records\n"%opts.type)

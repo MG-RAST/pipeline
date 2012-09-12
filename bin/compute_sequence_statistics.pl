@@ -12,7 +12,7 @@ GetOptions( 'help!'  => \$help,
 	    'file_format=s' => \$file_format,
 	    'tmp_dir:s'     => \$tmp_dir );
 
-my $usage = "Usage: compute_sequence_statistics.pl --file <sequence file> --dir <dir path> --file_format <fasta|fastq>\n";
+my $usage = "Usage: compute_sequence_statistics.pl --file <sequence file> --dir <dir path> --file_format <fasta|fastq> [--tmp_dir <tmp dir path>]\n";
 if ($help) {
   print STDOUT $usage;
   exit(0);
@@ -67,11 +67,11 @@ if (@error == 0) {
   # count unique ids
   my $unique_ids = 0;
   if ($file_format eq 'fasta') {
-    $unique_ids = `grep '>' $dir/$file | cut -f1 -d' ' | sort -T $tmp_dir -u | wc -l 2>&1`;
+    $unique_ids = `grep '>' $dir/$file | cut -f1 -d' ' | sort -T $tmp_dir -S 2G -u | wc -l 2>&1`;
     chomp $unique_ids;
   }
   elsif ($file_format eq 'fastq') {
-    $unique_ids = `awk '0 == (NR + 3) % 4' $dir/$file | cut -f1 -d' ' | sort -T $tmp_dir -u | wc -l 2>&1`;
+    $unique_ids = `awk '0 == (NR + 3) % 4' $dir/$file | cut -f1 -d' ' | sort -T $tmp_dir -S 2G -u | wc -l 2>&1`;
     chomp $unique_ids;
   }
   
