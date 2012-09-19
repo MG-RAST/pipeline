@@ -76,7 +76,7 @@ def test_ontology():
         if not (obj and ('success' in obj)):
             return False
     return True
-        
+
 def check_ontology(ontID, term, subID):
     part = term.split(':',1)
     # test if term is ID
@@ -106,7 +106,7 @@ def check_ontology(ontID, term, subID):
     try:
         contents = obj['success']['data'][0]['page']['contents']['ontologyHitList']['ontologyHitBean']
     except (KeyError, TypeError, IndexError, AttributeError):
-         errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+        errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
     if int(contents['numHits']) > 0:
         return base
     else:
@@ -211,9 +211,11 @@ def validate_type(key, val, atype):
             cleanVal = int(val)
             cleanVal = unicode(cleanVal)
         except ValueError:
-            cleanVal = unicode(val).lower()
+            cleanVal = unicode(val)
         if cleanVal in CV_PARAM['select'][key]:
             return cleanVal
+        elif cleanVal.lower() in CV_PARAM['select'][key]:
+            return cleanVal.lower()
         else:
             return None
     else:
@@ -324,7 +326,7 @@ def tables_to_mdraw(tables, dupe):
     edata = dict([(x, data_from_table(tables,'ep '+x)) for x in TEMPLATE['ep']])
     snMap = defaultdict(list)
     nDupe = False
-    
+
     # test for missing sheets (all but ep)
     libNames = []
     missing  = []
@@ -347,7 +349,7 @@ def tables_to_mdraw(tables, dupe):
 
     mName = []
     fName = []
-    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }    
+    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
     for sampName, sampData in sdata:
         # ep is messy - look for existance of vaild ep term, if no ep sheet make obj from just term
         if 'env_package' not in sampData:
@@ -511,7 +513,7 @@ def validate_ontology():
         for oset in ONT_MAP[value].iterkeys():
             subid, oid = oset.split('||')
             # exception for country handling
-            oterm = validate_type('country', oid, 'select') if 'country' in oid else None
+            oterm = validate_type('country', value, 'select') if 'country' in ONT_MAP[value][oset][0][1] else None
             if oterm is None:
                 oterm = check_ontology(oid, value, subid)
             if oterm is None:
@@ -578,7 +580,7 @@ def main(args):
     # test bioportal lookup
     if not test_ontology():
         errorMsg("Ontology lookup service '%s' is currently unavailable"%ONT_URL, 1)
-    
+
     # object from source (xlsx file or google link): create hierarchy / test connections
     if opts.format == 'xlsx':
         mdraw = xlsx_to_mdraw(md_source, opts.dupe)
@@ -600,7 +602,7 @@ def main(args):
     else:
         mdvalid['is_valid'] = 1;
         message = "Valid MG-RAST Metadata\n"
-    
+
     if LOG_FILE:
         lhdl = open(LOG_FILE, 'a')
         lhdl.write(message)

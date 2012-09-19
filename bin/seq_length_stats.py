@@ -26,22 +26,22 @@ OUTPUT:
   sequence_type"""
 
 def sum_map(aMap):
-  total = 0
-  for k, v in aMap.iteritems():
-    total += (float(k) * v)
-  return total
+    total = 0
+    for k, v in aMap.iteritems():
+        total += (float(k) * v)
+    return total
 
 def seq_iter(file_hdl, stype):
-  if stype == 'fastq':
-    return FastqGeneralIterator(file_hdl)
-  else:
-    return SeqIO.parse(file_hdl, stype)
+    if stype == 'fastq':
+        return FastqGeneralIterator(file_hdl)
+    else:
+        return SeqIO.parse(file_hdl, stype)
 
 def split_rec(rec, stype):
-  if stype == 'fastq':
-    return rec[0].split()[0], rec[1].upper(), rec[2]
-  else:
-    return rec.id, str(rec.seq).upper(), None
+    if stype == 'fastq':
+        return rec[0].split()[0], rec[1].upper(), rec[2]
+    else:
+        return rec.id, str(rec.seq).upper(), None
 
 def get_mean_stdev(count, data):
     total = sum_map(data)
@@ -63,7 +63,7 @@ def get_seq_type(size, data):
         return "Amplicon"
     else:
         return "WGS"
-    
+
 def sub_kmer(pos, total, data):
     sub_data = defaultdict(int)
     entropy  = 0
@@ -81,7 +81,7 @@ def output_bins(data, outf):
     for k in keys:
         out_hdl.write("%s\t%d\n"%(k, data[k]))
     out_hdl.close()
-    
+
 
 usage = "usage: %prog [options] -i input_fasta" + __doc__
 
@@ -116,50 +116,51 @@ def main(args):
     in_hdl = open(opts.input, "rU")
 
     # parse sequences
-    for rec in seq_iter(in_hdl, opts.type):
-      head, seq, qual = split_rec(rec, opts.type)
-      slen = len(seq)
-      if (qual is not None) and (len(qual) != slen):
-        sys.stderr.write("[error] possible file truncation: sequence length (%d) does not match qual score length (%d)\n"%(slen, len(qual)))
+    try:
+        for rec in seq_iter(in_hdl, opts.type):
+            head, seq, qual = split_rec(rec, opts.type)
+            slen = len(seq)
+            seqnum += 1
+            lengths[slen] += 1
+            
+            if not opts.fast:
+                char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
+                for c in seq:
+                    if c in char:
+                        char[c] += 1
+                atgc  = char['A'] + char['T'] + char['G'] + char['C']
+                ambig = slen - atgc;
+                gc_p  = "0"
+                gc_r  = "0"
+                if atgc > 0:
+                    gc_p = "%.1f"%((1.0 * (char['G'] + char['C']) / atgc) * 100)
+                if (char['G'] + char['C']) > 0:
+                    gc_r = "%.1f"%(1.0 * (char['A'] + char['T']) / (char['G'] + char['C']))
+                gc_perc[gc_p] += 1
+                gc_ratio[gc_r] += 1
+                if ambig > 0:
+                    ambig_char += ambig
+                    ambig_seq += 1
+            if opts.seq_type and (slen >= kmer_len):
+                prefix_map[ seq[:kmer_len] ] += 1
+    except ValueError as e:
+        sys.stderr.write("[error] possible file truncation: %s\n" %e)
         os._exit(1)
-      seqnum += 1
-      lengths[slen] += 1
-        
-      if not opts.fast:
-        char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
-        for c in seq:
-          if c in char:
-            char[c] += 1
-        atgc  = char['A'] + char['T'] + char['G'] + char['C']
-        ambig = slen - atgc;
-        gc_p  = "0"
-        gc_r  = "0"
-        if atgc > 0:
-          gc_p = "%.1f"%((1.0 * (char['G'] + char['C']) / atgc) * 100)
-        if (char['G'] + char['C']) > 0:
-          gc_r = "%.1f"%(1.0 * (char['A'] + char['T']) / (char['G'] + char['C']))
-        gc_perc[gc_p] += 1
-        gc_ratio[gc_r] += 1
-        if ambig > 0:
-          ambig_char += ambig
-          ambig_seq += 1
-      if opts.seq_type and (slen >= kmer_len):
-        prefix_map[ seq[:kmer_len] ] += 1
-    
+
     # get stats
     if seqnum == 0:
-      sys.stderr.write("[error] invalid %s file, unable to find sequence records\n"%opts.type)
-      os._exit(1)
+        sys.stderr.write("[error] invalid %s file, unable to find sequence records\n"%opts.type)
+        os._exit(1)
     len_mean, len_stdev = get_mean_stdev(seqnum, lengths)
     min_len   = min( lengths.iterkeys() )
     max_len   = max( lengths.iterkeys() )
     stat_text = [ "bp_count\t%d"%sum_map(lengths),
-		  "sequence_count\t%d"%seqnum,
-		  "average_length\t%.3f"%len_mean,
-		  "standard_deviation_length\t%.3f"%len_stdev,
-		  "length_min\t%d"%min_len,
-		  "length_max\t%d"%max_len ]
-    
+                  "sequence_count\t%d"%seqnum,
+                  "average_length\t%.3f"%len_mean,
+                  "standard_deviation_length\t%.3f"%len_stdev,
+                  "length_min\t%d"%min_len,
+                  "length_max\t%d"%max_len ]
+
     if not opts.fast:
         gcp_mean, gcp_stdev = get_mean_stdev(seqnum, gc_perc)
         gcr_mean, gcr_stdev = get_mean_stdev(seqnum, gc_ratio)
@@ -187,7 +188,7 @@ def main(args):
         output_bins(lengths, opts.len_bin)
     if opts.gc_bin and (not opts.fast):
         output_bins(gc_perc, opts.gc_bin)
-    
+
     return 0
 
 if __name__ == "__main__":
