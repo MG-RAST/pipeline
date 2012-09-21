@@ -94,6 +94,7 @@ def main(args):
     parser.add_option("-g", "--gc_percent_bin", dest="gc_bin", metavar="FILE", default=None, help="File to place % gc bins [default is no output]")
     parser.add_option("-f", "--fast", dest="fast", default=False, action="store_true", help="Fast mode, only calculate length stats")
     parser.add_option("-s", "--seq_type", dest="seq_type", default=False, action="store_true", help="Guess sequence type [wgs|amplicon] from kmer entropy")
+    parser.add_option("-m", "--seq_max", dest="seq_max", default=100000, type="int", help="max number of seqs to process (for kmer entropy) [default 100000]")
 
     # check options
     (opts, args) = parser.parse_args()
@@ -112,6 +113,7 @@ def main(args):
     ambig_char = 0
     ambig_seq  = 0
     kmer_len   = 16
+    kmer_num   = 0
     prefix_map = defaultdict(int)
     in_hdl = open(opts.input, "rU")
 
@@ -141,8 +143,9 @@ def main(args):
                 if ambig > 0:
                     ambig_char += ambig
                     ambig_seq += 1
-            if opts.seq_type and (slen >= kmer_len):
+            if opts.seq_type and (slen >= kmer_len) and (kmer_num < opts.seq_max):
                 prefix_map[ seq[:kmer_len] ] += 1
+                kmer_num += 1
     except ValueError as e:
         sys.stderr.write("[error] possible file truncation: %s\n" %e)
         os._exit(1)
