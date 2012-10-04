@@ -491,6 +491,7 @@ def validate_data(cat, name, data, template, skip):
             add_invalid(cat, key, name, '', 'missing required')
             errorMsg("%s '%s' missing required field '%s'"%(cat, name, key))
         if has_value:
+            data[key] = data[key].strip()
             if items['type'] == 'ontology':
                 validVal = data[key]
                 if validVal not in ONT_MAP:
