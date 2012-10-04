@@ -78,6 +78,7 @@ def test_ontology():
     return True
 
 def check_ontology(ontID, term, subID):
+    term = unicode(term)
     part = term.split(':',1)
     # test if term is ID
     if (len(part) == 2) and part[1].isdigit():
