@@ -494,7 +494,7 @@ def validate_data(cat, name, data, template, skip):
         if has_value:
             try:
                 data[key] = data[key].strip()
-            except ValueError, AttributeError, TypeError:
+            except (ValueError, AttributeError, TypeError):
                 pass
             if items['type'] == 'ontology':
                 validVal = data[key]
