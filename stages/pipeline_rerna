@@ -90,7 +90,7 @@ system("cp $fasta $fasta_file") == 0 or fail($log, "cp $fasta: ".$message);
 system("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr $fasta_file stdout | bleachsims -s - -o $sims_file -r 0 > $run_dir/blat.out 2> $err_file") == 0 or fail($log, "blat: ".$message);
 
 # new sims calculated, add m5rna version to JobAttributes
-load_stats($job_num, [['m5rna_sims_version', $Pipeline_Conf::ach_sequence_ver]]);
+load_data($job_num, [['m5rna_sims_version', $Pipeline_Conf::ach_sequence_ver]]);
 
 # run stats on cluster file
 my @proc_rna_tags = grep { $_ =~ /_processed_rna$/ } @{ Pipeline::get_job_stat_tags() };
@@ -189,5 +189,13 @@ sub load_stats {
   my $res = Pipeline::set_job_statistics($job_num, $stats);
   unless ($res) {
     fail($log, "$stage_name failed on job: $job_num, loading JobDB stats");
+  }  
+}
+
+sub load_data {
+  my ($job_num, $data) = @_;
+  my $res = Pipeline::set_job_attributes($job_num, $data);
+  unless ($res) {
+    fail($log, "$stage_name failed on job: $job_num, loading JobDB data");
   }  
 }
