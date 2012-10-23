@@ -40,7 +40,7 @@ def stitch_seqs(outfile, file1, file2, blen):
     outh = open(outfile, 'w')
     while 1:
         seq2 = Seq(rec2[1], generic_dna)
-        outh.write("@%s\n%s%s%s\n+\n%s%s%s\n" %(random_str(8), rec1[1], bseq, str(seq2.reverse_complement()), rec1[2], bqual, rec2[2][::-1]))
+        outh.write("@%s\n%s%s%s\n+\n%s%s%s\n" %(random_str(10), rec1[1], bseq, str(seq2.reverse_complement()), rec1[2], bqual, rec2[2][::-1]))
         try:
             rec1 = itr1.next()
             rec2 = itr2.next()
