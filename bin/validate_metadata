@@ -442,7 +442,7 @@ def find_sample_sub(sname, inData, ep_name, mName, fName):
                     data['investigation_type'] = typeName
                     outData.append({'name': data['metagenome_name'], 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
                     mName.append( data['metagenome_name'] )
-                    if 'file_name' in data:
+                    if ('file_name' in data) and data['file_name']:
                         fName.append( data['file_name'] )
             elif ep_name == typeName:
                 outData.append({'name': "%s: %s"%(sname,typeName), 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
@@ -536,6 +536,8 @@ def validate_ontology():
                     ONT_NEW[cat][name][key] = oterm
 
 def has_name_dupe(nameList):
+    if len(nameList) == 0:
+        return False
     nameDict = dict([(x,1) for x in nameList])
     if len(nameList) > len(nameDict.keys()):
         return True
