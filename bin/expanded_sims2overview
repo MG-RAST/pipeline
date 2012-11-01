@@ -8,6 +8,7 @@ use Getopt::Long;
 use List::Util qw(first max min sum);
 
 my $verbose  = 0;
+my $abun_file= '';
 my $in_file  = '';
 my $out_file = '';
 my $md5_file = '';
@@ -23,6 +24,7 @@ my $options  = { md5      => 1,
 
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { &usage(); }
 if ( ! GetOptions( "verbose!"           => \$verbose,
+                   "abundance_file=s"	=> \$abun_file,
 		   "expanded_sims_in=s" => \$in_file,
 		   "summary_sims_out=s" => \$out_file,
 		   "md5_index:s"        => \$md5_file,
@@ -37,8 +39,12 @@ unless ($in_file && $out_file && (-s $in_file)) {
 unless (exists $options->{$select}) {
   &usage("Unknown option $select.\n");
 }
+unless (!$abun_file || ($abun_file && (-s $abun_file))) {
+  &usage("Abundance file: $abun_file is missing or empty and this is an assembled dataset.\n");
+}
 
 my $data  = {};
+my $amap  = {};
 my $cmap  = {};
 my $imap  = {};
 my $curr  = '';
@@ -48,14 +54,29 @@ my @thresholds_eval  = ( -5 , -10 , -20 , -30 , -1000 );
 my @thresholds_len   = ( 10 , 25 , 50 , 100 , 1000000 );
 my @thresholds_ident = ( 60 , 80 , 90 , 97 , 100 );
 
-# get hash of cluster mapping file: cluster_id => frag_count
+# get hash of abundance mapping file if $abun_file exists
+if ($abun_file) {
+  print STDOUT "Reading file $abun_file ... " if ($verbose);
+  open(ABUN, "<$abun_file") || die "Can't open file $abun_file!\n";
+  while(my $line = <ABUN>) {
+    chomp $line;
+    my @tabs = split(/\t/, $line);
+    $amap->{$tabs[0]} = $tabs[1];
+  }
+  close ABUN;
+  print STDOUT "Done\n" if ($verbose);
+}
+
+# get hash of cluster mapping file: cluster_id{seq_id} => 1
 if ($cluster && (-s $cluster)) {
   print STDOUT "Reading file $cluster ... " if ($verbose);
   open(CLUST, "<$cluster") || die "Can't open file $cluster!\n";
   while (my $line = <CLUST>) {
     chomp $line;
     my @tabs = split(/\t/, $line);
-    $cmap->{ $tabs[0] } = scalar( split(/,/, $tabs[2]) ) + 1;
+    foreach my $seqid ($tabs[1], split(/,/, $tabs[2])) {
+      push @{$cmap->{$tabs[0]}}, $seqid;
+    }
   }
   close CLUST;
   print STDOUT "Done\n" if ($verbose);
@@ -201,7 +222,26 @@ sub get_md5_stats {
   my $exps  = {};
   my @evals = keys %{$data->{eval}};
 
-  map { $f_num += exists($cmap->{$_}) ? $cmap->{$_} : 1 } keys %{$data->{frag}};
+  foreach my $frag (keys %{$data->{frag}}) {
+    if(exists $cmap->{$frag}) {
+      foreach my $cluster_frag (@{$cmap->{$frag}}) {
+        $cluster_frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+        if(exists $amap->{$cluster_frag}) {
+          $f_num += $amap->{$cluster_frag};
+        } else {
+          $f_num += 1;
+        }
+      }
+    } else {
+      $frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+      if(exists $amap->{$frag}) {
+        $f_num += $amap->{$frag};
+      } else {
+        $f_num += 1;
+      }
+    }
+  }
+
   map { $exps->{ &get_exponent($_) } += $data->{eval}{$_} } @evals;
 
   my ($e_min, $e_max, $e_mean, $e_std) = &get_stats($exps);
@@ -214,7 +254,7 @@ sub get_md5_stats {
   my ($seek, $len) = exists($imap->{$md5}) ? @{$imap->{$md5}} : ('', '');
   
   #output
-  return join("\t", ( $md5, $f_num,
+  return join("\t", ( $md5, int($f_num),
 		      $e_min, $e_max, $e_mean, $e_std,
 		      &to_count_array($exps, "eval"),
 		      $l_min, $l_max, $l_mean, $l_std,
@@ -234,7 +274,26 @@ sub get_lca_stats {
   my $exps  = {};
   my @evals = keys %{$data->{eval}};
 
-  map { $f_num += exists($cmap->{$_}) ? $cmap->{$_} : 1 } keys %{$data->{frag}};
+  foreach my $frag (keys %{$data->{frag}}) {
+    if(exists $cmap->{$frag}) {
+      foreach my $cluster_frag (@{$cmap->{$frag}}) {
+        $cluster_frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+        if(exists $amap->{$cluster_frag}) {
+          $f_num += $amap->{$cluster_frag};
+        } else {
+          $f_num += 1;
+        }
+      }
+    } else {
+      $frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+      if(exists $amap->{$frag}) {
+        $f_num += $amap->{$frag};
+      } else {
+        $f_num += 1;
+      }
+    }
+  }
+
   map { $exps->{ &get_exponent($_) } += $data->{eval}{$_} } @evals;
 
   my ($e_min, $e_max, $e_mean, $e_std) = &get_stats($exps);
@@ -245,7 +304,7 @@ sub get_lca_stats {
   $e_max = max @evals;
 
   #output
-  return join("\t", ( $lca, $f_num,
+  return join("\t", ( $lca, int($f_num),
 		      $e_min, $e_max, $e_mean, $e_std,
 		      &to_count_array($exps, "eval"),
 		      $l_min, $l_max, $l_mean, $l_std,
@@ -270,7 +329,26 @@ sub get_type_stats {
     my $exps  = {};
     my @evals = keys %{$data->{$src}{eval}};
 
-    map { $f_num += exists($cmap->{$_}) ? $cmap->{$_} : 1 } keys %{$data->{$src}{frag}};
+    foreach my $frag (keys %{$data->{$src}{frag}}) {
+      if(exists $cmap->{$frag}) {
+        foreach my $cluster_frag (@{$cmap->{$frag}}) {
+          $cluster_frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+          if(exists $amap->{$cluster_frag}) {
+            $f_num += $amap->{$cluster_frag};
+          } else {
+            $f_num += 1;
+          }
+        }
+      } else {
+        $frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+        if(exists $amap->{$frag}) {
+          $f_num += $amap->{$frag};
+        } else {
+          $f_num += 1;
+        }
+      }
+    }
+
     map { $exps->{ &get_exponent($_) } += $data->{$src}{eval}{$_} } @evals;
 
     my ($e_min, $e_max, $e_mean, $e_std) = &get_stats($exps);
@@ -281,7 +359,7 @@ sub get_type_stats {
     $e_max = max @evals;
 
     # output
-    $text .= join("\t", ( $name, $f_num,
+    $text .= join("\t", ( $name, int($f_num),
 			  $e_min, $e_max, $e_mean, $e_std,
 			  &to_count_array($exps, "eval"),
 			  $l_min, $l_max, $l_mean, $l_std,
