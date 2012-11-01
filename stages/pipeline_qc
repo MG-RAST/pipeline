@@ -108,7 +108,6 @@ else {
 my $basename = $run_dir."/".$stage_id;
 my $log_file = $basename.".qc.out";
 my $infile   = $basename.".input.".$format;
-my $d_stats  = $basename.".drisee.stats";
 my $message  = "$stage_name failed on job: $job_num, see $stage_dir/$stage_id.qc.out for details.";
 
 if ($gzipped) {
@@ -117,45 +116,66 @@ if ($gzipped) {
   system("cp $seqs $infile") == 0 or fail($log, "cp $seqs: ".$message);
 }
 
-# create drisee table
-system("echo 'running drisee ... ' >> $log_file ");
-system("drisee -v -p $procs -t $format -d $run_dir -l $log_file -f $infile $d_stats > $basename.drisee.info 2>&1") == 0 or fail($log, "drisee: ".$message);
+# generate assembled abundance file in raw directory
+my $job_attribs = Pipeline::get_job_attributes($job_num);
+my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
 
-# create consensus table
-my $max_ln = 600;
-my $stats  = Pipeline::get_job_statistics($job_num);
-if ($stats && $stats->{length_max_raw}) {
-  $max_ln = min ($max_ln, $stats->{length_max_raw});
-} else {
-  my @new_stats = `seq_length_stats.py -i $infile -t $format -f`;
-  if (@new_stats) {
-    chomp @new_stats;
-    my $max_line   = first { $_ =~ /^length_max/ } @new_stats;
-    my $new_max_ln = (split(/\t/, $max_line))[1];
-    $max_ln = min ($max_ln, $new_max_ln);
-  } else {
-    $max_ln = 100;
+if($assembled eq '1') {
+  $log->info("Printing out assembly abundance to file: $infile.abundance");
+  open ABUN, ">$infile.abundance" || $log->error("file: $infile.abundance could not be written.");
+  open SEQS, $infile || $log->error("file: $infile cannot be read.");
+  while(my $line=<SEQS>) {
+    chomp $line;
+    if($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
+      my $seq = $1;
+      my $abun = $2;
+      print ABUN "$seq\t$abun\n";
+    }
   }
+  close SEQS;
+  close ABUN;
+} else {
+  my $d_stats  = $basename.".drisee.stats";
+  # create drisee table
+  system("echo 'running drisee ... ' >> $log_file ");
+  system("drisee -v -p $procs -t $format -d $run_dir -l $log_file -f $infile $d_stats > $basename.drisee.info 2>&1") == 0 or fail($log, "drisee: ".$message);
+
+  # create consensus table
+  my $max_ln = 600;
+  my $stats  = Pipeline::get_job_statistics($job_num);
+  if ($stats && $stats->{length_max_raw}) {
+    $max_ln = min ($max_ln, $stats->{length_max_raw});
+  } else {
+    my @new_stats = `seq_length_stats.py -i $infile -t $format -f`;
+    if (@new_stats) {
+      chomp @new_stats;
+      my $max_line   = first { $_ =~ /^length_max/ } @new_stats;
+      my $new_max_ln = (split(/\t/, $max_line))[1];
+      $max_ln = min ($max_ln, $new_max_ln);
+    } else {
+      $max_ln = 100;
+    }
+  }
+  system("echo 'running consensus ... ' >> $log_file ");
+  system("consensus.py -v -b $max_ln -t $format -i $infile -o $basename.consensus.stats >> $log_file 2>&1") == 0 or fail($log, "consensus: ".$message);
+
+  # load drisee stats
+  my $d_score = 0;
+  if (-s $d_stats) {
+    $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
+    chomp $d_score;
+  }
+  my $res = Pipeline::set_job_statistics($job_num, [["drisee_score_$name", sprintf("%.3f", $d_score)]]);
+  unless ($res) {
+    fail($log, "$stage_name failed on job: $job_num, loading drisee_score_$name stat: $d_score");
+  }  
 }
-system("echo 'running consensus ... ' >> $log_file ");
-system("consensus.py -v -b $max_ln -t $format -i $infile -o $basename.consensus.stats >> $log_file 2>&1") == 0 or fail($log, "consensus: ".$message);
 
 # create kmer profile
 foreach my $len (@kmers) {
   system("echo 'running kmer-tool for size $len ... ' >> $log_file ");
   system("kmer-tool -l $len -p $procs -i $infile -t $format -o $basename.kmer.$len.stats -f histo -r -d $run_dir >> $log_file 2>&1") == 0 or fail($log, "kmer-tool: ".$message);
 }
-
-# load drisee stats
-my $d_score = 0;
-if (-s $d_stats) {
-  $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
-  chomp $d_score;
-}
-my $res = Pipeline::set_job_statistics($job_num, [["drisee_score_$name", sprintf("%.3f", $d_score)]]);
-unless ($res) {
-  fail($log, "$stage_name failed on job: $job_num, loading drisee_score_$name stat: $d_score");
-}  
 
 # copy output to somewhere
 opendir(RUNDIR, $run_dir) or fail($log, "$stage_name failed on job: $job_num, can not open $run_dir: $!");
@@ -164,6 +184,10 @@ closedir RUNDIR;
 foreach my $sf (@stats) {
   move("$run_dir/$sf", "$results_dir/$sf") or fail($log, "$stage_name failed on job: $job_num, can not move $sf");
   chmod 0666, "$results_dir/$sf";
+}
+if($assembled == 1 && -e "$infile.abundance") {
+  move("$infile.abundance", "$job_dir/raw/$job_num.abundance") or fail($log, "$stage_name failed on job: $job_num, cannot move $infile.abundance to $job_dir/raw/$job_num.abundance");
+  chmod 0666, "$job_dir/raw/$job_num.abundance";
 }
 
 # move run_dir to stage_dir if on local
