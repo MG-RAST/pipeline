@@ -130,6 +130,9 @@ if($assembled eq '1') {
       my $seq = $1;
       my $abun = $2;
       print ABUN "$seq\t$abun\n";
+    } elsif($line =~ /^>(\S+).*$/) {
+      my $seq = $1;
+      print ABUN "$seq\t1\n";
     }
   }
   close SEQS;
