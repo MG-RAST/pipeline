@@ -196,11 +196,11 @@ sub get_top_hits {
   foreach my $frag (keys %$data) {
     foreach my $score (keys %{$data->{$frag}}) {
       foreach my $md5 (keys %{$data->{$frag}{$score}}) {
-	$total_md5s->{$md5} = 1;
-	if ($get_lca) {
-	  my $exp = &get_exp( $data->{$frag}{$score}{$md5}[8] );
-	  if (defined $exp) { push @{ $frag_md5s->{$frag} }, [ $md5, $exp, $data->{$frag}{$score}{$md5} ]; }
-	}
+	    $total_md5s->{$md5} = 1;
+	    if ($get_lca) {
+	      my $exp = &get_exp( $data->{$frag}{$score}{$md5}[8] );
+	      if (defined $exp) { push @{ $frag_md5s->{$frag} }, [ $md5, $exp, $data->{$frag}{$score}{$md5} ]; }
+	    }
       }
     }
   }
@@ -215,7 +215,7 @@ sub get_top_hits {
   foreach my $frag (keys %$data) {
     foreach my $score (keys %{$data->{$frag}}) {
       foreach my $md5 (grep {exists $md5_ach->{$_}} keys %{$data->{$frag}{$score}}) {
-	map { $frag_srcs->{$frag}{$_} = 1 } keys %{$md5_ach->{$md5}};
+	    map { $frag_srcs->{$frag}{$_} = 1 } keys %{$md5_ach->{$md5}};
       }
     }
   }
@@ -227,16 +227,16 @@ sub get_top_hits {
       my @sort_md5s = sort { $a->[1] <=> $b->[1] } grep { $_->[1] < 0 } @{$frag_md5s->{$frag}};
 
       if (@sort_md5s > 0) {   
-	my $cutoff = $sort_md5s[0][1] - int($sort_md5s[0][1] * 0.2);
-	foreach my $set (@sort_md5s) {
-	  if ($set->[1] <= $cutoff) { $md5s_lca{ $set->[0] } = $set->[2]; }
-	}
+	    my $cutoff = $sort_md5s[0][1] - int($sort_md5s[0][1] * 0.2);
+	    foreach my $set (@sort_md5s) {
+	      if ($set->[1] <= $cutoff) { $md5s_lca{ $set->[0] } = $set->[2]; }
+	    }
       }
       if (scalar(keys %md5s_lca) > 0) {
-	my @lca = &get_lca([keys %md5s_lca], $md5_lca);
-	if (@lca == 9) {
-	  $frag_lca->{$frag} = {md5s => [keys %md5s_lca], sims => [values %md5s_lca], lca => \@lca};
-	}
+	    my @lca = &get_lca([keys %md5s_lca], $md5_lca);
+	    if (@lca == 9) {
+	      $frag_lca->{$frag} = {md5s => [keys %md5s_lca], sims => [values %md5s_lca], lca => \@lca};
+	    }
       }
     }
   }
@@ -245,7 +245,7 @@ sub get_top_hits {
   foreach my $frag (keys %$data) {
     my $seen_srcs = {};
     my $seen_md5s = {};
-    foreach my $score (keys %{$data->{$frag}}) {
+    foreach my $score (sort {$b <=> $a} keys %{$data->{$frag}}) {
       if (scalar(keys %$seen_srcs) >= scalar(keys %{$frag_srcs->{$frag}})) { last; }
       my ($min_md5, $srcs) = &get_min_md5s_by_source($md5_ach, [keys %{$data->{$frag}{$score}}], $seen_srcs, $seen_md5s);
       $data_min_md5->{$frag}{$score} = $min_md5;
@@ -260,46 +260,46 @@ sub get_top_hits {
     if ($get_lca && exists($frag_lca->{$frag})) {
       my $level = pop @{$frag_lca->{$frag}{lca}};
       $lca_text .= join("\t", ( join(";", @{$frag_lca->{$frag}{md5s}}),               # md5s
-				$frag,
-				join(";", map {$_->[0]} @{$frag_lca->{$frag}{sims}}), # identity
-				join(";", map {$_->[1]} @{$frag_lca->{$frag}{sims}}), # length
-				join(";", map {$_->[8]} @{$frag_lca->{$frag}{sims}}), # evalue
-				join(";", @{$frag_lca->{$frag}{lca}}),                # taxa
-				$level
-			      )) . "\n";
+				                $frag,
+				                join(";", map {$_->[0]} @{$frag_lca->{$frag}{sims}}), # identity
+				                join(";", map {$_->[1]} @{$frag_lca->{$frag}{sims}}), # length
+				                join(";", map {$_->[8]} @{$frag_lca->{$frag}{sims}}), # evalue
+				                join(";", @{$frag_lca->{$frag}{lca}}),                # taxa
+				                $level
+			           )) . "\n";
     }
     next unless (exists $data_min_md5->{$frag});
     foreach my $score ( keys %{$data_min_md5->{$frag}} ) {
       foreach my $md5 ( keys %{$data_min_md5->{$frag}{$score}} ) {
-	# sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
-	my $sim = $data->{$frag}{$score}{$md5};
+  	    # sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
+	    my $sim = $data->{$frag}{$score}{$md5};
 
-	# filter sim output
-	$filter_text .= join("\t", ($frag, $md5, @$sim)) . "\n";
+	    # filter sim output
+	    $filter_text .= join("\t", ($frag, $md5, @$sim)) . "\n";
 
-	# md5_ach: md5 => source => function => [organism | ontology_id]
-	# ann_map: { 'source' => id => [ name, type ], 'function' => id => name, 'organism' => id => [ name, tax_id ] }
-	foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
-	  next unless (exists($md5_ach->{$md5}{$src}) && exists($ann_map->{source}{$src}));
-	  my ($sname, $stype) = @{$ann_map->{source}{$src}};
+	    # md5_ach: md5 => source => function => [organism | ontology_id]
+	    # ann_map: { 'source' => id => [ name, type ], 'function' => id => name, 'organism' => id => [ name, tax_id ] }
+    	foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
+	      next unless (exists($md5_ach->{$md5}{$src}) && exists($ann_map->{source}{$src}));
+	      my ($sname, $stype) = @{$ann_map->{source}{$src}};
 
-	  foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
-	    my $fname = exists($ann_map->{function}{$func}) ? $ann_map->{function}{$func} : "";
+	      foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
+	        my $fname = exists($ann_map->{function}{$func}) ? $ann_map->{function}{$func} : "";
 
-	    foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}} ) {
-	      my ($oname, $tid) = exists($ann_map->{organism}{$other}) ? @{$ann_map->{organism}{$other}} : ('','');
-	      if (($stype eq 'rna') && $oname && $get_rna) {
-		$rna_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
-	      }
-	      elsif (($stype eq 'protein') && $oname && (! $get_rna)) {
-		$protein_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
-	      }
-	      elsif (($stype eq 'ontology') && (! $get_rna)) {
-		$ontology_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $other, $sname)) . "\n";
+	        foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}} ) {
+	          my ($oname, $tid) = exists($ann_map->{organism}{$other}) ? @{$ann_map->{organism}{$other}} : ('','');
+	          if (($stype eq 'rna') && $oname && $get_rna) {
+		        $rna_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
+	          }
+	          elsif (($stype eq 'protein') && $oname && (! $get_rna)) {
+		        $protein_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
+	          }
+	          elsif (($stype eq 'ontology') && (! $get_rna)) {
+		        $ontology_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $other, $sname)) . "\n";
+	          }
+	        }
 	      }
 	    }
-	  }
-	}
       }
     }
   }
@@ -324,25 +324,25 @@ sub get_md5_data {
       my $try = 1;
       while ( ($try <= $max) && ((! $tmp) || (! ref ($tmp))) ) {
       #while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
-	#if (! $tmp) {
-	print STDERR "Warning (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
-	#} else {
-	#  print STDERR "Warning (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
-	#  @cache{ keys %$tmp } = values %$tmp;
-	#  @set = grep {! exists $tmp->{$_}} @set;
-	#  print STDERR "Missing keys: ".join(",", @set)."\n";
-	#}
-	$tmp = $mch->get_multi(@set);
-	$try += 1;
+	    #if (! $tmp) {
+	    print STDERR "Warning (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
+	    #} else {
+	    #  print STDERR "Warning (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
+	    #  @cache{ keys %$tmp } = values %$tmp;
+	    #  @set = grep {! exists $tmp->{$_}} @set;
+	    #  print STDERR "Missing keys: ".join(",", @set)."\n";
+	    #}
+	    $tmp = $mch->get_multi(@set);
+	    $try += 1;
       }
       unless ($tmp && ref($tmp)) {
       #unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
-	#if (! $tmp) {
-	print STDERR "Error (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
-	#} else {
-	#  print STDERR "Error (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
-	#  print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
-	#}
+	    #if (! $tmp) {
+	    print STDERR "Error (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
+	    #} else {
+	    #  print STDERR "Error (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
+	    #  print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
+	    #}
       }
       @cache{ keys %$tmp } = values %$tmp;
       last;
@@ -352,22 +352,22 @@ sub get_md5_data {
     my $try = 1;
     while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
       if (! $tmp) {
-	print STDERR "Warning (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
+	    print STDERR "Warning (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
       } else {
-	print STDERR "Warning (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
-	@cache{ keys %$tmp } = values %$tmp;
-	@set = grep {! exists $tmp->{$_}} @set;
-	print STDERR "Missing keys: ".join(",", @set)."\n";
+	    print STDERR "Warning (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
+	    @cache{ keys %$tmp } = values %$tmp;
+	    @set = grep {! exists $tmp->{$_}} @set;
+	    print STDERR "Missing keys: ".join(",", @set)."\n";
       }
       $tmp = $mch->get_multi(@set);
       $try += 1;
     }
     unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
       if (! $tmp) {
-	print STDERR "Error (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
+	    print STDERR "Error (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
       } else {
-	print STDERR "Error (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
-	print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
+	    print STDERR "Error (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
+	    print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
       }
     }
     @cache{ keys %$tmp } = values %$tmp;
@@ -376,11 +376,11 @@ sub get_md5_data {
   foreach my $k (keys %keys) {
     if (exists $cache{$k}) {
       foreach my $src (keys %{$cache{$k}}) {
-	if (($src eq 'lca') && $get_lca) {
-	  $lca->{$keys{$k}} = $cache{$k}{$src};
-	} elsif ($src ne 'lca') {
-	  $ach->{$keys{$k}}{$src} = $cache{$k}{$src};
-	}
+	    if (($src eq 'lca') && $get_lca) {
+	      $lca->{$keys{$k}} = $cache{$k}{$src};
+	    } elsif ($src ne 'lca') {
+	      $ach->{$keys{$k}}{$src} = $cache{$k}{$src};
+	    }
       }
     }
   }
@@ -408,8 +408,8 @@ sub get_min_md5s_by_source {
   foreach my $md5 (sort {scalar(keys %{$sub_md5s{$b}}) <=> scalar(keys %{$sub_md5s{$a}})} keys %sub_md5s) {
     foreach my $src (keys %{$sub_md5s{$md5}}) {
       if (! exists $cur_srcs{$src}) {
-	$cur_md5s{$md5}{$src} = 1;
-	$cur_srcs{$src} = 1;
+	    $cur_md5s{$md5}{$src} = 1;
+	    $cur_srcs{$src} = 1;
       }
     }
     last if (scalar(keys %cur_srcs) >= $max_srcs);
