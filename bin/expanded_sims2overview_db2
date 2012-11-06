@@ -106,6 +106,7 @@ while (my $line = <INFILE>) {
   chomp $line;
   my ($md5, $frag, $ident, $len, $eval, $fid, $oid, $source, @rest) = split(/\t/, $line);
   unless ($frag and $md5) { next; }
+  my $is_protein = (@rest && ($rest[0] == 1)) ? 0 : 1;
 
   if ($select eq "md5") {
     if ($curr eq '') { $curr = $md5; }
@@ -119,7 +120,7 @@ while (my $line = <INFILE>) {
     $data->{len}{$len}     += 1;
     $data->{ident}{$ident} += 1;
     $data->{frag}{$frag}    = 1;
-    $data->{is_protein}     = (@rest && ($rest[0] == 1)) ? 0 : 1;
+    $data->{is_protein}     = $is_protein;
   }
   elsif ($select eq 'lca') {
     unless ($fid) { next; }
@@ -166,6 +167,14 @@ while (my $line = <INFILE>) {
     $data->{$source}{ident}{$ident} += 1;
     $data->{$source}{md5}{$md5}     += 1;
     $data->{$source}{frag}{$frag}    = 1;
+    if ($select eq "organism") {
+        my $merge = $is_protein ? "M5NR" : "M5RNA";
+        $data->{$merge}{eval}{$eval}   += 1;
+        $data->{$merge}{len}{$len}     += 1;
+        $data->{$merge}{ident}{$ident} += 1;
+        $data->{$merge}{md5}{$md5}     += 1;
+        $data->{$merge}{frag}{$frag}    = 1;
+    }
   }
   elsif ($select eq "source") {
     unless ($source) { next; }
@@ -289,8 +298,8 @@ sub get_type_stats {
   my ($cmap, $data, $select, $name) = @_;
   
   unless ($name && (scalar(keys %$data) > 0)) { return ''; }
-
-  my $text = '';
+  
+  my $text  = '';
   foreach my $src (keys %$data) {
     unless (scalar(keys %{$data->{$src}{frag}}) > 0) { next; }
 
