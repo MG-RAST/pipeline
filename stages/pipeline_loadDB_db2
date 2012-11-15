@@ -210,13 +210,22 @@ if ($assembled == 1) {
   $abundance_option = "--abundance_file $abun_file";
 }
 
+my $summary_file_options = "";
+my %pluralize = ( 'md5' => 'md5s', 'function' => 'functions', 'organism' => 'organisms', 'ontology' => 'ontologies', 'lca' => 'lcas' );
 foreach my $info (@info_set) {
   my ($type, $input, $pos) = @$info;
   unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
   system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k $pos,$pos -o $input.$type $input >> $outf 2> $err_file") == 0 or fail($log, "sort $type: ".$message);
   system("expanded_sims2overview_db2 $abundance_option --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $input.$type.summary >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview_db2 $type: ".$message);
-  system("load_summary2db_db2 $params $dboptions $reload --job $job_num --type $type --filename $input.$type.summary >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db_db2 $type".$message);
+  $summary_file_options .= "--$pluralize{$type}_filename $input.$type.summary ";
+}
+
+$outf = "$run_dir/run_load_summary.out";
+system("load_summary2db_db2 $params $dboptions $summary_file_options $reload --job $job_num >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db_db2 ".$message);
+
+foreach my $info (@info_set) {
+  my ($type, $input, $pos) = @$info;
   # clean tmp files
   system("cp $input.$type $input.$type.summary $job_dir/analysis/");
 }
