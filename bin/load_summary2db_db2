@@ -21,8 +21,8 @@ my %filenames = ( md5s       => "",
                 );
 
 my $filenames_string = "";
-foreach my $key (keys %filenames) {
-  $filenames_string .= "  --$key\_filename\t\tsource data\tOptional.\n";
+foreach my $file_type (keys %filenames) {
+  $filenames_string .= "  --$file_type\_filename\t\tsource data\tOptional.\n";
 }
 
 my $usage   = qq($0
@@ -42,20 +42,24 @@ $filenames_string
 );
 
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
-if ( ! &GetOptions (        'verbose!'                  => \$verbose, 
-		            'md5s_filename=s'           => \$filenames{md5s},
-		            'functions_filename=s'      => \$filenames{functions},
-		            'organisms_filename=s'      => \$filenames{organisms},
-		            'ontologies_filename=s'     => \$filenames{ontologies},
-		            'lcas_filename=s'           => \$filenames{lcas},
-		            'seq-db-version:i'          => \$version,
-		            'job=i'                     => \$jobID,
-		            'dbhost:s'                  => \$dbhost,
-		            'dbname:s'                  => \$dbname,
-		            'dbuser:s'                  => \$dbuser,
-		            'reload!'                   => \$reload
-		           ) )
-  { print STDERR $usage; exit 1; }
+
+my %options = ( 'verbose!'         => \$verbose,
+                'seq-db-version:i' => \$version,
+                'job=i'            => \$jobID,
+                'dbhost:s'         => \$dbhost,
+                'dbname:s'         => \$dbname,
+                'dbuser:s'         => \$dbuser,
+                'reload!'          => \$reload
+              );
+
+foreach my $file_type (keys %filenames) {
+  $options{$file_type."\_filename=s"} = \$filenames{$file_type};
+}
+
+if (! &GetOptions ( %options )) {
+  print STDERR $usage;
+  exit 1;
+}
 
 my $file_count = 0;
 foreach my $file_type (keys %filenames) {
@@ -78,17 +82,6 @@ $has_job = ($has_job && (@$has_job > 0)) ? $has_job->[0] : 0;
 if ($has_job && (! $reload)) {
   print STDERR "Entry already exists in job_info for job=$jobID and version=$version, exiting.\n";
   exit 1;
-} elsif (! $has_job) {
-  # Load files into job_* tables
-  foreach my $file_type (keys %filenames) {
-    &insert_job_abundances($dbh, $file_type);
-  }
-
-  # Insert row in job_info with loaded = true
-  print "Inserting job=$jobID, version=$version and loaded=true into job_info table... " if ($verbose);
-  $dbh->do("INSERT INTO job_info (version, job, loaded) VALUES ('$version', '$jobID', true)");
-  $dbh->commit;
-
 } elsif ($has_job && $reload) {
   # Update row in job_info to loaded = false
   print "Updating job_info to loaded = false where job=$jobID and version=$version... " if ($verbose);
@@ -111,7 +104,16 @@ if ($has_job && (! $reload)) {
   print "Updating job_info to loaded = true where job=$jobID and version=$version... " if ($verbose);
   $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version)");
   $dbh->commit;
-  print "Done.\n" if ($verbose);
+} else {
+  # Load files into job_* tables
+  foreach my $file_type (keys %filenames) {
+    &insert_job_abundances($dbh, $file_type);
+  }
+
+  # Insert row in job_info with loaded = true
+  print "Inserting job=$jobID, version=$version and loaded=true into job_info table... " if ($verbose);
+  $dbh->do("INSERT INTO job_info (version, job, loaded) VALUES ('$version', '$jobID', true)");
+  $dbh->commit;
 }
 
 print "Done.\n" if ($verbose);
