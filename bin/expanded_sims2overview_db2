@@ -432,9 +432,8 @@ Create summary statistics file from expanded sims file, for loading into ACH.
 expanded: md5, fragment, identity, length, evalue, function, organism, source
 ontology: md5, fragment, identity, length, evalue, function, ontology, source
 LCA:      md5_list, fragment, identity_list, length_list, evalue_list, lca_string, depth of lca (1-8)
-summary: md5|function|organism|ontology|lca, abundance, [eval_list],
-         avg eval, stdev eval, avg len, stdev len, avg ident, stdev ident,
-         [md5_list | md5_count], [source, level]
+summary: m5nr-version, job_id, md5|function|organism|ontology|lca, abundance,
+         avg eval, stdev eval, avg len, stdev len, avg ident, stdev ident, [md5_list], source
 
   --job               job id       Required.
   --m5nr-version      m5nr version Optional. Default is '$version'
