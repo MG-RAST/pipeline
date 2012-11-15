@@ -6,8 +6,6 @@ use warnings;
 use DBI;
 use Getopt::Long;
 
-my $filename  = '';
-my $data_type = '';
 my $verbose = 0;
 my $version = 7;
 my $jobID   = '';
@@ -15,46 +13,59 @@ my $reload  = 0;
 my $dbname  = "";
 my $dbhost  = "";
 my $dbuser  = "";
-my $options = { md5      => "job_md5s",
-		function => "job_functions",
-		organism => "job_organisms",
-		ontology => "job_ontologies",
-		lca      => "job_lcas"
-	      };
-my $opt_str = join(" | ", sort keys %$options);
+my %filenames = ( md5s       => "",
+                  functions  => "",
+                  organisms  => "",
+                  ontologies => "",
+                  lcas       => ""
+                );
+
+my $filenames_string = "";
+foreach my $key (keys %filenames) {
+  $filenames_string .= "  --$key\_filename\t\tsource data\tOptional.\n";
+}
+
 my $usage   = qq($0
 load precomputed job data into database.
 
-  --filename        source data    Required.
-  --job             job id         Required.
-  --type            data type      Required. $opt_str
-  --seq-db-version  nr db version  Optional. Default is '$version'
-  --dbhost          db user        Required. Server of database
-  --dbname          db name        Required. Name of database
-  --dbuser          db user        Required. Owner of database
-  --verbose                        Optional. Verbose output.
-  --reload                         Optional. Overwrite data if exists for job/version.
+$filenames_string
+  Note: At least 1 of the above filenames is Required.
+
+  --job                  job id         Required.
+  --seq-db-version       nr db version  Optional. Default is '$version'
+  --dbhost               db user        Required. Server of database
+  --dbname               db name        Required. Name of database
+  --dbuser               db user        Required. Owner of database
+  --verbose                             Optional. Verbose output.
+  --reload                              Optional. Overwrite data if exists for job/version.
 
 );
 
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
-if ( ! &GetOptions ('verbose!'         => \$verbose, 
-		            'filename=s'       => \$filename,
-		            'type=s'           => \$data_type,
-		            'seq-db-version:i' => \$version,
-		            'job=i'            => \$jobID,
-		            'dbhost:s'         => \$dbhost,
-		            'dbname:s'         => \$dbname,
-		            'dbuser:s'         => \$dbuser,
-		            'reload!'          => \$reload
+if ( ! &GetOptions (        'verbose!'                  => \$verbose, 
+		            'md5s_filename=s'           => \$filenames{md5s},
+		            'functions_filename=s'      => \$filenames{functions},
+		            'organisms_filename=s'      => \$filenames{organisms},
+		            'ontologies_filename=s'     => \$filenames{ontologies},
+		            'lcas_filename=s'           => \$filenames{lcas},
+		            'seq-db-version:i'          => \$version,
+		            'job=i'                     => \$jobID,
+		            'dbhost:s'                  => \$dbhost,
+		            'dbname:s'                  => \$dbname,
+		            'dbuser:s'                  => \$dbuser,
+		            'reload!'                   => \$reload
 		           ) )
   { print STDERR $usage; exit 1; }
 
-unless ($filename && $jobID && $data_type) {
-  print STDERR $usage . "Missing parmater.\n"; exit 1;
+my $file_count = 0;
+foreach my $file_type (keys %filenames) {
+  if($filenames{$file_type}) {
+    ++$file_count;
+  }
 }
-unless (exists $options->{$data_type}) {
-  print STDERR $usage . "Unknown type '$data_type'.\n"; exit 1;
+
+unless ($file_count > 0 && $jobID && $dbhost && $dbname && $dbuser) {
+  print STDERR $usage . "Missing parmater.\n"; exit 1;
 }
 
 my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, '', {AutoCommit => 0 , RaiseError => 1});
@@ -69,7 +80,9 @@ if ($has_job && (! $reload)) {
   exit 1;
 } elsif (! $has_job) {
   # Load files into job_* tables
-  &insert_job_abundances($dbh, $filename, $data_type);
+  foreach my $file_type (keys %filenames) {
+    &insert_job_abundances($dbh, $file_type);
+  }
 
   # Insert row in job_info with loaded = true
   print "Inserting job=$jobID, version=$version and loaded=true into job_info table... " if ($verbose);
@@ -83,20 +96,16 @@ if ($has_job && (! $reload)) {
   $dbh->commit;
 
   # Delete entries from job_* tables with this job and version
-  $dbh->do("DELETE FROM job_md5s WHERE job=$jobID AND version=$version");
-  $dbh->do("DELETE FROM job_functions WHERE job=$jobID AND version=$version");
-  $dbh->do("DELETE FROM job_organisms WHERE job=$jobID AND version=$version");
-  $dbh->do("DELETE FROM job_ontologies WHERE job=$jobID AND version=$version");
-  $dbh->do("DELETE FROM job_lcas WHERE job=$jobID AND version=$version");
-  print "Deleting from job_md5s where job=$jobID and version=$version" if ($verbose);
-  print "Deleting from job_functions where job=$jobID and version=$version" if ($verbose);
-  print "Deleting from job_organisms where job=$jobID and version=$version" if ($verbose);
-  print "Deleting from job_ontologies where job=$jobID and version=$version" if ($verbose);
-  print "Deleting from job_lcas where job=$jobID and version=$version" if ($verbose);
+  foreach my $file_type (keys %filenames) {
+    $dbh->do("DELETE FROM job_$file_type WHERE job=$jobID AND version=$version");
+    print "Deleting from job_$file_type where job=$jobID and version=$version" if ($verbose);
+  }
   $dbh->commit;
   
   # Load files into job_* tables
-  &insert_job_abundances($dbh, $filename, $data_type);
+  foreach my $file_type (keys %filenames) {
+    &insert_job_abundances($dbh, $file_type);
+  }
 
   # Update row in job_info to loaded = true
   print "Updating job_info to loaded = true where job=$jobID and version=$version... " if ($verbose);
@@ -109,28 +118,15 @@ print "Done.\n" if ($verbose);
 $dbh->disconnect;
 exit 0;
 
-# Still need to update the database indexes after entering new rows.
-sub update_indexes {
-}
-
 sub insert_job_abundances {
-  my ($dbh, $file, $data_type) = @_;
+  my ($dbh, $file_type) = @_;
 
-  my $table = $options->{$data_type};
-
+  my $table = "job_$file_type";
+  my $filename = $filenames{$file_type};
   my ($num, $name, $end);
-  my $columns = "version,job,abundance,exp_avg,exp_stdv,len_avg,len_stdv,ident_avg,ident_stdv";
-  
-  if    ($data_type eq "md5")      { $columns = "md5,".$columns.",seek,length,is_protein"; }
-  elsif ($data_type eq "function") { $columns = "id,".$columns.",md5s"; }
-  elsif ($data_type eq "organism") { $columns = "id,".$columns.",md5s,source"; }
-  elsif ($data_type eq "ontology") { $columns = "id,".$columns.",md5s,source"; }
-  elsif ($data_type eq "lca")      { $columns = "lca,".$columns.",md5s,level"; }
-  else { print STDERR "ERROR:\tinvalid table type: $data_type"; exit 1; }
+  my $copy_cmd = "COPY $table FROM STDIN WITH NULL AS ''";
 
-  my $copy_cmd = "COPY $table ($columns) FROM STDIN WITH NULL AS ''";
-
-  if ( open(DATA, "<$file") ) {
+  if ( open(DATA, "<$filename") ) {
     print "Running $copy_cmd ... " if ($verbose);
     $dbh->do($copy_cmd);
     while (my $line = <DATA>) {
@@ -144,6 +140,6 @@ sub insert_job_abundances {
     close(DATA);
     print " Done\n" if ($verbose);
   } else {
-    print STDERR "Error: can not read file $file: $!\n"; exit 1;
+    print STDERR "Error: can not read file $filename: $!\n"; exit 1;
   }
 }
