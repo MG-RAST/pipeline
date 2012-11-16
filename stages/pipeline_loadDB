@@ -82,7 +82,7 @@ my $proc_dir    = $job_dir."/proc";
 my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
 my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
 my $run_dir     = $stage_dir;
-my $params      = "--verbose --seq-db-name M5NR --seq-db-version ".$ver_db;
+my $params      = "--verbose --seq-db-version ".$ver_db;
 my $dboptions   = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user;
 my $hostname    = `hostname`;
 
@@ -205,20 +205,31 @@ if ($db_reload) {
 my $job_attribs = Pipeline::get_job_attributes($job_num);
 my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
 my $abundance_option = "";
-if ($assembled == 1) {
+if ($assembled && $assembled == 1) {
   system("cp $raw_dir/$job_num.abundance $abun_file") == 0 or fail($log, 'cp: '.$message);
   $abundance_option = "--abundance_file $abun_file";
 }
 
+my $summary_file_options = "";
+my %pluralize = ( 'md5' => 'md5s', 'function' => 'functions', 'organism' => 'organisms', 'ontology' => 'ontologies', 'lca' => 'lcas' );
 foreach my $info (@info_set) {
   my ($type, $input, $pos) = @$info;
   unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
   system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k $pos,$pos -o $input.$type $input >> $outf 2> $err_file") == 0 or fail($log, "sort $type: ".$message);
-  system("expanded_sims2overview $abundance_option --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $input.$type.summary >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
-  system("load_summary2db $params $dboptions $reload --job $job_num --type $type --filename $input.$type.summary >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db $type".$message);
-  # clean tmp files
-  system("rm $input.$type $input.$type.summary");
+  system("expanded_sims2overview $abundance_option --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $input.$type.summary >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
+  $summary_file_options .= "--$pluralize{$type}_filename $input.$type.summary ";
+  # clean tmp file
+  system("rm $input.$type");
+}
+
+$outf = "$run_dir/run_load_summary.out";
+system("load_summary2db $params $dboptions $summary_file_options $reload --job $job_num >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db ".$message);
+
+foreach my $info (@info_set) {
+  my ($type, $input, $pos) = @$info;
+  # clean tmp file
+  system("rm $input.$type.summary");
 }
 
 # process sources
@@ -229,7 +240,7 @@ if ($ontol_expand && (-s $ontol_expand)) {
 } else {
   system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 8,8 -o $src_expand $md5_expand >> $outf 2> $err_file") == 0 or fail($log, "sort $type: ".$message);
 }
-system("expanded_sims2overview $abundance_option --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
+system("expanded_sims2overview $abundance_option --job $job_num --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
 
 # new annotations loaded, add version to JobAttributes
 Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
