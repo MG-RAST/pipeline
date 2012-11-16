@@ -5,9 +5,11 @@ use warnings;
 
 use Data::Dumper;
 use Getopt::Long;
-use List::Util qw(first max min sum);
+use List::Util qw(first sum);
 
 my $verbose  = 0;
+my $version  = 7;
+my $jobID    = '';
 my $abun_file= '';
 my $in_file  = '';
 my $out_file = '';
@@ -15,22 +17,24 @@ my $md5_file = '';
 my $cluster  = '';
 my $select   = '';
 my $options  = { md5      => 1,
-		 ontology => 1,
-		 function => 1,
-		 organism => 1,
-		 source   => 1,
-		 lca      => 1
-	       };
+		         ontology => 1,
+		         function => 1,
+		         organism => 1,
+		         source   => 1,
+		         lca      => 1
+	           };
 
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { &usage(); }
 if ( ! GetOptions( "verbose!"           => \$verbose,
-                   "abundance_file=s"	=> \$abun_file,
-		   "expanded_sims_in=s" => \$in_file,
-		   "summary_sims_out=s" => \$out_file,
-		   "md5_index:s"        => \$md5_file,
-		   "cluster:s"          => \$cluster,
-		   "option=s"           => \$select
-		 ) )
+                   "m5nr-version:i"     => \$version,
+                   "job=i"              => \$jobID,
+                   "abundance_file=s"   => \$abun_file,
+		           "expanded_sims_in=s" => \$in_file,
+		           "summary_sims_out=s" => \$out_file,
+		           "md5_index:s"        => \$md5_file,
+		           "cluster:s"          => \$cluster,
+		           "option=s"           => \$select
+		         ) )
   { print &usage(); }
 
 unless ($in_file && $out_file && (-s $in_file)) {
@@ -51,7 +55,6 @@ my $curr  = '';
 my $curr2 = '';
 my $count = 0;
 my @thresholds_eval  = ( -5 , -10 , -20 , -30 , -1000 );
-my @thresholds_len   = ( 10 , 25 , 50 , 100 , 1000000 );
 my @thresholds_ident = ( 60 , 80 , 90 , 97 , 100 );
 
 # get hash of abundance mapping file if $abun_file exists
@@ -101,8 +104,9 @@ open(OUTFILE, ">$out_file") || die "Can't open file $out_file!\n";
 
 while (my $line = <INFILE>) {
   chomp $line;
-  my ($md5, $frag, $ident, $len, $eval, $func, $org, $source, $taxid, @rest) = split(/\t/, $line);
+  my ($md5, $frag, $ident, $len, $eval, $fid, $oid, $source, @rest) = split(/\t/, $line);
   unless ($frag and $md5) { next; }
+  my $is_protein = (@rest && ($rest[0] == 1)) ? 0 : 1;
 
   if ($select eq "md5") {
     if ($curr eq '') { $curr = $md5; }
@@ -116,15 +120,16 @@ while (my $line = <INFILE>) {
     $data->{len}{$len}     += 1;
     $data->{ident}{$ident} += 1;
     $data->{frag}{$frag}    = 1;
+    $data->{is_protein}     = $is_protein;
   }
   elsif ($select eq 'lca') {
-    unless ($func) { next; }
-    if ($curr eq '') { $curr = $func; }
-    if ($curr ne $func) {
+    unless ($fid) { next; }
+    if ($curr eq '') { $curr = $fid; }
+    if ($curr ne $fid) {
       print OUTFILE &get_lca_stats($cmap, $data, $curr, $curr2);
       $data  = {};
-      $curr  = $func;
-      $curr2 = $org;
+      $curr  = $fid;
+      $curr2 = $oid;
       $count++;
     }
     map { $data->{eval}{$_}  += 1 } split(/;/, $eval);
@@ -134,12 +139,12 @@ while (my $line = <INFILE>) {
     $data->{frag}{$frag} = 1;
   }
   elsif ($select eq "function") {
-    unless ($func) { next; }
-    if ($curr eq '') { $curr = $func; }
-    if ($curr ne $func) {
+    unless ($fid) { next; }
+    if ($curr eq '') { $curr = $fid; }
+    if ($curr ne $fid) {
       print OUTFILE &get_type_stats($cmap, $data, $select, $curr);
       $data = {};
-      $curr = $func;
+      $curr = $fid;
       $count++;
     }
     $data->{$source}{eval}{$eval}   += 1;
@@ -148,14 +153,13 @@ while (my $line = <INFILE>) {
     $data->{$source}{md5}{$md5}     += 1;
     $data->{$source}{frag}{$frag}    = 1;
   }
-  elsif ($select eq "organism") {
-    unless ($org) { next; }
-    if ($curr eq '') { $curr = $org; }
-    if ($curr ne $org) {
-      print OUTFILE &get_type_stats($cmap, $data, $select, $curr, $curr2);
+  elsif (($select eq "organism") || ($select eq "ontology")) {
+    unless ($oid) { next; }
+    if ($curr eq '') { $curr = $oid; }
+    if ($curr ne $oid) {
+      print OUTFILE &get_type_stats($cmap, $data, $select, $curr);
       $data  = {};
-      $curr  = $org;
-      $curr2 = $taxid || '';
+      $curr  = $oid;
       $count++;
     }
     $data->{$source}{eval}{$eval}   += 1;
@@ -163,22 +167,14 @@ while (my $line = <INFILE>) {
     $data->{$source}{ident}{$ident} += 1;
     $data->{$source}{md5}{$md5}     += 1;
     $data->{$source}{frag}{$frag}    = 1;
-  }
-  elsif ($select eq "ontology") {
-    unless ($org) { next; }
-    if ($curr eq '') { $curr = $org; }
-    if ($curr ne $org) {
-      print OUTFILE &get_type_stats($cmap, $data, $select, $curr, $curr2);
-      $data  = {};
-      $curr  = $org;
-      $curr2 = $func;
-      $count++;
+    if ($select eq "organism") {
+        my $merge = $is_protein ? "M5NR" : "M5RNA";
+        $data->{$merge}{eval}{$eval}   += 1;
+        $data->{$merge}{len}{$len}     += 1;
+        $data->{$merge}{ident}{$ident} += 1;
+        $data->{$merge}{md5}{$md5}     += 1;
+        $data->{$merge}{frag}{$frag}    = 1;
     }
-    $data->{$source}{eval}{$eval}   += 1;
-    $data->{$source}{len}{$len}     += 1;
-    $data->{$source}{ident}{$ident} += 1;
-    $data->{$source}{md5}{$md5}     += 1;
-    $data->{$source}{frag}{$frag}    = 1;
   }
   elsif ($select eq "source") {
     unless ($source) { next; }
@@ -203,7 +199,7 @@ elsif ($select eq 'lca') {
   print OUTFILE &get_lca_stats($cmap, $data, $curr, $curr2);
 }
 elsif (($select eq "function") || ($select eq "organism") || ($select eq "ontology")) {
-  print OUTFILE &get_type_stats($cmap, $data, $select, $curr, $curr2);
+  print OUTFILE &get_type_stats($cmap, $data, $select, $curr);
 }
 elsif ($select eq "source") {
   print OUTFILE &get_source_stats($data, $curr);
@@ -244,25 +240,16 @@ sub get_md5_stats {
 
   map { $exps->{ &get_exponent($_) } += $data->{eval}{$_} } @evals;
 
-  my ($e_min, $e_max, $e_mean, $e_std) = &get_stats($exps);
-  my ($l_min, $l_max, $l_mean, $l_std) = &get_stats($data->{len});
-  my ($i_min, $i_max, $i_mean, $i_std) = &get_stats($data->{ident});
-
-  $e_min = min @evals;
-  $e_max = max @evals;
-
-  my ($seek, $len) = exists($imap->{$md5}) ? @{$imap->{$md5}} : ('', '');
+  my ($e_mean, $e_std) = &get_stats($exps);
+  my ($l_mean, $l_std) = &get_stats($data->{len});
+  my ($i_mean, $i_std) = &get_stats($data->{ident});
+  my ($seek, $len)     = exists($imap->{$md5}) ? @{$imap->{$md5}} : ('', '');
   
   #output
-  return join("\t", ( $md5, int($f_num),
-		      $e_min, $e_max, $e_mean, $e_std,
-		      &to_count_array($exps, "eval"),
-		      $l_min, $l_max, $l_mean, $l_std,
-		      &to_count_array($data->{len}, "len"),
-		      $i_min, $i_max, $i_mean, $i_std,
-		      &to_count_array($data->{ident}, "ident"),
-		      $seek, $len
-		    ) ) . "\n";
+  return join("\t", ( $version, $jobID, $md5, int($f_num), &to_count_array($exps, "eval"),
+		              $e_mean, $e_std, $l_mean, $l_std, $i_mean, $i_std,
+		              $seek, $len, $data->{is_protein}
+		            ) ) . "\n";
 }
 
 sub get_lca_stats {
@@ -296,32 +283,23 @@ sub get_lca_stats {
 
   map { $exps->{ &get_exponent($_) } += $data->{eval}{$_} } @evals;
 
-  my ($e_min, $e_max, $e_mean, $e_std) = &get_stats($exps);
-  my ($l_min, $l_max, $l_mean, $l_std) = &get_stats($data->{len});
-  my ($i_min, $i_max, $i_mean, $i_std) = &get_stats($data->{ident});
-
-  $e_min = min @evals;
-  $e_max = max @evals;
+  my ($e_mean, $e_std) = &get_stats($exps);
+  my ($l_mean, $l_std) = &get_stats($data->{len});
+  my ($i_mean, $i_std) = &get_stats($data->{ident});
 
   #output
-  return join("\t", ( $lca, int($f_num),
-		      $e_min, $e_max, $e_mean, $e_std,
-		      &to_count_array($exps, "eval"),
-		      $l_min, $l_max, $l_mean, $l_std,
-		      &to_count_array($data->{len}, "len"),
-		      $i_min, $i_max, $i_mean, $i_std,
-		      &to_count_array($data->{ident}, "ident"),
-		      scalar(keys %{$data->{md5}}),
-		      $level
-		    ) ) . "\n";
+  return join("\t", ( $version, $jobID, $lca, int($f_num),
+		              $e_mean, $e_std, $l_mean, $l_std, $i_mean, $i_std,
+		              scalar(keys %{$data->{md5}}), $level
+		            ) ) . "\n";
 }
 
 sub get_type_stats {
-  my ($cmap, $data, $select, $name, $extra) = @_;
+  my ($cmap, $data, $select, $name) = @_;
   
   unless ($name && (scalar(keys %$data) > 0)) { return ''; }
-
-  my $text = '';
+  
+  my $text  = '';
   foreach my $src (keys %$data) {
     unless (scalar(keys %{$data->{$src}{frag}}) > 0) { next; }
 
@@ -351,24 +329,15 @@ sub get_type_stats {
 
     map { $exps->{ &get_exponent($_) } += $data->{$src}{eval}{$_} } @evals;
 
-    my ($e_min, $e_max, $e_mean, $e_std) = &get_stats($exps);
-    my ($l_min, $l_max, $l_mean, $l_std) = &get_stats($data->{$src}{len});
-    my ($i_min, $i_max, $i_mean, $i_std) = &get_stats($data->{$src}{ident});
+    my ($e_mean, $e_std) = &get_stats($exps);
+    my ($l_mean, $l_std) = &get_stats($data->{$src}{len});
+    my ($i_mean, $i_std) = &get_stats($data->{$src}{ident});
     
-    $e_min = min @evals;
-    $e_max = max @evals;
-
     # output
-    $text .= join("\t", ( $name, int($f_num),
-			  $e_min, $e_max, $e_mean, $e_std,
-			  &to_count_array($exps, "eval"),
-			  $l_min, $l_max, $l_mean, $l_std,
-			  &to_count_array($data->{$src}{len}, "len"),
-			  $i_min, $i_max, $i_mean, $i_std,
-			  &to_count_array($data->{$src}{ident}, "ident"),
-			  "{" . join(",", keys %{$data->{$src}{md5}}) . "}",
-			  $src ));
-    $text .= (($select eq "organism") || ($select eq "ontology")) ? "\t$extra\n" : "\n";
+    $text .= join("\t", ( $version, $jobID, $name, int($f_num),
+			              $e_mean, $e_std, $l_mean, $l_std, $i_mean, $i_std,
+			              "{" . join(",", keys %{$data->{$src}{md5}}) . "}", $src
+			            ) ) . "\n";
   }
   return $text;
 }
@@ -396,14 +365,12 @@ sub get_exponent {
   return $e * 1;
 }
 
-# return (min, max, mean, stdev)
+# return (mean, stdev)
 sub get_stats {
   my ($data) = @_;
 
   my @uniq  = keys %$data;
   my $count = sum values %$data;
-  my $min   = min @uniq;
-  my $max   = max @uniq;
   my $total = 0;
   map { $total += ($_ * $data->{$_}) } @uniq;
 
@@ -419,7 +386,7 @@ sub get_stats {
   $mean     = sprintf( "%.3f", $mean );
   my $stdev = sprintf( "%.3f", sqrt($sum / $count) );
 
-  return ($min, $max, $mean, $stdev);
+  return ($mean, $stdev);
 }
 
 sub to_count_array {
@@ -430,27 +397,17 @@ sub to_count_array {
     my $zero = 0;
     foreach my $exp (sort {$b <=> $a} keys %$data) {
       if ($exp == 0) {
-	$zero += $data->{$exp};
-	next;
+	    $zero += $data->{$exp};
+	    next;
       }
       for (my $i = 0; $i < @thresholds_eval; $i++) {
-	if ($exp >= $thresholds_eval[$i]) {
-	  $bin[$i] += $data->{$exp};
-	  last;
-	}
+	    if ($exp >= $thresholds_eval[$i]) {
+	      $bin[$i] += $data->{$exp};
+	      last;
+	    }
       }
     }
     $bin[-1] += $zero;
-  }
-  elsif ($type eq 'len') {
-    foreach my $len (sort {$a <=> $b} keys %$data) {
-      for (my $i = 0; $i < @thresholds_len; $i++) {
-	if ($len <= $thresholds_len[$i]) {
-	  $bin[$i] += $data->{$len};
-	  last;
-	}
-      }
-    }
   }
   elsif ($type eq 'ident') {
     foreach my $ident (sort {$a <=> $b} keys %$data) {
@@ -472,19 +429,19 @@ sub usage {
   print STDERR qq($0
 Create summary statistics file from expanded sims file, for loading into ACH.
 
-expanded: md5, fragment, identity, length, evalue, function, organism, source, tax_id
-ontology: md5, fragment, identity, length, evalue, function, id, source
-LCA:      md5 list, fragment, identity list, length list, evalue list, lca string, depth of lca (1-8)
-summary: md5|function|organism|ontology|lca, abundance,
-         eval min, eval max, avg eval, stdev eval, eval list,
-         len min, len max, avg len, stdev len, len list,
-         ident min, ident max, avg ident, stdev ident, ident list,
-         fragment|md5 list, [source, tax_id|annotation]
+expanded: md5, fragment, identity, length, evalue, function, organism, source
+ontology: md5, fragment, identity, length, evalue, function, ontology, source
+LCA:      md5_list, fragment, identity_list, length_list, evalue_list, lca_string, depth of lca (1-8)
+summary: m5nr-version, job_id, md5|function|organism|ontology|lca, abundance,
+         avg eval, stdev eval, avg len, stdev len, avg ident, stdev ident, [md5_list], source
 
+  --job               job id       Required.
+  --m5nr-version      m5nr version Optional. Default is '$version'
   --expanded_sims_in  file name    Required. Name of input expanded sim file
   --summary_sims_out  file name    Required. Name of output summary sim file.
   --md5_index         file name    Optional. md5 \\t seek \\t length
   --cluster           file name    Optional. If queries are cluster names, will increase abundance count based on cluster size.
+  --abundance_file    file name    Optional. File with contig coverage abundance for assemebeled jobs.
   --option            option type  Required. Sorted input format and output type.
                                              $opt_str
   --verbose                        Optional. Verbose output.

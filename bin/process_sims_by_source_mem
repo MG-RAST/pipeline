@@ -22,7 +22,7 @@ my $memhost   = "";
 my $memkey    = '_ach';
 my $usage     = qq($0
 Input:  m8 format blast / blat file - sorted by query | top hit
-Output: top hit for eaach query (protein or rna formats)
+Output: top hit for each query per source (protein or rna formats)
     1. filtered sims: same format as m8
     2. rna expanded sims: see below
     3. lca expanded (rna): see below
@@ -33,9 +33,9 @@ Output: top hit for eaach query (protein or rna formats)
     4. lca expanded (protein): see below
 
 m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
-expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
-rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
-ontology: md5|query, fragment|subject, identity, length, evalue, function, id, source
+expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source
+rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, is_rna
+ontology: md5|query, fragment|subject, identity, length, evalue, function, ontology, source
 LCA:      md5|query list, fragment|subject, identity list, length list, evalue list, lca string, depth of lca (1-8)
 
   --in_sim       file name      Required. Name of input sim file
@@ -52,16 +52,16 @@ LCA:      md5|query list, fragment|subject, identity list, length list, evalue l
 );
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
 if ( ! GetOptions( "verbose!"       => \$verbose,
-		   "in_sim=s"       => \$in_file,
-		   "out_filter=s"   => \$filt_file,
-		   "out_expand:s"   => \$exp_file,
-		   "out_ontology:s" => \$ont_file,
-		   "out_rna:s"      => \$rna_file,
-		   "out_lca:s"      => \$lca_file,
-		   "frag_num:i"     => \$frag_num,
-		   'mem_host:s'     => \$memhost,
-		   'mem_key:s'      => \$memkey
-		 ) )
+		           "in_sim=s"       => \$in_file,
+		           "out_filter=s"   => \$filt_file,
+		           "out_expand:s"   => \$exp_file,
+		           "out_ontology:s" => \$ont_file,
+		           "out_rna:s"      => \$rna_file,
+		           "out_lca:s"      => \$lca_file,
+		           "frag_num:i"     => \$frag_num,
+		           'mem_host:s'     => \$memhost,
+		           'mem_key:s'      => \$memkey
+                 ) )
   { print STDERR $usage; exit 1; }
 
 unless ($in_file && (-s $in_file) && $filt_file) {
@@ -90,19 +90,12 @@ my $count = 0;
 my $frags = 0;
 my $curr  = '';
 my ($filt_fh, $exp_fh, $ont_fh, $rna_fh, $lca_fh, $filt_t, $exp_t, $ont_t, $rna_t, $lca_t);
-my $ann_map = {};
 
-# ann_map: { 'source' => id => [ name, type ], 'function' => id => name, 'organism' => id => [ name, tax_id ] }
-print "Loading memcache ach data for mapping ... " if ($verbose);
-foreach my $ann (('source', 'function', 'organism')) {
-  my $rand = int(rand(60)) + 10;  # random 10-60
-  sleep($rand);
-  my $data = $mch->get($ann.$memkey);
-  if ($data && ref($data)) {
-    $ann_map->{$ann} = $data;
-  } else {
-    print STDERR "Error: Unable to get $ann data from memcache\n"; exit 1;
-  }
+print "Loading memcache source data for mapping ... " if ($verbose);
+sleep( int(rand(60))+10 );
+my $src_map = $mch->get('source'.$memkey);
+unless ($src_map && ref($src_map)) {
+  print STDERR "Error: Unable to get source data from memcache\n"; exit 1;
 }
 print "Done\n" if ($verbose);
 
@@ -131,7 +124,7 @@ while (my $line = <INFILE>) {
   if ($curr ne $frag) {
     if ($frags >= $frag_num) {
       #print STDERR "." if ($verbose);
-      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($ann_map, $data, $mch, $get_rna, $get_lca);
+      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $mch, $get_rna, $get_lca);
       print $filt_fh $filt_t if ($filt_t);
       print $exp_fh $exp_t   if ($exp_t);
       print $ont_fh $ont_t   if ($ont_t);
@@ -154,7 +147,7 @@ while (my $line = <INFILE>) {
 close(INFILE);
 
 if (scalar(keys %$data) > 0) {
-  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($ann_map, $data, $mch, $get_rna, $get_lca);
+  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $mch, $get_rna, $get_lca);
   print $filt_fh $filt_t if ($filt_t);
   print $exp_fh $exp_t   if ($exp_t);
   print $ont_fh $ont_t   if ($ont_t);
@@ -177,7 +170,7 @@ print "Done - $count fragments parsed\n" if ($verbose);
 exit 0;
 
 sub get_top_hits {
-  my ($ann_map, $data, $mch, $get_rna, $get_lca) = @_;
+  my ($src_map, $data, $mch, $get_rna, $get_lca) = @_;
   
   my $filter_text   = '';
   my $protein_text  = '';
@@ -277,25 +270,25 @@ sub get_top_hits {
 	    # filter sim output
 	    $filter_text .= join("\t", ($frag, $md5, @$sim)) . "\n";
 
-	    # md5_ach: md5 => source => function => [organism | ontology_id]
-	    # ann_map: { 'source' => id => [ name, type ], 'function' => id => name, 'organism' => id => [ name, tax_id ] }
+	    # md5_ach: md5 => source => function => { 'organism' => [], 'ontology' => [] }
+	    # src_map: id => [ name, type ]
     	foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
-	      next unless (exists($md5_ach->{$md5}{$src}) && exists($ann_map->{source}{$src}));
-	      my ($sname, $stype) = @{$ann_map->{source}{$src}};
+	      next unless (exists($md5_ach->{$md5}{$src}) && exists($src_map->{$src}));
+	      my ($sname, $stype) = @{$src_map->{$src}};
 
 	      foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
-	        my $fname = exists($ann_map->{function}{$func}) ? $ann_map->{function}{$func} : "";
-
-	        foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}} ) {
-	          my ($oname, $tid) = exists($ann_map->{organism}{$other}) ? @{$ann_map->{organism}{$other}} : ('','');
-	          if (($stype eq 'rna') && $oname && $get_rna) {
-		        $rna_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
-	          }
-	          elsif (($stype eq 'protein') && $oname && (! $get_rna)) {
-		        $protein_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $oname, $sname, ($tid || ''))) . "\n";
-	          }
-	          elsif (($stype eq 'ontology') && (! $get_rna)) {
-		        $ontology_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $fname, $other, $sname)) . "\n";
+	        foreach my $otype ( keys %{$md5_ach->{$md5}{$src}{$func}} ) {
+	          foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}{$otype}} ) {
+	            my $expand_text = join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $sname));
+	            if (($otype eq 'organism') && ($stype eq 'rna') && $get_rna) {
+		          $rna_text .= $expand_text . "\t1\n";
+	            }
+	            elsif (($otype eq 'organism') && ($stype eq 'protein') && (! $get_rna)) {
+		          $protein_text .= $expand_text . "\n";
+	            }
+	            elsif (($otype eq 'ontology') && ($stype eq 'ontology') && (! $get_rna)) {
+		          $ontology_text .= $expand_text . "\n";
+	            }
 	          }
 	        }
 	      }
