@@ -115,7 +115,7 @@ else {
 my $sort_mem = int($procs * 1024 * 2.5);
 my $params   = "--verbose --mem_host ".$Pipeline_Conf::memcache_host." --mem_key ".$mem_key;
 system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 1,1 -k 12,12nr -o $sims_file.sort $sims_file >> $run_dir/process_sims.out 2> $err_file") == 0 or fail($log, "sort sim: ".$message);
-system("process_sims_by_source_mem_db2 $params --in_sim $sims_file.sort --out_filter $sims_file.filter --out_rna $run_dir/$prefix.expand.rna --out_lca $run_dir/$prefix.expand.lca >> $run_dir/process_sims.out 2> $err_file") == 0 or fail($log, 'process_sims: '.$message);
+system("process_sims_by_source_mem $params --in_sim $sims_file.sort --out_filter $sims_file.filter --out_rna $run_dir/$prefix.expand.rna --out_lca $run_dir/$prefix.expand.lca >> $run_dir/process_sims.out 2> $err_file") == 0 or fail($log, 'process_sims: '.$message);
 
 # cleanup
 move("$sims_file.sort", "$results_dir/$prefix.sims") or fail($log, "Failed copy: $prefix.sims.sort - $!");
