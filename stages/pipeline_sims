@@ -114,7 +114,7 @@ else {
 }
 
 # expand sims - AWE results should always be sorted by query id then bit score
-system("process_sims_by_source_mem_db2 $params --in_sim $sims_file --out_filter $run_dir/$prefix.sims.filter --out_expand $run_dir/$prefix.expand.protein --out_ontology $run_dir/$prefix.expand.ontology --out_lca $run_dir/$prefix.expand.lca >> $run_dir/process_sims.out 2> $err_file") == 0 or fail($log, 'process_sims: '.$message);
+system("process_sims_by_source_mem $params --in_sim $sims_file --out_filter $run_dir/$prefix.sims.filter --out_expand $run_dir/$prefix.expand.protein --out_ontology $run_dir/$prefix.expand.ontology --out_lca $run_dir/$prefix.expand.lca >> $run_dir/process_sims.out 2> $err_file") == 0 or fail($log, 'process_sims: '.$message);
 
 # cleanup
 move("$sims_file", "$results_dir/$prefix.sims") or fail($log, "Failed copy: $sims_file - $!");
