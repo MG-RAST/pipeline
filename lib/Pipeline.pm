@@ -251,13 +251,12 @@ sub get_taxa_abundances {
   my ($job, $taxa, $clump, $v) = @_;
 
   my $rows;
-  my $data = {};
-  my $ach_dbh  = get_ach_dbh();
+  my $data = {}; # id => taxa
   my $data_dbh = get_analysis_dbh();
-  my $tax_md5  = {};
-  my $tax_num  = [];
+  my $tax_md5  = {}; # taxa => { md5s }
+  my $tax_num  = []; # [ taxa, abundance ]
 
-  $rows = $ach_dbh->selectall_arrayref("SELECT distinct name, tax_$taxa FROM organisms_ncbi");
+  $rows = $data_dbh->selectall_arrayref("SELECT distinct _id, tax_$taxa FROM organisms_ncbi");
   unless ($rows && (@$rows > 0)) { return []; }
   %$data = map { $_->[0], $_->[1] } grep { $_->[1] && ($_->[1] =~ /\S/) } @$rows;
   
@@ -284,19 +283,32 @@ sub get_taxa_abundances {
   if ($clump && ($other > 0)) {
     push @$tax_num, [ "Other", $other ];
   }
-
+  
   return $tax_num;
 }
 
+our $ontology_md5s = {}; # src => ont => [md5s]
 our $organism_md5s = {}; # org => [md5s]
 our $md5_abundance = {}; # md5 => abund
+
+sub get_ontology_md5s {     
+  my ($job, $v) = @_;
+  unless (scalar(keys %$ontology_md5s) > 0) {
+    my $dbh  = get_analysis_dbh();
+    my $rows = $dbh->selectall_arrayref("SELECT distinct source, id, md5s FROM job_ontologies WHERE version=$v AND job=$job");
+    if ($rows && (@$rows > 0)) {
+      map { $ontology_md5s->{$_->[0]}{$_->[1]} = $_->[2] } @$rows;
+    }
+  }
+  return $ontology_md5s;
+}
 
 sub get_organism_md5s {
   my ($job, $v) = @_;
 
   unless (scalar(keys %$organism_md5s) > 0) {
     my $dbh  = get_analysis_dbh();
-    my $rows = $dbh->selectall_arrayref("SELECT distinct organism, md5s FROM j${job}_organism_m5nr_$v");
+    my $rows = $dbh->selectall_arrayref("SELECT distinct id, md5s FROM job_organisms WHERE version=$v AND job=$job");
     if ($rows && (@$rows > 0)) {
       %$organism_md5s = map { $_->[0], $_->[1] } @$rows;
     }
@@ -309,7 +321,7 @@ sub get_md5_abundance {
 
   unless (scalar(keys %$md5_abundance) > 0) {
     my $dbh  = get_analysis_dbh();
-    my $rows = $dbh->selectall_arrayref("SELECT distinct md5, abundance FROM j${job}_protein_m5nr_$v");
+    my $rows = $dbh->selectall_arrayref("SELECT distinct md5, abundance FROM job_md5s WHERE version=$v AND job=$job");
     if ($rows && (@$rows > 0)) {
       %$md5_abundance = map { $_->[0], $_->[1] } @$rows;
     }
@@ -321,53 +333,44 @@ sub get_ontology_abundances {
   my ($job, $v) = @_;
 
   my $rows;
-  my $data = {};
-  my $ach_dbh  = get_ach_dbh();
+  my $data = {}; # src => id => level1
   my $data_dbh = get_analysis_dbh();
-  my $ont_nums = {};
-  my $ont_md5  = {};
+  my $ont_md5  = {}; # src => lvl1 => { md5s }
+  my $ont_nums = {}; # src => [ lvl1, abundance ]
 
-  $rows = $ach_dbh->selectall_arrayref("SELECT name, source FROM sources WHERE type='ontology' and name != 'GO'");
-  my @sources = map { [$_->[0], lc($_->[1])] } @$rows;
-  %$ont_nums  = map { $_->[0], [] } @$rows;
+  $rows = $data_dbh->selectall_arrayref("SELECT distinct type, _id, level1 FROM ontologies");
+  unless ($rows && (@$rows > 0)) { return {}; }
+  map { $data->{$_->[0]}{$_->[1]} = $_->[2] } grep { $_->[2] && ($_->[2] =~ /\S/) } @$rows;
   
-  foreach my $s (@sources) {
-    $data    = {};
-    $ont_md5 = {};
-    my $sql  = "SELECT distinct id, level1 FROM ontology_".$s->[1];
-    if ($s->[1] eq 'eggnog') {
-      $sql .= " WHERE type = '".$s->[0]."'";
-    }
-    $rows = $ach_dbh->selectall_arrayref($sql);
-    unless ($rows && (@$rows > 0)) { next; }
-    %$data = map { $_->[0], $_->[1] } grep { $_->[1] && ($_->[1] =~ /\S/) } @$rows;
-
-    $rows = $data_dbh->selectall_arrayref("SELECT distinct id, md5s FROM j${job}_ontology_m5nr_$v");
-    unless ($rows && (@$rows > 0)) { next; }
-    foreach my $r (@$rows) {
-      if ( exists $data->{$r->[0]} ) {
-	foreach my $md5 ( @{$r->[1]} ) {
-	  $ont_md5->{ $data->{$r->[0]} }->{$md5} = 1;
-	}
+  my $onts = get_ontology_md5s($job, $v);
+  foreach my $s (keys %$onts) {
+    foreach my $o (keys %{$onts->{$s}}) {
+      if (exists $data->{$s}{$o}) {
+        map { $ont_md5->{$s}{$data->{$s}{$o}}->{$_} = 1 } @{ $onts->{$s}{$o} };
       }
-    }
-    my $md5s = get_md5_abundance($job, $v);
-    foreach my $o (sort keys %$ont_md5) {
-      my $num = 0;
-      map { $num += $md5s->{$_} } grep { exists $md5s->{$_} } keys %{ $ont_md5->{$o} };
-      push @{ $ont_nums->{$s->[0]} }, [ $o, $num ];
     }
   }
 
+  my $md5s = get_md5_abundance($job, $v);
+  foreach my $s (sort keys %$ont_md5) {
+    foreach my $d (sort keys %{$ont_md5->{$s}}) {
+      my $num = 0;
+      map { $num += $md5s->{$_} } grep { exists $md5s->{$_} } keys %{ $ont_md5->{$s}{$d} };
+      if ($num > 0) {
+  	    push @{$ont_nums->{$s}}, [ $d, $num ];
+      }
+    }
+  }
+  
   return $ont_nums;
 }
 
 sub get_alpha_diversity {
-  my ($job, $type) = @_;
+  my ($job, $type, $v) = @_;
 
   my $alpha = 0;
   my $h1    = 0;
-  my @nums  = map { $_->[1] } @{ get_taxa_abundances($job, 'species') };
+  my @nums  = map { $_->[1] } @{ get_taxa_abundances($job, 'species', undef, $v) };
   my $sum   = sum @nums;
 
   unless ($sum) {
@@ -383,7 +386,7 @@ sub get_alpha_diversity {
 }
 
 sub get_rarefaction_xy {
-  my ($job) = @_;
+  my ($job, $v) = @_;
 
   my $rare = [];
   my $stat = get_job_statistics($job);
@@ -393,7 +396,7 @@ sub get_rarefaction_xy {
 
   my $nseq = $stat->{sequence_count_raw};
   my $size = ($nseq > 1000) ? int($nseq / 1000) : 1;
-  my @nums = sort {$a <=> $b} map {$_->[1]} @{ get_taxa_abundances($job, 'species') };
+  my @nums = sort {$a <=> $b} map {$_->[1]} @{ get_taxa_abundances($job, 'species', undef, $v) };
   my $k    = scalar @nums;
 
   for (my $n = 0; $n < $nseq; $n += $size) {
