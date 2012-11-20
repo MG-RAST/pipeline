@@ -244,7 +244,7 @@ foreach my $ontol (keys %$ontol_stats) {
 }
 
 # calculate rarefaction coordanates
-my $rare_stats = Pipeline::get_rarefaction_xy($job_num);
+my $rare_stats = Pipeline::get_rarefaction_xy($job_num, $ver_db);
 if (@$rare_stats > 0) {
   open(RSTAT, ">$run_dir/$stage_id.$stage_name.rarefaction.stats") or fail($log, "$stage_name failed on job: $job_num, can not open $run_dir/$stage_id.$stage_name.rarefaction.stats: $!");
   print RSTAT join("\n", map { $_->[0] . "\t" . $_->[1] } @$rare_stats) . "\n";
@@ -252,7 +252,7 @@ if (@$rare_stats > 0) {
 }
 
 # calculate alpha diversity
-my $alpha = Pipeline::get_alpha_diversity($job_num, 'shannon');
+my $alpha = Pipeline::get_alpha_diversity($job_num, 'shannon', $ver_db);
 load_stats($job_num, [['alpha_diversity_shannon', $alpha]]);
 
 # calculate ratio identified reads
