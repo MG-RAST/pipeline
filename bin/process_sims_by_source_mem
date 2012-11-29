@@ -202,7 +202,7 @@ sub get_top_hits {
   # get data for md5s from memcache
   # ach: md5 => source => function => [organism | ontology_id]
   # lca: md5 => [lca]
-  my ($md5_ach, $md5_lca) = &get_md5_data($mch, [keys %$total_md5s], $get_lca);
+  my ($md5_ach, $md5_lca, $md5_id) = &get_md5_data($mch, [keys %$total_md5s], $get_lca);
 
   # get sources per frag: frag => {source}
   foreach my $frag (keys %$data) {
@@ -264,6 +264,8 @@ sub get_top_hits {
     next unless (exists $data_min_md5->{$frag});
     foreach my $score ( keys %{$data_min_md5->{$frag}} ) {
       foreach my $md5 ( keys %{$data_min_md5->{$frag}{$score}} ) {
+        next unless (exists $md5_id->{$md5});
+        
   	    # sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
 	    my $sim = $data->{$frag}{$score}{$md5};
 
@@ -279,7 +281,7 @@ sub get_top_hits {
 	      foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
 	        foreach my $otype ( keys %{$md5_ach->{$md5}{$src}{$func}} ) {
 	          foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}{$otype}} ) {
-	            my $expand_text = join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $sname));
+	            my $expand_text = join("\t", ($md5_id->{$md5}, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $src));
 	            if (($otype eq 'organism') && ($stype eq 'rna') && $get_rna) {
 		          $rna_text .= $expand_text . "\t1\n";
 	            }
@@ -304,6 +306,7 @@ sub get_md5_data {
   
   my $ach   = {};
   my $lca   = {};
+  my $md5_id = {};
   my %keys  = map { $_ . $memkey, $_ } @$md5s;
   my %cache = ();
   my $step  = 5000;
@@ -367,17 +370,16 @@ sub get_md5_data {
   }
   
   foreach my $k (keys %keys) {
-    if (exists $cache{$k}) {
-      foreach my $src (keys %{$cache{$k}}) {
-	    if (($src eq 'lca') && $get_lca) {
-	      $lca->{$keys{$k}} = $cache{$k}{$src};
-	    } elsif ($src ne 'lca') {
-	      $ach->{$keys{$k}}{$src} = $cache{$k}{$src};
-	    }
-      }
+    next unless (exists $cache{$k});
+    if (exists($cache{$k}{lca}) && $get_lca) {
+      $lca->{$keys{$k}} = $cache{$k}{lca};
+    } elsif (exists($cache{$k}{id}) {
+      $md5_id->{$keys{$k}} = $cache{$k}{id};
+    } elsif (exists($cache{$k}{ann}) {
+      map { $ach->{$keys{$k}}{$_} = $cache{$k}{$_} } keys %{$cache{$k}{ann}};
     }
   }
-  return ($ach, $lca);
+  return ($ach, $lca, $md5_id);
 }
 
 sub get_min_md5s_by_source {
