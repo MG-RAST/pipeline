@@ -373,9 +373,9 @@ sub get_md5_data {
     next unless (exists $cache{$k});
     if (exists($cache{$k}{lca}) && $get_lca) {
       $lca->{$keys{$k}} = $cache{$k}{lca};
-    } elsif (exists($cache{$k}{id}) {
+    } elsif (exists $cache{$k}{id}) {
       $md5_id->{$keys{$k}} = $cache{$k}{id};
-    } elsif (exists($cache{$k}{ann}) {
+    } elsif (exists $cache{$k}{ann}) {
       map { $ach->{$keys{$k}}{$_} = $cache{$k}{$_} } keys %{$cache{$k}{ann}};
     }
   }
