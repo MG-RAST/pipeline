@@ -103,14 +103,19 @@ if ($has_job && (! $reload)) {
   print "Updating job_info to loaded = true where job=$jobID and version=$version... " if ($verbose);
   $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version");
 } else {
+  # Insert row in job_info with loaded = false
+  print "Inserting job=$jobID, version=$version and loaded=false into job_info table... " if ($verbose);
+  $dbh->do("INSERT INTO job_info (version, job, loaded) VALUES ('$version', '$jobID', false)");
+  $dbh->commit;
+    
   # Load files into job_* tables
   foreach my $file_type (keys %filenames) {
     &insert_job_abundances($dbh, $file_type);
   }
 
-  # Insert row in job_info with loaded = true
-  print "Inserting job=$jobID, version=$version and loaded=true into job_info table... " if ($verbose);
-  $dbh->do("INSERT INTO job_info (version, job, loaded) VALUES ('$version', '$jobID', true)");
+  # Update row in job_info to loaded = true
+  print "Updating job_info to loaded = true where job=$jobID and version=$version... " if ($verbose);
+  $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version");
 }
 $dbh->commit;
 print "Done.\n" if ($verbose);
