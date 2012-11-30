@@ -75,7 +75,7 @@ elsif ($exp_file && $ont_file) {
   print "Running in protein sim mode.\n" if ($verbose);
 }
 else {
-  print STDERR "Output filenames required: (out_expand and out_ontology) or out_rna"; exit 1;
+  print STDERR "Output filenames required: (out_expand and out_ontology) or out_rna\n"; exit 1;
 }
 if ($lca_file) {
   print "Running in lca mode.\n" if ($verbose);
