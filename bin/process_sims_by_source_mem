@@ -32,7 +32,7 @@ Output: top hit for each query per source (protein or rna formats)
     3. ontology sims: see below
     4. lca expanded (protein): see below
 
-m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+m8: query|md5, subject|fragment, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
 expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source
 rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, is_rna
 ontology: md5|query, fragment|subject, identity, length, evalue, function, ontology, source
