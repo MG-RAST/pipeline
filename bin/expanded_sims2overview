@@ -155,6 +155,7 @@ while (my $line = <INFILE>) {
   }
   elsif (($select eq "organism") || ($select eq "ontology")) {
     unless ($oid) { next; }
+    if (($select eq "ontology") && ($oid > 71073)) { next; }
     if ($curr eq '') { $curr = $oid; }
     if ($curr ne $oid) {
       print OUTFILE &get_type_stats($cmap, $data, $select, $curr);
