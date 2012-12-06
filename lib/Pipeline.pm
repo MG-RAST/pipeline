@@ -247,16 +247,23 @@ sub setspri {
   }
 }
 
+sub get_source_map {
+    my $data_dbh = get_analysis_dbh();
+    my $rows = $data_dbh->selectall_arrayref("SELECT _id, name FROM sources");
+    unless ($rows && (@$rows > 0)) { return {}; }
+    my %data = map { $_->[0], $_->[1] } @$rows;
+    return \%data;
+}
+
 sub get_taxa_abundances {
   my ($job, $taxa, $clump, $v) = @_;
 
-  my $rows;
   my $data = {}; # id => taxa
   my $data_dbh = get_analysis_dbh();
   my $tax_md5  = {}; # taxa => { md5s }
   my $tax_num  = []; # [ taxa, abundance ]
 
-  $rows = $data_dbh->selectall_arrayref("SELECT distinct _id, tax_$taxa FROM organisms_ncbi");
+  my $rows = $data_dbh->selectall_arrayref("SELECT distinct _id, tax_$taxa FROM organisms_ncbi");
   unless ($rows && (@$rows > 0)) { return []; }
   %$data = map { $_->[0], $_->[1] } grep { $_->[1] && ($_->[1] =~ /\S/) } @$rows;
   
@@ -276,7 +283,7 @@ sub get_taxa_abundances {
       $other += $num;
     } else {
       if ($num > 0) {
-	push @$tax_num, [ $d, $num ];
+	    push @$tax_num, [ $d, $num ];
       }
     }
   }
@@ -293,9 +300,11 @@ our $md5_abundance = {}; # md5 => abund
 
 sub get_ontology_md5s {     
   my ($job, $v) = @_;
+  
   unless (scalar(keys %$ontology_md5s) > 0) {
     my $dbh  = get_analysis_dbh();
-    my $rows = $dbh->selectall_arrayref("SELECT distinct source, id, md5s FROM job_ontologies WHERE version=$v AND job=$job");
+    my $sql  = "SELECT distinct s.name, j.id, j.md5s FROM job_ontologies j, sources, s WHERE j.version=$v AND j.job=$job AND j.source=s._id";
+    my $rows = $dbh->selectall_arrayref($sql);
     if ($rows && (@$rows > 0)) {
       map { $ontology_md5s->{$_->[0]}{$_->[1]} = $_->[2] } @$rows;
     }
@@ -332,13 +341,13 @@ sub get_md5_abundance {
 sub get_ontology_abundances {
   my ($job, $v) = @_;
 
-  my $rows;
   my $data = {}; # src => id => level1
   my $data_dbh = get_analysis_dbh();
   my $ont_md5  = {}; # src => lvl1 => { md5s }
   my $ont_nums = {}; # src => [ lvl1, abundance ]
 
-  $rows = $data_dbh->selectall_arrayref("SELECT distinct type, _id, level1 FROM ontologies");
+  my $sql  = "SELECT distinct s.name, o._id, o.level1 FROM ontologies o, sources s WHERE o.source=s._id";
+  my $rows = $data_dbh->selectall_arrayref($sql);
   unless ($rows && (@$rows > 0)) { return {}; }
   map { $data->{$_->[0]}{$_->[1]} = $_->[2] } grep { $_->[2] && ($_->[2] =~ /\S/) } @$rows;
   

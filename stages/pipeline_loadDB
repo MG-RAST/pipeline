@@ -241,7 +241,18 @@ if ($ontol_expand && (-s $ontol_expand)) {
 } else {
   system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 8,8 -n -o $src_expand $md5_expand >> $outf 2> $err_file") == 0 or fail($log, "sort $type: ".$message);
 }
-system("expanded_sims2overview $abundance_option --job $job_num --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
+system("expanded_sims2overview $abundance_option --job $job_num --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
+
+my $src_map = Pipeline::get_source_map();
+open(SRCF, ">$run_dir/$prefix.$type.stats");
+foreach my $line (`cat $run_dir/$prefix.$type.stats.tmp`) {
+    chomp $line;
+    my @parts = split(/\t/, $line);
+    if (exists $src_map->{$parts[0]}) {
+        print SRCF $src_map->{$parts[0]}."\t".join("\t", @parts[1..-1])."\n";
+    }
+}
+close(SRCF);
 
 # new annotations loaded, add version to JobAttributes
 Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
