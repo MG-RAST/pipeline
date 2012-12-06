@@ -168,7 +168,8 @@ while (my $line = <INFILE>) {
     $data->{$source}{md5}{$md5}     += 1;
     $data->{$source}{frag}{$frag}    = 1;
     if ($select eq "organism") {
-        my $merge = $is_protein ? "M5NR" : "M5RNA";
+        # M5NR = 20, M5RNA = 19
+        my $merge = $is_protein ? '20' : '19';
         $data->{$merge}{eval}{$eval}   += 1;
         $data->{$merge}{len}{$len}     += 1;
         $data->{$merge}{ident}{$ident} += 1;
