@@ -52,6 +52,64 @@ if ((@error == 0) && (($report->{sequence_count} eq "0") || ($report->{bp_count}
 }
 
 if (@error == 0) {
+  # sequence content guess
+  my $seq_content = "";
+  if($file_format eq 'fastq') {
+    $seq_content = 'DNA';
+  } else {
+    my $max_chars = 10000;
+    my $seq = '';
+    my $line;
+    open(TMP, "<$dir/$file") or die "could not open file '$dir/$file': $!";
+    while ( defined($line = <TMP>) ) {
+      chomp $line;
+      if ( $line =~ /^\s*$/ or $line =~ /^>/ ) {
+        next;
+      } else {
+        $seq .= $line;
+      }
+
+      last if (length($seq) >= $max_chars);
+    }
+    close(TMP);
+
+    $seq =~ tr/A-Z/a-z/;
+
+    my %char_count;
+    foreach my $char ( split('', $seq) ) {
+        $char_count{$char}++;
+    }
+
+    $char_count{a} ||= 0;
+    $char_count{c} ||= 0;
+    $char_count{g} ||= 0;
+    $char_count{t} ||= 0;
+    $char_count{n} ||= 0;
+    $char_count{x} ||= 0;
+    $char_count{'-'} ||= 0;
+
+    # find fraction of a,c,g,t characters from total, not counting '-', 'N', 'X'
+    my $bp_char = $char_count{a} + $char_count{c} + $char_count{g} + $char_count{t};
+    my $n_char  = length($seq) - $char_count{n} - $char_count{x} - $char_count{'-'};
+    my $fraction = $n_char ? $bp_char/$n_char : 0;
+
+    # A high fraction of dashes could indicate a sequence alignment file
+    my $dash_fraction = $char_count{'-'}/length($seq);
+
+    if ( $fraction <= 0.6 ) {
+        $seq_content = "protein";
+    } elsif( $dash_fraction >= 0.05 ) {
+        $seq_content = "sequence alignment";
+    } else {
+        $seq_content = "DNA";
+    }
+  }
+  push @stats, "sequence_content\t$seq_content";
+
+  # md5sum
+  my $file_md5 = `md5sum '$dir/$file'` =~ /^(\S+)/;
+  push @stats, "file_checksum\t$file_md5";
+
   # tech guess
   my $header  = `head -1 '$dir/$file'`;
   my $options = '-s '.$report->{sequence_count}.' -a '.$report->{average_length}.' -d '.$report->{standard_deviation_length}.' -m '.$report->{length_max};
