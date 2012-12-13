@@ -215,9 +215,12 @@ my %pluralize = ( 'md5' => 'md5s', 'function' => 'functions', 'organism' => 'org
 foreach my $info (@info_set) {
   my ($type, $input, $pos) = @$info;
   my $sort_type = ($type eq 'lca') ? '' : '-n';
-  unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
   system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k $pos,$pos $sort_type -o $input.$type $input >> $outf 2> $err_file") == 0 or fail($log, "sort $type: ".$message);
+  unless (-s $input) { 
+    system("touch $input.$type.summary");
+    next;
+  }
   system("expanded_sims2overview $abundance_option --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $input.$type.summary >> $outf 2> $err_file") == 0 or fail($log, "expanded_sims2overview $type: ".$message);
   $summary_file_options .= "--$pluralize{$type}_filename $input.$type.summary ";
   # clean tmp file
