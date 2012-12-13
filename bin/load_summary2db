@@ -63,7 +63,7 @@ if (! &GetOptions ( %options )) {
 
 my $file_count = 0;
 foreach my $file_type (keys %filenames) {
-  if($filenames{$file_type}) {
+  if($filenames{$file_type} ne "") {
     ++$file_count;
   }
 }
@@ -96,7 +96,9 @@ if ($has_job && (! $reload)) {
   
   # Load files into job_* tables
   foreach my $file_type (keys %filenames) {
-    &insert_job_abundances($dbh, $file_type);
+    if($filenames{$file_type} ne "") {
+      &insert_job_abundances($dbh, $file_type);
+    }
   }
 
   # Update row in job_info to loaded = true
@@ -110,7 +112,9 @@ if ($has_job && (! $reload)) {
     
   # Load files into job_* tables
   foreach my $file_type (keys %filenames) {
-    &insert_job_abundances($dbh, $file_type);
+    if($filenames{$file_type} ne "") {
+      &insert_job_abundances($dbh, $file_type);
+    }
   }
 
   # Update row in job_info to loaded = true
