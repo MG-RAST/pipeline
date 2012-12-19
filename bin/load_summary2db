@@ -89,13 +89,13 @@ if ($has_job && (! $reload)) {
   $dbh->commit;
 
   # Delete entries from job_* tables with this job and version
-  foreach my $file_type (keys %filenames) {
+  foreach my $file_type (sort keys %filenames) {
     $dbh->do("DELETE FROM job_$file_type WHERE job=$jobID AND version=$version");
     print "Deleting from job_$file_type where job=$jobID and version=$version" if ($verbose);
   }
   
   # Load files into job_* tables
-  foreach my $file_type (keys %filenames) {
+  foreach my $file_type (sort keys %filenames) {
     if($filenames{$file_type} ne "") {
       &insert_job_abundances($dbh, $file_type);
     }
@@ -111,7 +111,7 @@ if ($has_job && (! $reload)) {
   $dbh->commit;
     
   # Load files into job_* tables
-  foreach my $file_type (keys %filenames) {
+  foreach my $file_type (sort keys %filenames) {
     if($filenames{$file_type} ne "") {
       &insert_job_abundances($dbh, $file_type);
     }
