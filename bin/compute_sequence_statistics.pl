@@ -107,7 +107,9 @@ if (@error == 0) {
   push @stats, "sequence_content\t$seq_content";
 
   # md5sum
-  my $file_md5 = `md5sum '$dir/$file'` =~ /^(\S+)/;
+  my $file_md5 = `md5sum '$dir/$file'`;
+  chomp $file_md5;
+  $file_md5 =~ s/^(\S+).*/$1/;
   push @stats, "file_checksum\t$file_md5";
 
   # tech guess
