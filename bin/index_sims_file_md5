@@ -1,0 +1,135 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+use Getopt::Long;
+use Cache::Memcached;
+
+my $verbose  = 0;
+my $in_file  = '';
+my $out_file = '';
+my $md5_num  = 5000;
+my $memhost  = "";
+my $memkey   = '_ach';
+my $usage    = qq($0
+Script to index m8 format blast file by 2nd column,
+assumning md5sum as entry and sorted by md5sum.
+Index will include id, seek, length for every chunck.
+'id' is the integer index for the md5sum in the input file, lookup done through memcache.
+Each chunk will contain the same md5sum in 2nd column.
+
+  --in_file      file name      Required. Name of input sim file
+  --out_file     file name      Required. Name of output index file
+  --md5_num      int            Optional. Number of md5 chunks to load in memory at once before processing. Default is '$md5_num'
+  --mem_host     memcache host  Required. Server of memcache
+  --mem_key      key extension  Optional. Extension to md5sum to use as memcache key. Default is '$memkey'
+  --verbose                     Optional. Verbose output.
+  
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! GetOptions( "verbose!"       => \$verbose,
+		           "in_file=s"      => \$in_file,
+		           "out_file=s"     => \$out_file,
+		           "md5_num:i"      => \$md5_num,
+		           'mem_host:s'     => \$memhost,
+		           'mem_key:s'      => \$memkey
+                 ) )
+  { print STDERR $usage; exit 1; }
+  
+unless ($in_file && (-s $in_file) && $out_file) {
+    print STDERR $usage . "Missing input and/or output files.\n"; exit 1;
+}
+
+my $mch = new Cache::Memcached {'servers' => [$memhost], 'debug' => 0, 'compress_threshold' => 10_000};
+unless ($mch) { print STDERR "Error: Unable to connect to memcache\n"; exit 1; }
+
+print "Parsing file $in_file in $md5_num md5 size chunks ... " if ($verbose);
+open(INFILE, "<$in_file") or die "Can't open file $in_file!\n";
+open(OUTFILE, ">$out_file") or die "Can't open file $out_file!\n";
+
+my $seeks = [];
+my $start = 0;
+my $byte  = 0;
+my $size  = 0;
+my $curr  = '';
+my $md5s  = 0;
+my $count = 0;
+
+while (my $line = <INFILE>) {
+    my @parts = split(/\t/, $line);
+    my $md5 = $parts[1];
+    if ($curr ne $md5) {
+        if ($size > 0) {
+            push @$seeks, [ $curr, $start, $size ];
+            if ($md5s >= $md5_num) {
+                print OUTFILE &process_seeks($mch, $seeks);
+                $seeks = [];
+                $md5s  = 0;
+            }
+        }
+        $count += 1;
+        $md5s  += 1;
+        $curr  = $md5;
+        $start = $byte;
+        $size  = 0;
+    }
+    $byte += length $line;
+    $size += length $line;
+}
+close INFILE;
+
+if (scalar(@$seeks) > 0) {
+    if ($size > 0) {
+        push @$seeks, [ $curr, $start, $size ];
+    }
+    print OUTFILE &process_seeks($mch, $seeks);
+}
+
+print "Done - $count md5s indexed\n" if ($verbose);
+exit 0;
+
+sub process_seeks {
+    my ($mch, $seeks) = @_;
+    
+    my %cache = ();
+    my $out_t = '';
+    my $max  = 3;
+    my $try  = 1;
+    my @keys = map { $_->[0].$memkey } @$seeks;
+    my $tmp  = $mch->get_multi(@keys);
+    
+    while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@keys))) ) {
+        if (! $tmp) {
+            print STDERR "Warning: Unable to call get_multi from memcache on ".scalar(@keys)." keys, trying again\n";
+        } else {
+            print STDERR "Warning: Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@keys)." keys from memcache, trying again\n";
+    	    @cache{ keys %$tmp } = values %$tmp;
+    	    @keys = grep {! exists $tmp->{$_}} @keys;
+    	    print STDERR "Missing keys: ".join(",", @keys)."\n";
+        }
+        $tmp = $mch->get_multi(@keys);
+        $try += 1;
+    }
+    unless ($tmp && (scalar(keys %$tmp) == scalar(@keys))) {
+        if (! $tmp) {
+	        print STDERR "Error: Unable to call get_multi from memcache on ".scalar(@keys)." keys, tried 3 times\n"; exit 1;
+        } else {
+	        print STDERR "Error: Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@keys)." keys from memcache, tried 3 times\n";
+	        print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @keys)."\n";
+        }
+    }
+    @cache{ keys %$tmp } = values %$tmp;
+    
+    foreach my $set (@$seeks) {
+        my ($md5, $start, $size) = @$set;
+        my $key = $md5.$memkey;
+        if (exists($cache{$key}) && exists($cache{$key}{id})) {
+            $out_t .= join("\t", ($cache{$key}{id}, $start, $size))."\n";
+        }
+    }
+    return $out_t;
+}
+
+
