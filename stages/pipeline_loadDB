@@ -76,15 +76,17 @@ $log->info("Starting $stage_name on job: $job_num");
 # update jobcache stage status
 Pipeline::update_stage_info($job_num, $stage_name, "running");
 
-my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
-my $raw_dir     = $job_dir."/raw";
-my $proc_dir    = $job_dir."/proc";
-my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
-my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
-my $run_dir     = $stage_dir;
-my $params      = "--verbose --seq-db-version ".$ver_db;
-my $dboptions   = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user;
-my $hostname    = `hostname`;
+my $job_dir		= $Pipeline_Conf::global_job_dir."/".$job_num;
+my $raw_dir		= $job_dir."/raw";
+my $proc_dir		= $job_dir."/proc";
+my $stage_dir		= $proc_dir."/".$stage_id.".".$stage_name;
+my $results_dir		= $job_dir."/".$Pipeline_Conf::results_dir;
+my $seq_file		= $results_dir."/900.loadDB.sims.filter.seq";
+my $run_dir		= $stage_dir;
+my $params		= "--verbose --seq-db-version ".$ver_db;
+my $index_sims_params	= "--verbose --mem_host ".$Pipeline_Conf::memcache_host." --mem_key ".$Pipeline_Conf::memcache_key;
+my $dboptions		= "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user;
+my $hostname		= `hostname`;
 
 chomp $hostname;
 
@@ -185,7 +187,7 @@ if ($max < $max_seq) {
   system("add_seq2sims -v -i $sims_filter.sort -o $sims_filter.seq -s $run_dir/$prefix.seq.tab >> $outf 2> $err_file") == 0 or fail($log, 'add_seq2sims: '.$message);
   system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 2,2 -o $sims_filter.seq.sort $sims_filter.seq >> $outf 2> $err_file") == 0 or fail($log, "sort sims-md5: ".$message);
   system("mv $sims_filter.seq.sort $sims_filter.seq") == 0 or fail($log, 'mv: '.$message);
-  system("index_tab_file -v -f 2 -o $sims_filter.seq.index $sims_filter.seq >> $outf 2> $err_file") == 0 or fail($log, 'index_tab_file: '.$message);
+  system("index_sims_file_md5 $index_sims_params --in_file $seq_file --out_file $seq_file.index") == 0 or fail($log, "index_sims_file_md5: failed for job $job_num");
   system("rm $run_dir/$prefix.seq.tab $sims_filter.sort");
 }
 else {
