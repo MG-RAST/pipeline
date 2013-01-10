@@ -13,7 +13,6 @@ Output: kmer information, one of:
 import sys, os, glob, string, random, math, re
 import itertools, subprocess
 from optparse import OptionParser
-from Bio import SeqIO
 
 fa_re   = re.compile('^>')
 BUFFER  = 2 * math.pow(1024, 3)  # 2 Gb seq buffer
