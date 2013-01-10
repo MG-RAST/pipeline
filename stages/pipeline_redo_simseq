@@ -44,9 +44,11 @@ open(SEQFILE, "<$seq_file.index") or fail($log, "Parsing $seq_file.index failed:
 while (my $line = <SEQFILE>) {
     chomp $line;
     my ($md5, $seek, $length) = split(/\t/, $line);
-    $dbh->do("UPDATE job_md5s SET seek = $seek, length = $length WHERE version = $ver_db AND job = $job_num");
+    $dbh->do("UPDATE job_md5s SET seek = $seek, length = $length WHERE version = $ver_db AND job = $job_num AND md5 = $md5");
 }
 close SEQFILE;
+$dbh->commit;
+$dbh->disconnect;
 
 # cleanup
 system("rm $seq_file.index");
