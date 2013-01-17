@@ -135,7 +135,9 @@ sub insert_job_abundances {
   my $copy_cmd = "COPY $table FROM STDIN WITH NULL AS ''";
 
   if ( open(DATA, "<$filename") ) {
-    print "Running $copy_cmd ... " if ($verbose);
+    my $start_time = `date`;
+    chomp $start_time;
+    print "$start_time -- Running $copy_cmd ... " if ($verbose);
     $dbh->do($copy_cmd);
     while (my $line = <DATA>) {
       $dbh->pg_putcopydata($line) if $line;
@@ -145,7 +147,9 @@ sub insert_job_abundances {
       print STDERR "Error with COPY: ".DBI->errstr."\n"; exit 1;
     }
     close(DATA);
-    print " Done\n" if ($verbose);
+    my $end_time = `date`;
+    chomp $end_time;
+    print " Done -- $end_time\n" if ($verbose);
   } else {
     print STDERR "Error: can not read file $filename: $!\n"; exit 1;
   }
