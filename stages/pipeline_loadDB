@@ -98,7 +98,7 @@ if (-d $stage_dir) {
 mkdir($stage_dir) or fail($log, "Could not mkdir: $stage_dir, $!");
 
 # set cluster workspace dir (use local if large job)
-my $work_dir = (($nodes > 4) && (-d $Pipeline_Conf::local_workspace)) ? $Pipeline_Conf::local_workspace : $Pipeline_Conf::cluster_workspace;
+my $work_dir = (($nodes >= 4) && (-d $Pipeline_Conf::local_workspace)) ? $Pipeline_Conf::local_workspace : $Pipeline_Conf::cluster_workspace;
 if (-d $work_dir) {
   $run_dir = "$work_dir/$job_num.$stage_id.$stage_name";
   if (-d $run_dir) {
