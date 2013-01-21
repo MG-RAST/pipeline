@@ -173,7 +173,7 @@ sub create_child_tables_if_missing {
     my $range_max = (int($jobID/$dbtable_range)*$dbtable_range) + $dbtable_range;
     my $range = $range_min."_".$range_max;
     my $child_table_name = $master_table_name."_".$range;
-    my $has_table = $dbh->selectcol_arrayref("SELECT relname FROM pg_class WHERE relname='$child_table_name'");
+    my $has_table = $dbh->selectcol_arrayref("SELECT count(*) FROM pg_class WHERE relname='$child_table_name'");
     unless($has_table && @$has_table > 0 && $has_table->[0] > 0) {
       $dbh->do("CREATE TABLE $child_table_name () INHERITS ($master_table_name);");
       $dbh->do(&create_indexes_code($file_type, $range));
