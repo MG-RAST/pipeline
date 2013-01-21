@@ -166,9 +166,9 @@ sub insert_job_abundances {
 
 sub create_child_tables_if_missing {
   my ($dbh, $jobID) = @_;
-  my $master_table_name = "job_$file_type";
 
   foreach my $file_type (sort keys %filenames) {
+    my $master_table_name = "job_$file_type";
     my $range_min = (int($jobID/$dbtable_range)*$dbtable_range) + 1;
     my $range_max = (int($jobID/$dbtable_range)*$dbtable_range) + $dbtable_range;
     my $range = $range_min."_".$range_max;
