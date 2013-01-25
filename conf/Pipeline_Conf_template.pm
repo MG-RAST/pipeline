@@ -33,7 +33,7 @@ our $jobcache_password = "";
 our $analysis_db   = "";
 our $analysis_host = "";
 our $analysis_user = "";
-our $job_table_range = 1000;
+our $analysis_db_table_range = 1000;
 
 # ACH db
 our $ach_db   = "";
