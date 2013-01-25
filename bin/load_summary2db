@@ -82,8 +82,8 @@ unless ($dbh) { print STDERR "Error: ".DBI->errstr."\n"; exit 1; }
 my $has_job = $dbh->selectcol_arrayref("SELECT count(*) FROM job_info WHERE job=$jobID AND version=$version");
 $has_job = ($has_job && (@$has_job > 0)) ? $has_job->[0] : 0;
 
-my $range_min = (int($jobID/$dbtable_range)*$dbtable_range) + 1;
-my $range_max = (int($jobID/$dbtable_range)*$dbtable_range) + $dbtable_range;
+my $range_min = (int($jobID/$dbtable_range)*$dbtable_range);
+my $range_max = (int($jobID/$dbtable_range)*$dbtable_range) + $dbtable_range - 1;
 my $range = $range_min."_".$range_max;
 
 if ($has_job && (! $reload)) {
