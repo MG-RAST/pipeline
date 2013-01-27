@@ -303,7 +303,7 @@ sub get_ontology_md5s {
   
   unless (scalar(keys %$ontology_md5s) > 0) {
     my $dbh  = get_analysis_dbh();
-    my $sql  = "SELECT distinct s.name, j.id, j.md5s FROM job_ontologies j, sources, s WHERE j.version=$v AND j.job=$job AND j.source=s._id";
+    my $sql  = "SELECT distinct s.name, j.id, j.md5s FROM job_ontologies j, sources s WHERE j.version=$v AND j.job=$job AND j.source=s._id";
     my $rows = $dbh->selectall_arrayref($sql);
     if ($rows && (@$rows > 0)) {
       map { $ontology_md5s->{$_->[0]}{$_->[1]} = $_->[2] } @$rows;
