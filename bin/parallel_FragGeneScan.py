@@ -82,7 +82,7 @@ def main(args):
     parser = OptionParser(usage=usage)
     parser.add_option("-p", "--processes", dest="processes", metavar="NUM_PROCESSES", type="int", default=4, help="Number of processes to use [default '4']")
     parser.add_option("-s", "--byte_size", dest="size", metavar="BYTE_SIZE", type="int", default=100, help="Max byte size to split fasta file (in MB) [default '100']")
-    parser.add_option("-t", "--type", dest="type", metavar="TYPE",  default='454_30', help="Technology type (sanger_10,454_30,illumina_10) [default '454_30']")
+    parser.add_option("-t", "--type", dest="type", metavar="TYPE",  default='454_30', help="Technology type (sanger_10,454_30,illumina_10,complete) [default '454_30']")
     parser.add_option("-d", "--tmp_dir", dest="tmpdir", metavar="DIR", default="/tmp", help="DIR for intermediate files (must be full path), deleted at end [default '/tmp']")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default is off]")
     
