@@ -250,7 +250,7 @@ foreach my $line (`cat $run_dir/$prefix.$type.stats.tmp`) {
     chomp $line;
     my @parts = split(/\t/, $line);
     if (exists $src_map->{$parts[0]}) {
-        print SRCF $src_map->{$parts[0]}."\t".join("\t", @parts[1..-1])."\n";
+        print SRCF $src_map->{$parts[0]}."\t".join("\t", @parts[1..@parts-1])."\n";
     }
 }
 close(SRCF);
