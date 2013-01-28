@@ -99,7 +99,7 @@ if (-d $Pipeline_Conf::cluster_workspace) {
 }
 $log->info("Running on host $hostname, using dir $run_dir");
 
-my %types = (sanger => 'sanger_10', 454 => '454_30', illumina => 'illumina_10');
+my %types = (sanger => 'sanger_10', 454 => '454_30', illumina => 'illumina_10', complete => "complete");
 my $input_fasta = $stage_id.".".$stage_name.".input.fna";
 
 # run cmd
