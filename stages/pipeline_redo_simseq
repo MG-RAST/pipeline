@@ -36,22 +36,22 @@ my $seq_file    = $results_dir."/900.loadDB.sims.filter.seq";
 # index filter seqs
 system("index_sims_file_md5 $params --in_file $seq_file --out_file $seq_file.index") == 0 or fail($log, "index_sims_file_md5: failed for job $job_num");
 
-my $dbh = DBI->connect("DBI:Pg:dbname=$Pipeline_Conf::analysis_db;host=$Pipeline_Conf::analysis_host", $Pipeline_Conf::analysis_user, '', {AutoCommit => 0 , RaiseError => 1});
-unless ($dbh) { fail($log, "Error: ".DBI->errstr."\n"); }
+#my $dbh = DBI->connect("DBI:Pg:dbname=$Pipeline_Conf::analysis_db;host=$Pipeline_Conf::analysis_host", $Pipeline_Conf::analysis_user, '', {AutoCommit => 0 , RaiseError => 1});
+#unless ($dbh) { fail($log, "Error: ".DBI->errstr."\n"); }
 
 # update DB
-open(SEQFILE, "<$seq_file.index") or fail($log, "Parsing $seq_file.index failed: Can't open file: $!\n");
-while (my $line = <SEQFILE>) {
-    chomp $line;
-    my ($md5, $seek, $length) = split(/\t/, $line);
-    $dbh->do("UPDATE job_md5s SET seek = $seek, length = $length WHERE version = $ver_db AND job = $job_num AND md5 = $md5");
-}
-close SEQFILE;
-$dbh->commit;
-$dbh->disconnect;
+#open(SEQFILE, "<$seq_file.index") or fail($log, "Parsing $seq_file.index failed: Can't open file: $!\n");
+#while (my $line = <SEQFILE>) {
+#    chomp $line;
+#    my ($md5, $seek, $length) = split(/\t/, $line);
+#    $dbh->do("UPDATE job_md5s SET seek = $seek, length = $length WHERE version = $ver_db AND job = $job_num AND md5 = $md5");
+#}
+#close SEQFILE;
+#$dbh->commit;
+#$dbh->disconnect;
 
 # cleanup
-system("rm $seq_file.index");
+#system("rm $seq_file.index");
 $log->info("Finished $stage_name on job: $job_num");
 
 exit(0);
