@@ -84,7 +84,7 @@ my $results_dir		= $job_dir."/".$Pipeline_Conf::results_dir;
 my $run_dir		= $stage_dir;
 my $params		= "--verbose --seq-db-version ".$ver_db;
 my $index_sims_params	= "--verbose --mem_host ".$Pipeline_Conf::memcache_host." --mem_key ".$Pipeline_Conf::memcache_key;
-my $dboptions		= "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user;
+my $dboptions		= "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user." --dbtable_range ".$Pipeline_Conf::analysis_db_table_range;
 my $hostname		= `hostname`;
 
 chomp $hostname;
@@ -98,7 +98,7 @@ if (-d $stage_dir) {
 mkdir($stage_dir) or fail($log, "Could not mkdir: $stage_dir, $!");
 
 # set cluster workspace dir (use local if large job)
-my $work_dir = (($nodes > 4) && (-d $Pipeline_Conf::local_workspace)) ? $Pipeline_Conf::local_workspace : $Pipeline_Conf::cluster_workspace;
+my $work_dir = (($nodes >= 4) && (-d $Pipeline_Conf::local_workspace)) ? $Pipeline_Conf::local_workspace : $Pipeline_Conf::cluster_workspace;
 if (-d $work_dir) {
   $run_dir = "$work_dir/$job_num.$stage_id.$stage_name";
   if (-d $run_dir) {
@@ -250,7 +250,7 @@ foreach my $line (`cat $run_dir/$prefix.$type.stats.tmp`) {
     chomp $line;
     my @parts = split(/\t/, $line);
     if (exists $src_map->{$parts[0]}) {
-        print SRCF $src_map->{$parts[0]}."\t".join("\t", @parts[1..-1])."\n";
+        print SRCF $src_map->{$parts[0]}."\t".join("\t", @parts[1..@parts-1])."\n";
     }
 }
 close(SRCF);
