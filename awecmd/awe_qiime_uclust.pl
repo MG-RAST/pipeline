@@ -51,9 +51,7 @@ if ( $help or !($fasta_file) ) {
   exit(1);
 }
 
-system("mkdir -p temp_dir") == 0 or exit (__LINE__);
-
-my $run_dir = ".";
+system("mkdir -p tmp_dir") == 0 or exit (__LINE__);
 
 my ($code, $fext);
 if ($dna) {
@@ -67,25 +65,25 @@ if ($dna) {
 
 if ((-s $fasta_file) > 1024) {
   if ( stat($fasta_file)->size > 1073741824 ) {
-    system("$runcmd --mergesort $run_dir/$fasta_file --tmpdir temp_dir --output $run_dir/input.sorted >> $run_dir/$runcmd.out 2>&1") == 0 or exit (__LINE__);
+    system("$runcmd --mergesort=$fasta_file --tmpdir=tmp_dir --output=input.sorted >> $runcmd.out 2>&1") == 0 or exit (__LINE__);
   } else {
-    system("$runcmd --sort $run_dir/$fasta_file --tmpdir tmp_dir --output $run_dir/input.sorted >> $run_dir/$runcmd.out 2>&1") == 0 or exit (__LINE__);
+    system("$runcmd --sort=$fasta_file --tmpdir=tmp_dir --output=input.sorted >> $runcmd.out 2>&1") == 0 or exit (__LINE__);
   }
 
-  system("$runcmd --input $run_dir/input.sorted --uc $run_dir/$job_num.$code$pid.uc --id 0.$pid --tmpdir tmp_dir --rev >> $run_dir/$runcmd.out 2>&1") == 0 or exit (__LINE__);
-  system("$runcmd --input $run_dir/input.sorted --uc2fasta $run_dir/$job_num.$code$pid.uc --types SH --output $run_dir/$job_num.$code$pid.$fext --tmpdir tmp_dir >> $run_dir/$runcmd.out 2>&1") == 0 or exit (__LINE__);
-  system("process_clusters -u $run_dir/$job_num.$code$pid.$fext -p $code".$pid."_ -m $run_dir/$job_num.$code$pid.mapping -f $run_dir/clusters.$code$pid.$fext >> $run_dir/process_clusters.out 2>&1") == 0 or exit (__LINE__);
+  system("$runcmd --input=input.sorted --uc=$job_num.$code$pid.uc --id=0.$pid --tmpdir=tmp_dir --rev >> $runcmd.out 2>&1") == 0 or exit (__LINE__);
+  system("$runcmd --input=input.sorted --uc2fasta=$job_num.$code$pid.uc --types=SH --output=$job_num.$code$pid.$fext --tmpdir=tmp_dir >> $runcmd.out 2>&1") == 0 or exit (__LINE__);
+  system("process_clusters -u $job_num.$code$pid.$fext -p $code".$pid."_ -m $job_num.$code$pid.mapping -f clusters.$code$pid.$fext >> process_clusters.out 2>&1") == 0 or exit (__LINE__);
 }
 else {
   # too small
-  system("touch $run_dir/clusters.$code$pid.$fext");
-  system("touch $run_dir/$job_num.$code$pid.mapping");
+  system("touch clusters.$code$pid.$fext");
+  system("touch $job_num.$code$pid.mapping");
 }
 
 
 # rename output to specified name
 if (length($final_output) > 0) {
-   system("mv $job_num.$code$pid.$fext $final_output") or exit (__LINE__);
+    system("mv clusters.$code$pid.$fext $final_output") ==0  or exit (__LINE__);
 }
 
 exit(0);
