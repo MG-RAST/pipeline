@@ -59,5 +59,5 @@ if (length($final_output) > 0) {
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_genecalling.pl -input=<input fasta> [-train=<454 | sanger | illumina | complete> -proc=<number of threads > -output=<output fasta> -jobnum=<job number>] \n";
+    print "USAGE: awe_genecalling.pl -input=<input fasta> [-type=<454 | sanger | illumina | complete> -proc=<number of threads > -output=<output fasta> -jobnum=<job number>] \n";
 }
