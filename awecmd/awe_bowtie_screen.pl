@@ -119,8 +119,10 @@ if ((-e "bowtie.input") and (-e "input.sorted")) {
 }
 
 if (length($final_output) > 0) {
-    system("mv $passed_seq $job_num-$final_output") == 0 or exit __LINE__;
+    system("mv $passed_seq $final_output") == 0 or exit __LINE__;
 }
+
+system("rm $input_file");
 
 exit(0);
 
