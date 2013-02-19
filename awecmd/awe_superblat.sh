@@ -14,8 +14,8 @@ then
    DB1=$REFDBPATH/md5nr.1
    DB2=$REFDBPATH/md5nr.2
 else 
-   DB1=md5dnr.1
-   DB2=md5dnr.2
+   DB1=md5nr.1
+   DB2=md5nr.2
 fi
 
 
