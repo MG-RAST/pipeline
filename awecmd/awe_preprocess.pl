@@ -45,7 +45,7 @@ my $cmd_options = "";
 # default => filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5
 if (length($filter_options)==0) {
   if ( $input_file =~ /\.fn?a$|\.fasta$/i ) {
-    my @out = `seq_length_stats --fasta_file $input_file --length_only | cut -f2`;
+    my @out = `seq_length_stats.py --input=$input_file  | cut -f2`;
     chomp @out;
     my $mean = $out[2];
     my $stdv = $out[3];
