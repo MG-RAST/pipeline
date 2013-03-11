@@ -146,8 +146,8 @@ def main(args):
 
     if size_bytes > file_bytes:
         if opts.verbose: sys.stdout.write("File %s smaller than %d Mb, running with 1 processor\n"%(in_fasta, opts.size))
-        shutil.copyfile(in_fasta, in_fasta+'.tmp')
-        sfiles   = [in_fasta+'.tmp.'+str(len(sfiles)+1)]
+        shutil.copyfile(in_fasta, in_fasta+'.tmp.1')
+        sfiles   = [in_fasta+'.tmp.1']
         min_proc = 1
     else:
         if opts.verbose: sys.stdout.write("Splitting file %s ... "%in_fasta)
