@@ -40,6 +40,7 @@ my @ids = ();
 my @pids = ();
 
 $/ = ">";
+my $junk = <IN>; # kill first line
 while (my $l = <IN>) {
   chomp $l;
   my @lines = split "\n", $l;
