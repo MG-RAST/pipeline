@@ -28,9 +28,9 @@ open IN, "<".$file or die $!;
 open MAP, ">".$mapping or die $!;
 open FNA, ">".$fasta or die $!;
 
-my $cur_cluster = "";
-my $cur_seq_id = "";
-my $cur_seq = "";
+my $prev_cluster = "";
+my $prev_seq_id = "";
+my $prev_seq = "";
 my @ids = ();
 my @pids = ();
 
@@ -44,28 +44,31 @@ while (my $l = <IN>) {
 
   if ($id_line =~ /^(\d+)\|(\d+\.\d\%|\*)\|(\S+)/) {
     my ($cid,$pid,$seq_id) = ($1,$2,$3);
-    if ($pid ne "*") {
+    if ($pid eq "*") {
+      if (scalar @ids) {
+	print MAP $prefix.$prev_cluster."\t".$prev_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
+	print FNA ">".$prefix.$prev_cluster."\n$prev_seq\n";
+      } elsif ($prev_seq_id) {
+	print FNA ">$prev_seq_id\n$prev_seq\n";
+      }
+      $prev_cluster = $cid;
+      $prev_seq_id = $seq_id;
+      $prev_seq = $seq;
+      @ids = ();
+      @pids = ();
+    } else {
       push @ids, $seq_id;
       push @pids, $pid;
       next;
-    } else {
-      unless (scalar @ids) {
-	if ($cur_seq_id) {
-	  print FNA ">$cur_seq_id\n$cur_seq\n";
-	} else {
-	  print FNA ">$seq_id\n$seq\n";
-	}
-      } else {
-	print MAP $prefix.$cur_cluster."\t".$cur_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
-	print FNA ">".$prefix.$cur_cluster."\n$cur_seq\n";
-      }
     }
-    $cur_cluster = $cid;
-    $cur_seq_id = $seq_id;
-    $cur_seq = $seq;
-    @ids = ();
-    @pids = ();
   }
+}
+
+if (scalar @ids) {
+  print MAP $prefix.$prev_cluster."\t".$prev_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
+  print FNA ">".$prefix.$prev_cluster."\n$prev_seq\n";
+} elsif ($prev_seq_id) {
+  print FNA ">$prev_seq_id\n$prev_seq\n";
 }
 
 close(IN);
