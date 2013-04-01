@@ -30,8 +30,7 @@ my $revision = "0";
 #my $params   = "--verbose --mem_host ".$memcache_host." --mem_key ".$memcache_key;
 my $params   = "--verbose --mem_host ".$memcache_host;
 
-my$prefix_aa = $stage_id.".aa";
-my $prefix_rna = $stage_id.".rna";
+my $out_prefix = $stage_id;
 
 # options
 my $job_num = "100";
@@ -40,6 +39,7 @@ my $rna_sims = "";
 my $options = GetOptions ("job=i"    => \$job_num,
 			  "aa_sims=s"  => \$aa_sims,
 			  "rna_sims=s"   => \$rna_sims,
+			  "out_prefix=s" => \$out_prefix,
 			 );
 
 unless (-s $aa_sims) {
@@ -54,6 +54,9 @@ unless (-s $rna_sims) {
     exit __LINE__;
 }
 
+my $prefix_aa = $out_prefix.".aa";
+my $prefix_rna = $out_prefix.".rna";
+
 my $run_dir = getcwd();
 
 # memcache sims for aa - superblat results should always be sorted by query id then bit score
@@ -67,5 +70,5 @@ print "Finished $stage_name on job $job_num\n";
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_annotate.pl -aa_sims=<input aa sims file> -rna_sim=<input rna sims file>\n";
+    print "USAGE: awe_annotate.pl -aa_sims=<input aa sims file> -rna_sim=<input rna sims file> [-out_prefix=<prefix for output files>]\n";
 }
