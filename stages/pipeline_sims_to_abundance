@@ -21,8 +21,9 @@ my $revision = "0";
 my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 
 # options
-my $job_num = "";
-my $sims    = "";
+my $job_num       = "";
+my $aa_sims_file  = "";
+my $rna_sims_file = "";
 my $mem_key = $Pipeline_Conf::memcache_key;
 my $procs   = 2;
 my $ver     = 0;
