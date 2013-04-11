@@ -43,6 +43,9 @@ def uc2fasta(infasta, inclust, outfasta, types, nameonly, tmpdir):
             continue
         parts = line.split("\t")
         (ctype, cname, pid, sname) = (parts[0], parts[1], parts[3], parts[8])
+        sname_fields = sname.split(" ")
+        sname = sname_fields[0]
+
         if ctype not in typeSet:
             continue
         while sname != curFasta.id:
