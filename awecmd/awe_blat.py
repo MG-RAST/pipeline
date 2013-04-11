@@ -15,7 +15,7 @@ Info_log = open("awe_blat.info", "w")
 def sortandbleach(sims_file, out_file):
     print "started sort and bleach"
     sorted_file = "%s.sorted" % sims_file
-    cmd = "sort -t '\t' -k 1,1 %s > %s" % (sims_file, sorted_file)
+    cmd = "sort -t '\t' -k 1,1 -T . %s > %s" % (sims_file, sorted_file)
     proc = sub.Popen([cmd], shell=True, stdout=sub.PIPE)
     while (proc.returncode == None):
         proc.poll()
@@ -64,33 +64,35 @@ def runBlatProcess(infile, nr, output):
     try:
         tmp_out1 = "%s.1" % output
         tmp_out2 = "%s.2" % output
-        
         cmd1 = "superblat -prot -fastMap -out=blast8 %s.1 %s %s" % (nr, infile, tmp_out1)
         cmd2 = "superblat -prot -fastMap -out=blast8 %s.2 %s %s" % (nr, infile, tmp_out2)
-        
         start = datetime.datetime.utcnow()
-        print "started running superblat"
-        print cmd1
-        cmdargs1 = cmd1.split()
-        sub.call(cmdargs1)
-        
-        print cmd2
-        cmdargs2 = cmd2.split()
-        sub.call(cmdargs2)
-        
+
+        proc1 = sub.Popen([cmd1], shell=True, stdout=sub.PIPE)
+        proc2 = sub.Popen([cmd2], shell=True, stdout=sub.PIPE)
+
+        while (proc1.returncode == None or proc2.returncode == None):
+                proc1.poll()
+                proc2.poll()
+                if (proc1.returncode != None and proc2.returncode != None):
+                        break
+                else:
+                        time.sleep(5)
+                        
         cat_output = "%s.cat_blat" % output
+        
         destination = open(cat_output,'wb')
         shutil.copyfileobj(open(tmp_out1,'rb'), destination)
         shutil.copyfileobj(open(tmp_out2,'rb'), destination)
         destination.close()
         os.remove(tmp_out1)
         os.remove(tmp_out2)
-        
         print "finished running superblat - time: %s m\n" % ((datetime.datetime.utcnow() - start).seconds / 60)
         Info_log.write("runBlatProcess - finished - time: %s m\n" % ((datetime.datetime.utcnow() - start).seconds / 60))
         return
+        
     except (KeyboardInterrupt, SystemExit):
-        Info_log.write("runBlatProcess - killed")
+        Info_log.write("runBlatProcessPara - killed")
         sys.exit(EXIT_RUNBLAT_FAIL)
 
 if __name__ == "__main__":
