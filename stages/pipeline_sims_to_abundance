@@ -13,7 +13,7 @@ umask 000;
 
 my $stage_name="sims_to_abundance";
 my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'default'}}) {
+for my $s (@{$Pipeline_Conf::pipeline->{'sims_to_abundance'}}) {
   $stage = $s if $s->{name} eq $stage_name; 
 }
 my $stage_id = $stage->{id};
@@ -22,39 +22,51 @@ my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 
 # options
 my $job_num       = "";
+my $fasta         = "";
 my $aa_sims_file  = "";
 my $rna_sims_file = "";
-my $mem_key = $Pipeline_Conf::memcache_key;
-my $procs   = 2;
-my $ver     = 0;
-my $help    = 0;
+my $clust_aa      = "";
+my $map_rna       = "";
+my $ver_db        = 0;
+my $procs         = 2;
+my $mem_key       = $Pipeline_Conf::memcache_key;
+my $max_seq       = 500000;
+my $ver           = 0;
+my $help          = 0;
+
 my $options = GetOptions ("job=i"           => \$job_num,
-			  "aa_sims_file:s"  => \$aa_sims_file,
-			  "rna_sims_file:s" => \$rna_sims_file,
-			  "procs:i"         => \$procs,
-			  "mem_key:s"       => \$mem_key,
+                          "fasta=s"         => \$fasta,
+			  "aa_sims_file=s"  => \$aa_sims_file,
+			  "rna_sims_file=s" => \$rna_sims_file,
+                          "clust_aa=s"      => \$clust_aa,
+                          "map_rna=s"       => \$map_rna,
+                          "nr_ver=s"        => \$ver_db,
+			  "procs=i"         => \$procs,
+			  "key_memcache=s"  => \$mem_key,
 			  "version!"        => \$ver,
 			  "help!"           => \$help
 			 );
 if ( $ver ) {
   print STDERR "$stage_name - $version - $stage_id\n";
   exit(0);
-} elsif ( $help or !($job_num and $rna_sims_file and $aa_sims_file) ) {
-  print STDERR "Usage: pipeline_$stage_name -j <job number> -a <aa sims file> -r <rna sims file> [ -m <memcache key> -p <# processors for sort, default $procs>]\n";
+} elsif ( $help or !($job_num and $fasta and $aa_sims_file and $rna_sims_file and $clust_aa and $map_rna and $ver_db) ) {
+  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta> -a <aa sims file> -r <rna sims file> -c <aa cluster file> -m <rna mapping file> --nr_ver <m5nr db version> [-k <memcache key> -p <# processors for sort, default $procs>]\n";
   exit(1);
 }
 
 my $log = Pipeline::logger($job_num);
 $log->info("Starting $stage_name on job: $job_num");
 
-unless (-e $aa_sims_file) {
-  $log->error("file: $aa_sims_file does not exist");
-  exit(1);
-}
+foreach my $file ($aa_sims_file, $rna_sims_file, $clust_aa, $map_rna) {
+  unless (-e $file) {
+    $log->error("file: $file does not exist");
+    exit(1);
+  }
 
-unless (-e $rna_sims_file) {
-  $log->error("file: $rna_sims_file does not exist");
-  exit(1);
+  if (-s $file == 0) {
+    $log->error("file: $file is empty");
+    exit(1);
+  }
 }
 
 # update jobcache stage status
@@ -64,6 +76,7 @@ my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
 my $proc_dir    = $job_dir."/proc";
 my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
 my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
+my $raw_dir     = $job_dir."/raw";
 my $run_dir     = $stage_dir;
 my $hostname    = `hostname`;
 chomp $hostname;
@@ -93,30 +106,38 @@ my $prefix   = $stage_id.".".$stage_name;
 my $err_file = $stage_dir."/".$prefix.".err";
 my $message  = "$stage_name failed on job: $job_num, see $err_file for details.";
 
-# process_rna_sims
-system("process_rna_sims --in_sim $rna_sims_file --sort_dir $sort_dir --run_dir $run_dir --err_file $err_file --prefix $prefix --mem_host $Pipeline_Conf::memcache_host --mem_key $mem_key --procs $procs") or fail($log, "process_rna_sims: ".$message);
+# find out if this is an assembled dataset
+my $job_attribs = Pipeline::get_job_attributes($job_num);
+my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
+my $assembly_abun_opt = "";
+if ($assembled && $assembled == 1) {
+  $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
+}
 
-# cleanup
-#move("$sims_file.sort", "$results_dir/$prefix.sims") or fail($log, "Failed copy: $prefix.sims.sort - $!");
-#move("$sims_file.filter", "$results_dir/$prefix.sims.filter") or fail($log, "Failed copy: $prefix.sims.filter - $!");
-#move("$run_dir/$prefix.expand.rna", "$results_dir/$prefix.expand.rna") or fail($log, "Failed copy: $prefix.expand.rna - $!");
-#move("$run_dir/$prefix.expand.lca", "$results_dir/$prefix.expand.lca") or fail($log, "Failed copy: $prefix.expand.lca - $!");
+system("sims_to_abundance --job_num $job_num --fasta $fasta --aa_sims_file $aa_sims_file --rna_sims_file $rna_sims_file --clust_aa $clust_aa --map_rna $map_rna --sort_dir $sort_dir --run_dir $run_dir --prefix $prefix --ver_db $ver_db --mem_host $Pipeline_Conf::memcache_host --mem_key $mem_key --procs $procs $assembly_abun_opt") == 0 or fail($log, "sims_to_abundance: ".$message);
 
-#chmod 0666, "$results_dir/$prefix.sims"; 
-#chmod 0666, "$results_dir/$prefix.sims.filter";
-#chmod 0666, "$results_dir/$prefix.expand.rna";
-#chmod 0666, "$results_dir/$prefix.expand.lca";
+# new annotations loaded, add version to JobAttributes
+Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
+Pipeline::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
+
+# move files / cleanup
+move("$run_dir/$prefix.source.stats", "$results_dir/$prefix.source.stats") or fail($log, "Failed copy: $prefix.source.stats - $!");
+move("$run_dir/$prefix.sims.filter.seq", "$results_dir/$prefix.sims.filter.seq") or fail($log, "Failed copy: $run_dir/$prefix.sims.filter.seq - $!");
+system("mv $run_dir/*summary $results_dir/.");
+chmod 0666, "$results_dir/$prefix.source.stats";
+chmod 0666, "$results_dir/$prefix.sims.filter.seq";
+chmod 0666, "$results_dir/*summary";
 
 # move run_dir to stage_dir if on local
-#if ($run_dir ne $stage_dir) {
-#  system("mv $run_dir/*.out $stage_dir/.");
-#  system("mv $run_dir/*.err $stage_dir/.");
-#  system("rm -rf $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
-#} else {
-#  my @run_files = `ls $run_dir`;
-#  chomp @run_files;
-#  map { system("rm $run_dir/$_") } grep { $_ !~ /\.(out|err)$/ } @run_files;
-#}
+if ($run_dir ne $stage_dir) {
+  system("mv $run_dir/*.out $stage_dir/.");
+  system("mv $run_dir/*.err $stage_dir/.");
+  system("rm -rf $run_dir") == 0 or fail($log, "$stage_name failed on job: $job_num, can not remove $run_dir");
+} else {
+  my @run_files = `ls $run_dir`;
+  chomp @run_files;
+  map { system("rm $run_dir/$_") } grep { $_ !~ /\.(out|err)$/ } @run_files;
+}
 
 $log->info("Finished $stage_name on job: $job_num");
 

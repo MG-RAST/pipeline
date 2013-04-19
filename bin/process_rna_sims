@@ -11,7 +11,6 @@ my $out_rna   = '';
 my $out_lca   = '';
 my $sort_dir  = '';
 my $run_dir   = '';
-my $err_file  = '';
 my $prefix    = '';
 my $memhost   = '';
 my $memkey    = '_ach';
@@ -32,7 +31,6 @@ rna:      md5|query, fragment|subject, identity, length, evalue, function, organ
   --in_sim       file name      Required. Name of input sim file
   --sort_dir     dir path       Required. Directory where sort can be performed.
   --run_dir      dir path       Required. Directory where files can be read from and written to.
-  --err_file     file name      Required. File where errors can be written to.
   --prefix       string         Required. Partial file path to where expand files will be written to.
   --mem_host     memcache host  Required. Server of memcache
   --mem_key      key extension  Optional. Extension to md5sum to use as memcache key. Default is '$memkey'
@@ -42,21 +40,20 @@ rna:      md5|query, fragment|subject, identity, length, evalue, function, organ
 
 );
 
+if(@ARGV == 0 || (@ARGV > 0) && ($ARGV[0] eq "-h")) {
+  print STDERR $usage . "Missing required input parameters.\n";
+  exit 1;
+}
+
 if ( ! GetOptions( "in_sim=s"       => \$in_file,
-                   "sort_dir=s"     => \$sort_dir
+                   "sort_dir=s"     => \$sort_dir,
                    "run_dir=s"      => \$run_dir,
-                   "err_file=s"     => \$err_file,
                    "prefix=s"       => \$prefix,
                    'mem_host=s'     => \$memhost,
                    'mem_key=s'      => \$memkey,
                    "procs=s"        => \$procs
                  ) )
   { print STDERR $usage; exit 1; }
-
-if(@ARGV == 0 || ((@ARGV > 0) && ($ARGV[0] =~ /-h/)) ) {
-  print STDERR $usage . "Missing required input parameters.\n";
-  exit 1;
-}
 
 unless(-e $in_file) {
   print STDERR $usage . "Input sim file not specified or does not exist.\n";
@@ -73,11 +70,6 @@ unless(-d $run_dir) {
   exit 1;
 }
 
-unless($err_file ne "") {
-  print STDERR $usage . "Error file not specified.\n";
-  exit 1;
-}
-
 unless($prefix ne "") {
   print STDERR $usage . "Prefix not specified.\n";
   exit 1;
@@ -89,10 +81,15 @@ unless($memhost ne "") {
 }
 
 my $sort_mem = int($procs * 1024 * 2.5);
-&run_system_command("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 1,1 -k 12,12nr -o $in_file.sort $in_file >> $run_dir/process_sims.out 2> $err_file");
+&run_system_command("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 1,1 -k 12,12nr -o $run_dir/$prefix.sims.sort $in_file >> $run_dir/$prefix.out 2>> $run_dir/$prefix.err");
 
-my $params   = "--verbose --mem_host $memhost --mem_key $mem_key";
-&run_system_command("process_sims_by_source_mem $params --in_sim $in_file.sort --out_filter $in_file.filter --out_rna $run_dir/$prefix.expand.rna --out_lca $run_dir/$prefix.expand.lca >> $run_dir/process_sims.out 2> $err_file");
+my $params = "--verbose --mem_host $memhost --mem_key $memkey";
+&run_system_command("process_sims_by_source_mem $params --in_sim $run_dir/$prefix.sims.sort --out_filter $run_dir/$prefix.sims.filter --out_rna $run_dir/$prefix.expand.rna --out_lca $run_dir/$prefix.expand.lca >> $run_dir/$prefix.out 2>> $run_dir/$prefix.err");
+
+chmod 0666, "$in_file.sort";
+chmod 0666, "$in_file.filter";
+chmod 0666, "$run_dir/$prefix.expand.rna";
+chmod 0666, "$run_dir/$prefix.expand.lca";
 
 sub run_system_command {
   my ($cmd) = @_;
