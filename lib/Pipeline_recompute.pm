@@ -186,7 +186,7 @@ sub set_job_statistics {
 sub set_job_tag_data {
   my ($job, $data, $table) = @_;
 
-  open OUT, ">>$global_job_dir/$job/recompute.sql" || die "Cannot open $global_job_dir/$job/recompute.sql for writing.\n";
+  open OUT, ">>$Pipeline_Conf::global_job_dir/$job/recompute.sql" || die "Cannot open $Pipeline_Conf::global_job_dir/$job/recompute.sql for writing.\n";
   foreach my $set (@$data) {
     my ($tag, $val) = @$set;
     print OUT "insert into $table (`tag`,`value`,`job`,`_job_db`) values ($tag,$val,?,2) on duplicate key update value=$val\n";
@@ -197,7 +197,7 @@ sub set_job_tag_data {
 
 sub update_stage_info { 
   my ($job, $stage, $status) = @_;
-  open OUT, ">>$global_job_dir/$job/recompute.sql" || die "Cannot open $global_job_dir/$job/recompute.sql for writing.\n";
+  open OUT, ">>$Pipeline_Conf::global_job_dir/$job/recompute.sql" || die "Cannot open $Pipeline_Conf::global_job_dir/$job/recompute.sql for writing.\n";
   print OUT "select * from Job where job_id=$job\n";
   print OUT "insert into PipelineStage (`stage`,`status`,`job`,`_job_db`,`timestamp`) values ($stage,$status,?,2,CURRENT_TIMESTAMP) on duplicate key update status=$status\n";
   close OUT;
