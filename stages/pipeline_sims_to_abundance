@@ -107,10 +107,15 @@ my $err_file = $stage_dir."/".$prefix.".err";
 my $message  = "$stage_name failed on job: $job_num, see $err_file for details.";
 
 # find out if this is an assembled dataset
-my $job_attribs = Pipeline::get_job_attributes($job_num);
-my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
-my $assembly_abun_opt = "";
-if ($assembled && $assembled == 1) {
+#   This code was modified to look for an abundance file in $raw_dir as an indicator that
+#   we're dealing with an assembled job.  This approach should only be used for recomputing.
+#my $job_attribs = Pipeline::get_job_attributes($job_num);
+#my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
+#my $assembly_abun_opt = "";
+#if ($assembled && $assembled == 1) {
+#  $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
+#}
+if(-e "$raw_dir/$job_num.abundance") {
   $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
 }
 
