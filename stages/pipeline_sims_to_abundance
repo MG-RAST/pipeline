@@ -115,6 +115,7 @@ my $message  = "$stage_name failed on job: $job_num, see $err_file for details."
 #if ($assembled && $assembled == 1) {
 #  $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
 #}
+my $assembly_abun_opt = "";
 if(-e "$raw_dir/$job_num.abundance") {
   $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
 }
