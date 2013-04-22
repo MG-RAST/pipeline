@@ -4,7 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
-use Pipeline;
+use Pipeline_recompute;
 use Pipeline_Conf;
 
 use Getopt::Long;
@@ -54,7 +54,7 @@ if ( $ver ) {
   exit(1);
 }
 
-my $log = Pipeline::logger($job_num);
+my $log = Pipeline_recompute::logger($job_num);
 $log->info("Starting $stage_name on job: $job_num");
 
 foreach my $file ($aa_sims_file, $rna_sims_file, $clust_aa, $map_rna) {
@@ -70,7 +70,7 @@ foreach my $file ($aa_sims_file, $rna_sims_file, $clust_aa, $map_rna) {
 }
 
 # update jobcache stage status
-Pipeline::update_stage_info($job_num, $stage_name, "running");
+Pipeline_recompute::update_stage_info($job_num, $stage_name, "running");
 
 my $job_dir     = $Pipeline_Conf::global_job_dir."/".$job_num;
 my $proc_dir    = $job_dir."/proc";
@@ -107,18 +107,23 @@ my $err_file = $stage_dir."/".$prefix.".err";
 my $message  = "$stage_name failed on job: $job_num, see $err_file for details.";
 
 # find out if this is an assembled dataset
-my $job_attribs = Pipeline::get_job_attributes($job_num);
-my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
-my $assembly_abun_opt = "";
-if ($assembled && $assembled == 1) {
+#   This code was modified to look for an abundance file in $raw_dir as an indicator that
+#   we're dealing with an assembled job.  This approach should only be used for recomputing.
+#my $job_attribs = Pipeline::get_job_attributes($job_num);
+#my $assembled = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : '';
+#my $assembly_abun_opt = "";
+#if ($assembled && $assembled == 1) {
+#  $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
+#}
+if(-e "$raw_dir/$job_num.abundance") {
   $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
 }
 
 system("sims_to_abundance --job_num $job_num --fasta $fasta --aa_sims_file $aa_sims_file --rna_sims_file $rna_sims_file --clust_aa $clust_aa --map_rna $map_rna --sort_dir $sort_dir --run_dir $run_dir --prefix $prefix --ver_db $ver_db --mem_host $Pipeline_Conf::memcache_host --mem_key $mem_key --procs $procs $assembly_abun_opt") == 0 or fail($log, "sims_to_abundance: ".$message);
 
 # new annotations loaded, add version to JobAttributes
-Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
-Pipeline::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
+Pipeline_recompute::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
+Pipeline_recompute::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
 
 # move files / cleanup
 move("$run_dir/$prefix.source.stats", "$results_dir/$prefix.source.stats") or fail($log, "Failed copy: $prefix.source.stats - $!");
@@ -142,13 +147,13 @@ if ($run_dir ne $stage_dir) {
 $log->info("Finished $stage_name on job: $job_num");
 
 # update jobcache stage status
-Pipeline::update_stage_info($job_num, $stage_name, "completed");
+Pipeline_recompute::update_stage_info($job_num, $stage_name, "completed");
 
 exit(0);
 
 sub fail {
   my ($log, $message) = @_;
-  Pipeline::update_stage_info($job_num, $stage_name, "error");
+  Pipeline_recompute::update_stage_info($job_num, $stage_name, "error");
   $log->error($message);
   if ($run_dir ne $stage_dir) {
     system("mv $run_dir/* $stage_dir/.");
