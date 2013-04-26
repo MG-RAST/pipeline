@@ -11,9 +11,9 @@ use Getopt::Long;
 use File::Copy;
 umask 000;
 
-my $stage_name="sims2abundance";
+my $stage_name="abundance";
 my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'sims2abundance'}}) {
+for my $s (@{$Pipeline_Conf::pipeline->{'prod'}}) {
   $stage = $s if $s->{name} eq $stage_name; 
 }
 my $stage_id = $stage->{id};
@@ -52,7 +52,7 @@ if ( $ver ) {
   print STDERR "$stage_name - $version - $stage_id\n";
   exit(0);
 } elsif ( $help or !($job_num and $fasta and $aa_sims_file and $rna_sims_file and $clust_aa and $map_rna and $ver_db) ) {
-  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta> -a <aa sims file> -r <rna sims file> -c <aa cluster file> -m <rna mapping file> --nr_ver <m5nr db version> [-h <memcache host> -k <memcache key> -p <# processors for sort, default $procs>]\n";
+  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta> -a <aa sims file> -r <rna sims file> -c <aa cluster file> -m <rna mapping file> --nr_ver <m5nr db version> [--host_memcache <memcache host> -k <memcache key> -p <# processors for sort, default $procs>]\n";
   exit(1);
 }
 
