@@ -202,12 +202,14 @@ sub set_job_tag_data {
 
 sub update_stage_info { 
   my ($job, $stage, $status) = @_;
-  my $dbh = get_jobcache_dbh();
-  my $query = $dbh->prepare(qq(select * from Job where job_id=?));
-  $query->execute($job) or die $dbh->errstr;  
-  my $job_object = $query->fetchrow_hashref;  
-  $query = $dbh->prepare(qq(insert into PipelineStage (`stage`,`status`,`job`,`_job_db`,`timestamp`) values (?,?,?,2,CURRENT_TIMESTAMP) on duplicate key update status=?));
-  $query->execute($stage,$status,$job_object->{_id},$status) or die $dbh->errstr;
+  if($Pipeline_Conf::jobcache_db_avail) {
+    my $dbh = get_jobcache_dbh();
+    my $query = $dbh->prepare(qq(select * from Job where job_id=?));
+    $query->execute($job) or die $dbh->errstr;  
+    my $job_object = $query->fetchrow_hashref;  
+    $query = $dbh->prepare(qq(insert into PipelineStage (`stage`,`status`,`job`,`_job_db`,`timestamp`) values (?,?,?,2,CURRENT_TIMESTAMP) on duplicate key update status=?));
+    $query->execute($stage,$status,$job_object->{_id},$status) or die $dbh->errstr;
+  }
   return 1;
 }
 
