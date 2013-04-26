@@ -122,9 +122,13 @@ sub get_job_owner {
 }
 
 sub get_job_options {
-  my $job = shift;
-  my $job_obj = get_jobcache_info($job);
-  return $job_obj->{options} ? $job_obj->{options} : "";
+  if($Pipeline_Conf::jobcache_db_avail) {
+    my $job = shift;
+    my $job_obj = get_jobcache_info($job);
+    return $job_obj->{options} ? $job_obj->{options} : "";
+  } else {
+    return "";
+  }
 }
 
 sub get_jobcache_info { 
