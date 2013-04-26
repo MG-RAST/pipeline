@@ -106,10 +106,14 @@ if ($db_reload) {
 my $outf = "$stage_dir/run_load_summary.out";
 system("load_summary2db $params $dboptions $summary_file_options $reload --job $job_num >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db ".$message);
 
-$log->info("Finished $stage_name on job: $job_num");
+# new annotations loaded, add version to JobAttributes
+Pipeline_recompute::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
+Pipeline_recompute::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
 
 # update jobcache stage status
 Pipeline_recompute::update_stage_info($job_num, $stage_name, "completed");
+
+$log->info("Finished $stage_name on job: $job_num");
 
 exit(0);
 
