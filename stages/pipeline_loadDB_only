@@ -11,8 +11,8 @@ use Getopt::Long;
 use File::Copy;
 umask 000;
 
-my $stage_name="loadDB_only";
-my $stage_id = 950;
+my $stage_name="loadDB";
+my $stage_id = 900;
 my $revision = "0";
 my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 
