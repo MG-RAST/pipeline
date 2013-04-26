@@ -11,9 +11,9 @@ use Getopt::Long;
 use File::Copy;
 umask 000;
 
-my $stage_name="sims2abundance";
+my $stage_name="abundance";
 my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'sims2abundance'}}) {
+for my $s (@{$Pipeline_Conf::pipeline->{'prod'}}) {
   $stage = $s if $s->{name} eq $stage_name; 
 }
 my $stage_id = $stage->{id};
