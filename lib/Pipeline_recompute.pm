@@ -186,17 +186,25 @@ sub set_job_statistics {
 sub set_job_tag_data {
   my ($job, $data, $table) = @_;
 
-  open OUT, ">>$Pipeline_Conf::global_job_dir/$job/recompute.sql" || die "Cannot open $Pipeline_Conf::global_job_dir/$job/recompute.sql for writing.\n";
+  my $job_obj = get_jobcache_info($job);
+  my $dbh     = get_jobcache_dbh();
+  my $query   = $dbh->prepare(qq(insert into $table (`tag`,`value`,`job`,`_job_db`) values (?,?,?,2) on duplicate key update value=?));
+
+  unless ($data && @$data && $job_obj && $job_obj->{_id}) {
+    return 0;
+  }
   foreach my $set (@$data) {
     my ($tag, $val) = @$set;
-    print OUT "insert into $table (`tag`,`value`,`job`,`_job_db`) values ($tag,$val,?,2) on duplicate key update value=$val\n";
+    $query->execute($tag, $val, $job_obj->{_id}, $val) or die $dbh->errstr;
   }
-  close OUT;
   return 1;
 }
 
 sub update_stage_info { 
   my ($job, $stage, $status) = @_;
+  if($status eq 'running') {
+    system "rm -f $Pipeline_Conf::global_job_dir/$job/recompute.sql";
+  }
   open OUT, ">>$Pipeline_Conf::global_job_dir/$job/recompute.sql" || die "Cannot open $Pipeline_Conf::global_job_dir/$job/recompute.sql for writing.\n";
   print OUT "select * from Job where job_id=$job\n";
   print OUT "insert into PipelineStage (`stage`,`status`,`job`,`_job_db`,`timestamp`) values ($stage,$status,?,2,CURRENT_TIMESTAMP) on duplicate key update status=$status\n";
