@@ -12,11 +12,7 @@ use File::Copy;
 umask 000;
 
 my $stage_name="abundance";
-my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'prod'}}) {
-  $stage = $s if $s->{name} eq $stage_name; 
-}
-my $stage_id = $stage->{id};
+my $stage_id = 700;
 my $revision = "0";
 my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 
