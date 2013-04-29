@@ -202,7 +202,7 @@ sub set_job_tag_data {
 
 sub update_stage_info { 
   my ($job, $stage, $status) = @_;
-  if($Pipeline_Conf::jobcache_db_avail) {
+  if($Pipeline_Conf::jobcache_db_avail == 1) {
     my $dbh = get_jobcache_dbh();
     my $query = $dbh->prepare(qq(select * from Job where job_id=?));
     $query->execute($job) or die $dbh->errstr;  
