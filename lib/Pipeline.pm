@@ -174,28 +174,42 @@ sub get_job_tag_data {
 }
 
 sub set_job_attributes {
-  my ($job, $data) = @_;
-  return set_job_tag_data($job, $data, "JobAttributes");
+  my ($job, $data, $proc_subdir) = @_;
+  return set_job_tag_data($job, $data, "JobAttributes", $proc_subdir);
 }
 
 sub set_job_statistics {
-  my ($job, $data) = @_;
-  return set_job_tag_data($job, $data, "JobStatistics");
+  my ($job, $data, $proc_subdir) = @_;
+  return set_job_tag_data($job, $data, "JobStatistics", $proc_subdir);
 }
 
 sub set_job_tag_data {
-  my ($job, $data, $table) = @_;
+  my ($job, $data, $table, $proc_subdir) = @_;
 
-  my $job_obj = get_jobcache_info($job);
-  my $dbh     = get_jobcache_dbh();
-  my $query   = $dbh->prepare(qq(insert into $table (`tag`,`value`,`job`,`_job_db`) values (?,?,?,2) on duplicate key update value=?));
+  if($Pipeline_Conf::jobcache_db_avail == 1) {
+    my $job_obj = get_jobcache_info($job);
+    my $dbh     = get_jobcache_dbh();
+    my $query   = $dbh->prepare(qq(insert into $table (`tag`,`value`,`job`,`_job_db`) values (?,?,?,2) on duplicate key update value=?));
 
-  unless ($data && @$data && $job_obj && $job_obj->{_id}) {
-    return 0;
-  }
-  foreach my $set (@$data) {
-    my ($tag, $val) = @$set;
-    $query->execute($tag, $val, $job_obj->{_id}, $val) or die $dbh->errstr;
+    unless ($data && @$data && $job_obj && $job_obj->{_id}) {
+      return 0;
+    }
+    foreach my $set (@$data) {
+      my ($tag, $val) = @$set;
+      $query->execute($tag, $val, $job_obj->{_id}, $val) or die $dbh->errstr;
+    }
+  } else {
+    my $job_dir = get_job_dir($job);
+    my $ofile = "$job_dir/proc/$proc_subdir/$table.out";
+    open OUT, ">>$ofile" || die "Cannot print to file: $ofile\n";
+    unless ($data && @$data) {
+      return 0;
+    }
+    foreach my $set (@$data) {
+      my ($tag, $val) = @$set;
+      print OUT "insert into $table (`tag`,`value`,`job`,`_job_db`) values ($tag,$val,(select _id from Job where job_id = $job),2) on duplicate key update value=$val\n";
+    }
+    close OUT;
   }
   return 1;
 }
