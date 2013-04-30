@@ -90,7 +90,7 @@ system("cp $fasta $fasta_file") == 0 or fail($log, "cp $fasta: ".$message);
 system("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr $fasta_file stdout | bleachsims -s - -o $sims_file -r 0 > $run_dir/blat.out 2> $err_file") == 0 or fail($log, "blat: ".$message);
 
 # new sims calculated, add m5rna version to JobAttributes
-load_data($job_num, [['m5rna_sims_version', $Pipeline_Conf::ach_sequence_ver]]);
+load_data($job_num, [['m5rna_sims_version', $Pipeline_Conf::ach_sequence_ver]], $prefix);
 
 # run stats on cluster file
 my @proc_rna_tags = grep { $_ =~ /_processed_rna$/ } @{ Pipeline::get_job_stat_tags() };
@@ -111,19 +111,19 @@ if (-s $clust) {
   open(CSTAT, ">$clust.stats") or fail($log, "$stage_name failed on job: $job_num, can not open $clust.stats: $!");
   print CSTAT "cluster_count\t$c_num\nclustered_sequence_count\t$c_seq\n";
   close CSTAT;
-  load_fasta_stats($job_num, $clust, $clust.".stats", \@proc_rna_tags, "processed_rna");
+  load_fasta_stats($job_num, $clust, $clust.".stats", \@proc_rna_tags, "processed_rna", $prefix);
 }
 
 # load processed rna stats
 my $proc_rna_file = (-s $results_dir."/".$Pipeline::processed_fasta_rna_1) ? $Pipeline::processed_fasta_rna_1 : $Pipeline::processed_fasta_rna_2;
-load_fasta_stats($job_num, $results_dir."/".$proc_rna_file, $results_dir."/".$proc_rna_file.".stats", \@proc_rna_tags, "processed_rna");
+load_fasta_stats($job_num, $results_dir."/".$proc_rna_file, $results_dir."/".$proc_rna_file.".stats", \@proc_rna_tags, "processed_rna", $prefix);
 my $rna_pred  = $results_dir."/".$Pipeline::processed_fasta_rna_2.".stats";
 my $rna_reads = '0';
 if (-s $rna_reads) {
   $rna_reads = `grep -w sequence_count $rna_pred | cut -f2`;
   chomp $rna_reads;
 }
-load_stats($job_num, [['read_count_processed_rna', $rna_reads]]);
+load_stats($job_num, [['read_count_processed_rna', $rna_reads]], $prefix);
 
 # cleanup
 move($sims_file, "$results_dir/$prefix.sims") or fail($log, "Failed copy: $prefix.sims - $!");
@@ -157,7 +157,7 @@ sub fail {
 }
 
 sub load_fasta_stats {
-  my ($job_num, $fasta_file, $stats_file, $tags, $step) = @_;
+  my ($job_num, $fasta_file, $stats_file, $tags, $step, $prefix) = @_;
 
   unless (-s $fasta_file) {
     $log->info("Skipping loading stats for stage '$step', $fasta_file is empty");
@@ -181,20 +181,20 @@ sub load_fasta_stats {
       push @data, [$jtag, $val];
     }
   }
-  load_stats($job_num, \@data);
+  load_stats($job_num, \@data, $prefix);
 }
 
 sub load_stats {
-  my ($job_num, $stats) = @_;
-  my $res = Pipeline::set_job_statistics($job_num, $stats);
+  my ($job_num, $stats, $prefix) = @_;
+  my $res = Pipeline::set_job_statistics($job_num, $stats, $prefix);
   unless ($res) {
     fail($log, "$stage_name failed on job: $job_num, loading JobDB stats");
   }  
 }
 
 sub load_data {
-  my ($job_num, $data) = @_;
-  my $res = Pipeline::set_job_attributes($job_num, $data);
+  my ($job_num, $data, $prefix) = @_;
+  my $res = Pipeline::set_job_attributes($job_num, $data, $prefix);
   unless ($res) {
     fail($log, "$stage_name failed on job: $job_num, loading JobDB data");
   }  
