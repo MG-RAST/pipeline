@@ -81,7 +81,7 @@ unless($memhost ne "") {
 }
 
 my $sort_mem = int($procs * 1024 * 2.5);
-&run_system_command("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 1,1 -k 12,12nr -o $run_dir/$prefix.sims.sort $in_file >> $run_dir/$prefix.out 2>> $run_dir/$prefix.err");
+&run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 1,1 -k 12,12nr -o $run_dir/$prefix.sims.sort $in_file", 1);
 
 my $params = "--verbose --mem_host $memhost --mem_key $memkey";
 &run_system_command("process_sims_by_source_mem $params --in_sim $run_dir/$prefix.sims.sort --out_filter $run_dir/$prefix.sims.filter --out_rna $run_dir/$prefix.expand.rna --out_lca $run_dir/$prefix.expand.lca >> $run_dir/$prefix.out 2>> $run_dir/$prefix.err");
@@ -92,10 +92,15 @@ chmod 0666, "$run_dir/$prefix.expand.rna";
 chmod 0666, "$run_dir/$prefix.expand.lca";
 
 sub run_system_command {
-  my ($cmd) = @_;
-  my $status = system($cmd);
+  my ($cmd, $split) = @_;
+  my $status;
+  if ($split) {
+      $status = system(split(/ /, $cmd));
+  } else {
+      $status = system($cmd);
+  }
   unless($status == 0) {
-    print STDERR "Failed to run command: $cmd\n";
+    print STDERR "Error status '$status' running command: $cmd\n";
     exit(1);
   }
 }
