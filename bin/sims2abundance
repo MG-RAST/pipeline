@@ -269,7 +269,7 @@ sub run_system_command {
   my ($cmd, $split) = @_;
   my $status;
   if ($split) {
-      $status = system(split(/ /, @$cmd));
+      $status = system(split(/ /, $cmd));
   } else {
       $status = system($cmd);
   }
