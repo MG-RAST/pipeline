@@ -228,10 +228,10 @@ my @info_set     = ( ['md5', $md5_expand, 1],
 my %pluralize = ( 'md5' => 'md5s', 'function' => 'functions', 'organism' => 'organisms', 'ontology' => 'ontologies', 'lca' => 'lcas' );
 foreach my $info (@info_set) {
   my ($type, $input, $pos) = @$info;
-  my $sort_type = ($type eq 'lca') ? '' : '-n';
+  my $sort_type = ($type eq 'lca') ? '' : ' -n';
   unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
-  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k $pos,$pos $sort_type -o $input.$type $input", 1);
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k $pos,$pos$sort_type -o $input.$type $input", 1);
   &run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $input.$type.summary >> $outf 2> $err_file");
   # clean tmp file
   system("rm $input.$type");
