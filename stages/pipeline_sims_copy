@@ -74,29 +74,29 @@ my $err_file = $stage_dir."/".$prefix.".err";
 my $message  = "$stage_name failed on job: $job_num, see $err_file for details.";
 
 if ((-s $fasta) < $Pipeline_Conf::min_gene_size) {
-  quit_sims($stage_dir, $job_num, $stage_id, $stage_name, "no genes called");
+  quit_sims($job_num, $stage_id, $stage_name, "no genes called");
 }
 
 # get AWE results
-my $sims_file = "$stage_dir/$prefix.sims";
+my $sims_file = "$results_dir/$prefix.sims";
 unless ($sims && (-e $sims)) {
   my $awe_results_dir = $Pipeline_Conf::AWEdata."/".$job_num.".results";
   unless (-d $awe_results_dir) {
-    quit_sims($stage_dir, $job_num, $stage_id, $stage_name, "no AWE results");
+    quit_sims($job_num, $stage_id, $stage_name, "no AWE results");
   }
   system("cat $awe_results_dir/* > $sims_file") == 0 or fail($log, 'AWE cat: '.$message);
   unless (-s $sims_file) {
-    quit_sims($stage_dir, $job_num, $stage_id, $stage_name, "no sims found");
+    quit_sims($job_num, $stage_id, $stage_name, "no sims found");
   }
 }
 else {
   if ((-s $sims) < $Pipeline_Conf::min_gene_size) {
-    quit_sims($stage_dir, $job_num, $stage_id, $stage_name, "no sims found");
+    quit_sims($job_num, $stage_id, $stage_name, "no sims found");
   }
-  system("cp $sims $results_dir/$prefix.sims") == 0 or fail($log, 'cp $sims: '.$message);
+  system("cp $sims $sims_file") == 0 or fail($log, 'cp $sims: '.$message);
 }
 
-chmod 0666, "$results_dir/$prefix.sims";
+chmod 0666, "$sims_file";
 $log->info("Finished $stage_name on job: $job_num");
 
 # update jobcache stage status
@@ -112,7 +112,7 @@ sub fail {
 }
 
 sub quit_sims {
-  my ($stage_dir, $job_num, $stage_id, $stage_name, $msg) = @_;
+  my ($job_num, $stage_id, $stage_name, $msg) = @_;
 
   my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
   my $prefix = $stage_id.".superblat";
