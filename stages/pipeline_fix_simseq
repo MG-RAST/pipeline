@@ -51,8 +51,7 @@ my $proc_dir    = $job_dir."/proc";
 my $stage_dir   = $proc_dir."/".$stage_id.".".$stage_name;
 my $results_dir = $job_dir."/".$Pipeline_Conf::results_dir;
 my $run_dir     = $stage_dir;
-my $params      = "--verbose --seq-db-name M5NR --seq-db-version ".$Pipeline_Conf::ach_annotation_ver;
-my $dboptions   = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user;
+my $params      = "--verbose --mem_host ".$Pipeline_Conf::memcache_host." --mem_key ".$Pipeline_Conf::memcache_key;
 my $hostname    = `hostname`;
 chomp $hostname;
 
@@ -143,13 +142,12 @@ if ($max < $max_seq) {
   system("add_seq2sims -v -i $sims_filter.sort -o $sims_filter.seq -s $run_dir/$prefix.seq.tab >> $outf 2> $err_file") == 0 or fail($log, 'add_seq2sims: '.$message);
   system("sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 2,2 -o $sims_filter.seq.sort $sims_filter.seq >> $outf 2> $err_file") == 0 or fail($log, "sort sims-md5: ".$message);
   system("mv $sims_filter.seq.sort $sims_filter.seq") == 0 or fail($log, 'mv: '.$message);
-  system("index_tab_file -v -f 2 -o $sims_filter.seq.index $sims_filter.seq >> $outf 2> $err_file") == 0 or fail($log, 'index_tab_file: '.$message);
-  system("load_md5_sim_index $params $dboptions --job $job_num --filename $sims_filter.seq.index") == 0 or fail($log, 'load_md5_sim_index '.$message);
+  system("index_sims_file_md5 $params --in_file $sims_filter.seq --out_file $sims_filter.seq.index >> $outf 2> $err_file") == 0 or fail($log, 'index_sims_file_md5: '.$message);
   system("rm $run_dir/$prefix.seq.tab $sims_filter.sort");
 }
 else {
   $log->info("Skipping adding of sequences to index sims file, max sequence length is $max bps");
-  system("/soft/packages/coreutils/8.13/alias/sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 2,2 -o $sims_filter.seq $sims_filter.unclust >> $outf 2> $err_file") == 0 or fail($log, "sort sims-md5: ".$message);
+  system("sort -T $sort_dir -S ${sort_mem}M -t \$'\\t' -k 2,2 -o $sims_filter.seq $sims_filter.unclust >> $outf 2> $err_file") == 0 or fail($log, "sort sims-md5: ".$message);
 }
 system("rm $sims_filter.unclust");
 
@@ -162,7 +160,9 @@ unless ($res) {
 }  
 
 # move files / cleanup
+move("$sims_filter.seq.index", "$results_dir/900.loadDB.sims.filter.seq.index") or fail($log, "Failed copy: 900.loadDB.sims.filter.seq.index - $!");
 move("$sims_filter.seq", "$results_dir/900.loadDB.sims.filter.seq") or fail($log, "Failed copy: 900.loadDB.sims.filter.seq - $!");
+chmod 0666, "$results_dir/900.loadDB.sims.filter.seq.index";
 chmod 0666, "$results_dir/900.loadDB.sims.filter.seq";
 
 # move run_dir to stage_dir if on local
