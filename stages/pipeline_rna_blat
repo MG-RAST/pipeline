@@ -104,6 +104,10 @@ else {
   system("cp $sims $sims_file") == 0 or fail($log, 'cp $sims: '.$message);
 }
 
+move($sims_file, "$results_dir/") or fail($log, "Failed copy: $sims_file - $!");
+
+chmod 0666, "$results_dir/$prefix.sims";
+
 # move run_dir to stage_dir if on local
 if ($run_dir ne $stage_dir) {
   system("mv $run_dir/*.out $stage_dir/.");
