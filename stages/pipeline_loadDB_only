@@ -30,7 +30,7 @@ my $options      = GetOptions ("job=i" => \$job_num,
                                "help!" => \$help
                               );
 
-my $usage = "Usage: pipeline_$stage_name -j <job number> [-d (boolean:reload db) --ver_db <db version>]\nNOTE: No individual summary file is required, but at least one is required to run this script.";
+my $usage = "Usage: $0 -j <job number> [-d (boolean:reload db) --ver_db <db version>]\nNOTE: No individual summary file is required, but at least one is required to run this script.";
 
 if ( $ver ) {
   print STDERR "$stage_name - $version\n";
