@@ -4,7 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
-use Pipeline_recompute;
+use Pipeline;
 use Pipeline_Conf;
 
 use Getopt::Long;
@@ -76,11 +76,11 @@ if($summary_file_options eq "") {
   exit(1);
 }
 
-my $log = Pipeline_recompute::logger($job_num);
+my $log = Pipeline::logger($job_num);
 $log->info("Starting $stage_name on job: $job_num");
 
 # update jobcache stage status
-Pipeline_recompute::update_stage_info($job_num, $stage_name, "running");
+Pipeline::update_stage_info($job_num, $stage_name, "running");
 
 # create directories
 if (-d $stage_dir) {
@@ -107,11 +107,11 @@ my $outf = "$stage_dir/run_load_summary.out";
 system("load_summary2db $params $dboptions $summary_file_options $reload --job $job_num >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db ".$message);
 
 # new annotations loaded, add version to JobAttributes
-Pipeline_recompute::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
-Pipeline_recompute::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
+Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
+Pipeline::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
 
 # update jobcache stage status
-Pipeline_recompute::update_stage_info($job_num, $stage_name, "completed");
+Pipeline::update_stage_info($job_num, $stage_name, "completed");
 
 $log->info("Finished $stage_name on job: $job_num");
 
@@ -119,7 +119,7 @@ exit(0);
 
 sub fail {
   my ($log, $message) = @_;
-  Pipeline_recompute::update_stage_info($job_num, $stage_name, "error");
+  Pipeline::update_stage_info($job_num, $stage_name, "error");
   $log->error($message);
   exit(1);
 }
