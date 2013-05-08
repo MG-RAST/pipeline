@@ -23,8 +23,8 @@ GetOptions( \%opts, "job_num=i",
                     "help!" );
 
 my $mem_key       = '_ach';
-my $sort_mem      = 2;
-my $procs         = 2;
+my $sort_mem      = 10;
+my $procs         = 4;
 my $max_seq       = 500000;
 
 my $usage = "Usage: $0 --job <job number> --fasta <raw input fasta file> --aa_sims_file <aa_sims_file> --rna_sims_file <rna_sims_file> --clust_aa <protein cluster file> --map_rna <rna mapping file> --sort_dir <sort_dir> --run_dir <run_dir> --prefix <prefix> --ver_db <m5nr db version> --mem_host <memcache_host> --mem_key <memcache_key (default $mem_key)> --sort_mem <sort memory in GB (default $sort_mem)> --procs <# processors for sort (default $procs) --abun_file <assembly abundance file (default none)>\n";
