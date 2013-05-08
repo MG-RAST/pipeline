@@ -48,7 +48,7 @@ if ( exists $opts{version} ) {
   print STDERR "$stage_name - $version - $stage_id\n";
   exit(0);
 } elsif ( exists $opts{help} or !($job_num and $fasta and $ver_db) ) {
-  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta> -a <aa sims file> -r <rna sims file> -c <aa cluster file> -m <rna mapping file> --nr_ver <m5nr db version> [--host_memcache <memcache host> -k <memcache key> -p <# processors for sort, default $procs>]\n";
+  print STDERR "Usage: pipeline_$stage_name -j <job number> -f <fasta> -a <aa sims file> -r <rna sims file> -c <aa cluster file> -m <rna mapping file> --nr_ver <m5nr db version> [--host_memcache <memcache host> -k <memcache key> -s <sort memory in GB> -p <# processors for sort, default $procs>]\n";
   exit(1);
 }
 
