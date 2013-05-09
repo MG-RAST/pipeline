@@ -51,9 +51,9 @@ my $hostname                = `hostname`;
 chomp $hostname;
 
 # get merged files
-my $md5_expand   = "$results_dir/700.sims_to_abundance.expand";
-my $lca_expand   = "$results_dir/700.sims_to_abundance.lca";
-my $ontol_expand = "$results_dir/700.sims_to_abundance.ontology";
+my $md5_expand   = "$results_dir/700.annotation.expand";
+my $lca_expand   = "$results_dir/700.annotation.lca";
+my $ontol_expand = "$results_dir/700.annotation.ontology";
 my @info_set     = ( ['md5', $md5_expand, 1],
                      ['function', $md5_expand, 6],
                      ['organism', $md5_expand, 7],
