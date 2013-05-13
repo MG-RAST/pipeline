@@ -232,7 +232,7 @@ foreach my $info (@info_set) {
   unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
   &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k $pos,$pos$sort_type -o $input.$type $input", 1);
-  &run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $input.$type.summary >> $outf 2> $err_file");
+  &run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $prefix.summary >> $outf 2> $err_file");
   # clean tmp file
   system("rm $input.$type");
 }
