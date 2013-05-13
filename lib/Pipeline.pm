@@ -524,12 +524,9 @@ our $preprocessed_fasta     = '299.screen.passed.fna';
 our $processed_fasta_rna_2  = '425.search.rna.fna';
 our $processed_fasta_rna_1  = '440.cluster.rna97.fna';
 our $cluster_map_rna        = '440.cluster.rna97.mapping';
-our $sims_filter_rna        = '450.rna.sims.filter';
 our $processed_fasta_aa_2   = '350.genecalling.coding.faa';
 our $processed_fasta_aa_1   = '550.cluster.aa90.faa';
 our $cluster_map_aa         = '550.cluster.aa90.mapping';
-our $sims_filter_aa         = '650.superblat.sims.filter';
-our $sims_ontology          = '650.superblat.expand.ontology';
 
 sub get_result_files {
   return [ $preprocessed_rna_fasta,
@@ -543,14 +540,9 @@ sub get_result_files {
 	   $processed_fasta_rna_1,
 	   $cluster_map_rna,
 	   '450.rna.sims',
-	   $sims_filter_rna,
-	   '450.rna.expand.rna',
 	   $processed_fasta_aa_1,
 	   $cluster_map_aa,
 	   '650.superblat.sims',
-	   $sims_filter_aa,
-	   '650.superblat.expand.protein',
-	   $sims_ontology,
 	   '900.loadDB.sims.filter.seq',
 	   '900.loadDB.source.stats'
 	 ];
