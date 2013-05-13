@@ -51,20 +51,17 @@ my $hostname                = `hostname`;
 chomp $hostname;
 
 # get merged files
-my $md5_expand   = "$results_dir/700.annotation.expand";
-my $lca_expand   = "$results_dir/700.annotation.lca";
-my $ontol_expand = "$results_dir/700.annotation.ontology";
-my @info_set     = ( ['md5', $md5_expand, 1],
-                     ['function', $md5_expand, 6],
-                     ['organism', $md5_expand, 7],
-                     ['ontology', $ontol_expand, 7],
-                     ['lca', $lca_expand, 6] );
+my @info_set     = ( ['md5', 1],
+                     ['function', 6],
+                     ['organism', 7],
+                     ['ontology', 7],
+                     ['lca', 6] );
 
 my $summary_file_options = "";
 my %pluralize = ( 'md5' => 'md5s', 'function' => 'functions', 'organism' => 'organisms', 'ontology' => 'ontologies', 'lca' => 'lcas' );
 foreach my $info (@info_set) {
-  my ($type, $input, $pos) = @$info;
-  my $filename = "$input.$type.summary";
+  my ($type, $pos) = @$info;
+  my $filename = "$results_dir/700.annotation.$type.summary";
   if(-e $filename) {
     $summary_file_options .= "--$pluralize{$type}_filename $filename ";
   }
