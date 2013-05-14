@@ -259,7 +259,7 @@ unless ($mem_cache && ref($mem_cache)) {
 
 my $src_map = $mem_cache->get("source".$mem_key);
 
-open(SRCF, ">$run_dir/$prefix.$type.stats");
+open(SRCF, ">$run_dir/$prefix.$type.stats") || die "Cannot open $run_dir/$prefix.$type.stats file to print.\n";
 foreach my $line (`cat $run_dir/$prefix.$type.stats.tmp`) {
     chomp $line;
     my @parts = split(/\t/, $line);
@@ -268,6 +268,21 @@ foreach my $line (`cat $run_dir/$prefix.$type.stats.tmp`) {
     }
 }
 close(SRCF);
+
+# run / load sims stats
+my $sim_stats = [ ["$run_dir/$rna_prefix.sims.filter", 1, 'sequence_count_sims_rna', 0],
+                  ["$run_dir/$aa_prefix.sims.filter", 1, 'sequence_count_sims_aa', 0],
+                  ["$run_dir/$aa_prefix.expand.ontology", 2, 'sequence_count_ontology', 0] ];
+open(SSTAT, ">$run_dir/$prefix.sims.stats") || die "Cannot open $run_dir/$prefix.sims.stats file to print.\n";
+foreach my $set (@$sim_stats) {
+  my ($sfile, $scut, $skey, $sstat) = @$set;
+  if (-s $sfile) {
+    $sstat = `cut -f$scut $sfile | uniq | wc -l`;
+    chomp $sstat;
+  }
+  print SSTAT "$skey\t$sstat\n";
+}
+close SSTAT;
 
 sub run_system_command {
   my ($cmd, $split) = @_;
