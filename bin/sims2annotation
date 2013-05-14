@@ -18,6 +18,7 @@ GetOptions( \%opts, "job_num=i",
                     "ver_db:s",
                     "mem_host=s",
                     "mem_key=s",
+                    "sort_mem=s",
                     "procs=s",
                     "abun_file=s",
                     "help!" );
@@ -89,6 +90,9 @@ my $prefix        = $opts{prefix};
 my $ver_db        = $opts{ver_db};
 my $mem_host      = $opts{mem_host};
 my $abun_file     = (exists $opts{abun_file}) ? $opts{abun_file} : '';
+$mem_key          = (exists $opts{mem_key}) ? $opts{mem_key} : $mem_key;
+$sort_mem         = (exists $opts{sort_mem}) ? $opts{sort_mem} : $sort_mem;
+$procs            = (exists $opts{procs}) ? $opts{procs} : $procs;
 
 my @rna_ext  = ('sims.filter', 'expand.rna', 'expand.lca');
 my $rna_prefix = $prefix.".rna";
@@ -232,7 +236,7 @@ foreach my $info (@info_set) {
   unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
   &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k $pos,$pos$sort_type -o $input.$type $input", 1);
-  &run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $prefix.summary >> $outf 2> $err_file");
+  &run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $run_dir/$prefix.$type.summary >> $outf 2> $err_file");
   # clean tmp file
   system("rm $input.$type");
 }
