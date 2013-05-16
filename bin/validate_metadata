@@ -7,6 +7,7 @@ import gspread
 import xlrd
 from optparse import OptionParser
 from collections import defaultdict
+from HTMLParser import HTMLParser
 from lepl.apps.rfc3696 import Email, HttpUrl
 from openpyxl.reader.excel import load_workbook
 
@@ -30,6 +31,20 @@ JSON_FILE = None
 INVALID   = []
 valid_email    = Email()
 valid_http_url = HttpUrl()
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
 
 def errorMsg(err, exit=0):
     if LOG_FILE:
@@ -363,6 +378,8 @@ def tables_to_mdraw(tables, dupe):
             errorMsg("sample '%s' field 'env_package' %s: '%s'"%(sampName, bad_type, unicode(sampData['env_package'])))
             add_invalid('sample', 'env_package', sampName, sampData['env_package'], bad_type)
             continue
+        else:
+            s_ep = strip_tags(s_ep)
         eps = find_sample_sub(sampName, edata, s_ep, None, None)
         if len(eps) == 0:
             eps.append( {'name': "%s: %s"%(sampName, s_ep), 'type': s_ep, 'data': {'sample_name': sampName}} )
@@ -509,6 +526,8 @@ def validate_data(cat, name, data, template, skip):
                     bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
                     add_invalid(cat, key, name, data[key], 'not '+bad_type)
                     errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key]).encode('ascii','replace')))
+                else:
+                    validVal = strip_tags(validVal)
             validData[key] = copy.deepcopy(items)
             validData[key]['value'] = validVal
     return validData
