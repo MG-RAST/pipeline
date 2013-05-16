@@ -57,6 +57,7 @@ if ( $help or !($fasta_file) ) {
   exit(1);
 }
 
+system("rm -rf tmp_dir");
 system("mkdir -p tmp_dir") == 0 or exit (__LINE__);
 
 my ($code, $fext);
@@ -78,13 +79,13 @@ if ((-s $fasta_file) > 1024) {
 else {
   # too small, skip the cluster step
   system("cp $input_fasta $prefix.$fext");
-  system("touch $job_num.$code$pid.mapping");
+  system("touch $prefix.mapping");
 }
 
 # rename output to specified name
 if (length($final_output) > 0) {
     system("mv $prefix.$fext $final_output") ==0  or exit (__LINE__);
-    system("mv $job_num.$code$pid.mapping $final_output.mapping") ==0  or exit (__LINE__);
+    system("mv $prefix.mapping $final_output.mapping") ==0  or exit (__LINE__);
 }
 
 system("rm -rf tmp_dir");
