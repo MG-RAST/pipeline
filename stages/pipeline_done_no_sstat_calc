@@ -198,7 +198,8 @@ if (-s $aa_pred) {
 }
 load_stats($job_num, [['read_count_processed_aa', $aa_reads]]);
 
-load_fasta_stats($job_num, $raw_fna, "$run_dir/700.annotation.sims.stats", [$sim_stats->[0][2], $sim_stats->[1][2], $sim_stats->[2][2]], 0);
+move("$results_dir/700.annotation.sims.stats", "$results_dir/$stage_id.$stage_name.sims.stats") or fail($log, "$stage_name failed on job: $job_num, can not move $results_dir/700.annotation.sims.stats to $results_dir/$stage_id.$stage_name.sims.stats");
+load_fasta_stats($job_num, $raw_fna, "$results_dir/$stage_id.$stage_name.sims.stats", [$sim_stats->[0][2], $sim_stats->[1][2], $sim_stats->[2][2]], 0);
 
 # annotated read stat
 my $ann_read = '0';
