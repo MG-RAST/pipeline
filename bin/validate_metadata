@@ -146,7 +146,7 @@ def validate_type(key, val, atype):
             else:
                 return unicode(floatVal)
         except ValueError:
-            return unicode(val)
+            return unicode(strip_tags(val))
     elif atype == 'int':
         try:
             intVal = int(val)
@@ -166,9 +166,9 @@ def validate_type(key, val, atype):
         else:
             return 0
     elif (atype == 'email') and valid_email(val):
-        return val
+        return strip_tags(str(val))
     elif atype == 'url':
-        return str(val)
+        return strip_tags(str(val))
     elif atype == 'date':
         if isinstance(val, datetime.datetime):
             return unicode(val.date())
@@ -526,8 +526,6 @@ def validate_data(cat, name, data, template, skip):
                     bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
                     add_invalid(cat, key, name, data[key], 'not '+bad_type)
                     errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key]).encode('ascii','replace')))
-                else:
-                    validVal = strip_tags(validVal)
             validData[key] = copy.deepcopy(items)
             validData[key]['value'] = validVal
     return validData
