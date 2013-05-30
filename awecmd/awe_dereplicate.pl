@@ -18,9 +18,11 @@ my $job_num    = "";
 my $fasta_file = "";
 my $out_file = "";
 my $prefix_size = 50;
+my $memsize = "1G";
 my $options = GetOptions ("input=s"     => \$fasta_file,
 			  "output=s"    => \$out_file,
 			  "prefix_length=i" => \$prefix_size,
+			  "mem_size=s" => \$memsize,
 			 );
 
 
@@ -43,7 +45,7 @@ if (length($out_file)==0) {
 
 my $results_dir = ".";
 
-my $command = "$runcmd -file $fasta_file -destination $results_dir -prefix_length $prefix_size";
+my $command = "$runcmd -file $fasta_file -destination $results_dir -prefix_length $prefix_size -memory $memsize";
 print $command."\n";
 system($command);
 if ($? != 0) {print "ERROR: $runcmd returns value $?\n"; exit $?}
