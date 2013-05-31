@@ -207,7 +207,7 @@ sub set_job_tag_data {
     }
     foreach my $set (@$data) {
       my ($tag, $val) = @$set;
-      print OUT "insert into $table (`tag`,`value`,`job`,`_job_db`) values ($tag,$val,(select _id from Job where job_id = $job),2) on duplicate key update value=$val\n";
+      print OUT "insert into $table (`tag`,`value`,`job`,`_job_db`) values ($tag,\'$val\',(select _id from Job where job_id = $job),2) on duplicate key update value=$val;\n";
     }
     close OUT;
   }
