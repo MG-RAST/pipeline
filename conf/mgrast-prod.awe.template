@@ -311,7 +311,7 @@
                 }, 
                 "outputs": {
                     "#jobname.700.annotation.function.summary": {
-                        "name": "#700.annotation.jobname.function.summary",
+                        "name": "#jobname.700.annotation.function.summary",
                         "host": "http://#shockurl",
                         "node": "-"
                     },
