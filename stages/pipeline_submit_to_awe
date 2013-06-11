@@ -36,10 +36,11 @@ use Pipeline_Conf;
 
 use JSON;
 use Data::Dumper;
+use Digest::MD5::File qw( file_md5_hex );
 use File::Slurp;
 use Getopt::Long;
 use LWP::UserAgent;
-use HTTP::Request::Common;
+#use HTTP::Request::Common;
 use String::Random;
 umask 000;
 
@@ -133,34 +134,34 @@ if (length($pipeline_template)==0) {
 }
     
 #upload input to shock
-print "uploading input file to Shock...";
+print "\nUploading input file to Shock...";
 
-my $userAgent = LWP::UserAgent->new();
-my $URL = "http://".$vars{shockurl}."/node";
-my $FILE = $vars{inputfile};
-my $request = POST $URL, Content_Type => 'form-data', Content => [file_0 => [$FILE]];
+my $md5 = file_md5_hex( $vars{inputfile} );
+my $ua = LWP::UserAgent->new();
+my $post = $ua->post("http://".$vars{shockurl}."/node",
+                     Content_Type => 'form-data',
+                     Content      => [ upload => [$vars{inputfile}] ]
+                    );
+
 my $json = new JSON();
-my $response = $userAgent->request($request);
-print Dumper($response);
-if(exists $response->{'_msg'} && $response->{'_msg'} eq 'OK') {
-  my $content = $json->decode($response->{'_content'});
-  $vars{shocknode} = $content->{data}->{id};
-} else {
-  print STDERR "Shock upload was not successful, exiting...\n";
+my $res = $json->decode( $post->content );
+my $res_md5 = $res->{data}->{file}->{checksum}->{md5};
+
+if($md5 ne $res_md5) {
+  print STDERR "\nShock upload of input file was not successful, exiting...\n";
   exit(1);
 }
 
-print "Done! shock node id=".$vars{shocknode}."\n";
-exit(0);
+$vars{shocknode} = $res->{data}->{id};
+
+print " Done! Shock node id=".$vars{shocknode}."\n";
 
 #generate job script based on template (instantiate a job script with availalbe information filled into the template)
 my $pipeline_name = $pipeline_template;
 $pipeline_name =~ s/(.*)\.template/$1/;
-print "pipeline_name=".$pipeline_name."\n";
 if (length($vars{jobname})==0) {
     $vars{jobname} = $pipeline_name.".job";
 }
-print "job_name=".$vars{jobname}."\n";
 
 # Replace # vars in template
 my $text = read_file($pipeline_template);
@@ -175,33 +176,36 @@ print OUT $text;
 close OUT;
 
 #upload job script to awe server
-print "submitting job script to AWE...jobscript=$jobscript \n";
-my $ua = LWP::UserAgent->new;
-$json = new JSON();
-$response = $json->decode($ua->post($awe_url."/job",
-   Content_Type => 'form-data',
-   Content => [
-      Filedata => [ $jobscript, Content_Type => 'text/plain' ],
-      submit => 'Submit',
-   ],
-));
+print "Submitting job script ($jobscript) to AWE...";
+$ua = LWP::UserAgent->new();
+$post = $ua->post("http://".$awe_url."/job",
+                  Content_Type => 'form-data',
+                  Content      => [ upload => [$jobscript] ]
+                 );
 
-#check if upload was successful
-my $out_awe_sub = $response->{result};
-my $job_id = $response->{result};
+$res = $json->decode( $post->content );
 
-print "\nsubmitting job script to AWE...Done! id=".$job_id."\n";
+
+my $awe_id = $res->{data}->{id};
+my $job_id = $res->{data}->{jid};
+my $state = $res->{data}->{state};
+
+if($state ne "submitted") {
+  print STDERR "AWE job submission was not successful, exiting...\n";
+  exit(1);
+}
+
+print " Done! awe_id=".$awe_id." job_id=$job_id\n";
 
 #print summary
 
-print "job submission summary:\n";
-print "pipeline job awe url: http://".$awe_url."/job/".$job_id."\n";
+print "\nJob Submission Summary:\n";
+print "pipeline job awe url = http://".$awe_url."/job/".$awe_id."\n";
+print "input file shock url = http://".$vars{shockurl}."/node/".$vars{shocknode}."\n";
 
-print "input file shock url: http://".$vars{shockurl}."/node/".$vars{shocknode}."\n";
-
-my $refjson = "awe_".$vars{inputfile}."_".$job_id.".json"; 
+my $refjson = "awe_".$vars{inputfile}."_".$awe_id.".json"; 
 system("mv $jobscript $refjson");
-print "job script for reference: $refjson\n";
+print "job script for reference = $refjson\n";
 
 exit(0);
 
