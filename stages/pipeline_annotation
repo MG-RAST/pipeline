@@ -69,11 +69,11 @@ foreach my $opt ('fasta', 'aa_sims_file', 'rna_sims_file', 'clust_aa', 'map_rna'
       $log->error("Input file '$file_name' does not exist.");
       exit(1);
     
-    if ($opt ne 'clust_aa' && $opt ne 'map_rna' && (-s $file_name) == 0) {
-      $log->error("Input file '$file_name' is empty.");
-      exit(1);
-    }
     if($opt eq 'fasta') {
+      unless(-s $file_name) {
+        $log->error("Input file '$file_name' is empty.");
+        exit(1);
+      }
       $input_file_str .= "--fasta $fasta ";
     } elsif($opt eq 'aa_sims_file') {
       $input_file_str .= "--aa_sims_file $aa_sims_file ";
