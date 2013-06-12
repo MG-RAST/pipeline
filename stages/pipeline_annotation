@@ -68,6 +68,7 @@ foreach my $opt ('fasta', 'aa_sims_file', 'rna_sims_file', 'clust_aa', 'map_rna'
     unless (-e $file_name) {
       $log->error("Input file '$file_name' does not exist.");
       exit(1);
+    }
     
     if($opt eq 'fasta') {
       unless(-s $file_name) {
