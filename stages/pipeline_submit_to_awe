@@ -35,12 +35,10 @@ no warnings('once');
 use Pipeline_Conf;
 
 use JSON;
-use Data::Dumper;
 use Digest::MD5::File qw( file_md5_hex );
 use File::Slurp;
 use Getopt::Long;
 use LWP::UserAgent;
-#use HTTP::Request::Common;
 use String::Random;
 umask 000;
 
@@ -83,7 +81,8 @@ my $options = GetOptions ("upload=s"   => \$vars{inputfile},
 $vars{aa_pid} = 90;
 $vars{ach_annotation_ver} = length($Pipeline_Conf::ach_annotation_ver) > 0 ? $Pipeline_Conf::ach_annotation_ver : 1;
 $vars{fgs_type} = 454;
-$vars{md5rna_clust} = length($Pipeline_Conf::md5rna_clust) > 0 ? $Pipeline_Conf::md5rna_clust : "/mcs/bio/mg-rast/data/md5rna/current/md5nr.clust";
+$vars{md5rna_clust} = length($Pipeline_Conf::md5rna_clust) > 0 ? $Pipeline_Conf::md5rna_clust : "md5nr.clust";
+$vars{md5rna_clust} =~ s/.*\/(.*)/$1/;
 $vars{prefix_length} = 50;
 $vars{rna_pid} = 97;
 
@@ -227,6 +226,7 @@ Options:
      -dereplicate=<boolean, if dereplication should be performed (default 1)>
      -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
      -screen_indexes=<default='h_sapiens_asm'>
+     -mem_host=<default='10.0.4.172:11211'>
      
 Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
       Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
