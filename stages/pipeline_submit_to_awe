@@ -82,6 +82,7 @@ $vars{aa_pid} = 90;
 $vars{ach_annotation_ver} = length($Pipeline_Conf::ach_annotation_ver) > 0 ? $Pipeline_Conf::ach_annotation_ver : 1;
 $vars{fgs_type} = 454;
 $vars{md5rna_clust} = length($Pipeline_Conf::md5rna_clust) > 0 ? $Pipeline_Conf::md5rna_clust : "md5nr.clust";
+$vars{md5rna_clust} =~ s/.*\/(.*)/$1/;
 $vars{prefix_length} = 50;
 $vars{rna_pid} = 97;
 
