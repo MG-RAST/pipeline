@@ -68,8 +68,8 @@ foreach my $opt ('fasta', 'aa_sims_file', 'rna_sims_file', 'clust_aa', 'map_rna'
     unless (-e $file_name) {
       $log->error("Input file '$file_name' does not exist.");
       exit(1);
-    }
-    unless (-s $file_name) {
+    
+    if ($opt ne 'clust_aa' && $opt ne 'map_rna' && (-s $file_name) == 0) {
       $log->error("Input file '$file_name' is empty.");
       exit(1);
     }
