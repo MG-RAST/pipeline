@@ -12,7 +12,6 @@ umask 000;
 my $stage_name="search";
 my $stage;
 my $stage_id = "440";
-my $runcmd   = "parallel_search.py";
 
 # options
 my $job_num = "";
