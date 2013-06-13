@@ -32,12 +32,14 @@ my $index      = "";
 my $threads    = "";
 my $ver     = "";
 my $help    = "";
-my $final_output = "";
+my $final_output = "default.screened.fna";
+my $run_bowtie = 1;
 my $options = GetOptions ("job=i"        => \$job_num,
 			  "input=s"      => \$fasta_file,
 			  "output=s"     => \$final_output,
-			  "indexes=s"    => \$index,
+			  "index=s"    => \$index,
 			  "threads=i"    => \$threads,
+			  "bowtie=i"     =>  \$run_bowtie,
 			  "version"      => \$ver,
 			  "help"         => \$help,
 			 );
@@ -52,10 +54,11 @@ unless (-s $fasta_file) {
   exit __LINE__;
 }
 
-# update jobcache stage status
 
-#my $hostname    = `hostname`;
-#chomp $hostname;
+if ($run_bowtie==0) {
+  system("cp $fasta_file $final_output > cp.out 2>&1") == 0 or exit __LINE__;
+  exit (0);
+}
 
 system("mkdir -p sort_dir") == 0 or exit (__LINE__);
 

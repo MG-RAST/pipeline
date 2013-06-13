@@ -47,7 +47,7 @@ my $options = GetOptions ("job=i"    => \$job_num,
  			  "out_prefix=s" => \$out_prefix,
 			  "mem_host=s" => \$mem_host,
 			  "mem_key=s" => \$mem_key,
-			  "db_version=s" => \$ver_db,
+			  "nr_ver=s" => \$ver_db,
 			  "abundance_file=s"  =>$abundance_file,
 			 );
 
@@ -64,7 +64,7 @@ unless (-s $raw_input) {
 my $input_file_str = "--fasta $raw_input ";
 
 
-unless (-s $aa_sims && -s $rna_sims) {
+unless (-s $aa_sims || -s $rna_sims) {
     print  "Error: either -aa_sims (\'$aa_sims\') or -rna_sims (\'$rna_sims\') should be non-empty\n";
     print_usage();
     exit __LINE__;
@@ -100,9 +100,10 @@ exit(0);
 sub print_usage{
     print "USAGE: awe_annotate.pl -raw=<raw input fasta or fastq>
                                   -aa_sims=<input aa sims file>
-				  -rna_sim=<input rna sims file>
+				  -rna_sims=<input rna sims file>
 				  -clust_aa=<aa clust output>
 				  -map_rna=<rna clust map>
 				  -mem_host=<memcache host>
+				  -nr_ver=<nr db version>
 				  [-out_prefix=<prefix for output files>]\n";
 }

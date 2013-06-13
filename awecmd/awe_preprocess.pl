@@ -18,7 +18,7 @@ my $out_file = "";
 my $filter_options = "";
 my $options = GetOptions ("input=s"   => \$input_file,
 			  "output=s"  => \$out_file,
-			  "options=s" => \$filter_options,
+			  "filter_options=s" => \$filter_options,
 			 );
 
 if (length($input_file)==0){
@@ -80,6 +80,6 @@ unless ( $filter_options =~ /^skip$/i ) {
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-output=<output fasta> -options=<string_filter_options>]\n";
+    print "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-output=<output fasta> -filter_options=<string_filter_options>]\n";
 }
 
