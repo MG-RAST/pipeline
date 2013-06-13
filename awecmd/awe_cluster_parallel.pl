@@ -85,7 +85,9 @@ else {
 # rename output to specified name
 if (length($final_output) > 0) {
     system("mv $prefix.$fext $final_output") ==0  or exit (__LINE__);
-    system("mv $prefix.mapping $final_output.mapping") ==0  or exit (__LINE__);
+    my $pos=rindex($final_output,".");
+    my $stem=substr($final_output,0,$pos);
+    system("mv $prefix.mapping $stem.mapping") ==0  or exit (__LINE__);
 }
 
 system("rm -rf tmp_dir");
