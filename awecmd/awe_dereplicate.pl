@@ -16,13 +16,15 @@ my $runcmd   = "dereplication";
 # options
 my $job_num    = "";
 my $fasta_file = "";
-my $out_file = "";
+my $out_file = "default.derep.fna";
 my $prefix_size = 50;
 my $memsize = "1G";
+my $run_derep = 1;
 my $options = GetOptions ("input=s"     => \$fasta_file,
 			  "output=s"    => \$out_file,
 			  "prefix_length=i" => \$prefix_size,
 			  "mem_size=s" => \$memsize,
+			  "dereplicate" => \$run_derep,
 			 );
 
 
@@ -36,6 +38,11 @@ if (length($fasta_file)==0){
     print "ERROR: The input genome file [$fasta_file] does not exist.\n";
     print_usage();
     exit __LINE__;   
+}
+
+if ($run_derep==0) {
+  system("cp $fasta_file $out_file > cp.out 2>&1") == 0 or exit __LINE__;
+  exit (0);
 }
 
 my ($file,$dir,$ext) = fileparse($fasta_file, qr/\.[^.]*/);

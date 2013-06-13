@@ -29,7 +29,7 @@ my $options = GetOptions ("job=i"   => \$job_num,
 			  "input=s" => \$fasta_file,
                           "output=s"     => \$final_output,
 			  "proc:i"  => \$proc,
-			  "type:s"  => \$type,
+			  "fgs_type:s"  => \$type,
 			  "version" => \$ver,
 			 );
 
