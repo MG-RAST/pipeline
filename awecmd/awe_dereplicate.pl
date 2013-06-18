@@ -52,7 +52,7 @@ if (length($out_file)==0) {
 
 my $results_dir = ".";
 
-my $command = "$runcmd -file $fasta_file -destination $results_dir -prefix_length $prefix_size -memory $memsize";
+my $command = "$runcmd -file $fasta_file -destination $results_dir -prefix_length $prefix_size -memory $memsize -tempdir $results_dir";
 print $command."\n";
 system($command);
 if ($? != 0) {print "ERROR: $runcmd returns value $?\n"; exit $?}
