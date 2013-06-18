@@ -1,0 +1,137 @@
+#!/usr/bin/env perl 
+
+#MG-RAST pipeline job downloader for AWE
+#Command name: pipeline_download_from_awe
+#Options:
+#     -awe=<AWE server URL (ip:port), required>
+#     -awe_job_id=<AWE assigned job ID, required>
+#     
+#      Operations:
+#               1. check if job is complete
+#               2. if job is complete, download files and generate job directory structure
+#               3. if job exited with error status, return the error status
+#               4. if job is still running, just return status "running"
+
+use strict;
+use warnings;
+no warnings('once');
+
+use JSON;
+use Pipeline;
+use Pipeline_Conf;
+use Getopt::Long;
+use LWP::UserAgent;
+use Data::Dumper;
+use Digest::MD5::File qw( file_md5_hex );
+umask 000;
+
+# options
+my $awe_url = "";
+my $awe_job_id = "";
+my $help = 0;
+
+my $options = GetOptions ("awe=s"         => \$awe_url,
+                          "awe_job_id=s"  => \$awe_job_id,
+                          "h"  => \$help,
+			 );
+
+if ($help) {
+    print_usage();
+    exit 0;
+}
+
+if (length($awe_url)==0) {
+    if(defined $Pipeline_Conf::awe_url) {
+        $awe_url = $Pipeline_Conf::awe_url;
+    }
+    if (length($awe_url)==0) {
+        print STDERR "ERROR: AWE server URL was not specified.\n";
+        print_usage();
+        exit 1;
+    }
+} elsif (length($awe_job_id)==0) {
+    print STDERR "ERROR: AWE job ID was not specified.\n";
+    print_usage();
+    exit 1;
+}
+
+#retrieve job status from awe
+print "\nRetrieving job status from AWE...\n";
+
+my $ua = LWP::UserAgent->new();
+my $get = $ua->get("http://".$awe_url."/job/".$awe_job_id);
+my $json = new JSON();
+my $res = $json->decode( $get->content );
+
+if($res->{data}->{state} ne "completed") {
+  print STDERR "ERROR, AWE job cannot be downloaded as it is in state: ".$res->{data}->{state}."\n";
+  exit(1);
+}
+
+print "SUCCESS, AWE job has completed without error and will now be downloaded.\n";
+
+my %filename_to_shock_info = ();
+my $awe_job_name = $res->{data}->{info}->{name};
+foreach my $task (@{$res->{data}->{tasks}}) {
+  foreach my $output (keys %{$task->{outputs}}) {
+    my $filename = $output;
+    $filename =~ s/^$awe_job_name\.(.*)/$1/;
+    if(exists $filename_to_shock_info{$filename}) {
+      print STDERR "WARNING, this output filename appears multiple times in the : $filename\n";
+    } else {
+      $filename_to_shock_info{$filename}{node} = $task->{outputs}->{$output}->{node};
+      $filename_to_shock_info{$filename}{host} = $task->{outputs}->{$output}->{host};
+    }
+  }
+}
+
+foreach my $req_file ('100.preprocess.passed.fna', '150.dereplication.passed.fna', '299.screen.passed.fna',
+                      '350.genecalling.coding.faa', '425.search.rna.fna', '440.cluster.rna97.fna',
+                      '440.cluster.rna97.mapping', '450.rna.sims', '550.cluster.aa90.faa',
+                      '550.cluster.aa90.mapping', '650.superblat.sims', '700.annotation.function.summary',
+                      '700.annotation.lca.summary', '700.annotation.md5.summary', '700.annotation.ontology.summary',
+                      '700.annotation.organism.summary', '700.annotation.sims.filter.seq', '700.annotation.sims.stats',
+                      '700.annotation.source.stats') {
+  unless(exists $filename_to_shock_info{$req_file}) {
+    print STDERR "WARNING, required file is missing from awe job output: $req_file.\n";
+  }
+
+  my $node = $filename_to_shock_info{$req_file}{node};
+  my $host = $filename_to_shock_info{$req_file}{host};
+  my $response = $ua->get("$host/node/$node?download");
+  print "http://$host/node/$node?download\n";
+  if ($response->is_success) {
+    print "Retrieved $req_file: ".length($response->decoded_content)." bytes of data.\n";
+  } else {
+    print STDERR "ERROR: " . $response->status_line;
+  }
+
+  unless(open OUT, '>' . $req_file) {
+    die "\nCannot create save file '$req_file'\n";
+  }
+     
+  binmode(OUT, ":utf8");
+  print OUT $response->decoded_content;
+  close OUT;
+     
+  print "Saved $req_file.\n";
+}
+
+
+exit(0);
+
+sub print_usage{
+    print "
+MG-RAST pipeline job downloader for AWE
+Command name: pipeline_download_from_awe
+Options:
+     -awe=<AWE server URL (ip:port), required>
+     -awe_job_id=<AWE assigned job ID, required>
+     
+      Operations:
+               1. check if job is complete
+               2. if job is complete, download files and generate job directory structure
+               3. if job exited with error status, return the error status
+               4. if job is still running, just return status \"running\"
+\n";
+}
