@@ -4,7 +4,7 @@ import json, psycopg2, sys, os, shutil, subprocess as sub
 from Bio import SeqIO
 from optparse import OptionParser
 
-conf = json.loads(open("%s/conf.json" % (os.path.dirname(__file__)), "Ur").read())
+conf = json.loads(open("%s/../conf/awe_conf.json" % (os.path.dirname(__file__)), "Ur").read())
 ver = conf['version']
 job_dir = conf[ver]['jobsdir']
 pgconnect = conf[ver]['pgconnect']
