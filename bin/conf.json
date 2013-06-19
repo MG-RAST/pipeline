@@ -1,0 +1,11 @@
+{   "_about"  : "AWE - node json configuration file",
+	"verbose" : false,
+	"port"    : 8888,
+	"version" : "prod",
+	"prod"    : {
+		"jobsdir"   : "/mcs/bio/mg-rast/awedata/jobs",
+		"uploads"   : "/local/awe/tmp-uploads",
+		"dbconnect" : "pg://mgrastprod@luzon.mcs.anl.gov/awe_v3",
+		"pgconnect" : "host='luzon.mcs.anl.gov' dbname='awe_v3' user='mgrastprod'"
+		}
+}
