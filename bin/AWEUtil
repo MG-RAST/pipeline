@@ -88,6 +88,7 @@ def addJob(dbh, file, name):
 	dbh.commit()
 	os.mkdir("%s/%s.results" % (job_dir, name))
 	shutil.copy(options.infile, "%s/%s" % (job_dir, name))
+        print "submitting " + num_chunks + " chunks to AWE."
 	cursor.execute("update jobs set (total, avail) = (%d, %d) where _id = %s" % (num_chunks, num_chunks, job_id))	
 	dbh.commit()
 		
