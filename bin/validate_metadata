@@ -67,7 +67,6 @@ def add_invalid(category, field, name, value, problem):
     INVALID.append([category, field, name, value, problem])
 
 def obj_from_url(url):
-    print url
     try:
         req = urllib2.Request(url, headers={'Accept': 'application/json'})
         res = urllib2.urlopen(req)
