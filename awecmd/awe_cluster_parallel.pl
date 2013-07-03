@@ -74,9 +74,12 @@ my $prefix  = $stage_id.".".$stage_name.".$code$pid";
 
 if ((-s $fasta_file) > 1024) {
   system("cp $fasta_file $input_fasta >> cp.out 2>&1") == 0 or exit __LINE__;
-  system("$runcmd -v -p $nodes -s $size -i $pid -d tmp_dir -t $code $input_fasta $prefix >> $runcmd.out 2>&1") == 0 or exit __LINE__;
-}
-else {
+  my $ret = system("$runcmd -v -p $nodes -s $size -i $pid -d tmp_dir -t $code $input_fasta $prefix >> $runcmd.out 2>&1");
+  if ($ret != 0) {  #clust is skiptable if it fails, move input to output and make an empty mapping file
+      system("cp $input_fasta $prefix.$fext");
+      system("touch $prefix.mapping");
+  }
+} else {
   # too small, skip the cluster step
   system("cp $input_fasta $prefix.$fext");
   system("touch $prefix.mapping");
@@ -85,7 +88,9 @@ else {
 # rename output to specified name
 if (length($final_output) > 0) {
     system("mv $prefix.$fext $final_output") ==0  or exit (__LINE__);
-    system("mv $prefix.mapping $final_output.mapping") ==0  or exit (__LINE__);
+    my $pos=rindex($final_output,".");
+    my $stem=substr($final_output,0,$pos);
+    system("mv $prefix.mapping $stem.mapping") ==0  or exit (__LINE__);
 }
 
 system("rm -rf tmp_dir");
