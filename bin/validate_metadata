@@ -113,7 +113,7 @@ def check_ontology(ontID, term, subID):
                 oid  = obj['success']['data'][0]['classBean']['id']
                 name = obj['success']['data'][0]['classBean']['label']
             except (KeyError, TypeError, IndexError, AttributeError):
-                errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontver, url), 1)
+                errorMsg("Bioportal ontology ID %s, version %s has malformed return structure from %s"%(ontID, ontver, url), 1)
             if oid == term:
                 return name
     # test if term is name
