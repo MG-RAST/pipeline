@@ -17,7 +17,7 @@ MGRAST_URL = 'http://api.metagenomics.anl.gov/'
 BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
 BIOP_URL = 'http://bioportal.bioontology.org'
 SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
-ONT_URL  = 'http://rest.bioontology.org/bioportal/virtual/ontology/'
+ONT_URL  = 'http://rest.bioontology.org/bioportal/ontologies/'
 MGRASTID = 'mgrast_id'
 GEO_DIR  = {'N':1, 'S':-1, 'E':1, 'W':-1}
 ID_COL   = 0
@@ -67,6 +67,7 @@ def add_invalid(category, field, name, value, problem):
     INVALID.append([category, field, name, value, problem])
 
 def obj_from_url(url):
+    print url
     try:
         req = urllib2.Request(url, headers={'Accept': 'application/json'})
         res = urllib2.urlopen(req)
@@ -86,7 +87,10 @@ def obj_from_url(url):
 
 def test_ontology():
     for bioid in set(CV_PARAM['ontology'].values()):
-        url = ONT_URL+bioid+'?'+urllib.urlencode({'apikey': BIOP_KEY})
+        arr = bioid.split('.')
+        ontID = arr[0]
+        ontver = arr[1]
+        url = ONT_URL+ontver+'?'+urllib.urlencode({'apikey': BIOP_KEY})
         obj =  obj_from_url(url)
         if not (obj and ('success' in obj)):
             return False
@@ -95,34 +99,37 @@ def test_ontology():
 def check_ontology(ontID, term, subID):
     term = unicode(term)
     part = term.split(':',1)
+    arr = ontID.split('.')
+    ontID = arr[0]
+    ontver = arr[1]
     # test if term is ID
     if (len(part) == 2) and part[1].isdigit():
         params = {'conceptid':term, 'apikey':BIOP_KEY}
         if subID != 'none':
             params['subtreerootconceptid'] = subID
-        url = ONT_URL+ontID+'?'+urllib.urlencode(params)
+        url = ONT_URL+ontver+'?'+urllib.urlencode(params)
         obj = obj_from_url(url)
         if obj and ('success' in obj):
             try:
                 oid  = obj['success']['data'][0]['classBean']['id']
                 name = obj['success']['data'][0]['classBean']['label']
             except (KeyError, TypeError, IndexError, AttributeError):
-                errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+                errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontver, url), 1)
             if oid == term:
                 return name
     # test if term is name
     base = part[1] if len(part) == 2 else part[0]
-    params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'query':base}
+    params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'ontologyVersionId':ontver, 'query':base}
     if subID != 'none':
         params['subtreerootconceptid'] = subID
     url  = SRCH_URL+'?'+urllib.urlencode(params)
     obj  = obj_from_url(url)
     if not (obj and ('success' in obj)):
-        errorMsg("Bioportal ontology ID %s is not available from %s"%(ontID, url), 1)
+        errorMsg("Bioportal ontology ID %s, version %s is not available from %s"%(ontID, ontver, url), 1)
     try:
         contents = obj['success']['data'][0]['page']['contents']['ontologyHitList']['ontologyHitBean']
     except (KeyError, TypeError, IndexError, AttributeError):
-        errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+        errorMsg("Bioportal ontology ID %s, version %s has malformed return structure from %s"%(ontID, ontver, url), 1)
     if int(contents['numHits']) > 0:
         return base
     else:
