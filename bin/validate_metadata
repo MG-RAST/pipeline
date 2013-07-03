@@ -119,8 +119,8 @@ def check_ontology(ontID, term, subID):
     # test if term is name
     base = part[1] if len(part) == 2 else part[0]
     params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'ontologyVersionId':ontver, 'query':base}
-    if subID != 'none':
-        params['subtreerootconceptid'] = subID
+    #if subID != 'none':
+    #    params['subtreerootconceptid'] = subID
     url  = SRCH_URL+'?'+urllib.urlencode(params)
     obj  = obj_from_url(url)
     if not (obj and ('success' in obj)):
