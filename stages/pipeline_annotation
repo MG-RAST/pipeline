@@ -76,14 +76,16 @@ foreach my $opt ('fasta', 'aa_sims_file', 'rna_sims_file', 'clust_aa', 'map_rna'
         exit(1);
       }
       $input_file_str .= "--fasta $fasta ";
-    } elsif($opt eq 'aa_sims_file') {
-      $input_file_str .= "--aa_sims_file $aa_sims_file ";
-    } elsif($opt eq 'rna_sims_file') {
-      $input_file_str .= "--rna_sims_file $rna_sims_file ";
-    } elsif($opt eq 'clust_aa') {
-      $input_file_str .= "--clust_aa $clust_aa ";
-    } elsif($opt eq 'map_rna') {
-      $input_file_str .= "--map_rna $map_rna ";
+    } elsif(-s $file_name) {
+      if($opt eq 'aa_sims_file') {
+        $input_file_str .= "--aa_sims_file $aa_sims_file ";
+      } elsif($opt eq 'rna_sims_file') {
+        $input_file_str .= "--rna_sims_file $rna_sims_file ";
+      } elsif($opt eq 'clust_aa') {
+        $input_file_str .= "--clust_aa $clust_aa ";
+      } elsif($opt eq 'map_rna') {
+        $input_file_str .= "--map_rna $map_rna ";
+      }
     }
   }
 }
