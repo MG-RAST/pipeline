@@ -47,6 +47,7 @@ my %vars = ();  # Hash to store variables that we'll replace in the AWE job temp
 $vars{inputfile} = "";
 my $awe_url = "";
 $vars{shockurl} = "";
+$vars{mem_host} = "";
 my $pipeline_template = "";
 $vars{jobname} ="default";
 $vars{user} = "mgrastprod";
