@@ -4,9 +4,10 @@
 #Command name: pipeline_submit_to_awe
 #Options:
 #     -upload=<input file that is local and to be uploaded, required>
+#     -pipeline=<path for pipeline job template, required>
 #     -awe=<AWE server URL (ip:port), required>
 #     -shock=<Shock URL (ip:port), required>
-#     -pipeline=<path for pipeline job template, required>
+#     -mem_host=<memcache URL (ip:port), required>
 #     -name=<job name (default='default')>
 #     -user=<user name (default='mgrastprod')>
 #     -project=<project name (default='pipeline')>
@@ -16,7 +17,6 @@
 #     -dereplicate=<boolean, if dereplication should be performed (default 1)>
 #     -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
 #     -screen_indexes=<default='h_sapiens_asm'>
-#     -mem_host=<default='10.0.4.172:11211'>
 #     
 #Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
 #      Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
@@ -26,7 +26,7 @@
 #               2. create job script based on job template and available info
 #               3. submit the job json script to awe
 #               
-#Note: if awe_pipeline_template, awe_url (ip:port), and shock_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, and -shock are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.
+#Note: if awe_pipeline_template, awe_url (ip:port), shock_url (ip:port), and mem_host_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, -shock, and -mem_host are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.
 
 use strict;
 use warnings;
@@ -57,14 +57,14 @@ $vars{bowtie} = 1;
 $vars{dereplicate} = 1;
 $vars{filter_options} = "filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806";
 $vars{screen_indexes} = "h_sapiens_asm";
-$vars{mem_host} = "10.0.4.172:11211";
 
 my $help = 0;
 
 my $options = GetOptions ("upload=s"   => \$vars{inputfile},
+			  "pipeline=s" => \$pipeline_template,
                           "awe=s"    => \$awe_url,
  			  "shock=s"  => \$vars{shockurl},
-			  "pipeline=s" => \$pipeline_template,
+                          "mem_host=s" => \$vars{mem_host},
                           "name=s" => \$vars{jobname},
                           "user=s"   => \$vars{user},
                           "project=s" => \$vars{project},
@@ -74,7 +74,6 @@ my $options = GetOptions ("upload=s"   => \$vars{inputfile},
                           "dereplicate=i" => \$vars{dereplicate},
                           "filter_options=s" => \$vars{filter_options},
                           "screen_indexes=s" => \$vars{screen_indexes},
-                          "mem_host=s" => \$vars{mem_host},
                           "h"  => \$help,
 			 );
 
@@ -101,6 +100,19 @@ if (length($vars{inputfile})==0) {
     exit 1;  
 }
 
+if (length($pipeline_template)==0) {
+    $pipeline_template = $Pipeline_Conf::awe_pipeline_template;
+    if (length($pipeline_template)==0) {
+        print "ERROR: a pipeline template was not specified.\n";
+        print_usage();
+        exit 1;  
+    } elsif (! -e $pipeline_template) {
+        print "ERROR: The pipeline template file [$pipeline_template] does not exist.\n";
+        print_usage();
+        exit 1;
+    }
+}
+    
 if (length($awe_url)==0) {
     $awe_url = $Pipeline_Conf::awe_url;
     if (length($awe_url)==0) {
@@ -119,19 +131,15 @@ if (length($vars{shockurl})==0 ) {
     }
 }
 
-if (length($pipeline_template)==0) {
-    $pipeline_template = $Pipeline_Conf::awe_pipeline_template;
-    if (length($pipeline_template)==0) {
-        print "ERROR: a pipeline template was not specified.\n";
-        print_usage();
-        exit 1;  
-    } elsif (! -e $pipeline_template) {
-        print "ERROR: The pipeline template file [$pipeline_template] does not exist.\n";
-        print_usage();
-        exit 1;
+if (length($vars{mem_host})==0 ) {
+    $vars{mem_host} = $Pipeline_Conf::mem_host_url;
+    if (length($vars{mem_host})==0) {
+	print "ERROR: memcache server URL was not specified.\n";
+	print_usage();
+	exit 1;
     }
 }
-    
+
 #upload input to shock
 print "\nUploading input file to Shock...";
 
@@ -214,9 +222,10 @@ MG-RAST pipeline job submitter for AWE
 Command name: pipeline_submit_to_awe
 Options:
      -upload=<input file that is local and to be uploaded, required>
+     -pipeline=<path for pipeline job template, required>
      -awe=<AWE server URL (ip:port), required>
      -shock=<Shock URL (ip:port), required>
-     -pipeline=<path for pipeline job template, required>
+     -mem_host=<memcache URL (ip:port), required>
      -name=<job name (default='default')>
      -user=<user name (default='mgrastprod')>
      -project=<project name (default='pipeline')>
@@ -226,7 +235,6 @@ Options:
      -dereplicate=<boolean, if dereplication should be performed (default 1)>
      -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
      -screen_indexes=<default='h_sapiens_asm'>
-     -mem_host=<default='10.0.4.172:11211'>
      
 Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
       Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
@@ -236,5 +244,5 @@ Use case: submit a job with a local input file and a pipeline template (input fi
                2. create job script based on job template and available info
                3. submit the job json script to awe
                
-Note: if awe_pipeline_template, awe_url (ip:port), and shock_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, and -shock are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.\n";
+Note: if awe_pipeline_template, awe_url (ip:port), shock_url (ip:port), and mem_host_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, -shock, and -mem_host are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.\n";
 }
