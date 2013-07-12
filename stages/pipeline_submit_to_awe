@@ -66,9 +66,9 @@ $vars{jobname} ="default";
 $vars{user} = "mgrastprod";
 $vars{project} = "pipeline";
 $vars{clientgroups} = "";
-$totalwork_sm = 8;
-$totalwork_lg = 16;
-$lg_size = 2147483648;
+my $totalwork_sm = 8;
+my $totalwork_lg = 16;
+my $lg_size = 2147483648;
 $vars{bowtie} = 1;
 $vars{dereplicate} = 1;
 $vars{filter_options} = "filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806";
@@ -110,7 +110,7 @@ if ($help) {
 }
 
 if(length($job_num)==0) {
-    print STDERR "$stage_name failed, job_num was not specified.");
+    print STDERR "$stage_name failed, job_num was not specified.\n";
     print_usage();
     exit 1;
 }
