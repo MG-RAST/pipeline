@@ -24,6 +24,10 @@
                     "#jobname.100.preprocess.passed.fna": {
                         "host": "http://#shockurl",
                         "node": "-"
+                    },
+                    "#jobname.100.preprocess.removed.fna": {
+                        "host": "http://#shockurl",
+                        "node": "-"
                     }
                 },
                 "partinfo": {
@@ -49,6 +53,10 @@
                 }, 
                 "outputs": {
                     "#jobname.150.dereplication.passed.fna": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    },
+                    "#jobname.150.dereplication.removed.fna": {
                         "host": "http://#shockurl",
                         "node": "-"
                     }

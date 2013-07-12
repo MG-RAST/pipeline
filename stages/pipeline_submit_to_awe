@@ -3,6 +3,7 @@
 #MG-RAST pipeline job submitter for AWE
 #Command name: pipeline_submit_to_awe
 #Options:
+#     -job_num=<job number, required>
 #     -upload=<input file that is local and to be uploaded, required>
 #     -pipeline=<path for pipeline job template, required>
 #     -awe=<AWE server URL (ip:port), required>
@@ -12,7 +13,9 @@
 #     -user=<user name (default='mgrastprod')>
 #     -project=<project name (default='pipeline')>
 #     -cgroups=<exclusive_client_group_list (separate by ',') (default='')>
-#     -totalwork=<number of workunits to split for splitable tasks (default 1)>
+#     -totalwork_sm=<number of workunits to split for splitable tasks of small jobs (default 8)>
+#     -totalwork_lg=<number of workunits to split for splitable tasks of large jobs (default 16)>
+#     -lg_size=<cutoff for size in bytes that categorizes a job as "large" (default 2147483648 bytes, aka 2GB)>
 #     -bowtie=<boolean, if bowtie should be run (default 1)>
 #     -dereplicate=<boolean, if dereplication should be performed (default 1)>
 #     -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
@@ -20,7 +23,7 @@
 #     
 #Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
 #      Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
-#      Optional options: -name, -user, -project, -cgroups, -totalwork, -bowtie, -dereplicate, -filter_options, -screen_indexes
+#      Optional options: -name, -user, -project, -cgroups, -totalwork_sm, -totalwork_lg, -lg_size, -bowtie, -dereplicate, -filter_options, -screen_indexes
 #      Operations:
 #               1. upload input file to shock
 #               2. create job script based on job template and available info
@@ -32,6 +35,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+use Pipeline;
 use Pipeline_Conf;
 
 use JSON;
@@ -40,9 +44,18 @@ use File::Slurp;
 use Getopt::Long;
 use LWP::UserAgent;
 use String::Random;
+use Data::Dumper;
 umask 000;
 
+my $stage_name = "submit_to_awe";
+my $stage;
+for my $s (@{$Pipeline_Conf::pipeline->{'awe_part_one'}}){
+  $stage = $s if $s->{name} eq $stage_name;
+}
+my $stage_id = $stage->{id};
+
 # options
+my $job_num = "";
 my %vars = ();  # Hash to store variables that we'll replace in the AWE job template
 $vars{inputfile} = "";
 my $awe_url = "";
@@ -53,7 +66,9 @@ $vars{jobname} ="default";
 $vars{user} = "mgrastprod";
 $vars{project} = "pipeline";
 $vars{clientgroups} = "";
-$vars{totalwork} = 1;
+$totalwork_sm = 8;
+$totalwork_lg = 16;
+$lg_size = 2147483648;
 $vars{bowtie} = 1;
 $vars{dereplicate} = 1;
 $vars{filter_options} = "filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806";
@@ -61,7 +76,8 @@ $vars{screen_indexes} = "h_sapiens_asm";
 
 my $help = 0;
 
-my $options = GetOptions ("upload=s"   => \$vars{inputfile},
+my $options = GetOptions ("job_num=i" => \$job_num,
+                          "upload=s"   => \$vars{inputfile},
 			  "pipeline=s" => \$pipeline_template,
                           "awe=s"    => \$awe_url,
  			  "shock=s"  => \$vars{shockurl},
@@ -70,7 +86,9 @@ my $options = GetOptions ("upload=s"   => \$vars{inputfile},
                           "user=s"   => \$vars{user},
                           "project=s" => \$vars{project},
                           "cgroups=s" => \$vars{clientgroups},
-                          "totalwork=i" => \$vars{totalwork},
+                          "totalwork_sm=i" => \$totalwork_sm,
+                          "totalwork_lg=i" => \$totalwork_lg,
+                          "lg_size=i" => \$lg_size,
                           "bowtie=i" => \$vars{bowtie},
                           "dereplicate=i" => \$vars{dereplicate},
                           "filter_options=s" => \$vars{filter_options},
@@ -91,12 +109,21 @@ if ($help) {
     exit 0;
 }
 
+if(length($job_num)==0) {
+    print STDERR "$stage_name failed, job_num was not specified.");
+    print_usage();
+    exit 1;
+}
+
+my $log = Pipeline::logger($job_num);
+$log->info("Starting $stage_name on job: $job_num");
+
 if (length($vars{inputfile})==0) {
-    print "ERROR: please specify the local path of the input file.\n";
+    $log->error("$stage_name failed on job: $job_num, please specify the local path of the input file.");
     print_usage();
     exit 1;
 } elsif (! -e $vars{inputfile}) {
-    print "ERROR: The input genome file [".$vars{inputfile}."] does not exist.\n";
+    $log->error("$stage_name failed on job: $job_num, the input file [".$vars{inputfile}."] does not exist.");
     print_usage();
     exit 1;  
 }
@@ -104,11 +131,11 @@ if (length($vars{inputfile})==0) {
 if (length($pipeline_template)==0) {
     $pipeline_template = $Pipeline_Conf::awe_pipeline_template;
     if (length($pipeline_template)==0) {
-        print "ERROR: a pipeline template was not specified.\n";
+        $log->error("$stage_name failed on job: $job_num, a pipeline template was not specified.");
         print_usage();
         exit 1;  
     } elsif (! -e $pipeline_template) {
-        print "ERROR: The pipeline template file [$pipeline_template] does not exist.\n";
+        $log->error("$stage_name failed on job: $job_num, the pipeline template file [$pipeline_template] does not exist.");
         print_usage();
         exit 1;
     }
@@ -117,7 +144,7 @@ if (length($pipeline_template)==0) {
 if (length($awe_url)==0) {
     $awe_url = $Pipeline_Conf::awe_url;
     if (length($awe_url)==0) {
-        print "ERROR: AWE server URL was not specified.\n";
+        $log->error("$stage_name failed on job: $job_num, the AWE server URL was not specified.");
         print_usage();
         exit 1;
     }
@@ -126,7 +153,7 @@ if (length($awe_url)==0) {
 if (length($vars{shockurl})==0 ) {
     $vars{shockurl} = $Pipeline_Conf::shock_url;
     if (length($vars{shockurl})==0) {
-	print "ERROR: SHOCK server URL was not specified.\n";
+        $log->error("$stage_name failed on job: $job_num, the Shock server URL was not specified.");
 	print_usage();
 	exit 1;
     }
@@ -135,14 +162,19 @@ if (length($vars{shockurl})==0 ) {
 if (length($vars{mem_host})==0 ) {
     $vars{mem_host} = $Pipeline_Conf::mem_host_url;
     if (length($vars{mem_host})==0) {
-	print "ERROR: memcache server URL was not specified.\n";
+        $log->error("$stage_name failed on job: $job_num, the memcache server URL was not specified.");
 	print_usage();
 	exit 1;
     }
 }
 
+my $job_dir   = $Pipeline_Conf::global_job_dir."/".$job_num;
+my $proc_dir  = $job_dir."/proc";
+my $stage_dir = $proc_dir."/".$stage_id.".".$stage_name;
+mkdir($stage_dir) or fail($log, "Could not mkdir: $stage_dir, $!");
+
 #upload input to shock
-print "\nUploading input file to Shock...";
+$log->info("Uploading input file: ".$vars{inputfile}." to Shock");
 
 my $md5 = file_md5_hex( $vars{inputfile} );
 my $ua = LWP::UserAgent->new();
@@ -154,15 +186,14 @@ my $post = $ua->post("http://".$vars{shockurl}."/node",
 my $json = new JSON();
 my $res = $json->decode( $post->content );
 my $res_md5 = $res->{data}->{file}->{checksum}->{md5};
-
-if($md5 ne $res_md5) {
-  print STDERR "\nShock upload of input file was not successful, exiting...\n";
-  exit(1);
-}
-
 $vars{shocknode} = $res->{data}->{id};
 
-print " Done! Shock node id=".$vars{shocknode}."\n";
+if($md5 ne $res_md5) {
+    $log->error("$stage_name failed on job: $job_num, Shock upload of input file to Shock node:".$vars{shocknode}." was not successful.");
+    exit(1);
+}
+
+$log->info("Upload of input file: ".$vars{inputfile}." complete. Shock node id=".$vars{shocknode}."\n");
 
 #generate job script based on template (instantiate a job script with availalbe information filled into the template)
 my $pipeline_name = $pipeline_template;
@@ -171,20 +202,30 @@ if (length($vars{jobname})==0) {
     $vars{jobname} = $pipeline_name.".job";
 }
 
+# setting totalwork variable
+my $file_size = -s $vars{inputfile};
+if($file_size >= $lg_size) {
+    $vars{totalwork} = $totalwork_lg;
+} else {
+    $vars{totalwork} = $totalwork_sm;
+}
+
+# inputfile in awe workflow cannot contain directory path, only filename, so removing path here.
+$vars{inputfile} =~ s/.*\/(.*)/$1/;
+
 # Replace # vars in template
 my $text = read_file($pipeline_template);
 foreach my $key (keys %vars) {
-  $text =~ s/#$key/$vars{$key}/g;
+    $text =~ s/#$key/$vars{$key}/g;
 }
 
-my $rand = new String::Random;
-my $jobscript = "tempjob.".($rand->randregex('\d\d\d\d\d\d\d\d\d\d')).".json";
-open OUT, ">$jobscript" || die "Cannot open $jobscript for writing.\n";
+my $jobscript = "$stage_dir/awe_workflow.$job_num.json";
+open OUT, ">$jobscript" || fail($log, "Could not open $jobscript for writing.");
 print OUT $text;
 close OUT;
 
 #upload job script to awe server
-print "Submitting job script ($jobscript) to AWE...";
+$log->info("Submitting job script ($jobscript) to AWE.\n");
 $ua = LWP::UserAgent->new();
 $post = $ua->post("http://".$awe_url."/job",
                   Content_Type => 'form-data',
@@ -193,35 +234,39 @@ $post = $ua->post("http://".$awe_url."/job",
 
 $res = $json->decode( $post->content );
 
-
 my $awe_id = $res->{data}->{id};
 my $job_id = $res->{data}->{jid};
 my $state = $res->{data}->{state};
 
+my $awe_dump_file = "$stage_dir/awe_submission_output.txt";
+
+open OUT, ">$awe_dump_file" || fail($log, "Could not open $awe_dump_file for writing.");
+print OUT Dumper($res);
+close OUT;
+
 if($state ne "submitted") {
-  print STDERR "AWE job submission was not successful, exiting...\n";
-  exit(1);
+    $log->error("$stage_name failed on job: AWE job submission was not successful, please see '$awe_dump_file' for more info.");
+    exit(1);
 }
 
 print " Done! awe_id=".$awe_id." job_id=$job_id\n";
-
-#print summary
-
-print "\nJob Submission Summary:\n";
-print "pipeline job awe url = http://".$awe_url."/job/".$awe_id."\n";
-print "input file shock url = http://".$vars{shockurl}."/node/".$vars{shocknode}."\n";
-
-my $refjson = "awe_".$vars{inputfile}."_".$awe_id.".json"; 
-system("mv $jobscript $refjson");
-print "job script for reference = $refjson\n";
+$log->info("AWE submission complete. AWE URL = http://".$awe_url."/job/".$awe_id." Shock URL = http://".$vars{shockurl}."/node/".$vars{shocknode});
 
 exit(0);
+
+sub fail {
+    my ($log, $message) = @_;
+    Pipeline::update_stage_info($job_num, $stage_name, "error");
+    $log->error($message);
+    exit(1);
+}
 
 sub print_usage{
     print "
 MG-RAST pipeline job submitter for AWE
 Command name: pipeline_submit_to_awe
 Options:
+     -job_num=<job number, required>
      -upload=<input file that is local and to be uploaded, required>
      -pipeline=<path for pipeline job template, required>
      -awe=<AWE server URL (ip:port), required>
