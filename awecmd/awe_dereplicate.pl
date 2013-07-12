@@ -20,6 +20,7 @@ my $runcmd   = "dereplication";
 my $job_num    = "";
 my $fasta_file = "";
 my $out_prefix = "derep";
+my $out_file = "";
 my $prefix_size = 50;
 my $memsize = "1G";
 my $run_derep = 1;
@@ -28,6 +29,7 @@ my $options = GetOptions ("input=s"     => \$fasta_file,
 			  "prefix_length=i" => \$prefix_size,
 			  "mem_size=s" => \$memsize,
 			  "dereplicate" => \$run_derep,
+			  "output=s"    => \$out_file, #depreciated
 			 );
 
 
@@ -47,6 +49,9 @@ if (length($fasta_file)==0){
 my $passed_seq = $out_prefix.".passed.fna";
 my $removed_seq = $out_prefix.".removed.fna";
 
+if (length($out_file)>0) { #for compatibility with old pipeline templates (-output is deprecated)
+    $passed_seq = $out_file;
+}
 
 if ($run_derep==0) {
   system("cp $fasta_file $passed_seq > cp.out 2>&1") == 0 or exit __LINE__;
