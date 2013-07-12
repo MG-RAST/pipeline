@@ -1,5 +1,8 @@
 #!/usr/bin/env perl 
 
+#input: fasta
+#outputs: ${out_prefix}.passed.fna, ${out_prefix}.passed.fna
+
 use strict;
 use warnings;
 no warnings('once');
@@ -16,12 +19,12 @@ my $runcmd   = "dereplication";
 # options
 my $job_num    = "";
 my $fasta_file = "";
-my $out_file = "default.derep.fna";
+my $out_prefix = "derep";
 my $prefix_size = 50;
 my $memsize = "1G";
 my $run_derep = 1;
 my $options = GetOptions ("input=s"     => \$fasta_file,
-			  "output=s"    => \$out_file,
+			  "out_prefix=s"    => \$out_prefix,
 			  "prefix_length=i" => \$prefix_size,
 			  "mem_size=s" => \$memsize,
 			  "dereplicate" => \$run_derep,
@@ -40,15 +43,18 @@ if (length($fasta_file)==0){
     exit __LINE__;   
 }
 
+#output file names:
+my $passed_seq = $out_prefix.".passed.fna";
+my $removed_seq = $out_prefix.".removed.fna";
+
+
 if ($run_derep==0) {
-  system("cp $fasta_file $out_file > cp.out 2>&1") == 0 or exit __LINE__;
+  system("cp $fasta_file $passed_seq > cp.out 2>&1") == 0 or exit __LINE__;
+  system("touch $removed_seq");
   exit (0);
 }
 
 my ($file,$dir,$ext) = fileparse($fasta_file, qr/\.[^.]*/);
-if (length($out_file)==0) {
-  $out_file = $dir.$file.".derep.fna";
-}
 
 my $results_dir = ".";
 
@@ -58,12 +64,14 @@ system($command);
 if ($? != 0) {print "ERROR: $runcmd returns value $?\n"; exit $?}
 
 # rename output to specified name
-system("mv $fasta_file.derep.fasta $out_file");
+system("mv $fasta_file.derep.fasta $passed_seq");
+system("mv $fasta_file.removed.fasta $removed_seq");
 if ($? != 0) {print "ERROR: failed copy output $?\n"; exit $?}
 
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_dereplicate.pl -input=<input_fasta> [-output=<output_fasta> --prefix_length=<INT prefix length>]\n";
+    print "USAGE: awe_dereplicate.pl -input=<input_fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n";
+    print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
 }
 

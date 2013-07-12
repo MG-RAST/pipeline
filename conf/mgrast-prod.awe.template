@@ -9,7 +9,7 @@
         "tasks": [
             {
                 "cmd": {
-                    "args": "-input=@#inputfile -output=#jobname.100.preprocess.passed.fna -filter_options=#filter_options", 
+                    "args": "-input=@#inputfile -out_prefix=#jobname.100.preprocess -filter_options=#filter_options", 
                     "description": "preprocess",
                     "name": "awe_preprocess.pl"
                 }, 
@@ -39,7 +39,7 @@
             },
             {
                 "cmd": {
-                    "args": "-input=@#jobname.100.preprocess.passed.fna -output=#jobname.150.dereplication.passed.fna -mem_size=4G -prefix_length=#prefix_length -dereplicate=#dereplicate", 
+                    "args": "-input=@#jobname.100.preprocess.passed.fna -out_prefix=#jobname.150.dereplication -mem_size=4G -prefix_length=#prefix_length -dereplicate=#dereplicate", 
                     "description": "dereplication",
                     "name": "awe_dereplicate.pl"
                 }, 
