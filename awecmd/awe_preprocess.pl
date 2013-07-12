@@ -19,9 +19,11 @@ my $runcmd   = "filter_sequences";
 my $input_file = "";
 my $out_prefix = "prep";
 my $filter_options = "";
+my $out_file = "";
 my $options = GetOptions ("input=s"   => \$input_file,
 			  "out_prefix=s"  => \$out_prefix,
 			  "filter_options=s" => \$filter_options,
+			  "output=s" => \$out_file, #deprecated
 			 );
 
 if (length($input_file)==0){
@@ -37,6 +39,10 @@ if (length($input_file)==0){
 my ($file,$dir,$ext) = fileparse($input_file, qr/\.[^.]*/);
 
 my $passed_seq = $out_prefix.".passed.fna";
+
+if (length($out_file)>0) { #for compatibility with old pipeline templates (-output is deprecated)
+    $passed_seq = $out_file;
+}
 
 my $removed_seq = $out_prefix.".removed.fna";
 
