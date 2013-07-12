@@ -17,7 +17,7 @@ MGRAST_URL = 'http://api.metagenomics.anl.gov/'
 BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
 BIOP_URL = 'http://bioportal.bioontology.org'
 SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
-ONT_URL  = 'http://rest.bioontology.org/bioportal/virtual/ontology/'
+ONT_URL  = 'http://rest.bioontology.org/bioportal/ontologies/'
 MGRASTID = 'mgrast_id'
 GEO_DIR  = {'N':1, 'S':-1, 'E':1, 'W':-1}
 ID_COL   = 0
@@ -86,7 +86,10 @@ def obj_from_url(url):
 
 def test_ontology():
     for bioid in set(CV_PARAM['ontology'].values()):
-        url = ONT_URL+bioid+'?'+urllib.urlencode({'apikey': BIOP_KEY})
+        arr = bioid.split('.')
+        ontID = arr[0]
+        ontver = arr[1]
+        url = ONT_URL+ontver+'?'+urllib.urlencode({'apikey': BIOP_KEY})
         obj =  obj_from_url(url)
         if not (obj and ('success' in obj)):
             return False
@@ -95,34 +98,37 @@ def test_ontology():
 def check_ontology(ontID, term, subID):
     term = unicode(term)
     part = term.split(':',1)
+    arr = ontID.split('.')
+    ontID = arr[0]
+    ontver = arr[1]
     # test if term is ID
     if (len(part) == 2) and part[1].isdigit():
         params = {'conceptid':term, 'apikey':BIOP_KEY}
         if subID != 'none':
             params['subtreerootconceptid'] = subID
-        url = ONT_URL+ontID+'?'+urllib.urlencode(params)
+        url = ONT_URL+ontver+'?'+urllib.urlencode(params)
         obj = obj_from_url(url)
         if obj and ('success' in obj):
             try:
                 oid  = obj['success']['data'][0]['classBean']['id']
                 name = obj['success']['data'][0]['classBean']['label']
             except (KeyError, TypeError, IndexError, AttributeError):
-                errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+                errorMsg("Bioportal ontology ID %s, version %s has malformed return structure from %s"%(ontID, ontver, url), 1)
             if oid == term:
                 return name
     # test if term is name
     base = part[1] if len(part) == 2 else part[0]
-    params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'query':base}
-    if subID != 'none':
-        params['subtreerootconceptid'] = subID
+    params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'ontologyVersionId':ontver, 'query':base}
+    #if subID != 'none':
+    #    params['subtreerootconceptid'] = subID
     url  = SRCH_URL+'?'+urllib.urlencode(params)
     obj  = obj_from_url(url)
     if not (obj and ('success' in obj)):
-        errorMsg("Bioportal ontology ID %s is not available from %s"%(ontID, url), 1)
+        errorMsg("Bioportal ontology ID %s, version %s is not available from %s"%(ontID, ontver, url), 1)
     try:
         contents = obj['success']['data'][0]['page']['contents']['ontologyHitList']['ontologyHitBean']
     except (KeyError, TypeError, IndexError, AttributeError):
-        errorMsg("Bioportal ontology ID %s has malformed return structure from %s"%(ontID, url), 1)
+        errorMsg("Bioportal ontology ID %s, version %s has malformed return structure from %s"%(ontID, ontver, url), 1)
     if int(contents['numHits']) > 0:
         return base
     else:
@@ -270,21 +276,30 @@ def convert_coordinate(coord):
         return fdms * GEO_DIR[geodir]
     return fCoord * GEO_DIR[geodir]
 
-def google_to_mdraw(url, dupe, login, password):
+def google_to_mdraw(url, dupe, inc, login, password):
     gclient = gspread.login(login, password)
     gbook   = gclient.open_by_url(url)
     tables  = dict([(x.title, sheet_to_table(x, 'google')) for x in gbook.worksheets()])
-    return tables_to_mdraw(tables, dupe)
+    if inc:
+      return tables_to_mdraw_inc(tables, dupe)
+    else:
+      return tables_to_mdraw(tables, dupe)
 
-def xlsx_to_mdraw(xxfile, dupe):
+def xlsx_to_mdraw(xxfile, dupe, inc):
     xxbook = load_workbook(filename = xxfile)
     tables = dict([(x, sheet_to_table(xxbook.get_sheet_by_name(x), 'xlsx')) for x in xxbook.get_sheet_names()])
-    return tables_to_mdraw(tables, dupe)
+    if inc:
+      return tables_to_mdraw_inc(tables, dupe)
+    else:
+      return tables_to_mdraw(tables, dupe)
 
-def xls_to_mdraw(xfile, dupe):
+def xls_to_mdraw(xfile, dupe, inc):
     xbook  = xlrd.open_workbook(xfile)
     tables = dict([(x, sheet_to_table(xbook.sheet_by_name(x), 'xls')) for x in xbook.sheet_names()])
-    return tables_to_mdraw(tables, dupe)
+    if inc:
+      return tables_to_mdraw_inc(tables, dupe)
+    else:
+      return tables_to_mdraw(tables, dupe)
 
 def sheet_to_table(sheet, source):
     table = []
@@ -326,6 +341,89 @@ def update_header_size(tables):
             HEADER += 1
         else:
             break
+
+def tables_to_mdraw_inc(tables, dupe):
+    ## keep only sheets / rows that have primary ids, map library / env_package to samples
+    ## MDraw:  { name:<proj_name: str>, data:<proj_data: dict>, sampleNum:<number_samples: int>, samples:<list of sample objs> }
+    ## data (raw):   { key: <value: str|int|float|time|datetime> }
+    ## data (valid): { key: {qiime_tag:<str>, mgrast_tag:<str>, definition:<str>, required:<bool>, mixs:<bool>, type:<str>, value:<str|int|float|time|datetime>} }
+    ## sample: { name:<samp_name: str>, data:<samp_data: dict>, envPackage:<env_package obj>, libNum:<number_libraries: int>, libraries:<list of library objs> }
+    ## library:     { name:<metagenome_name: str>, type:<library_type: str>, data<library_data: dict> }
+    ## env_package: { name:<samp_name-env_package_type: str>, type:<env_package_type: str>, data<env_package_data: dict> }
+    update_header_size(tables)
+    pdata = data_from_table(tables, 'project')
+    sdata = data_from_table(tables, 'sample')
+    ldata = dict([(x, data_from_table(tables,'library '+x)) for x in TEMPLATE['library']])
+    edata = dict([(x, data_from_table(tables,'ep '+x)) for x in TEMPLATE['ep']])
+    snMap = defaultdict(list)
+    nDupe = False
+
+    # test for missing sheets (all but ep)
+    libNames = []
+    missing  = []
+    lnum = 0
+    for l in ldata:
+        if ldata[l]:
+            lnum += 1
+            libNames.append("'library "+l+"'")
+    for e in edata:
+        if edata[e]:
+            snMap['ep '+e] = map(lambda x: x[0], edata[e])
+    if not pdata: missing.append('project')
+    if not sdata: missing.append('sample')
+    if len(missing) > 0:
+        for m in missing:
+            errorMsg("no %s entries found (sheet is empty starting at row %d)"%(m, HEADER+1))
+        os._exit(1)
+    snMap['sample'] = map(lambda x: x[0], sdata)
+
+    mName = []
+    fName = []
+    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
+    for sampName, sampData in sdata:
+        # ep is messy - look for existance of vaild ep term, if no ep sheet make obj from just term
+        if 'env_package' not in sampData:
+            errorMsg("sample '%s' missing required field 'env_package'"%sampName)
+            add_invalid('sample', 'env_package', sampName, '', 'required field empty')
+            continue
+        s_ep = validate_type('env_package', sampData['env_package'], 'select')
+        if s_ep is None:
+            bad_type = 'not one of: %s'%', '.join(CV_PARAM['select']['env_package'])
+            errorMsg("sample '%s' field 'env_package' %s: '%s'"%(sampName, bad_type, unicode(sampData['env_package'])))
+            add_invalid('sample', 'env_package', sampName, sampData['env_package'], bad_type)
+            continue
+        else:
+            s_ep = strip_tags(s_ep)
+        eps = find_sample_sub_inc(sampName, edata, s_ep, None, None)
+        if len(eps) == 0:
+            eps.append( {'name': "%s: %s"%(sampName, s_ep), 'type': s_ep, 'data': {'sample_name': sampName}} )
+        # find libs
+        libs = find_sample_sub_inc(sampName, ldata, None, mName, fName)
+        # create samp obj
+        mdraw['samples'].append({ 'name': sampName,
+                                  'data': sampData,
+                                  'id': id_from_data(sampData, MGRASTID),
+                                  'libNum': len(libs),
+                                  'libraries': libs,
+                                  'envPackage': eps[0] })
+    sampNum = len(mdraw['samples'])
+    if sampNum == 0:
+        errorMsg("no sample entries found with matching library", 1)
+    # test for duplicate names
+    for dtype, dnames in snMap.iteritems():
+        if has_name_dupe(dnames):
+            nDupe = True
+            errorMsg("'sample_name' values in sheet '%s' are not unique"%dtype)
+    if has_name_dupe(mName) and (not dupe):
+        nDupe = True
+        errorMsg("'metagenome_name' values in %s are not unique"%' and '.join(libNames))
+    if has_name_dupe(fName):
+        nDupe = True
+        errorMsg("'file_name' values in %s are not unique"%' and '.join(libNames))
+    if nDupe:
+        os._exit(1)
+    mdraw['sampleNum'] = sampNum
+    return mdraw
 
 def tables_to_mdraw(tables, dupe):
     ## keep only sheets / rows that have primary ids, map library / env_package to samples
@@ -445,6 +543,25 @@ def id_from_data(data, id_name):
         return data[id_name]
     else:
         return None
+
+def find_sample_sub_inc(sname, inData, ep_name, mName, fName):
+    outData = []
+    for typeName, typeData in inData.iteritems():
+        if typeData is None:
+            continue
+        for name, data in typeData:
+            if data['sample_name'] != sname:
+                continue
+            if not ep_name:
+                if ('metagenome_name' in data) and ('investigation_type' in data):
+                    data['investigation_type'] = typeName
+                    outData.append({'name': data['metagenome_name'], 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
+                    mName.append( data['metagenome_name'] )
+                    if ('file_name' in data) and data['file_name']:
+                        fName.append( data['file_name'] )
+            elif ep_name == typeName:
+                outData.append({'name': "%s: %s"%(sname,typeName), 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
+    return outData
 
 def find_sample_sub(sname, inData, ep_name, mName, fName):
     outData = []
@@ -582,6 +699,7 @@ def main(args):
     parser.add_option("-j", "--json", dest="json", default=None, help="File to output json structure of parsed spreadsheet.  default no output")
     parser.add_option("-s", "--skip_required", dest="skip", action="store_true", default=False, help="Skip checking for required metadata (other than needed for mapping)")
     parser.add_option("-d", "--allow_duplicate", dest="dupe", action="store_true", default=False, help="Allow duplicate metagenome_name values")
+    parser.add_option("-i", "--allow_incomplete", dest="inc", action="store_true", default=False, help="Allow incomplete metadata speadsheets (will validate fields with empty library and ep tabs.)")
 
     (opts, args) = parser.parse_args()
     if len(args) < 1:
@@ -607,11 +725,11 @@ def main(args):
 
     # object from source (xlsx file or google link): create hierarchy / test connections
     if opts.format == 'xlsx':
-        mdraw = xlsx_to_mdraw(md_source, opts.dupe)
+        mdraw = xlsx_to_mdraw(md_source, opts.dupe, opts.inc)
     elif opts.format == 'xls':
-        mdraw = xls_to_mdraw(md_source, opts.dupe)
+        mdraw = xls_to_mdraw(md_source, opts.dupe, opts.inc)
     elif opts.format == 'google':
-        mdraw = google_to_mdraw(md_source, opts.dupe, opts.login, opts.password)
+        mdraw = google_to_mdraw(md_source, opts.dupe, opts.inc, opts.login, opts.password)
     else:
         mdraw = None
     #pprint.pprint(mdraw)

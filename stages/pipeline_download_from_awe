@@ -3,14 +3,15 @@
 #MG-RAST pipeline job downloader for AWE
 #Command name: pipeline_download_from_awe
 #Options:
+#     -job_num=<MG-RAST job number, required>
 #     -awe=<AWE server URL (ip:port), required>
 #     -awe_job_id=<AWE assigned job ID, required>
 #     
 #      Operations:
 #               1. check if job is complete
-#               2. if job is complete, download files and generate job directory structure
-#               3. if job exited with error status, return the error status
-#               4. if job is still running, just return status "running"
+#               2. if job is complete, download files to analysis subdirectory in job directory
+#               3. if job is not complete, return job state
+#Note: if awe_url (ip:port) is configured in Pipeline_Conf.pm, then -awe is not needed. But the specified -awe will overwrite the Pipeline_Conf.pm variable.
 
 use strict;
 use warnings;
@@ -21,16 +22,24 @@ use Pipeline;
 use Pipeline_Conf;
 use Getopt::Long;
 use LWP::UserAgent;
-use Data::Dumper;
 use Digest::MD5::File qw( file_md5_hex );
 umask 000;
 
+my $stage_name = "download_from_awe";
+my $stage;
+for my $s (@{$Pipeline_Conf::pipeline->{'awe_part_two'}}){
+  $stage = $s if $s->{name} eq $stage_name;
+}
+my $stage_id = $stage->{id};
+
 # options
+my $job_num = "";
 my $awe_url = "";
 my $awe_job_id = "";
 my $help = 0;
 
-my $options = GetOptions ("awe=s"         => \$awe_url,
+my $options = GetOptions ("job_num=i"     => \$job_num,
+                          "awe=s"         => \$awe_url,
                           "awe_job_id=s"  => \$awe_job_id,
                           "h"  => \$help,
 			 );
@@ -40,49 +49,67 @@ if ($help) {
     exit 0;
 }
 
+if (length($job_num)==0) {
+    print STDERR "ERROR: $stage_name failed, job_num was not specified.\n";
+    print_usage();
+    exit 1;
+}
+
+my $log = Pipeline::logger($job_num);
+$log->info("Starting $stage_name on job: $job_num");
+
 if (length($awe_url)==0) {
     if(defined $Pipeline_Conf::awe_url) {
         $awe_url = $Pipeline_Conf::awe_url;
     }
     if (length($awe_url)==0) {
-        print STDERR "ERROR: AWE server URL was not specified.\n";
+        $log->error("$stage_name failed on job: $job_num, AWE server URL was not specified.");
         print_usage();
-        exit 1;
+        exit(1);
     }
-} elsif (length($awe_job_id)==0) {
-    print STDERR "ERROR: AWE job ID was not specified.\n";
-    print_usage();
-    exit 1;
 }
 
+if (length($awe_job_id)==0) {
+    $log->error("$stage_name failed on job: $job_num, AWE job ID was not specified.");
+    print_usage();
+    exit(1);
+}
+
+my $awe_job_url = "http://".$awe_url."/job/".$awe_job_id;
+
 #retrieve job status from awe
-print "\nRetrieving job status from AWE...\n";
+$log->info("Retrieving job status for job #$job_num from AWE via url: $awe_job_url");
 
 my $ua = LWP::UserAgent->new();
-my $get = $ua->get("http://".$awe_url."/job/".$awe_job_id);
+my $get = $ua->get($awe_job_url);
+unless ($get->is_success) {
+    $log->error("$stage_name failed on job: $job_num, could not retrieve AWE job via url: $awe_job_url");
+    exit(1);
+}
 my $json = new JSON();
 my $res = $json->decode( $get->content );
 
 if($res->{data}->{state} ne "completed") {
-  print STDERR "ERROR, AWE job cannot be downloaded as it is in state: ".$res->{data}->{state}."\n";
-  exit(1);
+    $log->error("$stage_name failed on job: $job_num, AWE job cannot be downloaded as it is in state: ".$res->{data}->{state});
+    exit(1);
 }
 
-print "SUCCESS, AWE job has completed without error and will now be downloaded.\n";
+$log->info("SUCCESS, AWE job has completed without error and will now be downloaded.");
 
 my %filename_to_shock_info = ();
 my $awe_job_name = $res->{data}->{info}->{name};
 foreach my $task (@{$res->{data}->{tasks}}) {
-  foreach my $output (keys %{$task->{outputs}}) {
-    my $filename = $output;
-    $filename =~ s/^$awe_job_name\.(.*)/$1/;
-    if(exists $filename_to_shock_info{$filename}) {
-      print STDERR "WARNING, this output filename appears multiple times in the : $filename\n";
-    } else {
-      $filename_to_shock_info{$filename}{node} = $task->{outputs}->{$output}->{node};
-      $filename_to_shock_info{$filename}{host} = $task->{outputs}->{$output}->{host};
+    foreach my $output (keys %{$task->{outputs}}) {
+        my $filename = $output;
+        $filename =~ s/^$awe_job_name\.(.*)/$1/;
+        if(exists $filename_to_shock_info{$filename}) {
+            $log->error("The output filename: $filename appears multiple times in the AWE workflow.");
+            exit(1);
+        } else {
+            $filename_to_shock_info{$filename}{node} = $task->{outputs}->{$output}->{node};
+            $filename_to_shock_info{$filename}{host} = $task->{outputs}->{$output}->{host};
+        }
     }
-  }
 }
 
 foreach my $req_file ('100.preprocess.passed.fna', '150.dereplication.passed.fna', '299.screen.passed.fna',
@@ -92,46 +119,77 @@ foreach my $req_file ('100.preprocess.passed.fna', '150.dereplication.passed.fna
                       '700.annotation.lca.summary', '700.annotation.md5.summary', '700.annotation.ontology.summary',
                       '700.annotation.organism.summary', '700.annotation.sims.filter.seq', '700.annotation.sims.stats',
                       '700.annotation.source.stats') {
-  unless(exists $filename_to_shock_info{$req_file}) {
-    print STDERR "WARNING, required file is missing from awe job output: $req_file.\n";
-  }
+    unless(exists $filename_to_shock_info{$req_file}) {
+        $log->error("Required file: $req_file is missing from AWE job output.");
+        exit(1);
+    }
 
-  my $node = $filename_to_shock_info{$req_file}{node};
-  my $host = $filename_to_shock_info{$req_file}{host};
-  my $response = $ua->get("$host/node/$node?download");
-  print "http://$host/node/$node?download\n";
-  if ($response->is_success) {
-    print "Retrieved $req_file: ".length($response->decoded_content)." bytes of data.\n";
-  } else {
-    print STDERR "ERROR: " . $response->status_line;
-  }
+    my $node = $filename_to_shock_info{$req_file}{node};
+    my $host = $filename_to_shock_info{$req_file}{host};
+    my $shock_url = "$host/node/$node";
 
-  unless(open OUT, '>' . $req_file) {
-    die "\nCannot create save file '$req_file'\n";
-  }
+    my $shock_download_url = "$shock_url?download";
+    my $get = $ua->get($shock_download_url);
+    if ($get->is_success) {
+        $log->info("Retrieving $req_file: ".length($get->decoded_content)." bytes of data.");
+    } else {
+        $log->error("Could not download $req_file via Shock url: $shock_download_url. Response error: " . $get->status_line);
+        exit(1);
+    }
+ 
+    my $job_dir = $Pipeline_Conf::global_job_dir."/".$job_num;
+    my $adir    = $job_dir."/analysis";
+    my $saved_file = "$adir/$req_file";
+    unless(open OUT, '>' . $saved_file) {
+        $log->error("Could not create and save file: '$saved_file'");
+        exit(1);
+    }
      
-  binmode(OUT, ":utf8");
-  print OUT $response->decoded_content;
-  close OUT;
+    binmode(OUT, ":utf8");
+    print OUT $get->decoded_content;
+    close OUT;
      
-  print "Saved $req_file.\n";
+    $log->info("Saved file: $saved_file");
+
+    my $md5 = file_md5_hex( $saved_file );
+    my $shock_md5 = &get_shockfile_md5($shock_url);
+    if($shock_md5 eq "") {
+        $log->error("Could not retrieve md5 checksum from Shock url: $shock_url for file $saved_file");
+        exit(1);
+    } elsif($shock_md5 ne $md5) {
+        $log->error("md5 checksum for downloaded file $saved_file did not match that in Shock ($shock_url)");
+        exit(1);
+    }
 }
 
 
 exit(0);
 
-sub print_usage{
+sub get_shockfile_md5 {
+    my ($shock_url) = @_;
+    my $ua = LWP::UserAgent->new();
+    my $get = $ua->get($shock_url);
+    unless ($get->is_success) {
+        return "";
+    }
+    my $json = new JSON();
+    my $res = $json->decode( $get->content );
+    return $res->{data}->{file}->{checksum}->{md5};
+}
+
+sub print_usage {
     print "
 MG-RAST pipeline job downloader for AWE
 Command name: pipeline_download_from_awe
 Options:
+     -job_num=<MG-RAST job number, required>
      -awe=<AWE server URL (ip:port), required>
      -awe_job_id=<AWE assigned job ID, required>
      
       Operations:
                1. check if job is complete
-               2. if job is complete, download files and generate job directory structure
-               3. if job exited with error status, return the error status
-               4. if job is still running, just return status \"running\"
+               2. if job is complete, download files to analysis subdirectory in job directory
+               3. if job is not complete, return job state
+Note: if awe_url (ip:port) is configured in Pipeline_Conf.pm, then -awe is not needed. But the specified -awe will overwrite the Pipeline_Conf.pm variable.
 \n";
 }

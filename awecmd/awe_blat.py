@@ -12,10 +12,10 @@ ENV_VAR_DBPATH = 'REFDBPATH'
 Info_log = open("awe_blat.info", "w")
 
 
-def sortandbleach(sims_file, out_file):
+def sortandbleach(sims_file, out_file, sort_dir):
     print "started sort and bleach"
     sorted_file = "%s.sorted" % sims_file
-    cmd = "sort -t '\t' -k 1,1 -T . %s > %s" % (sims_file, sorted_file)
+    cmd = "sort -t '\t' -k 1,1 -T %s %s > %s" % (sort_dir, sims_file, sorted_file)
     proc = sub.Popen([cmd], shell=True, stdout=sub.PIPE)
     while (proc.returncode == None):
         proc.poll()
@@ -100,6 +100,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage)
     parser.add_option("-i", "--input",  dest="input", type = "string", default=None, help="input file path")
     parser.add_option("-o", "--output", dest="output", type = "string", default=None, help="output file path")
+    parser.add_option("-d", "--sort_dir",  dest="sort_dir", type = "string", default='.', help="temporary sort directory")
     
     (opts, args) = parser.parse_args()
     
@@ -121,6 +122,6 @@ if __name__ == "__main__":
         
     blat_hits = runBlatProcess(infile, refdb, outfile)
         
-    sortandbleach("%s.cat_blat" % outfile, outfile)
+    sortandbleach("%s.cat_blat" % outfile, outfile, opts.sort_dir)
     
     Info_log.close()

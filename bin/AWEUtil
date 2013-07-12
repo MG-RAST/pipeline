@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+import json, psycopg2, sys, os, shutil, subprocess as sub
+
+from Bio import SeqIO
+from optparse import OptionParser
+
+conf = json.loads(open("%s/../conf/awe_conf.json" % (os.path.dirname(__file__)), "Ur").read())
+ver = conf['version']
+job_dir = conf[ver]['jobsdir']
+pgconnect = conf[ver]['pgconnect']
+
+usage = "usage: %prog -c CMD -i ID -f FILE"
+parser = OptionParser(usage)
+parser.add_option('-c', '--cmd', dest="cmd", help="options: add, extract, remove")
+parser.add_option('-i', '--id', dest="id", help="id / name of job")
+parser.add_option('-f', '--infile', dest="infile", help="path to input file")
+parser.add_option('-o', '--outfile', dest="outfile", help="path to output file")
+parser.add_option('-s', '--script', dest="script", help="final run script")
+parser.add_option('-p', '--priority', dest="priority", help="job run priority", type="int", default=1)
+(options, args) = parser.parse_args()
+if not (options.cmd and options.id):
+	parser.print_help()
+	print " "
+	print "ERROR: cmd, id required"
+	sys.exit(0)
+
+def fail(message):
+	print message
+	sys.exit(1)
+	
+def addJob(dbh, file, name):
+        # Code to get average seq len in first 100 sequences.  This will determine the AWE chunk size.
+        size = 0
+        count = 0
+	handle = open(file, "rU")
+	for record in SeqIO.parse(handle, "fasta"):
+                size += len(record.seq)
+                ++count
+                if(count == 100):
+                        break
+
+	chunk_size = 2000000
+
+        avg_size = size / 100
+        if(avg_size < 100):
+                chunk_size = 10000000
+        elif(avg_size < 150):
+                chunk_size = 5000000
+
+	cursor = dbh.cursor()
+	cursor.execute("select * from jobs where job_name='%s'" % (name))
+	if cursor.rowcount != 0:
+		fail("ERROR: Job name already exists.")
+	
+	cursor.execute("insert into jobs (job_name, done_file, done_script, priority) values ('%s', '%s', '%s', %d)" % (name, options.outfile, options.script, options.priority))
+	dbh.commit()
+	cursor.execute("select _id from jobs where job_name='%s'" % (name))
+	job_id = cursor.fetchone()[0]
+	size = 0
+	num_chunks = 0
+	handle = open(file, "rU")
+	handle2 = open(file, "rU")
+	record_start = handle.tell()
+	dbh.commit()
+	cursor.close()
+	cursor = dbh.cursor()
+	cursor.execute("prepare workunitInsert (int, bigint, int) as insert into workunits (job_id, f_offset, f_length) values ($1, $2, $3)")
+	for record in SeqIO.parse(handle, "fasta"):
+		size += len(record.seq)
+		if(size > chunk_size):
+			handle2.seek((handle.tell()),0)
+			while(handle2.read(1) != ">"):
+				handle2.seek(-2, 1)
+			handle2.seek(-3, 1)	
+			end = handle2.tell()
+			cursor.execute("execute workunitInsert (%d, %d, %d)" % (job_id, record_start, (end - record_start)))
+			dbh.commit()
+			num_chunks += 1
+			record_start = end + 2			
+			size = 0
+	handle2.seek(0, os.SEEK_END)
+	file_end = handle2.tell()
+	if file_end > record_start:
+		cursor.execute("execute workunitInsert (%d, %d, %d)" % (job_id, record_start, (file_end - record_start)))
+		num_chunks += 1
+	handle.close()
+	handle2.close()
+	dbh.commit()
+	os.mkdir("%s/%s.results" % (job_dir, name))
+	shutil.copy(options.infile, "%s/%s" % (job_dir, name))
+        print "submitting " + str(num_chunks) + " chunks to AWE."
+	cursor.execute("update jobs set (total, avail) = (%d, %d) where _id = %s" % (num_chunks, num_chunks, job_id))	
+	dbh.commit()
+		
+def main():
+	if (options.cmd == 'add'):
+		if not ( options.infile and options.outfile ):
+			parser.print_help()
+			print " "
+			print "ERROR: infile/outfile required for add"
+		try:
+			conn = psycopg2.connect(pgconnect)
+		except:
+			exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+			sys.exit("Database connection failed!\n ->%s" % (exceptionValue))
+		else:
+			addJob(conn, options.infile, options.id)
+	elif (options.cmd == 'extract'):
+		if not options.infile:
+			parser.print_help()
+			print " "
+			print "ERROR: file required for extract"
+		if os.path.isdir("%s/%s.results" % (job_dir, options.id)):
+			args = ["cat %s/%s.results/* > %s" % (job_dir, options.id, options.infile)]
+			sub.Popen(args, shell=True)
+
+if __name__ == "__main__":
+	sys.exit(main())

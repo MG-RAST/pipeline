@@ -97,7 +97,7 @@ $procs            = (exists $opts{procs}) ? $opts{procs} : $procs;
 my @rna_ext  = ('sims.filter', 'expand.rna', 'expand.lca');
 my $rna_prefix = $prefix.".rna";
 
-if(exists $opts{rna_sims_file}) {
+if($rna_sims_file && -s $rna_sims_file) {
   # process_rna_sims
   # This next step will generate 6 output files (paths and filenames assume the normal setup):
   #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.err
@@ -120,7 +120,7 @@ if(exists $opts{rna_sims_file}) {
 my $aa_prefix = $prefix.".aa";
 my @prot_ext = ('sims.filter', 'expand.protein', 'expand.lca', 'expand.ontology');
 
-if(exists $opts{aa_sims_file}) {
+if($aa_sims_file && -s $aa_sims_file) {
   # process_sims_by_source_mem
   # This next step will generate 6 output files (paths and filenames assume the normal setup):
   #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.err
