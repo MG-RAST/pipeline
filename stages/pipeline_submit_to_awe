@@ -38,6 +38,7 @@ no warnings('once');
 use Pipeline;
 use Pipeline_Conf;
 
+use DBI;
 use JSON;
 use Digest::MD5::File qw( file_md5_hex );
 use File::Slurp;
@@ -251,6 +252,20 @@ if($state ne "submitted") {
 
 print " Done! awe_id=".$awe_id." job_id=$job_id\n";
 $log->info("AWE submission complete. AWE URL = http://".$awe_url."/job/".$awe_id." Shock URL = http://".$vars{shockurl}."/node/".$vars{shocknode});
+
+$log->info("Adding job to AWE MG-RAST lookup database.");
+my $db = $Pipeline_Conf::awe_mgrast_lookup_db;
+my $host = $Pipeline_Conf::awe_mgrast_lookup_host;
+my $user = $Pipeline_Conf::awe_mgrast_lookup_user;
+my $pass = $Pipeline_Conf::awe_mgrast_lookup_past;
+my $table = $Pipeline_Conf::awe_mgrast_lookup_table;
+my $dbh = DBI->connect("DBI:mysql:$db;host=$host", $user, $pass) || fail($log, "Couldn't connect to database: ".DBI->errstr);
+my $str = "INSERT INTO $table (job, awe_id, status, submitted, last_update) VALUES($job_id, '$awe_id', '$state', now(), now())";
+my $sth = $dbh->prepare($str) || fail($log, "Couldn't prepare statement: " . $dbh->errstr);
+$sth->execute() || fail($log, "Couldn't execute statement: " . $sth->errstr);
+
+$log->info("Job added to AWE MG-RAST lookup database.");
+$log->info("Finished $stage_name on job: $job_num");
 
 exit(0);
 
