@@ -260,7 +260,7 @@ my $user = $Pipeline_Conf::awe_mgrast_lookup_user;
 my $pass = $Pipeline_Conf::awe_mgrast_lookup_pass;
 my $table = $Pipeline_Conf::awe_mgrast_lookup_table;
 my $dbh = DBI->connect("DBI:mysql:$db;host=$host", $user, $pass) || fail($log, "Couldn't connect to database: ".DBI->errstr);
-my $str = "INSERT INTO $table (job, awe_id, status, submitted, last_update) VALUES($job_num, '$awe_id', '$state', now(), now())";
+my $str = "INSERT INTO $table (job, awe_id, awe_url, status, submitted, last_update) VALUES($job_num, '$awe_id' 'http://$awe_url/job/$awe_id', '$state', now(), now())";
 my $sth = $dbh->prepare($str) || fail($log, "Couldn't prepare statement: " . $dbh->errstr);
 $sth->execute() || fail($log, "Couldn't execute statement: " . $sth->errstr);
 
