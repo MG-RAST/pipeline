@@ -1,0 +1,59 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Pipeline_Conf;
+umask 000;
+
+my $db = $Pipeline_Conf::awe_mgrast_lookup_db;
+my $host = $Pipeline_Conf::awe_mgrast_lookup_host;
+my $user = $Pipeline_Conf::awe_mgrast_lookup_user;
+my $pass = $Pipeline_Conf::awe_mgrast_lookup_pass;
+my $table = $Pipeline_Conf::awe_mgrast_lookup_table;
+
+my $dbh = DBI->connect("DBI:mysql:$db;host=$host", $user, $pass) || die "Couldn't connect to database: ".DBI->errstr;
+my $str = "SELECT _id, job, awe_id, awe_url, status, submitted, last_update FROM $table";
+my $sth = $dbh->prepare($str) || die "Couldn't prepare statement: " . $dbh->errstr;
+$sth->execute() || die "Couldn't execute statement: " . $sth->errstr;
+while(my @row = $sth->fetchrow_array) {
+    my $db_id = $row[0];
+    my $job_num = $row[1];
+    my $awe_job_id = $row[2];
+    my $awe_url = $row[3];
+    my $status = $row[4];
+    my $submitted = $row[5];
+    my $last_update = $row[6];
+
+    my $awe_job_url = "http://".$awe_url."/job/".$awe_job_id;
+    my $ua = LWP::UserAgent->new();
+    my $get = $ua->get($awe_job_url);
+
+    unless ($get->is_success) {
+	print STDERR "Could not retrieve AWE job via url: $awe_job_url");
+	next;
+    }
+    my $json = new JSON();
+    my $res = $json->decode( $get->content );
+
+    if($res->{data}->{state} eq "completed") {
+        my $info_file = $Pipeline_Conf::global_job_dir."/$job_num/$job_num.info";
+        my $options_str = `grep -m 1 "^options=" $info_file`;
+        chomp $options_str;
+        my $file_type = "fna";
+        foreach my $set ( split("&", $foo) ) {
+            my ($opt, $val) = split("=", $set, 2);
+            if($opt eq 'file_type') {
+                $file_type = $val;
+            }
+        }
+        system("submit_stages -j $job_num -p awe_part_two -o \"awe_job_id=$awe_job_id&file_type=$file_type\"");
+    } else {
+        print "AWE job cannot be downloaded as it is in state: ".$res->{data}->{state});
+	my $str2 = "UPDATE $table SET last_update=now(), status='".$res->{data}->{state}."' WHERE _id = $db_id";
+	my $sth2 = $dbh->prepare($str2) || die "Couldn't prepare statement: " . $dbh->errstr;
+	$sth2->execute() || die "Couldn't execute statement: " . $sth2->errstr;
+	exit(1);
+    }
+}
