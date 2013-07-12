@@ -162,6 +162,7 @@ foreach my $req_file ('100.preprocess.passed.fna', '150.dereplication.passed.fna
     }
 }
 
+$log->info("Finished $stage_name on job: $job_num");
 
 exit(0);
 
