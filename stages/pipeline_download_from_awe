@@ -112,13 +112,13 @@ foreach my $task (@{$res->{data}->{tasks}}) {
     }
 }
 
-foreach my $req_file ('100.preprocess.passed.fna', '150.dereplication.passed.fna', '299.screen.passed.fna',
-                      '350.genecalling.coding.faa', '425.search.rna.fna', '440.cluster.rna97.fna',
-                      '440.cluster.rna97.mapping', '450.rna.sims', '550.cluster.aa90.faa',
-                      '550.cluster.aa90.mapping', '650.superblat.sims', '700.annotation.function.summary',
-                      '700.annotation.lca.summary', '700.annotation.md5.summary', '700.annotation.ontology.summary',
-                      '700.annotation.organism.summary', '700.annotation.sims.filter.seq', '700.annotation.sims.stats',
-                      '700.annotation.source.stats') {
+foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna', '150.dereplication.passed.fna',
+                      '150.dereplication.removed.fna', '299.screen.passed.fna', '350.genecalling.coding.faa',
+                      '425.search.rna.fna', '440.cluster.rna97.fna', '440.cluster.rna97.mapping',
+                      '450.rna.sims', '550.cluster.aa90.faa', '550.cluster.aa90.mapping',
+                      '650.superblat.sims', '700.annotation.function.summary', '700.annotation.lca.summary',
+                      '700.annotation.md5.summary', '700.annotation.ontology.summary', '700.annotation.organism.summary',
+                      '700.annotation.sims.filter.seq', '700.annotation.sims.stats', '700.annotation.source.stats') {
     unless(exists $filename_to_shock_info{$req_file}) {
         $log->error("Required file: $req_file is missing from AWE job output.");
         exit(1);
