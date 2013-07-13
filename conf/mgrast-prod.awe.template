@@ -93,7 +93,7 @@
             },
             {
                 "cmd": {
-                    "args": "-input=@#jobname.299.screen.passed.fna -output=#jobname.350.genecalling.coding.faa -fgs_type=#fgs_type",
+                    "args": "-input=@#jobname.299.screen.passed.fna -out_prefix=#jobname.350.genecalling.coding -fgs_type=#fgs_type",
                     "description": "gene calling", 
                     "name": "awe_genecalling.pl"
                 }, 
@@ -107,6 +107,10 @@
                 }, 
                 "outputs": {
                     "#jobname.350.genecalling.coding.faa": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    },
+                    "#jobname.350.genecalling.coding.fna": {
                         "host": "http://#shockurl",
                         "node": "-"
                     }
