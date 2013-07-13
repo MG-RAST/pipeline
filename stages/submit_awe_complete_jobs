@@ -51,6 +51,10 @@ while(my @row = $sth->fetchrow_array) {
             }
         }
         system("submit_stages -j $job_num -p awe_part_two -o \"awe_job_id=$awe_job_id&file_type=$file_type\"");
+	my $str2 = "DELETE FROM $table WHERE _id = $db_id";
+	my $sth2 = $dbh->prepare($str2) || die "Couldn't prepare statement: " . $dbh->errstr;
+	$sth2->execute() || die "Couldn't execute statement: " . $sth2->errstr;
+        print "Job $job_num submitted!\n";
     } else {
         print "AWE job cannot be downloaded as it is in state: ".$res->{data}->{state}."\n";
 	my $str2 = "UPDATE $table SET last_update=now(), status='".$res->{data}->{state}."' WHERE _id = $db_id";
