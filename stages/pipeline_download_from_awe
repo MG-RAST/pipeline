@@ -141,6 +141,11 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
     my $job_dir = $Pipeline_Conf::global_job_dir."/".$job_num;
     my $adir    = $job_dir."/analysis";
     my $saved_file = "$adir/$req_file";
+    if($req_file eq '700.annotation.sims.filter.seq' || $req_file eq '700.annotation.source.stats') {
+        my $tmp = $req_file;
+        $tmp =~ s/^700(.*)$/900$1/;
+        $saved_file = "$adir/$tmp";
+    }
     unless(open OUT, '>' . $saved_file) {
         $log->error("Could not create and save file: '$saved_file'");
         exit(1);
