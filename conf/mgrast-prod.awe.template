@@ -120,7 +120,7 @@
                      "output": "#jobname.350.genecalling.coding.faa"
                 },
                 "taskid": "3", 
-                "totalwork": 1
+                "totalwork": #totalwork
             },
             {   
                 "cmd": {
