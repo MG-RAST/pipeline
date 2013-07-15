@@ -143,7 +143,7 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
     my $saved_file = "$adir/$req_file";
     if($req_file eq '700.annotation.sims.filter.seq' || $req_file eq '700.annotation.source.stats') {
         my $tmp = $req_file;
-        $tmp =~ s/^700(.*)$/900$1/;
+        $tmp =~ s/^700\.annotation(.*)$/900.loadDB$1/;
         $saved_file = "$adir/$tmp";
     }
     unless(open OUT, '>' . $saved_file) {
