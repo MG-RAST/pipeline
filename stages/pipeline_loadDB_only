@@ -20,17 +20,19 @@ my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 my $job_num      = "";
 my $fasta        = "";
 my $db_reload    = 0;
-my $ver_db       = $Pipeline_Conf::ach_annotation_ver;
+my $annot_db_ver = $Pipeline_Conf::ach_annotation_ver;
+my $sims_db_ver  = $Pipeline_Conf::ach_sequence_ver;
 my $ver          = "";
 my $help         = "";
 my $options      = GetOptions ("job=i" => \$job_num,
                                "db_reload!" => \$db_reload,
-                               "ver_db=s" => \$ver_db,
+                               "annot_db_ver=s" => \$annot_db_ver,
+                               "sims_db_ver=s" => \$sims_db_ver,
                                "version!" => \$ver,
                                "help!" => \$help
                               );
 
-my $usage = "Usage: $0 -j <job number> [-d (boolean:reload db) --ver_db <db version>]\nNOTE: No individual summary file is required, but at least one is required to run this script.";
+my $usage = "Usage: $0 -j <job number> [-d (boolean:reload db) --annot_db_ver <annotation db version> --sims_db_ver <sims db version>]\nNOTE: No individual summary file is required, but at least one is required to run this script.";
 
 if ( $ver ) {
   print STDERR "$stage_name - $version\n";
@@ -45,7 +47,7 @@ my $raw_dir                = $job_dir."/raw";
 my $proc_dir               = $job_dir."/proc";
 my $stage_dir              = $proc_dir."/".$stage_id.".".$stage_name;
 my $results_dir            = $job_dir."/".$Pipeline_Conf::results_dir;
-my $params                 = "--verbose --seq-db-version ".$ver_db;
+my $params                 = "--verbose --seq-db-version ".$annot_db_ver;
 my $dboptions              = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user." --dbtable_range ".$Pipeline_Conf::analysis_db_table_range;
 my $hostname                = `hostname`;
 chomp $hostname;
@@ -104,8 +106,10 @@ my $outf = "$stage_dir/run_load_summary.out";
 system("load_summary2db $params $dboptions $summary_file_options $reload --job $job_num >> $outf 2> $err_file") == 0 or fail($log, "load_summary2db ".$message);
 
 # new annotations loaded, add version to JobAttributes
-Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $ver_db]]);
-Pipeline::set_job_attributes($job_num, [['m5rna_annotation_version', $ver_db]]);
+Pipeline::set_job_attributes($job_num, [['m5nr_sims_version', $sims_db_ver]]);
+Pipeline::set_job_attributes($job_num, [['m5rna_sims_version', $sims_db_ver]]);
+Pipeline::set_job_attributes($job_num, [['m5nr_annotation_version', $annot_db_ver]]);
+Pipeline::set_job_attributes($job_num, [['m5rna_annotation_version', $annot_db_ver]]);
 
 # update jobcache stage status
 Pipeline::update_stage_info($job_num, $stage_name, "completed");
