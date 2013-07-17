@@ -25,7 +25,6 @@ my $index_ids = { a_thaliana            => 201,
 		      };
 
 # options
-my $job_num    = "000";
 my $input_fasta = "input.fasta";
 my $fasta_file = "";
 my $index      = "";
@@ -34,8 +33,7 @@ my $ver     = "";
 my $help    = "";
 my $final_output = "default.screened.fna";
 my $run_bowtie = 1;
-my $options = GetOptions ("job=i"        => \$job_num,
-			  "input=s"      => \$fasta_file,
+my $options = GetOptions ("input=s"      => \$fasta_file,
 			  "output=s"     => \$final_output,
 			  "index=s"    => \$index,
 			  "threads=i"    => \$threads,

@@ -30,7 +30,7 @@ my $sort_dir = getcwd();
 my $out_prefix = $stage_id;
 
 # options
-my $job_num = "";
+my $job_num = 0;
 my $raw_input="";
 my $aa_sims  = "";
 my $rna_sims = "";
@@ -54,8 +54,8 @@ my $options = GetOptions ("job=i"    => \$job_num,
 my $prefix_aa = $out_prefix.".aa";
 my $prefix_rna = $out_prefix.".rna";
 
-if ($job_num=="") {
-    print  "Error: job number is needed\n";
+if ($job_num == 0) {
+    print  "Error: job number (INT) is needed\n";
     print_usage();
     exit __LINE__;
 }
@@ -104,7 +104,7 @@ print "Finished $stage_name on job $job_num\n";
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_annotate.pl -job=<job number>
+    print "USAGE: awe_annotate.pl -job=<job number (INT)>
                                   -raw=<raw input fasta or fastq>
                                   -aa_sims=<input aa sims file>
 				  -rna_sims=<input rna sims file>
