@@ -7,8 +7,27 @@ no warnings('once');
 use DBI;
 use JSON;
 use LWP::UserAgent;
+use Pipeline;
 use Pipeline_Conf;
 umask 000;
+
+# Check that no other instance of this script is already running.
+my $running_instance = 0;
+foreach my $proc (`ps awux`) {
+  chomp $proc;
+  if($proc =~ /perl/ && $proc =~ /$0/) {
+    my $proc_id = $proc;
+    $proc_id =~ s/^\S+\s+(\S+).*/$1/;
+    if($proc_id != $$) {
+      $running_instance = 1;
+    }
+  }
+}
+
+if($running_instance == 1) {
+  print STDERR "There is a running instance of this script already.  Don't want to run multiple instances at once.\n";
+  exit(1);
+}
 
 my $db = $Pipeline_Conf::awe_mgrast_lookup_db;
 my $host = $Pipeline_Conf::awe_mgrast_lookup_host;
@@ -39,6 +58,18 @@ while(my @row = $sth->fetchrow_array) {
     my $json = new JSON();
     my $res = $json->decode( $get->content );
 
+    foreach my $task (@{$res->{data}->{tasks}}) {
+        if($task->{state} ne "init") {
+            Pipeline::update_stage_info($job_num, $task->{cmd}->{description}, $task->{state});
+        }
+        if($task->{cmd}->{description} eq "cluster_aa90" && $task->{state} eq "completed") {
+            Pipeline::update_stage_info($job_num, "loadAWE", "completed");
+        }
+        if($task->{cmd}->{description} eq "annotation" && $task->{state} eq "completed") {
+            Pipeline::update_stage_info($job_num, "sims", "completed");
+        }
+    }
+
     if($res->{data}->{state} eq "completed") {
         my $info_file = $Pipeline_Conf::global_job_dir."/$job_num/$job_num.info";
         my $options_str = `grep -m 1 "^options=" $info_file`;
@@ -60,6 +91,5 @@ while(my @row = $sth->fetchrow_array) {
 	my $str2 = "UPDATE $table SET last_update=now(), status='".$res->{data}->{state}."' WHERE _id = $db_id";
 	my $sth2 = $dbh->prepare($str2) || die "Couldn't prepare statement: " . $dbh->errstr;
 	$sth2->execute() || die "Couldn't execute statement: " . $sth2->errstr;
-	exit(1);
     }
 }
