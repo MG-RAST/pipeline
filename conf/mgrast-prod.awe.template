@@ -67,7 +67,7 @@
             {
                 "cmd": {
                     "args": "-input=@#jobname.150.dereplication.passed.fna -output=#jobname.299.screen.passed.fna -index=#screen_indexes -bowtie=#bowtie",
-                    "description": "bowtie screen", 
+                    "description": "screen", 
                     "name": "awe_bowtie_screen.pl"
                 }, 
                 "dependsOn": ["1"], 
@@ -94,7 +94,7 @@
             {
                 "cmd": {
                     "args": "-input=@#jobname.299.screen.passed.fna -out_prefix=#jobname.350.genecalling.coding -fgs_type=#fgs_type",
-                    "description": "gene calling", 
+                    "description": "genecalling", 
                     "name": "awe_genecalling.pl"
                 }, 
                 "dependsOn": ["2"], 
@@ -125,7 +125,7 @@
             {   
                 "cmd": {
                     "args": "-input=@#jobname.350.genecalling.coding.faa --output=#jobname.550.cluster.aa90.faa -aa -pid=#aa_pid",
-                    "description": "aa clustering",
+                    "description": "cluster_aa90",
                     "name": "awe_cluster_parallel.pl"
                 },
                 "dependsOn": ["3"],
@@ -157,7 +157,7 @@
                 "cmd": {
                     "name": "awe_blat.py",
                     "args": "--input=@#jobname.550.cluster.aa90.faa --output=#jobname.650.superblat.sims", 
-                    "description": "simularity search using blat"
+                    "description": "aa sims"
                 }, 
                 "dependsOn": ["4"],  
                 "inputs": {
@@ -239,7 +239,7 @@
                 "cmd": {
                     "name": "awe_rna_blat.sh",
                     "args": "-i @#jobname.440.cluster.rna97.fna -o #jobname.450.rna.sims",
-                    "description": "simularity search using blat"
+                    "description": "rna sims"
                 }, 
                 "dependsOn": ["7"],  
                 "inputs": {
