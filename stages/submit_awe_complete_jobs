@@ -60,6 +60,5 @@ while(my @row = $sth->fetchrow_array) {
 	my $str2 = "UPDATE $table SET last_update=now(), status='".$res->{data}->{state}."' WHERE _id = $db_id";
 	my $sth2 = $dbh->prepare($str2) || die "Couldn't prepare statement: " . $dbh->errstr;
 	$sth2->execute() || die "Couldn't execute statement: " . $sth2->errstr;
-	exit(1);
     }
 }
