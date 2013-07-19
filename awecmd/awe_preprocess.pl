@@ -49,27 +49,7 @@ my $removed_seq = $out_prefix.".removed.fna";
 my $cmd_options = "";
 
 # get filter options
-# default => filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5
-if (length($filter_options)==0) {
-  if ( $input_file =~ /\.fn?a$|\.fasta$/i ) {
-    my @out = `seq_length_stats.py --input=$input_file  | cut -f2`;
-    chomp @out;
-    my $mean = $out[2];
-    my $stdv = $out[3];
-    my $min  = int( $mean - (2 * $stdv) );
-    my $max  = int( $mean + (2 * $stdv) );
-    if ($min < 0) { $min = 0; }
-    $filter_options = "filter_ln:min_ln=".$min.":max_ln=".$max.":filter_ambig:max_ambig=5";
-  }
-  elsif ( $input_file =~ /\.(fq|fastq)$/i ) {
-    $filter_options = "min_qual=15:max_lqb=5";
-  }
-  else {
-    $filter_options = "skip";
-  }
-}
-
-unless ( $filter_options =~ /^skip$/i ) {
+if($input_file =~ /\.fn?a$|\.fasta$/i || $input_file =~ /\.(fq|fastq)$/i) {
   for my $ov (split ":", $filter_options) {
     if ($ov =~ /=/) {
       my ($option, $value) = split "=", $ov;
