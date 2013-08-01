@@ -46,18 +46,46 @@ if (length($out_file)>0) { #for compatibility with old pipeline templates (-outp
 
 my $removed_seq = $out_prefix.".removed.fna";
 
-my $cmd_options = "";
 
 # get filter options
 if($input_file =~ /\.fn?a$|\.fasta$/i || $input_file =~ /\.(fq|fastq)$/i) {
+  my %value_opts = ();
+  my %boolean_opts = ();
   for my $ov (split ":", $filter_options) {
     if ($ov =~ /=/) {
       my ($option, $value) = split "=", $ov;
-      $cmd_options .= "-".$option." ".$value." ";
+      $value_opts{$option} = $value;
     } else {
-      $cmd_options .= "-".$ov." ";
+      $boolean_opts{$ov} = 1;
     }
   }
+
+  # if filter_ln flag is set but min_ln and max_ln are missing, run seq_length_stats.py -f to get those values.
+  if(exists $boolean_opts{"filter_ln"} && (!exists $value_opts{"min_ln"} || !exists $value_opts{"max_ln"})) {
+    foreach my $line (`seq_length_stats.py -i $input_file -f`) {
+      chomp $line;
+      if($line =~ /^length_min\s+.*$/) {
+        my $value = $line;
+        $value =~ s/^\S+\s+(\S+)/$1/;
+        $value_opts{"min_ln"} = $value;
+      } elsif($line =~ /^length_max\s+.*$/) {
+        my $value = $line;
+        $value =~ s/^\S+\s+(\S+)/$1/;
+        $value_opts{"max_ln"} = $value;
+      }
+    }
+  }
+
+  my $cmd_options = "";
+  foreach my $option (keys %value_opts) {
+    my $value = $value_opts{$option};
+    $cmd_options .= "-".$option." ".$value." ";
+  }
+
+  foreach my $option (keys %boolean_opts) {
+    $cmd_options .= "-".$option." ";
+  }
+
   # run cmd
   print "$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options";
   system("$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
