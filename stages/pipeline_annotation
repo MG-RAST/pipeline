@@ -141,7 +141,7 @@ if(-e "$raw_dir/$job_num.abundance") {
   $assembly_abun_opt = "--abun_file $raw_dir/$job_num.abundance";
 }
 
-system("sims2annotation --job_num $job_num $input_file_str --sort_dir $sort_dir --run_dir $run_dir --prefix $prefix --ver_db $ver_db --mem_host $mem_host --mem_key $mem_key --sort_mem $sort_mem --procs $procs $assembly_abun_opt") == 0 or fail($log, "sims2annotation: ".$message);
+system("sims2annotation --job_id $job_num $input_file_str --sort_dir $sort_dir --run_dir $run_dir --prefix $prefix --ver_db $ver_db --mem_host $mem_host --mem_key $mem_key --sort_mem $sort_mem --procs $procs $assembly_abun_opt") == 0 or fail($log, "sims2annotation: ".$message);
 
 # move files / cleanup
 move("$run_dir/$prefix.sims.stats", "$results_dir/$prefix.sims.stats") or fail($log, "Failed move: $run_dir/$prefix.sims.stats - $!");
