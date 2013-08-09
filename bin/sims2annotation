@@ -6,7 +6,7 @@ use Getopt::Long;
 use Cache::Memcached;
 
 my %opts = ();
-GetOptions( \%opts, "job_num=i",
+GetOptions( \%opts, "job_id=s",
                     "fasta=s",
                     "aa_sims_file=s",
                     "rna_sims_file=s",
@@ -28,7 +28,7 @@ my $sort_mem      = 10;
 my $procs         = 4;
 my $max_seq       = 500000;
 
-my $usage = "Usage: $0 --job <job number> --fasta <raw input fasta file> --aa_sims_file <aa_sims_file> --rna_sims_file <rna_sims_file> --clust_aa <protein cluster file> --map_rna <rna mapping file> --sort_dir <sort_dir> --run_dir <run_dir> --prefix <prefix> --ver_db <m5nr db version> --mem_host <memcache_host> --mem_key <memcache_key (default $mem_key)> --sort_mem <sort memory in GB (default $sort_mem)> --procs <# processors for sort (default $procs) --abun_file <assembly abundance file (default none)>\n";
+my $usage = "Usage: $0 --job <job identifier> --fasta <raw input fasta file> --aa_sims_file <aa_sims_file> --rna_sims_file <rna_sims_file> --clust_aa <protein cluster file> --map_rna <rna mapping file> --sort_dir <sort_dir> --run_dir <run_dir> --prefix <prefix> --ver_db <m5nr db version> --mem_host <memcache_host> --mem_key <memcache_key (default $mem_key)> --sort_mem <sort memory in GB (default $sort_mem)> --procs <# processors for sort (default $procs) --abun_file <assembly abundance file (default none)>\n";
 
 if ($opts{help}) {
   print STDERR "$usage\n";
@@ -36,7 +36,7 @@ if ($opts{help}) {
 }
 
 my $invalid_input = 0;
-foreach my $opt ('job_num', 'fasta', 'sort_dir', 'run_dir', 'prefix', 'ver_db', 'mem_host') {
+foreach my $opt ('job_id', 'fasta', 'sort_dir', 'run_dir', 'prefix', 'ver_db', 'mem_host') {
   unless(exists $opts{$opt}) {
     print STDERR "ERROR: Required input parameter '$opt' is not specified.\n";
     $invalid_input = 1;
@@ -78,7 +78,7 @@ unless($invalid_input == 0) {
   exit(1);
 }
 
-my $job_num       = $opts{job_num};
+my $job_id        = $opts{job_id};
 my $fasta         = $opts{fasta};
 my $aa_sims_file  = (exists $opts{aa_sims_file}) ? $opts{aa_sims_file} : "";
 my $rna_sims_file = (exists $opts{rna_sims_file}) ? $opts{rna_sims_file} : "";
@@ -236,7 +236,7 @@ foreach my $info (@info_set) {
   unless ($input && (-s $input)) { next; }
   $outf = "$run_dir/run_$type.out";
   &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k $pos,$pos$sort_type -o $input.$type $input", 1);
-  &run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $run_dir/$prefix.$type.summary >> $outf 2> $err_file");
+  &run_system_command("expanded_sims2overview $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $run_dir/$prefix.$type.summary >> $outf 2> $err_file");
   # clean tmp file
   system("rm $input.$type");
 }
@@ -249,7 +249,7 @@ if ($ontol_expand && (-s $ontol_expand)) {
 } else {
   &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 8,8 -n -o $src_expand $md5_expand", 1);
 }
-&run_system_command("expanded_sims2overview $assembled_opt --job $job_num --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file");
+&run_system_command("expanded_sims2overview $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file");
 
 my $mem_cache = new Cache::Memcached { 'servers' => [$mem_host], 'debug' => 0, 'compress_threshold' => 10_000 };
 unless ($mem_cache && ref($mem_cache)) {

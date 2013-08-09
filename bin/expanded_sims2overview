@@ -27,7 +27,7 @@ my $options  = { md5      => 1,
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { &usage(); }
 if ( ! GetOptions( "verbose!"           => \$verbose,
                    "m5nr-version:i"     => \$version,
-                   "job=i"              => \$jobID,
+                   "job=s"              => \$jobID,
                    "abundance_file=s"   => \$abun_file,
 		           "expanded_sims_in=s" => \$in_file,
 		           "summary_sims_out=s" => \$out_file,
