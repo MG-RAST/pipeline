@@ -84,6 +84,26 @@
                         "node": "-"
                     }
                 },
+                "predata": {
+                    "h_sapiens_asm.1.ebwt":{
+                        "url":"http://140.221.84.150:8000/node/0d3e3406-36ea-4ae7-b943-279afb51c7d7?download"
+                    },
+                    "h_sapiens_asm.2.ebwt":{
+                        "url":"http://140.221.84.150:8000/node/8595fbb8-f0f7-4e4d-b8a5-e1064493a4d3?download"
+                    },
+                    "h_sapiens_asm.3.ebwt":{
+                        "url":"http://140.221.84.150:8000/node/21a545e6-d802-4153-a5b7-943df62e92f0?download"
+                    },
+                    "h_sapiens_asm.4.ebwt":{
+                        "url":"http://140.221.84.150:8000/node/2070b750-2159-46d4-b42b-fa717ba4a635?download"
+                    },
+                    "h_sapiens_asm.rev.1.ebwt":{
+                        "url":"http://140.221.84.150:8000/node/0a79b7b3-a362-4f85-8b91-44bb3f4a25c5?download"
+                    },
+                    "h_sapiens_asm.rev.2.ebwt":{
+                        "url":"http://140.221.84.150:8000/node/920d71f9-7f15-4ceb-9a70-83151059026b?download"
+                    }
+                },
                 "partinfo": {
                      "input": "#jobname.150.dereplication.passed.fna",
                      "output": "#jobname.299.screen.passed.fna"
@@ -173,6 +193,14 @@
                         "node": "-"
                     }
                 },
+                "predata": {
+                    "md5nr.1":{
+                        "url":"http://140.221.84.150:8000/node/88bbdfd4-d412-45b3-83c8-e97d027871a9?download"
+                    },
+                    "md5nr.2":{
+                        "url":"http://140.221.84.150:8000/node/08956b07-0abc-4e4c-bb08-e2581744e30e?download"
+                    }
+                },
                 "partinfo": {
                      "input": "#jobname.550.cluster.aa90.faa",
                      "output": "#jobname.650.superblat.sims"
@@ -184,7 +212,7 @@
             {
                 "cmd": {
                     "name": "awe_rna_search.pl",
-                    "args": "-input=@#jobname.100.preprocess.passed.fna -output=#jobname.425.search.rna.fna -rna_nr=#md5rna_clust",
+                    "args": "-input=@#jobname.100.preprocess.passed.fna -output=#jobname.425.search.rna.fna -rna_nr=md5rna.clust",
                     "description": "rna detection"
                 }, 
                 "dependsOn": ["0"],  
@@ -194,7 +222,12 @@
                         "node": "-",
                         "origin": "0"
                     }
-                }, 
+                },
+                "predata": {
+                    "md5rna.clust":{
+                        "url":"http://140.221.84.150:8000/node/5df4e719-1818-4211-9bff-e94145a65da0?download"
+                    }
+                },
                 "outputs": {
                     "#jobname.425.search.rna.fna": {
                         "host": "http://#shockurl",
@@ -253,6 +286,11 @@
                     "#jobname.450.rna.sims": {
                         "host": "http://#shockurl",
                         "node": "-"
+                    }
+                },
+                "predata": {
+                    "md5rna":{
+                        "url":"http://140.221.84.150:8000/node/5ff0fd4f-90ed-4086-80a6-5a1cb85503a9?download"
                     }
                 },
                 "partinfo": {

@@ -2,7 +2,7 @@
 
 # usage: awe_rna_blat.sh -i  <input_fasta> [-o <output_file>]
 
-RNA_NR=md5nr.clust
+RNA_NR=md5rna
 OUTPUT=450.rna.sim
 # get args
 while getopts i:o:n option; do
