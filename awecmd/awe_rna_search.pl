@@ -17,7 +17,7 @@ my $runcmd   = "parallel_search.py";
 # options
 my $job_num = "";
 my $fasta   = "";
-my $rna_nr  = "md5nr.clust";
+my $rna_nr  = "md5rna.clust";
 my $proc    = 8;
 my $size    = 100;
 my $ident   = 70;

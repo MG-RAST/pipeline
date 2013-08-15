@@ -16,7 +16,7 @@ my $stage_id = "440";
 # options
 my $job_num = "";
 my $fasta   = "";
-my $rna_nr  = "md5nr.clust";
+my $rna_nr  = "md5rna";
 my $proc    = 8;
 my $size    = 100;
 my $ident   = 70;
