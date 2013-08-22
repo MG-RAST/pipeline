@@ -149,6 +149,7 @@ if (@error > 0) {
   foreach my $line (@error) {
     print FH $line."\n";		
   }
+  print FH "file_checksum\t$file_md5\n";
 } else {
   foreach my $line (@stats) {
     print FH $line."\n";		
