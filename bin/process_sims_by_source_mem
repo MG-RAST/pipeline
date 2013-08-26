@@ -115,8 +115,9 @@ while (my $line = <INFILE>) {
   chomp $line;
   my ($frag, $md5, @rest) = split(/\t/, $line);
   my $score = $rest[-1];
+  my $eval = $rest[-2] * 1.0;
 
-  unless ($line && $frag && (length($md5) == 32) && (scalar(@rest) == 10)) { next; }
+  unless ($line && $frag && (length($md5) == 32) && (scalar(@rest) == 10) && ($eval <= 0.001)) { next; }
   if ($curr eq '') { $curr = $frag; }
   
   # get top hits for each fragment
