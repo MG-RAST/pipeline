@@ -130,13 +130,6 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
     my $shock_url = "$host/node/$node";
 
     my $shock_download_url = "$shock_url?download";
-    my $get = $ua->get($shock_download_url);
-    if ($get->is_success) {
-        $log->info("Retrieving $req_file: ".length($get->decoded_content)." bytes of data.");
-    } else {
-        $log->error("Could not download $req_file via Shock url: $shock_download_url. Response error: " . $get->status_line);
-        exit(1);
-    }
  
     my $job_dir = $Pipeline_Conf::global_job_dir."/".$job_num;
     my $adir    = $job_dir."/analysis";
@@ -146,15 +139,31 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
         $tmp =~ s/^700\.annotation(.*)$/900.loadDB$1/;
         $saved_file = "$adir/$tmp";
     }
-    unless(open OUT, '>' . $saved_file) {
-        $log->error("Could not create and save file: '$saved_file'");
+
+    $log->info("Downloading file: $saved_file...\n");
+
+    my $content = undef;
+    eval {
+        my $get = undef;
+        open(OUTF, ">$saved_file") || die "Can not open file $saved_file: $!\n";
+        $get = $ua->get( $shock_download_url,
+                         ':read_size_hint' => 8192,
+                         ':content_cb' => sub{ my ($chunk) = @_; print OUTF $chunk; } );
+        close OUTF;
+        $content = $get->content;
+    };
+    
+    if ($@) {
+        $log->error("unable to connect to Shock ".$shock_download_url);
+        exit(1);
+    } elsif (ref($content) && exists($content->{error}) && $content->{error}) {
+        $log->error("unable to GET file $node from Shock: ".$content->{error}[0]);
+        exit(1);
+    } elsif (! -s $saved_file) {
+        $log->error("unable to download to $saved_file: $!");
         exit(1);
     }
-     
-    binmode(OUT, ":utf8");
-    print OUT $get->decoded_content;
-    close OUT;
-     
+
     $log->info("Saved file: $saved_file");
 
     my $md5 = file_md5_hex( $saved_file );
