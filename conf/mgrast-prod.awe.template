@@ -4,6 +4,7 @@
             "name": "#jobname",
             "project": "#project",
             "user": "#user",
+            "xref": "#xref",
             "clientgroups":"#clientgroups"
         }, 
         "tasks": [
