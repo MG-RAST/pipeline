@@ -38,6 +38,7 @@ my $report = {};
 my @error  = ();
 my @stats  = `seq_length_stats.py -i '$dir/$file'$filetype -s 2>&1`;
 chomp @stats;
+my $file_md5 = '';
 
 foreach my $line (@stats) {
   if ($line =~ /^\[error\]\s+(.*)/) {
@@ -107,7 +108,7 @@ if (@error == 0) {
   push @stats, "sequence_content\t$seq_content";
 
   # md5sum
-  my $file_md5 = `md5sum '$dir/$file'`;
+  $file_md5 = `md5sum '$dir/$file'`;
   chomp $file_md5;
   $file_md5 =~ s/^(\S+).*/$1/;
   push @stats, "file_checksum\t$file_md5";
@@ -149,6 +150,7 @@ if (@error > 0) {
   foreach my $line (@error) {
     print FH $line."\n";		
   }
+  print FH "file_checksum\t$file_md5\n";
 } else {
   foreach my $line (@stats) {
     print FH $line."\n";		
