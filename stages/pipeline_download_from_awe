@@ -32,6 +32,8 @@ for my $s (@{$Pipeline_Conf::pipeline->{'awe_part_two'}}){
 }
 my $stage_id = $stage->{id};
 
+my $DOWNLOAD_RETRY_MAX = 1;
+
 # options
 my $job_num = "";
 my $awe_url = "";
@@ -42,7 +44,7 @@ my $options = GetOptions ("job_num=i"     => \$job_num,
                           "awe=s"         => \$awe_url,
                           "awe_job_id=s"  => \$awe_job_id,
                           "h"  => \$help,
-			 );
+                         );
 
 if ($help) {
     print_usage();
@@ -140,46 +142,109 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
         $saved_file = "$adir/$tmp";
     }
 
-    $log->info("Downloading file: $saved_file...\n");
+    my $retry_count = 0;
+    while($retry_count <= $DOWNLOAD_RETRY_MAX) {
+        $log->info("Downloading file: $saved_file...\n");
 
-    my $content = undef;
-    eval {
-        my $get = undef;
-        open(OUTF, ">$saved_file") || die "Can not open file $saved_file: $!\n";
-        $get = $ua->get( $shock_download_url,
-                         ':read_size_hint' => 8192,
-                         ':content_cb' => sub{ my ($chunk) = @_; print OUTF $chunk; } );
-        close OUTF;
-        $content = $get->content;
-    };
-    
-    if ($@) {
-        $log->error("unable to connect to Shock ".$shock_download_url);
-        exit(1);
-    } elsif (ref($content) && exists($content->{error}) && $content->{error}) {
-        $log->error("unable to GET file $node from Shock: ".$content->{error}[0]);
-        exit(1);
-    } elsif (! -s $saved_file) {
-        $log->error("unable to download to $saved_file: $!");
-        exit(1);
-    }
+        my $content = undef;
+        eval {
+            my $get = undef;
+            open(OUTF, ">$saved_file") || die "Can not open file $saved_file: $!\n";
+            $get = $ua->get( $shock_download_url,
+                             ':read_size_hint' => 8192,
+                             ':content_cb' => sub{ my ($chunk) = @_; print OUTF $chunk; } );
+            close OUTF;
+            $content = $get->content;
+        };
 
-    $log->info("Saved file: $saved_file");
+        my $error = "";
+        if ($@) {
+            $error = "unable to connect to Shock ".$shock_download_url;
+        } elsif (ref($content) && exists($content->{error}) && $content->{error}) {
+            $error = "unable to GET file $node from Shock: ".$content->{error}[0];
+        } elsif (! -s $saved_file) {
+            $error = "unable to download to $saved_file: $!";
+        }
 
-    my $md5 = file_md5_hex( $saved_file );
-    my $shock_md5 = &get_shockfile_md5($shock_url);
-    if($shock_md5 eq "") {
-        $log->error("Could not retrieve md5 checksum from Shock url: $shock_url for file $saved_file");
-        exit(1);
-    } elsif($shock_md5 ne $md5) {
-        $log->error("md5 checksum for downloaded file $saved_file did not match that in Shock ($shock_url)");
-        exit(1);
+        my $state = &retry_exit_or_continue($retry_count, $error);
+        if($state == 1) {
+            ++$retry_count;
+            next;
+        } elsif($state == 2) {
+            exit(1);
+        }
+
+        $log->info("Saved file: $saved_file");
+
+        my $size = -s $saved_file;
+        my $shock_size = &get_shockfile_size($shock_url);
+        if($shock_size eq "") {
+            $log->error("Could not retrieve file size from Shock url: $shock_url for file $saved_file");
+            exit(1);
+        } elsif($size != $shock_size) {
+            $log->error("File size for downloaded file $saved_file did not match that in Shock ($shock_url)");
+            exit(1);
+        }
+
+        $state = &retry_exit_or_continue($retry_count, $error);
+        if($state == 1) {
+            ++$retry_count;
+            next;
+        } elsif($state == 2) {
+            exit(1);
+        }
+
+        my $md5 = file_md5_hex( $saved_file );
+        my $shock_md5 = &get_shockfile_md5($shock_url);
+        if($shock_md5 eq "") {
+            $log->error("Could not retrieve md5 checksum from Shock url: $shock_url for file $saved_file");
+            exit(1);
+        } elsif($shock_md5 ne $md5) {
+            $log->error("md5 checksum for downloaded file $saved_file did not match that in Shock ($shock_url)");
+            exit(1);
+        }
+
+        $state = &retry_exit_or_continue($retry_count, $error);
+        if($state == 1) {
+            ++$retry_count;
+            next;
+        } elsif($state == 2) {
+            exit(1);
+        }
+
+        # If we've reached this point, then the download was successful
+        $log->info("Success, downloaded file: $saved_file matched the byte size and md5 checksum in Shock.");
+        last;
     }
 }
 
 $log->info("Finished $stage_name on job: $job_num");
 
 exit(0);
+
+sub retry_exit_or_continue {
+    my ($count, $err_msg) = @_;
+    if($err_msg ne "" && $count < $DOWNLOAD_RETRY_MAX) {
+        $log->warn("$err_msg, will retry download.");
+        return 1;
+    } elsif($err_msg ne "" && $count == $DOWNLOAD_RETRY_MAX) {
+        $log->error("$err_msg, met maximum number of retries ($DOWNLOAD_RETRY_MAX), exiting.");
+        return 2;
+    }
+    return 0;
+}
+
+sub get_shockfile_size {
+    my ($shock_url) = @_;
+    my $ua = LWP::UserAgent->new();
+    my $get = $ua->get($shock_url);
+    unless ($get->is_success) {
+        return "";
+    }
+    my $json = new JSON();
+    my $res = $json->decode( $get->content );
+    return $res->{data}->{file}->{size};
+}
 
 sub get_shockfile_md5 {
     my ($shock_url) = @_;
