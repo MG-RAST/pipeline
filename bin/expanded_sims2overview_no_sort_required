@@ -371,14 +371,23 @@ sub print_source_stats {
         return;
     }
 
-    foreach my $src (keys %{$data->{eval}}) {
-        print "$src";
+    foreach my $src (sort {$a<=>$b} keys %{$data->{eval}}) {
+        print OUTFILE "$src";
         foreach my $e_bin (@thresholds_eval) {
-            print "\t".$data->{eval}{$src}{$e_bin};
+            if(exists $data->{eval}{$src}{$e_bin}) {
+                print OUTFILE "\t".$data->{eval}{$src}{$e_bin};
+            } else {
+                print OUTFILE "\t0";
+            }
         }
         foreach my $i_bin (@thresholds_ident) {
-            print "\t".$data->{ident}{$src}{$i_bin};
+            if(exists $data->{ident}{$src}{$i_bin}) {
+                print OUTFILE "\t".$data->{ident}{$src}{$i_bin};
+            } else {
+                print OUTFILE "\t0";
+            }
         }
+        print OUTFILE "\n";
     }
 }
 
