@@ -151,7 +151,7 @@ while(my $line=<INFILE>) {
             $frag_keys{$md5} = 1;
         }
     } elsif($select eq 'lca') {
-        unless ($fid) { next; }
+        unless($fid) { next; }
         # In this case the $fid is actually the LCA, and the $oid is the level
         my $lca = $fid;
         my $level = $oid;
@@ -186,7 +186,7 @@ while(my $line=<INFILE>) {
         $data->{$lca}{i_sos} += $abun * ($i_avg * $i_avg);
         $data->{$lca}{level} = $level;
     } elsif($select eq 'function') {
-        unless ($fid) { next; }
+        unless($fid) { next; }
         if($frag ne $prev_frag) {
             %frag_keys = ();
         }
@@ -204,7 +204,7 @@ while(my $line=<INFILE>) {
             $frag_keys{$fid}{$source} = 1;
         }
     } elsif(($select eq "organism") || ($select eq "ontology")) {
-        unless ($oid) { next; }
+        unless($oid) { next; }
         if($frag ne $prev_frag) {
             %frag_keys = ();
         }
@@ -235,6 +235,21 @@ while(my $line=<INFILE>) {
             }
         }
     } elsif($select eq 'source') {
+        unless($source) { next; }
+        my $eval_exp = &get_exponent($eval);
+        my $abun = &get_abundance($frag);
+        my $e_bin = &get_e_bin($eval_exp);
+        my $i_bin = &get_i_bin($ident);
+        if($e_bin eq "error") {
+            print "ERROR, invalid e-value exponent: $eval_exp. Exiting.\n";
+            exit(1);
+        }
+        if($i_bin eq "error") {
+            print "ERROR, invalid identity e-value: $ident. Exiting.\n";
+            exit(1);
+        }
+        $data->{eval}{$source}{$e_bin} += $abun;
+        $data->{ident}{$source}{$i_bin} += $abun;
     }
 
     $prev_frag = $frag;
@@ -352,6 +367,45 @@ sub print_type_stats {
 }
 
 sub print_source_stats {
+    unless(scalar(keys %{$data}) > 0) {
+        return;
+    }
+
+    foreach my $src (keys %{$data->{eval}}) {
+        print "$src";
+        foreach my $e_bin (@thresholds_eval) {
+            print "\t".$data->{eval}{$src}{$e_bin};
+        }
+        foreach my $i_bin (@thresholds_ident) {
+            print "\t".$data->{ident}{$src}{$i_bin};
+        }
+    }
+}
+
+sub get_e_bin {
+    my $val = shift;
+    if($val == 0) {
+        return $thresholds_eval[-1];
+    }
+    foreach my $eval (@thresholds_eval) {
+        if($val >= $eval) {
+            return $eval;
+        }
+    }
+    if($val < $thresholds_eval[-1]) {
+        return $thresholds_eval[-1];
+    }
+    return "error";
+}
+
+sub get_i_bin {
+    my $val = shift;
+    foreach my $ident (@thresholds_ident) {
+        if($val <= $ident) {
+            return $ident;
+        }
+    }
+    return "error";
 }
 
 # Round to nearest thousandth
@@ -415,6 +469,10 @@ sub get_abundance {
 
 sub get_exponent {
     my ($eval) = @_;
+
+    if($eval == 0) {
+        return 0;
+    }
 
     my ($m, $e) = split(/e/, $eval);
     unless ($e) {
