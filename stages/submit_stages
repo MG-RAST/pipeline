@@ -109,6 +109,22 @@ for my $s (@{$pipeline}) {
 }
 
 my $stage_tid = {};
+my $stage_names = {};
+for my $stage (@{$pipeline}) {
+  $stage_names->{$stage->{name}} = 1;
+}
+for my $stage (@{$pipeline}) {
+  if(defined $stage->{requires} and scalar @{$stage->{requires}}) {
+    foreach my $req (@{$stage->{requires}}) {
+      unless(exists $stage_names->{$req}) {
+        print STDERR "ERROR, required stage does not exist: $req\n";
+        print STDERR "Exiting.\n";
+        exit(1);
+      }
+    }
+  }
+}
+
 sub_pipeline($pipeline, $stage_tid);
 
 #$log->info("Successfully submitted stages for job: $job_num to cluster");
