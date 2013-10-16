@@ -38,9 +38,9 @@ unless ($header && $seq_num && $avg_len && $max_len) {
 }
 
 # (tech_guess, num_reads_guess, avg_length_guess, avg_length_stdev_guess, max_length_guess)
-my $guess = { 'Illumina'  => [0,0,0,0,0],
+my $guess = { 'illumina'  => [0,0,0,0,0],
 	      '454'       => [0,0,0,0,0],
-	      'Sanger'    => [0,0,0,0,0],
+	      'sanger'    => [0,0,0,0,0],
 	      'assembled' => [0,0,0,0,0],
 	      'other'     => [0,0,0,0,0]
 	    };
