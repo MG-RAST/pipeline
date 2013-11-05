@@ -3,7 +3,14 @@
 import os, sys, pprint, subprocess
 from optparse import OptionParser
 from Bio import SeqIO
-from qiime.pycogent_backports.uclust import Uclust
+try:
+    from qiime.pycogent_backports.uclust import Uclust
+except ImportError:
+    try:
+        from cogent.app.uclust import Uclust
+    except ImportError:
+        sys.stderr.write("Error: QIIME is missing\n")
+        sys.exit(1)
 
 usage = "usage: %prog [options]\n"
 

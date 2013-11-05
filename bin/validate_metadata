@@ -13,11 +13,13 @@ from openpyxl.reader.excel import load_workbook
 
 __doc__ = """Script to validate metadata from filled out MG-RAST v3 xlsx template"""
 
-MGRAST_URL = 'http://api.metagenomics.anl.gov/'
+MGRAST_URL = 'http://api.metagenomics.anl.gov/1/'
 BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
 BIOP_URL = 'http://bioportal.bioontology.org'
+ENVO_URL = 'http://www.ontobee.org/browser/rdf.php?o=ENVO&iri=http://purl.obolibrary.org/obo/'
 SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
 ONT_URL  = 'http://rest.bioontology.org/bioportal/ontologies/'
+CON_URL  = 'http://rest.bioontology.org/bioportal/concepts/'
 MGRASTID = 'mgrast_id'
 GEO_DIR  = {'N':1, 'S':-1, 'E':1, 'W':-1}
 ID_COL   = 0
@@ -70,13 +72,22 @@ def obj_from_url(url):
     try:
         req = urllib2.Request(url, headers={'Accept': 'application/json'})
         res = urllib2.urlopen(req)
-    except urllib2.HTTPError:
-        if (ONT_URL in url) or (SRCH_URL in url):
-            errorMsg("Bioportal (%s) inaccessable for ontology term lookup: can not connect to: %s\nPlease try again in 30 mins."%(BIOP_URL,url), 1)
+    except urllib2.HTTPError, error:
+        eobj = None
+        try:
+            eobj = json.loads(error.read())
+        except:
+            pass
+        if (ONT_URL in url) or (SRCH_URL in url) or (CON_URL in url):
+            # in this state, ID not found
+            if eobj and ('errorStatus' in eobj) and (eobj['errorStatus']['errorCode'] == 404):
+                return None
+            # some other unknown error
+            else:
+                errorMsg("Bioportal (%s) inaccessable for ontology term lookup: can not connect to: %s\nPlease try again in 30 mins."%(BIOP_URL,url), 1)
+        # mgrast error
         elif MGRAST_URL in url:
             errorMsg("MG-RAST API (%s) inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%(MGRAST_URL,url), 1)
-        else:
-            errorMsg("Malformed url, there was a problem connecting to this site: %s\nPlease try again in 30 mins."%url, 1)
     if not res:
         return None
     obj = json.loads(res.read())
@@ -106,7 +117,7 @@ def check_ontology(ontID, term, subID):
         params = {'conceptid':term, 'apikey':BIOP_KEY}
         if subID != 'none':
             params['subtreerootconceptid'] = subID
-        url = ONT_URL+ontver+'?'+urllib.urlencode(params)
+        url = CON_URL+ontver+'?'+urllib.urlencode(params)
         obj = obj_from_url(url)
         if obj and ('success' in obj):
             try:
@@ -655,11 +666,14 @@ def validate_ontology():
             oterm = validate_type('country', value, 'select') if 'country' in ONT_MAP[value][oset][0][1] else None
             if oterm is None:
                 oterm = check_ontology(oid, value, subid)
+            # ontology is missing
             if oterm is None:
                 for items in ONT_MAP[value][oset]:
                     (cat, key, name) = items
-                    url = "%s/visualize/%s"%(BIOP_URL, oid)
-                    url += "?conceptid=%s"%subid if subid != 'none' else ""
+                    if subid != 'none':
+                        url = ENVO_URL+subid.replace(':', '_')
+                    else:
+                        url = "%s/visualize/%s"%(BIOP_URL, oid)
                     add_invalid(cat, key, name, value, 'not found in %s ontology (%s): see %s'%(key, oid, url))
                     errorMsg("%s '%s' field '%s' value '%s' not found in ontology %s: see %s"%(cat, name, key, value, oid, url))
             elif oterm != value:

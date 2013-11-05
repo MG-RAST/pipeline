@@ -78,6 +78,11 @@ if ((-s $fasta_file) > 1024) {
   if ($ret != 0) {  #clust is skiptable if it fails, move input to output and make an empty mapping file
       system("cp $input_fasta $prefix.$fext");
       system("touch $prefix.mapping");
+  } else {
+     if ((-s $prefix.$fext) == 0) {
+        system("cp $input_fasta $prefix.$fext");
+        system("touch $prefix.mapping");
+     }
   }
 } else {
   # too small, skip the cluster step
