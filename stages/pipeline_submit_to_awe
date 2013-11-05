@@ -6,6 +6,7 @@
 #     -job_num=<job number, required>
 #     -upload=<input file that is local and to be uploaded, required>
 #     -pipeline=<path for pipeline job template, required>
+#     -pipeline_token=<globus token for authentication, required>
 #     -awe=<AWE server URL (ip:port), required>
 #     -shock=<Shock URL (ip:port), required>
 #     -mem_host=<memcache URL (ip:port), required>
@@ -22,14 +23,14 @@
 #     -screen_indexes=<default='h_sapiens_asm'>
 #     
 #Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
-#      Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
+#      Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -pipeline_token (if awe_pipeline_token not in Pipeline_Conf.pm, -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
 #      Optional options: -name, -user, -project, -cgroups, -totalwork_sm, -totalwork_lg, -lg_size, -bowtie, -dereplicate, -filter_options, -screen_indexes
 #      Operations:
 #               1. upload input file to shock
 #               2. create job script based on job template and available info
 #               3. submit the job json script to awe
 #               
-#Note: if awe_pipeline_template, awe_url (ip:port), shock_url (ip:port), and mem_host_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, -shock, and -mem_host are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.
+#Note: if awe_pipeline_template, awe_pipeline_token, awe_url (ip:port), shock_url (ip:port), and mem_host_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, -shock, and -mem_host are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.
 
 use strict;
 use warnings;
@@ -62,6 +63,7 @@ $vars{inputfile} = "";
 my $awe_url = "";
 $vars{shockurl} = "";
 $vars{mem_host} = "";
+my $pipeline_token = "";
 my $pipeline_template = "";
 $vars{jobname} ="default";
 $vars{user} = "mgrastprod";
@@ -80,6 +82,7 @@ my $help = 0;
 my $options = GetOptions ("job_num=i" => \$job_num,
                           "upload=s"   => \$vars{inputfile},
 			  "pipeline=s" => \$pipeline_template,
+			  "pipeline_token=s" => \$pipeline_token,
                           "awe=s"    => \$awe_url,
  			  "shock=s"  => \$vars{shockurl},
                           "mem_host=s" => \$vars{mem_host},
@@ -142,6 +145,15 @@ if (length($pipeline_template)==0) {
     }
 }
     
+if (length($pipeline_token)==0) {
+    $pipeline_token = $Pipeline_Conf::awe_pipeline_token;
+    if (length($pipeline_token)==0) {
+        $log->error("$stage_name failed on job: $job_num, a pipeline token was not specified.");
+        print_usage();
+        exit 1;
+    }
+}
+
 if (length($awe_url)==0) {
     $awe_url = $Pipeline_Conf::awe_url;
     if (length($awe_url)==0) {
@@ -182,8 +194,9 @@ my $ua = LWP::UserAgent->new();
 
 $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 my $post = $ua->post("http://".$vars{shockurl}."/node",
-                     Content_Type => 'form-data',
-                     Content      => [ upload => [$vars{inputfile}] ]
+                     Content_Type  => 'form-data',
+                     Content       => [ upload => [$vars{inputfile}] ],
+                     Authorization => "OAuth $pipeline_token"
                     );
 
 my $json = new JSON();
@@ -232,7 +245,8 @@ $log->info("Submitting job script ($jobscript) to AWE.\n");
 $ua = LWP::UserAgent->new();
 $post = $ua->post("http://".$awe_url."/job",
                   Content_Type => 'form-data',
-                  Content      => [ upload => [$jobscript] ]
+                  Content      => [ upload => [$jobscript] ],
+                  Datatoken    => $pipeline_token
                  );
 
 $res = $json->decode( $post->content );
@@ -286,6 +300,7 @@ Options:
      -job_num=<job number, required>
      -upload=<input file that is local and to be uploaded, required>
      -pipeline=<path for pipeline job template, required>
+     -pipeline_token=<globus token for authentication, required>
      -awe=<AWE server URL (ip:port), required>
      -shock=<Shock URL (ip:port), required>
      -mem_host=<memcache URL (ip:port), required>
@@ -293,19 +308,21 @@ Options:
      -user=<user name (default='mgrastprod')>
      -project=<project name (default='pipeline')>
      -cgroups=<exclusive_client_group_list (separate by ',') (default='')>
-     -totalwork=<number of workunits to split for splitable tasks (default 1)>
+     -totalwork_sm=<number of workunits to split for splitable tasks of small jobs (default 8)>
+     -totalwork_lg=<number of workunits to split for splitable tasks of large jobs (default 16)>
+     -lg_size=<cutoff for size in bytes that categorizes a job as "large" (default 2147483648 bytes, aka 2GB)>
      -bowtie=<boolean, if bowtie should be run (default 1)>
      -dereplicate=<boolean, if dereplication should be performed (default 1)>
      -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
      -screen_indexes=<default='h_sapiens_asm'>
      
 Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
-      Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
-      Optional options: -name, -user, -project, -cgroups, -totalwork, -bowtie, -dereplicate, -filter_options, -screen_indexes
+      Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -pipeline_token (if awe_pipeline_token not in Pipeline_Conf.pm, -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
+      Optional options: -name, -user, -project, -cgroups, -totalwork_sm, -totalwork_lg, -lg_size, -bowtie, -dereplicate, -filter_options, -screen_indexes
       Operations:
                1. upload input file to shock
                2. create job script based on job template and available info
                3. submit the job json script to awe
                
-Note: if awe_pipeline_template, awe_url (ip:port), shock_url (ip:port), and mem_host_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, -shock, and -mem_host are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.\n";
+Note: if awe_pipeline_template, awe_pipeline_token, awe_url (ip:port), shock_url (ip:port), and mem_host_url (ip:port) are configured in Pipeline_Conf.pm, -pipeline, -awe, -shock, and -mem_host are not needed respectively. But the specified -pipeline, -awe,  and -shock will overwrite the Pipeline_Conf.pm variables.\n";
 }
