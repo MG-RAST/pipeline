@@ -16,7 +16,7 @@
 #     -cgroups=<exclusive_client_group_list (separate by ',') (default='')>
 #     -totalwork_sm=<number of workunits to split for splitable tasks of small jobs (default 8)>
 #     -totalwork_lg=<number of workunits to split for splitable tasks of large jobs (default 16)>
-#     -lg_size=<cutoff for size in bytes that categorizes a job as "large" (default 2147483648 bytes, aka 2GB)>
+#     -lg_size=<cutoff for size in bytes that categorizes a job as large (default 2147483648 bytes, aka 2GB)>
 #     -bowtie=<boolean, if bowtie should be run (default 1)>
 #     -dereplicate=<boolean, if dereplication should be performed (default 1)>
 #     -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
@@ -310,13 +310,13 @@ Options:
      -cgroups=<exclusive_client_group_list (separate by ',') (default='')>
      -totalwork_sm=<number of workunits to split for splitable tasks of small jobs (default 8)>
      -totalwork_lg=<number of workunits to split for splitable tasks of large jobs (default 16)>
-     -lg_size=<cutoff for size in bytes that categorizes a job as "large" (default 2147483648 bytes, aka 2GB)>
+     -lg_size=<cutoff for size in bytes that categorizes a job as large (default 2147483648 bytes, aka 2GB)>
      -bowtie=<boolean, if bowtie should be run (default 1)>
      -dereplicate=<boolean, if dereplication should be performed (default 1)>
      -filter_options=<default='filter_ambig:max_ambig=5:filter_ln:min_ln=1:max_ln=806'>
      -screen_indexes=<default='h_sapiens_asm'>
      
-Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially;
+Use case: submit a job with a local input file and a pipeline template (input file is local and will be uploaded to shock automatially
       Required options: -upload, -pipeline (if awe_pipeline_template not in Pipeline_Conf.pm), -pipeline_token (if awe_pipeline_token not in Pipeline_Conf.pm, -awe (if awe_url not in Pipeline_Conf.pm), -shock (if shock_url not in Pipeline_Conf.pm)
       Optional options: -name, -user, -project, -cgroups, -totalwork_sm, -totalwork_lg, -lg_size, -bowtie, -dereplicate, -filter_options, -screen_indexes
       Operations:
