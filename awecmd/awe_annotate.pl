@@ -97,7 +97,7 @@ if (-e $abundance_file) {
 
 print "input_file_str=".$input_file_str."\n";
 
-system("sims2annotation --job_id $job_id $input_file_str --sort_dir $sort_dir --run_dir $run_dir --prefix $out_prefix --ver_db $ver_db --mem_host $mem_host --mem_key $mem_key --procs $procs $assembly_abun_opt") == 0 or exit __LINE__;
+system("sims2annotation_less_sorting --job_id $job_id $input_file_str --sort_dir $sort_dir --run_dir $run_dir --prefix $out_prefix --ver_db $ver_db --mem_host $mem_host --mem_key $mem_key --procs $procs $assembly_abun_opt >> sims2annotation.out 2>&1") == 0 or exit __LINE__;
 
 print "Finished $stage_name on job $job_id\n";
 
