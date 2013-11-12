@@ -185,6 +185,7 @@ unless(-e $cluster_file) {
 for my $file ($sims_filter, $md5_expand) {
   unless(-s $file) {
     print STDERR "ERROR: File \"$file\" is empty\n";
+    exit(1);
   }
 }
 
