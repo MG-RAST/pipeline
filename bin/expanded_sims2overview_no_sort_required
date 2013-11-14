@@ -447,7 +447,7 @@ sub stddev {
     my $tmp = ( $sos/$n ) - ( $mean*$mean );
     # If there's a very small negative number here, it's probably just a result
     #  of computational overflow and the stddev is actually zero.
-    if($tmp < 0 && $tmp > -0.1) {
+    if($tmp < 0) {
         return 0;
     }
     return sqrt( $tmp );
