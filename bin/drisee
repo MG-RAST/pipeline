@@ -309,8 +309,8 @@ def main(args):
         out_hdl  = open(out_file, 'w')
         in_hdl   = open(in_seq, 'rU')
         try:
-            for rec in seq_iter(in_hdl, fformat):
-                head, seq, qual = split_rec(rec, fformat)
+            for rec in seq_iter(in_hdl, opts.seq_type):
+                head, seq, qual = split_rec(rec, opts.seq_type)
                 rnd_num = random.random()
                 if seqper >= rnd_num:
                     seqmax += 1
