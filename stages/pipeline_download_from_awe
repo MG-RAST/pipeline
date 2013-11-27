@@ -6,13 +6,14 @@
 #     -job_num=<MG-RAST job number, required>
 #     -awe=<AWE server URL (ip:port), required>
 #     -awe_job_id=<AWE assigned job ID, required>
+#     -pipeline_token=<globus token for authentication, required>
 #     -shock=<Shock server URL (ip:port), optional (will override Shock server URL in AWE workflow document)>
 #     
 #      Operations:
 #               1. check if job is complete
 #               2. if job is complete, download files to analysis subdirectory in job directory
 #               3. if job is not complete, return job state
-#Note: if awe_url (ip:port) is configured in Pipeline_Conf.pm, then -awe is not needed. But the specified -awe will overwrite the Pipeline_Conf.pm variable.
+#Note: if awe_pipeline_token and awe_url (ip:port) are configured in Pipeline_Conf.pm, then -pipeline_token and -awe are not needed. But the specified command line options will override the Pipeline_Conf.pm variable.
 
 use strict;
 use warnings;
@@ -39,13 +40,15 @@ my $DOWNLOAD_RETRY_MAX = 1;
 my $job_num = "";
 my $awe_url = "";
 my $awe_job_id = "";
+my $pipeline_token = "";
 my $shock_url_override = "";
 my $help = 0;
 
-my $options = GetOptions ("job_num=i"     => \$job_num,
-                          "awe=s"         => \$awe_url,
-                          "awe_job_id=s"  => \$awe_job_id,
-                          "shock=s"       => \$shock_url_override,
+my $options = GetOptions ("job_num=i"        => \$job_num,
+                          "awe=s"            => \$awe_url,
+                          "awe_job_id=s"     => \$awe_job_id,
+                          "pipeline_token=s" => \$pipeline_token,
+                          "shock=s"          => \$shock_url_override,
                           "h"  => \$help,
                          );
 
@@ -80,8 +83,19 @@ if (length($awe_job_id)==0) {
     exit(1);
 }
 
-if(defined $Pipeline_Conf::shock_url_from_berlin) {
-    $shock_url_override = $Pipeline_Conf::shock_url_from_berlin;
+if (length($pipeline_token)==0) {
+    $pipeline_token = $Pipeline_Conf::awe_pipeline_token;
+    if (length($pipeline_token)==0) {
+        $log->error("$stage_name failed on job: $job_num, a pipeline token was not specified.");
+        print_usage();
+        exit 1;
+    }
+}
+
+if (length($shock_url_override)==0) {
+    if(defined $Pipeline_Conf::shock_url_from_berlin) {
+        $shock_url_override = $Pipeline_Conf::shock_url_from_berlin;
+    }
 }
 
 my $awe_job_url = "http://".$awe_url."/job/".$awe_job_id;
@@ -161,8 +175,9 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
             my $get = undef;
             open(OUTF, ">$saved_file") || die "Can not open file $saved_file: $!\n";
             $get = $ua->get( $shock_download_url,
+                             Authorization     => "OAuth $pipeline_token",
                              ':read_size_hint' => 8192,
-                             ':content_cb' => sub{ my ($chunk) = @_; print OUTF $chunk; } );
+                             ':content_cb'     => sub{ my ($chunk) = @_; print OUTF $chunk; } );
             close OUTF;
             $content = $get->content;
         };
@@ -247,7 +262,7 @@ sub retry_exit_or_continue {
 sub get_shockfile_size {
     my ($shock_url) = @_;
     my $ua = LWP::UserAgent->new();
-    my $get = $ua->get($shock_url);
+    my $get = $ua->get($shock_url, Authorization => "OAuth $pipeline_token");
     unless ($get->is_success) {
         return "";
     }
@@ -259,7 +274,7 @@ sub get_shockfile_size {
 sub get_shockfile_md5 {
     my ($shock_url) = @_;
     my $ua = LWP::UserAgent->new();
-    my $get = $ua->get($shock_url);
+    my $get = $ua->get($shock_url, Authorization => "OAuth $pipeline_token");
     unless ($get->is_success) {
         return "";
     }
@@ -276,12 +291,13 @@ Options:
      -job_num=<MG-RAST job number, required>
      -awe=<AWE server URL (ip:port), required>
      -awe_job_id=<AWE assigned job ID, required>
+     -pipeline_token=<globus token for authentication, required>
      -shock=<Shock server URL (ip:port), optional (will override Shock server URL in AWE workflow document)>
      
       Operations:
                1. check if job is complete
                2. if job is complete, download files to analysis subdirectory in job directory
                3. if job is not complete, return job state
-Note: if awe_url (ip:port) is configured in Pipeline_Conf.pm, then -awe is not needed. But the specified -awe will overwrite the Pipeline_Conf.pm variable.
+Note: if awe_pipeline_token and awe_url (ip:port) are configured in Pipeline_Conf.pm, then -pipeline_token and -awe are not needed. But the specified command line options will override the Pipeline_Conf.pm variable.
 \n";
 }
