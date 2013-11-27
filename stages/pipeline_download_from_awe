@@ -93,8 +93,8 @@ if (length($pipeline_token)==0) {
 }
 
 if (length($shock_url_override)==0) {
-    if(defined $Pipeline_Conf::shock_url_from_berlin) {
-        $shock_url_override = $Pipeline_Conf::shock_url_from_berlin;
+    if(defined $Pipeline_Conf::shock_url_from_mgrast) {
+        $shock_url_override = "http://".$Pipeline_Conf::shock_url_from_mgrast;
     }
 }
 
