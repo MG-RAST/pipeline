@@ -6,6 +6,7 @@
 #     -job_num=<MG-RAST job number, required>
 #     -awe=<AWE server URL (ip:port), required>
 #     -awe_job_id=<AWE assigned job ID, required>
+#     -shock=<Shock server URL (ip:port), optional (will override Shock server URL in AWE workflow document)>
 #     
 #      Operations:
 #               1. check if job is complete
@@ -38,11 +39,13 @@ my $DOWNLOAD_RETRY_MAX = 1;
 my $job_num = "";
 my $awe_url = "";
 my $awe_job_id = "";
+my $shock_url_override = "";
 my $help = 0;
 
 my $options = GetOptions ("job_num=i"     => \$job_num,
                           "awe=s"         => \$awe_url,
                           "awe_job_id=s"  => \$awe_job_id,
+                          "shock=s"       => \$shock_url_override,
                           "h"  => \$help,
                          );
 
@@ -75,6 +78,10 @@ if (length($awe_job_id)==0) {
     $log->error("$stage_name failed on job: $job_num, AWE job ID was not specified.");
     print_usage();
     exit(1);
+}
+
+if(defined $Pipeline_Conf::shock_url_from_berlin) {
+    $shock_url_override = $Pipeline_Conf::shock_url_from_berlin;
 }
 
 my $awe_job_url = "http://".$awe_url."/job/".$awe_job_id;
@@ -129,6 +136,9 @@ foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna',
 
     my $node = $filename_to_shock_info{$req_file}{node};
     my $host = $filename_to_shock_info{$req_file}{host};
+    if($shock_url_override ne "") {
+        $host = $shock_url_override;
+    }
     my $shock_url = "$host/node/$node";
 
     my $shock_download_url = "$shock_url?download";
@@ -266,6 +276,7 @@ Options:
      -job_num=<MG-RAST job number, required>
      -awe=<AWE server URL (ip:port), required>
      -awe_job_id=<AWE assigned job ID, required>
+     -shock=<Shock server URL (ip:port), optional (will override Shock server URL in AWE workflow document)>
      
       Operations:
                1. check if job is complete
