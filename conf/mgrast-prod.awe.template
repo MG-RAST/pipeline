@@ -10,6 +10,44 @@
         "tasks": [
             {
                 "cmd": {
+                    "args": "-seqs=@#inputfile -out_prefix=#jobname.075", 
+                    "description": "qc",
+                    "name": "awe_qc.pl"
+                }, 
+                "dependsOn": [], 
+                "inputs": {
+                   "#inputfile": {
+                        "host": "http://#shockurl",
+                        "node": "#shocknode"
+                    }
+                }, 
+                "outputs": {
+                    "#jobname.075.consensus.stats": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    },
+                    "#jobname.075.drisee.info": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    },
+                    "#jobname.075.drisee.stats": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    },
+                    "#jobname.075.kmer.15.stats": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    },
+                    "#jobname.075.kmer.6.stats": {
+                        "host": "http://#shockurl",
+                        "node": "-"
+                    }
+                },
+                "taskid": "10", 
+                "totalwork": 1
+            },
+            {
+                "cmd": {
                     "args": "-input=@#inputfile -out_prefix=#jobname.100.preprocess -filter_options=#filter_options", 
                     "description": "preprocess",
                     "name": "awe_preprocess.pl"
