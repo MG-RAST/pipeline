@@ -24,6 +24,7 @@ my $seqs    = "";
 my $name    = "raw";
 my $procs   = 4;
 my $kmers   = '15,6';
+my $output_prefix = "";
 my $assembled = 0;
 my $help    = 0;
 my $filter_options = "";
@@ -32,6 +33,7 @@ my $options = GetOptions ("job=i"    => \$job_num,
 			  "name=s"   => \$name,
 			  "procs=i"  => \$procs,
 			  "kmers=s"  => \$kmers,
+			  "output_prefix=s"  => \$output_prefix,
                           "assembled=i" => \$assembled,
                           "filter_options=s" => \$filter_options,
 			  "help!"    => \$help,
@@ -39,6 +41,12 @@ my $options = GetOptions ("job=i"    => \$job_num,
 
 unless (-s $seqs) {
     print "ERROR: The input sequence file [$seqs] does not exist.\n";
+    print_usage();
+    exit __LINE__;  
+}
+
+unless (length($output_prefix) > 0) {
+    print "ERROR: An output_prefix is required.\n";
     print_usage();
     exit __LINE__;  
 }
@@ -66,7 +74,7 @@ else {
 
 # files
 my $run_dir = getcwd();
-my $basename = $run_dir."/".$stage_id;
+my $basename = $run_dir."/".$output_prefix;
 my $log_file = $basename.".qc.out";
 my $infile   = $basename.".input.".$format;
 #my $message  = "$stage_name failed on job: $job_num, see $stage_dir/$stage_id.qc.out for details.";
@@ -154,8 +162,7 @@ foreach my $len (@kmers) {
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_qc.pl -seqs=<input_file> [-procs=<number cpus, default 4>, -kmers=<kmer list, default 6,15>]\n";
-    print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
+    print "USAGE: awe_qc.pl -seqs=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 4>, -kmers=<kmer list, default 6,15>]\n";
 }
 
 
