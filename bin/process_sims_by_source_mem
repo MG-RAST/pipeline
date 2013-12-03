@@ -274,7 +274,7 @@ sub get_top_hits {
 
 	    # md5_ach: md5 => source => function => { 'organism' => [], 'ontology' => [] }
 	    # src_map: id => [ name, type ]
-    	foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
+        foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
 	      next unless (exists($md5_ach->{$md5}{$src}) && exists($src_map->{$src}));
 	      my ($sname, $stype) = @{$src_map->{$src}};
 
@@ -282,6 +282,7 @@ sub get_top_hits {
 	        foreach my $otype ( keys %{$md5_ach->{$md5}{$src}{$func}} ) {
 	          foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}{$otype}} ) {
 	            my $expand_text = join("\t", ($md5_id->{$md5}, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $src));
+	            my $expand_wout_fo_text = join("\t", ($md5_id->{$md5}, $frag, $sim->[0], $sim->[1], $sim->[8], "", "", $src));
 	            if (($otype eq 'organism') && ($stype eq 'rna') && $get_rna) {
 		          $rna_text .= $expand_text . "\t1\n";
 	            }
@@ -291,6 +292,7 @@ sub get_top_hits {
 	            elsif (($otype eq 'ontology') && ($stype eq 'ontology') && (! $get_rna)) {
 	              if (int($other) > 71073) { next; }
 		          $ontology_text .= $expand_text . "\n";
+		          $protein_text .= $expand_wout_fo_text . "\n";
 	            }
 	          }
 	        }
