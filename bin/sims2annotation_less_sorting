@@ -245,12 +245,7 @@ foreach my $info (@info_set) {
 # process sources
 my $type = "source";
 $outf = "$run_dir/run_$type.out";
-if ($ontol_expand && (-s $ontol_expand)) {
-  &run_system_command("cat $md5_expand $ontol_expand > $src_expand");
-  &run_system_command("expanded_sims2overview_no_sort_required $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file");
-} else {
-  &run_system_command("expanded_sims2overview_no_sort_required $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $md5_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file");
-}
+&run_system_command("expanded_sims2overview_no_sort_required $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $md5_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file");
 
 my $mem_cache = new Cache::Memcached { 'servers' => [$mem_host], 'debug' => 0, 'compress_threshold' => 10_000 };
 unless ($mem_cache && ref($mem_cache)) {
