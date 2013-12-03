@@ -135,7 +135,8 @@ foreach my $task (@{$res->{data}->{tasks}}) {
     }
 }
 
-foreach my $req_file ('100.preprocess.passed.fna', '100.preprocess.removed.fna', '150.dereplication.passed.fna',
+foreach my $req_file ('075.consensus.stats', '075.drisee.info', '075.drisee.stats', '075.kmer.15.stats', '075.kmer.6.stats',
+                      '100.preprocess.passed.fna', '100.preprocess.removed.fna', '150.dereplication.passed.fna',
                       '150.dereplication.removed.fna', '299.screen.passed.fna', '350.genecalling.coding.faa',
                       '350.genecalling.coding.fna', '425.search.rna.fna', '440.cluster.rna97.fna',
                       '440.cluster.rna97.mapping', '450.rna.sims', '550.cluster.aa90.faa',
