@@ -43,7 +43,7 @@
                         "node": "-"
                     }
                 },
-                "taskid": "10", 
+                "taskid": "0", 
                 "totalwork": 1
             },
             {
@@ -73,7 +73,7 @@
                      "input": "#inputfile",
                      "output": "#jobname.100.preprocess.passed.fna"
                 },
-                "taskid": "0", 
+                "taskid": "1", 
                 "totalwork": 1
             },
             {
@@ -82,7 +82,7 @@
                     "description": "dereplication",
                     "name": "awe_dereplicate.pl"
                 }, 
-                "dependsOn": ["0"], 
+                "dependsOn": ["1"], 
                 "inputs": {
                    "#jobname.100.preprocess.passed.fna": {
                         "host": "http://#shockurl",
@@ -100,7 +100,7 @@
                         "node": "-"
                     }
                 },
-                "taskid": "1", 
+                "taskid": "2", 
                 "totalwork": 1
             },
             {
@@ -109,7 +109,7 @@
                     "description": "screen", 
                     "name": "awe_bowtie_screen.pl"
                 }, 
-                "dependsOn": ["1"], 
+                "dependsOn": ["2"], 
                 "inputs": {
                    "#jobname.150.dereplication.passed.fna": {
                         "host": "http://#shockurl",
@@ -147,7 +147,7 @@
                      "input": "#jobname.150.dereplication.passed.fna",
                      "output": "#jobname.299.screen.passed.fna"
                 },
-                "taskid": "2", 
+                "taskid": "3", 
                 "totalwork": #totalwork
             },
             {
@@ -156,12 +156,12 @@
                     "description": "genecalling", 
                     "name": "awe_genecalling.pl"
                 }, 
-                "dependsOn": ["2"], 
+                "dependsOn": ["3"], 
                 "inputs": {
                    "#jobname.299.screen.passed.fna": {
                         "host": "http://#shockurl",
                         "node": "-",
-                        "origin": "2"
+                        "origin": "3"
                     }
                 }, 
                 "outputs": {
@@ -178,7 +178,7 @@
                      "input": "#jobname.299.screen.passed.fna",
                      "output": "#jobname.350.genecalling.coding.faa"
                 },
-                "taskid": "3", 
+                "taskid": "4", 
                 "totalwork": #totalwork
             },
             {   
@@ -187,12 +187,12 @@
                     "description": "cluster_aa90",
                     "name": "awe_cluster_parallel.pl"
                 },
-                "dependsOn": ["3"],
+                "dependsOn": ["4"],
                 "inputs": {
                     "#jobname.350.genecalling.coding.faa": {
                         "host": "http://#shockurl",
                         "node": "-",
-                        "origin": "3"
+                        "origin": "4"
                     }
                 },
                 "outputs": {
@@ -209,7 +209,7 @@
                      "input": "#jobname.350.genecalling.coding.faa",
                      "output": "#jobname.550.cluster.aa90.faa"
                 },
-                "taskid": "4",
+                "taskid": "5",
                 "totalwork": 1
             },
             {
@@ -218,11 +218,11 @@
                     "args": "--input=@#jobname.550.cluster.aa90.faa --output=#jobname.650.superblat.sims", 
                     "description": "aa sims"
                 }, 
-                "dependsOn": ["4"],  
+                "dependsOn": ["5"],  
                 "inputs": {
                     "#jobname.550.cluster.aa90.faa": {
                         "host": "http://#shockurl",
-                        "origin": "4",
+                        "origin": "5",
                         "node": "-"
                     }
                 }, 
@@ -244,7 +244,7 @@
                      "input": "#jobname.550.cluster.aa90.faa",
                      "output": "#jobname.650.superblat.sims"
                 },
-                "taskid": "5",
+                "taskid": "6",
                 "totalwork": #totalwork,
                 "maxworksize": 50
             },
@@ -254,12 +254,12 @@
                     "args": "-input=@#jobname.100.preprocess.passed.fna -output=#jobname.425.search.rna.fna -rna_nr=md5rna.clust",
                     "description": "rna detection"
                 }, 
-                "dependsOn": ["0"],  
+                "dependsOn": ["1"],  
                 "inputs": {
                    "#jobname.100.preprocess.passed.fna": {
                         "host": "http://#shockurl",
                         "node": "-",
-                        "origin": "0"
+                        "origin": "1"
                     }
                 },
                 "predata": {
@@ -273,7 +273,7 @@
                         "node": "-"
                     }
                 },
-                "taskid": "6",
+                "taskid": "7",
                 "totalwork": 1
             },          
             {
@@ -282,11 +282,11 @@
                     "args": "-input=@#jobname.425.search.rna.fna --output=#jobname.440.cluster.rna97.fna -rna -pid=#rna_pid", 
                     "description": "rna clustering"
                 }, 
-                "dependsOn": ["6"],
+                "dependsOn": ["7"],
                 "inputs": {
                     "#jobname.425.search.rna.fna": {
                         "host": "http://#shockurl",
-                        "origin": "6",
+                        "origin": "7",
                         "node": "-"
                     }
                 }, 
@@ -304,7 +304,7 @@
                      "input": "#jobname.425.search.rna.fna",
                      "output": "#jobname.440.cluster.rna97.fna"
                 },
-                "taskid": "7",
+                "taskid": "8",
                 "totalwork": 1
             },
             {
@@ -313,11 +313,11 @@
                     "args": "-i @#jobname.440.cluster.rna97.fna -o #jobname.450.rna.sims",
                     "description": "rna sims"
                 }, 
-                "dependsOn": ["7"],  
+                "dependsOn": ["8"],  
                 "inputs": {
                     "#jobname.440.cluster.rna97.fna": {
                         "host": "http://#shockurl",
-                        "origin": "7",
+                        "origin": "8",
                         "node": "-"
                     }
                 }, 
@@ -336,7 +336,7 @@
                      "input": "#jobname.440.cluster.rna97.fna",
                      "output": "#jobname.450.rna.sims"
                 },
-                "taskid": "8",
+                "taskid": "9",
                 "totalwork": 1
             },
             {
@@ -345,7 +345,7 @@
                     "args": "-raw=@#inputfile -job=#jobname -aa_sims=@#jobname.650.superblat.sims -rna_sims=@#jobname.450.rna.sims -clust_aa=@#jobname.550.cluster.aa90.mapping -map_rna=@#jobname.440.cluster.rna97.mapping -out_prefix=#jobname.700.annotation -nr_ver=#ach_annotation_ver -mem_host=#mem_host", 
                     "description": "annotation"
                 }, 
-                "dependsOn": ["4", "5", "7", "8"],  
+                "dependsOn": ["5", "6", "8", "9"],  
                 "inputs": {
                     "#inputfile": {
                         "host": "http://#shockurl",
@@ -353,22 +353,22 @@
                     },
                     "#jobname.550.cluster.aa90.mapping": {
                         "host": "http://#shockurl",
-                        "origin": "4",
+                        "origin": "5",
                         "node": "-"
                     },
                     "#jobname.650.superblat.sims": {
                         "host": "http://#shockurl",
-                        "origin": "5",
+                        "origin": "6",
                         "node": "-"
                     },
                     "#jobname.440.cluster.rna97.mapping": {
                         "host": "http://#shockurl",
-                        "origin": "7",
+                        "origin": "8",
                         "node": "-"
                     },
                     "#jobname.450.rna.sims": {
                         "host": "http://#shockurl",
-                        "origin": "8",
+                        "origin": "9",
                         "node": "-"
                     }
                 }, 
@@ -406,7 +406,7 @@
                         "node": "-"
                     }
                 },
-                "taskid": "9",
+                "taskid": "10",
                 "totalwork": 1
             }
         ]
