@@ -10,9 +10,9 @@
         "tasks": [
             {
                 "cmd": {
-                    "args": "-seqs=@#inputfile -out_prefix=#jobname.075", 
-                    "description": "qc",
-                    "name": "awe_qc.pl"
+                    "args": "-input=@#inputfile -out_prefix_qc=#jobname.075 -out_prefix_prep=#jobname.100.preprocess -filter_options=#filter_options", 
+                    "description": "preprocess",
+                    "name": "awe_preprocess.pl"
                 }, 
                 "dependsOn": [], 
                 "inputs": {
@@ -41,25 +41,7 @@
                     "#jobname.075.kmer.6.stats": {
                         "host": "http://#shockurl",
                         "node": "-"
-                    }
-                },
-                "taskid": "0", 
-                "totalwork": 1
-            },
-            {
-                "cmd": {
-                    "args": "-input=@#inputfile -out_prefix=#jobname.100.preprocess -filter_options=#filter_options", 
-                    "description": "preprocess",
-                    "name": "awe_preprocess.pl"
-                }, 
-                "dependsOn": [], 
-                "inputs": {
-                   "#inputfile": {
-                        "host": "http://#shockurl",
-                        "node": "#shocknode"
-                    }
-                }, 
-                "outputs": {
+                    },
                     "#jobname.100.preprocess.passed.fna": {
                         "host": "http://#shockurl",
                         "node": "-"
@@ -73,7 +55,7 @@
                      "input": "#inputfile",
                      "output": "#jobname.100.preprocess.passed.fna"
                 },
-                "taskid": "1", 
+                "taskid": "0", 
                 "totalwork": 1
             },
             {
@@ -82,7 +64,7 @@
                     "description": "dereplication",
                     "name": "awe_dereplicate.pl"
                 }, 
-                "dependsOn": ["1"], 
+                "dependsOn": ["0"], 
                 "inputs": {
                    "#jobname.100.preprocess.passed.fna": {
                         "host": "http://#shockurl",
@@ -100,7 +82,7 @@
                         "node": "-"
                     }
                 },
-                "taskid": "2", 
+                "taskid": "1", 
                 "totalwork": 1
             },
             {
@@ -109,7 +91,7 @@
                     "description": "screen", 
                     "name": "awe_bowtie_screen.pl"
                 }, 
-                "dependsOn": ["2"], 
+                "dependsOn": ["1"], 
                 "inputs": {
                    "#jobname.150.dereplication.passed.fna": {
                         "host": "http://#shockurl",
@@ -147,7 +129,7 @@
                      "input": "#jobname.150.dereplication.passed.fna",
                      "output": "#jobname.299.screen.passed.fna"
                 },
-                "taskid": "3", 
+                "taskid": "2", 
                 "totalwork": #totalwork
             },
             {
@@ -156,12 +138,12 @@
                     "description": "genecalling", 
                     "name": "awe_genecalling.pl"
                 }, 
-                "dependsOn": ["3"], 
+                "dependsOn": ["2"], 
                 "inputs": {
                    "#jobname.299.screen.passed.fna": {
                         "host": "http://#shockurl",
                         "node": "-",
-                        "origin": "3"
+                        "origin": "2"
                     }
                 }, 
                 "outputs": {
@@ -178,7 +160,7 @@
                      "input": "#jobname.299.screen.passed.fna",
                      "output": "#jobname.350.genecalling.coding.faa"
                 },
-                "taskid": "4", 
+                "taskid": "3", 
                 "totalwork": #totalwork
             },
             {   
@@ -187,12 +169,12 @@
                     "description": "cluster_aa90",
                     "name": "awe_cluster_parallel.pl"
                 },
-                "dependsOn": ["4"],
+                "dependsOn": ["3"],
                 "inputs": {
                     "#jobname.350.genecalling.coding.faa": {
                         "host": "http://#shockurl",
                         "node": "-",
-                        "origin": "4"
+                        "origin": "3"
                     }
                 },
                 "outputs": {
@@ -209,7 +191,7 @@
                      "input": "#jobname.350.genecalling.coding.faa",
                      "output": "#jobname.550.cluster.aa90.faa"
                 },
-                "taskid": "5",
+                "taskid": "4",
                 "totalwork": 1
             },
             {
@@ -218,11 +200,11 @@
                     "args": "--input=@#jobname.550.cluster.aa90.faa --output=#jobname.650.superblat.sims", 
                     "description": "aa sims"
                 }, 
-                "dependsOn": ["5"],  
+                "dependsOn": ["4"],  
                 "inputs": {
                     "#jobname.550.cluster.aa90.faa": {
                         "host": "http://#shockurl",
-                        "origin": "5",
+                        "origin": "4",
                         "node": "-"
                     }
                 }, 
@@ -244,7 +226,7 @@
                      "input": "#jobname.550.cluster.aa90.faa",
                      "output": "#jobname.650.superblat.sims"
                 },
-                "taskid": "6",
+                "taskid": "5",
                 "totalwork": #totalwork,
                 "maxworksize": 50
             },
@@ -254,12 +236,12 @@
                     "args": "-input=@#jobname.100.preprocess.passed.fna -output=#jobname.425.search.rna.fna -rna_nr=md5rna.clust",
                     "description": "rna detection"
                 }, 
-                "dependsOn": ["1"],  
+                "dependsOn": ["0"],  
                 "inputs": {
                    "#jobname.100.preprocess.passed.fna": {
                         "host": "http://#shockurl",
                         "node": "-",
-                        "origin": "1"
+                        "origin": "0"
                     }
                 },
                 "predata": {
@@ -273,7 +255,7 @@
                         "node": "-"
                     }
                 },
-                "taskid": "7",
+                "taskid": "6",
                 "totalwork": 1
             },          
             {
@@ -282,11 +264,11 @@
                     "args": "-input=@#jobname.425.search.rna.fna --output=#jobname.440.cluster.rna97.fna -rna -pid=#rna_pid", 
                     "description": "rna clustering"
                 }, 
-                "dependsOn": ["7"],
+                "dependsOn": ["6"],
                 "inputs": {
                     "#jobname.425.search.rna.fna": {
                         "host": "http://#shockurl",
-                        "origin": "7",
+                        "origin": "6",
                         "node": "-"
                     }
                 }, 
@@ -304,7 +286,7 @@
                      "input": "#jobname.425.search.rna.fna",
                      "output": "#jobname.440.cluster.rna97.fna"
                 },
-                "taskid": "8",
+                "taskid": "7",
                 "totalwork": 1
             },
             {
@@ -313,11 +295,11 @@
                     "args": "-i @#jobname.440.cluster.rna97.fna -o #jobname.450.rna.sims",
                     "description": "rna sims"
                 }, 
-                "dependsOn": ["8"],  
+                "dependsOn": ["7"],  
                 "inputs": {
                     "#jobname.440.cluster.rna97.fna": {
                         "host": "http://#shockurl",
-                        "origin": "8",
+                        "origin": "7",
                         "node": "-"
                     }
                 }, 
@@ -336,7 +318,7 @@
                      "input": "#jobname.440.cluster.rna97.fna",
                      "output": "#jobname.450.rna.sims"
                 },
-                "taskid": "9",
+                "taskid": "8",
                 "totalwork": 1
             },
             {
@@ -345,7 +327,7 @@
                     "args": "-raw=@#inputfile -job=#jobname -aa_sims=@#jobname.650.superblat.sims -rna_sims=@#jobname.450.rna.sims -clust_aa=@#jobname.550.cluster.aa90.mapping -map_rna=@#jobname.440.cluster.rna97.mapping -out_prefix=#jobname.700.annotation -nr_ver=#ach_annotation_ver -mem_host=#mem_host", 
                     "description": "annotation"
                 }, 
-                "dependsOn": ["5", "6", "8", "9"],  
+                "dependsOn": ["4", "5", "7", "8"],  
                 "inputs": {
                     "#inputfile": {
                         "host": "http://#shockurl",
@@ -353,22 +335,22 @@
                     },
                     "#jobname.550.cluster.aa90.mapping": {
                         "host": "http://#shockurl",
-                        "origin": "5",
+                        "origin": "4",
                         "node": "-"
                     },
                     "#jobname.650.superblat.sims": {
                         "host": "http://#shockurl",
-                        "origin": "6",
+                        "origin": "5",
                         "node": "-"
                     },
                     "#jobname.440.cluster.rna97.mapping": {
                         "host": "http://#shockurl",
-                        "origin": "8",
+                        "origin": "7",
                         "node": "-"
                     },
                     "#jobname.450.rna.sims": {
                         "host": "http://#shockurl",
-                        "origin": "9",
+                        "origin": "8",
                         "node": "-"
                     }
                 }, 
@@ -406,9 +388,8 @@
                         "node": "-"
                     }
                 },
-                "taskid": "10",
+                "taskid": "9",
                 "totalwork": 1
             }
         ]
     }
-
