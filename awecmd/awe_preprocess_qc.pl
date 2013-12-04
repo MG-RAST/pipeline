@@ -96,7 +96,7 @@ if($input_file =~ /\.fn?a$|\.fasta$/i || $input_file =~ /\.(fq|fastq)$/i) {
   
   #run qc:
   print "$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc";
-  system("$qc_cmd -seqs=<input_file> -out_prefix=$out_prefix_qc");
+  system("$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc");
   if ($? != 0) {print "ERROR: $qc_cmd returns value $?\n"; exit $?};
 }
 
