@@ -11,8 +11,8 @@
             {
                 "cmd": {
                     "args": "-input=@#inputfile -out_prefix_qc=#jobname.075 -out_prefix_prep=#jobname.100.preprocess -filter_options=#filter_options", 
-                    "description": "preprocess",
-                    "name": "awe_preprocess.pl"
+                    "description": "preprocess_qc",
+                    "name": "awe_preprocess_qc.pl"
                 }, 
                 "dependsOn": [], 
                 "inputs": {
@@ -50,10 +50,6 @@
                         "host": "http://#shockurl",
                         "node": "-"
                     }
-                },
-                "partinfo": {
-                     "input": "#inputfile",
-                     "output": "#jobname.100.preprocess.passed.fna"
                 },
                 "taskid": "0", 
                 "totalwork": 1
