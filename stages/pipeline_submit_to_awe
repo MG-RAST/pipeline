@@ -192,10 +192,10 @@ if (length($vars{screen_indexes}) > 0) {
     }
     foreach my $filename (keys %{$index_files}) {
         if($vars{predata} ne "") {
-            $vars{predata} .= ",\n";
+            $vars{predata} .= ",\n                    ";
         }
-        $vars{predata} .= "                    \"$filename\":{\n".
-                          "                        \"url\":\"http://".$Pipeline_Conf::shock_url_from_mgrast."/node/".$index_files->{$filename}."?download\n".
+        $vars{predata} .= "\"$filename\":{\n".
+                          "                        \"url\":\"http://".$Pipeline_Conf::shock_url_from_mgrast."/node/".$index_files->{$filename}."?download\"\n".
                           "                    }";
     }
 }
