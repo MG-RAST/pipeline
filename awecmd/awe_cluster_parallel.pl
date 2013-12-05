@@ -25,10 +25,12 @@ my $pid     = "";
 my $ver     = "";
 my $help    = "";
 my $job_num = "000";
-my $stage_id = "";
+my $in_stage_id = "";
+my $out_stage_id = "";
 my $nodes   = 4;
 my $size    = 250;
-my $stage_name = "cluster";
+my $in_stage_name = "";
+my $out_stage_name = "";
 my $options = GetOptions ("input=s" => \$fasta_file,
                           "output=s"=> \$final_output,
                           "nodes=i" => \$nodes,
@@ -60,38 +62,38 @@ system("mkdir -p tmp_dir") == 0 or exit (__LINE__);
 
 my ($code, $fext);
 if ($aa) {
-  ($stage_id, $code, $fext) = (550, "aa", "faa");
+  ($in_stage_id, $in_stage_name, $out_stage_id, $out_stage_name, $code, $fext) = (350, "genecalling", 550, "cluster", "aa", "faa");
 } elsif ($rna) {
-  ($stage_id, $code, $fext) = (440, "rna", "fna");
+  ($in_stage_id, $in_stage_name, $out_stage_id, $out_stage_name, $code, $fext) = (425, "search", 440, "cluster", "rna", "fna");
 }
 
-my $input_fasta = $stage_id.".".$stage_name.".input.$fext";
-my $prefix  = $stage_id.".".$stage_name.".$code$pid";
+my $input_fasta = $in_stage_id.".".$in_stage_name.".input.$fext";
+my $output_prefix  = $out_stage_id.".".$out_stage_name.".$code$pid";
 
 if ((-s $fasta_file) > 1024) {
   system("cp $fasta_file $input_fasta >> cp.out 2>&1") == 0 or exit __LINE__;
-  my $ret = system("$runcmd -v -p $nodes -s $size -i $pid -d tmp_dir -t $code $input_fasta $prefix >> $runcmd.out 2>&1");
-  if ($ret != 0) {  #clust is skiptable if it fails, move input to output and make an empty mapping file
-      system("cp $input_fasta $prefix.$fext");
-      system("touch $prefix.mapping");
+  my $ret = system("$runcmd -v -p $nodes -s $size -i $pid -d tmp_dir -t $code $input_fasta $output_prefix >> $runcmd.out 2>&1");
+  if ($ret != 0) {  #clust is skipable if it fails, move input to output and make an empty mapping file
+      system("cp $input_fasta $output_prefix.$fext");
+      system("touch $output_prefix.mapping");
   } else {
-     if ((-s $prefix.$fext) == 0) {
-        system("cp $input_fasta $prefix.$fext");
-        system("touch $prefix.mapping");
+     if ((-s $output_prefix.$fext) == 0) {
+        system("cp $input_fasta $output_prefix.$fext");
+        system("touch $output_prefix.mapping");
      }
   }
 } else {
   # too small, skip the cluster step
-  system("cp $input_fasta $prefix.$fext");
-  system("touch $prefix.mapping");
+  system("cp $fasta_file $output_prefix.$fext");
+  system("touch $output_prefix.mapping");
 }
 
 # rename output to specified name
 if (length($final_output) > 0) {
-    system("mv $prefix.$fext $final_output") ==0  or exit (__LINE__);
+    system("mv $output_prefix.$fext $final_output") ==0  or exit (__LINE__);
     my $pos=rindex($final_output,".");
     my $stem=substr($final_output,0,$pos);
-    system("mv $prefix.mapping $stem.mapping") ==0  or exit (__LINE__);
+    system("mv $output_prefix.mapping $stem.mapping") ==0  or exit (__LINE__);
 }
 
 system("rm -rf tmp_dir");
