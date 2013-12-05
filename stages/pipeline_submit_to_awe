@@ -135,9 +135,6 @@ if (length($vars{inputfile})==0) {
 
 if (length($pipeline_template)==0) {
     $pipeline_template = $Pipeline_Conf::awe_pipeline_template;
-    if ($vars{screen_indexes} eq "") {
-        $pipeline_template = $Pipeline_Conf::awe_no_screening_pipeline_template;
-    }
     if (length($pipeline_template)==0) {
         $log->error("$stage_name failed on job: $job_num, a pipeline template was not specified.");
         print_usage();
