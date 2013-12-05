@@ -195,15 +195,15 @@ if (length($vars{screen_indexes}) > 0) {
             $vars{predata} .= ",\n                    ";
         }
         $vars{predata} .= "\"$filename\":{\n".
-                          "                        \"url\":\"http://".$Pipeline_Conf::shock_url_from_mgrast."/node/".$index_files->{$filename}."?download\"\n".
+                          "                        \"url\":\"http://".$Pipeline_Conf::shock_url."/node/".$index_files->{$filename}."?download\"\n".
                           "                    }";
     }
 }
 
-$vars{md5nr1_download_url} = "http://".$Pipeline_Conf::shock_url_from_mgrast."/node/5fb38b95-ae49-44ed-bbf6-f135ad397993?download";
-$vars{md5nr2_download_url} = "http://".$Pipeline_Conf::shock_url_from_mgrast."/node/a4fd51d7-97c1-400c-9278-12087b930f7e?download";
-$vars{md5rna_clust_download_url} = "http://".$Pipeline_Conf::shock_url_from_mgrast."/node/f9761860-dc49-49c7-8de1-d3e3708802d2?download";
-$vars{md5rna_download_url} = "http://".$Pipeline_Conf::shock_url_from_mgrast."/node/d25932bf-83ed-44cf-8696-5bfeb6c8c8ef?download";
+$vars{md5nr1_download_url} = "http://".$Pipeline_Conf::shock_url."/node/5fb38b95-ae49-44ed-bbf6-f135ad397993?download";
+$vars{md5nr2_download_url} = "http://".$Pipeline_Conf::shock_url."/node/a4fd51d7-97c1-400c-9278-12087b930f7e?download";
+$vars{md5rna_clust_download_url} = "http://".$Pipeline_Conf::shock_url."/node/f9761860-dc49-49c7-8de1-d3e3708802d2?download";
+$vars{md5rna_download_url} = "http://".$Pipeline_Conf::shock_url."/node/d25932bf-83ed-44cf-8696-5bfeb6c8c8ef?download";
 
 my $job_dir   = $Pipeline_Conf::global_job_dir."/".$job_num;
 my $proc_dir  = $job_dir."/proc";
