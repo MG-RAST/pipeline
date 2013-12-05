@@ -182,7 +182,7 @@ if (length($vars{mem_host})==0 ) {
     }
 }
 
-if (length($vars{screen_indexes}) > 0) {
+if (length($vars{screen_indexes}) > 0 && $vars{screen_indexes} ne "none") {
     my $index_files = &get_bowtie_shock_ids($vars{screen_indexes});
     my $file_count = keys %{$index_files};
     if ($file_count == 0) {
