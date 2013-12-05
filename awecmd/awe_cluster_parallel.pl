@@ -19,14 +19,13 @@ my $runcmd   = "parallel_cluster";
 # options
 my $fasta_file = "";
 my $final_output = "";
-my $dna     = "";
 my $aa      = "";
 my $rna     = "";
 my $pid     = "";
 my $ver     = "";
 my $help    = "";
 my $job_num = "000";
-my $stage_id = 550;
+my $stage_id = "";
 my $nodes   = 4;
 my $size    = 250;
 my $stage_name = "cluster";
@@ -34,7 +33,6 @@ my $options = GetOptions ("input=s" => \$fasta_file,
                           "output=s"=> \$final_output,
                           "nodes=i" => \$nodes,
 			  "size=i"  => \$size,
-                          "dna"     => \$dna,
                           "aa"      => \$aa,
                           "rna"     => \$rna,
                           "pid=i"   => \$pid,
@@ -47,8 +45,8 @@ if ( $help or !($fasta_file) ) {
   print STDERR "must specify a input fasta file\n";
   print_usage();
   exit(1);
-} elsif ( !($dna xor $aa xor $rna) ) {
-  print STDERR "must select either -aa, -dna or -rna\n";
+} elsif ( !($aa xor $rna) ) {
+  print STDERR "must select either -aa or -rna\n";
   print_usage();
   exit(1);
 } elsif ( ! $pid ) {
@@ -61,12 +59,10 @@ system("rm -rf tmp_dir");
 system("mkdir -p tmp_dir") == 0 or exit (__LINE__);
 
 my ($code, $fext);
-if ($dna) {
-  ($code, $fext) = ("dna", "fna");
-} elsif ($aa) {
-  ($code, $fext) = ("aa", "faa");
+if ($aa) {
+  ($stage_id, $code, $fext) = (550, "aa", "faa");
 } elsif ($rna) {
-  ($code, $fext) = ("rna", "fna");
+  ($stage_id, $code, $fext) = (440, "rna", "fna");
 }
 
 my $input_fasta = $stage_id.".".$stage_name.".input.$fext";
@@ -103,5 +99,5 @@ system("rm -rf tmp_dir");
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_cluster_parallel.pl -input=<input_fasta> <-dna|-aa|-rna> -pid=<percentage of identification, e.g. 80 for 80%>  [-output=<output_fasta> -jobnum=<job_num> -node=<# of nodes> -size=<size>]\n";
+    print "USAGE: awe_cluster_parallel.pl -input=<input_fasta> <-aa|-rna> -pid=<percentage of identification, e.g. 80 for 80%>  [-output=<output_fasta> -jobnum=<job_num> -node=<# of nodes> -size=<size>]\n";
 }
