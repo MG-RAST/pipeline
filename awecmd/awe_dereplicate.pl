@@ -28,7 +28,7 @@ my $options = GetOptions ("input=s"     => \$fasta_file,
 			  "out_prefix=s"    => \$out_prefix,
 			  "prefix_length=i" => \$prefix_size,
 			  "mem_size=s" => \$memsize,
-			  "dereplicate" => \$run_derep,
+			  "dereplicate=i" => \$run_derep,
 			  "output=s"    => \$out_file, #depreciated
 			 );
 
