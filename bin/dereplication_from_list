@@ -122,6 +122,8 @@ while( my $line = <FILE>){
  
 }
 
+my $error = check_block($current_md5 , $option , $block , $outfiles) if (scalar @$block);
+
 exit(0);
 
 sub check_block{
