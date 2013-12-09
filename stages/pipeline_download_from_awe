@@ -109,6 +109,14 @@ unless ($get->is_success) {
     $log->error("$stage_name failed on job: $job_num, could not retrieve AWE job via url: $awe_job_url");
     exit(1);
 }
+
+my $job_dir = $Pipeline_Conf::global_job_dir."/".$job_num;
+my $adir    = $job_dir."/analysis";
+
+open AWE_JOB, ">800.download_from_awe.awf" || $log->error("$stage_name failed on job: $job_num, Cannot save AWE worflow to $adir/800.download_from_awe.awf");
+print AWE_JOB $get->content;
+close AWE_JOB;
+
 my $json = new JSON();
 my $res = $json->decode( $get->content );
 
@@ -158,8 +166,6 @@ foreach my $req_file ('075.consensus.stats', '075.drisee.info', '075.drisee.stat
 
     my $shock_download_url = "$shock_url?download";
  
-    my $job_dir = $Pipeline_Conf::global_job_dir."/".$job_num;
-    my $adir    = $job_dir."/analysis";
     my $saved_file = "$adir/$req_file";
     if($req_file eq '700.annotation.sims.filter.seq' || $req_file eq '700.annotation.source.stats') {
         my $tmp = $req_file;

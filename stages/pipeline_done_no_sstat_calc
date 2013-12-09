@@ -94,6 +94,18 @@ $log->info("Running on host $hostname, using dir $run_dir");
 my $out_file = "$run_dir/$runcmd.out";
 my $message  = "$stage_name failed on job: $job_num, see $out_file for details.";
 
+# store drisee score
+my $d_stats  = "$results_dir/075.drisee.stats";
+my $d_score = 0;
+if (-s $d_stats) {
+  $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
+  chomp $d_score;
+}
+my $res = Pipeline::set_job_statistics($job_num, [["drisee_score_raw", sprintf("%.3f", $d_score)]]);
+unless ($res) {
+  $log->info("loaded drisee_score_raw stat: $d_score");
+}
+
 my (@fna_files, @faa_files);
 my $result_files = Pipeline::get_result_files();
 my $stat_tags    = Pipeline::get_job_stat_tags();
@@ -307,6 +319,39 @@ if ($email) {
     or die "Can't open Mail::Mailer: $!\n";
   print $mailer $body_txt;
   $mailer->close();
+}
+
+# last task should be to remove nodes (files) from Shock
+unless(-s "$results_dir/800.download_from_awe.awf" != 0) {
+  fail($log, "$stage_name failed on job: $job_num, AWE workflow document is empty or size zero.");
+}
+open AWE_JOB, "$results_dir/800.download_from_awe.awf" || fail($log, "$stage_name failed on job: $job_num, cannot open AWE workflow document.");
+my $line=<AWE_JOB>;
+close AWE_JOB;
+chomp $line;
+my $json = from_json( $line, { utf8 => 1 } );
+my %shock_nodes = ();
+foreach my $task (@{$json->{data}->{tasks}}) {
+  foreach my $input (keys %{$task->{inputs}}) {
+    my $node = $task->{inputs}->{$input}->{node};
+    $shock_nodes{$node} = 1;
+  }
+  foreach my $output (keys %{$task->{outputs}}) {
+    my $node = $task->{outputs}->{$output}->{node};
+    $shock_nodes{$node} = 1;
+  }
+}
+
+$log->info("Removing nodes from Shock");
+my $ua = LWP::UserAgent->new();
+foreach my $node (keys %shock_nodes) {
+  my $delete = $ua->delete("http://".$Pipeline_Conf::shock_url_from_mgrast."/node/".$shock_nodes{$node},
+                           Authorization => "OAuth $Pipeline_Conf::awe_pipeline_token");
+  if($delete->{'_msg'} eq 'OK') {
+    $log->info("Deleted node $node from Shock.");
+  } else {
+    $log->info("Could not delete node $node from Shock, msg returned was: ".$delete->{'_msg'});
+  }
 }
 
 $log->info("Finished $stage_name on job: $job_num");
