@@ -50,11 +50,7 @@ use Data::Dumper;
 umask 000;
 
 my $stage_name = "submit_to_awe";
-my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'awe_part_one'}}){
-  $stage = $s if $s->{name} eq $stage_name;
-}
-my $stage_id = $stage->{id};
+my $stage_id = "010";
 
 # options
 my $job_num = "";
