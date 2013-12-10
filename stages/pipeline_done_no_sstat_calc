@@ -343,7 +343,7 @@ foreach my $task (@{$json->{data}->{tasks}}) {
 $log->info("Removing nodes from Shock");
 my $ua = LWP::UserAgent->new();
 foreach my $node (keys %shock_nodes) {
-  my $delete = $ua->delete("http://".$Pipeline_Conf::shock_url_from_mgrast."/node/".$shock_nodes{$node},
+  my $delete = $ua->delete("http://".$Pipeline_Conf::shock_url_from_mgrast."/node/$node",
                            Authorization => "OAuth $Pipeline_Conf::awe_pipeline_token");
   if($delete->{'_msg'} eq 'OK') {
     $log->info("Deleted node $node from Shock.");
