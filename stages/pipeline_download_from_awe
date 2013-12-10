@@ -113,7 +113,7 @@ unless ($get->is_success) {
 my $job_dir = $Pipeline_Conf::global_job_dir."/".$job_num;
 my $adir    = $job_dir."/analysis";
 
-open AWE_JOB, ">800.download_from_awe.awf" || $log->error("$stage_name failed on job: $job_num, Cannot save AWE worflow to $adir/800.download_from_awe.awf");
+open AWE_JOB, ">$adir/800.download_from_awe.awf" || $log->error("$stage_name failed on job: $job_num, Cannot save AWE worflow to $adir/800.download_from_awe.awf");
 print AWE_JOB $get->content;
 close AWE_JOB;
 
@@ -194,8 +194,6 @@ foreach my $req_file ('075.consensus.stats', '075.drisee.info', '075.drisee.stat
             $error = "unable to connect to Shock ".$shock_download_url;
         } elsif (ref($content) && exists($content->{error}) && $content->{error}) {
             $error = "unable to GET file $node from Shock: ".$content->{error}[0];
-        } elsif (! -s $saved_file) {
-            $error = "unable to download to $saved_file: $!";
         }
 
         my $state = &retry_exit_or_continue($retry_count, $error);
