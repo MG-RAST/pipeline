@@ -12,6 +12,7 @@ use Data::Dumper;
 use Mail::Mailer;
 use Getopt::Long;
 use File::Copy;
+use LWP::UserAgent;
 umask 000;
 
 my $stage_name = "done";
