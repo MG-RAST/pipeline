@@ -28,11 +28,7 @@ use Digest::MD5::File qw( file_md5_hex );
 umask 000;
 
 my $stage_name = "download_from_awe";
-my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'awe_part_two'}}){
-  $stage = $s if $s->{name} eq $stage_name;
-}
-my $stage_id = $stage->{id};
+my $stage_id = "800";
 
 my $DOWNLOAD_RETRY_MAX = 1;
 
