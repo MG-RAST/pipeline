@@ -1,4 +1,4 @@
-#!/soft/packages/python/2.6/bin/python
+#!/usr/bin/env python
 
 import os, sys, copy, pprint
 import urllib, urllib2, json
@@ -739,9 +739,21 @@ def main(args):
 
     # object from source (xlsx file or google link): create hierarchy / test connections
     if opts.format == 'xlsx':
-        mdraw = xlsx_to_mdraw(md_source, opts.dupe, opts.inc)
+        try:
+            mdraw = xlsx_to_mdraw(md_source, opts.dupe, opts.inc)
+        except:
+            try:
+                mdraw = xls_to_mdraw(md_source, opts.dupe, opts.inc)
+            except:
+                errorMsg('Invald file format: '+md_source)
     elif opts.format == 'xls':
-        mdraw = xls_to_mdraw(md_source, opts.dupe, opts.inc)
+        try:
+            mdraw = xls_to_mdraw(md_source, opts.dupe, opts.inc)
+        except:
+            try:
+                mdraw = xlsx_to_mdraw(md_source, opts.dupe, opts.inc)
+            except:
+                errorMsg('Invald file format: '+md_source)
     elif opts.format == 'google':
         mdraw = google_to_mdraw(md_source, opts.dupe, opts.inc, opts.login, opts.password)
     else:
