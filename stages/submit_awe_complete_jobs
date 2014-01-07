@@ -60,13 +60,13 @@ while(my @row = $sth->fetchrow_array) {
 
     foreach my $task (@{$res->{data}->{tasks}}) {
         if($task->{state} ne "init") {
-            Pipeline::update_stage_info($job_num, $task->{cmd}->{description}, $task->{state});
+            Pipeline::update_stage_info_if_progressed($job_num, $task->{cmd}->{description}, $task->{state});
         }
         if($task->{cmd}->{description} eq "cluster_aa90" && $task->{state} eq "completed") {
-            Pipeline::update_stage_info($job_num, "loadAWE", "completed");
+            Pipeline::update_stage_info_if_progressed($job_num, "loadAWE", "completed");
         }
         if($task->{cmd}->{description} eq "annotation" && $task->{state} eq "completed") {
-            Pipeline::update_stage_info($job_num, "sims", "completed");
+            Pipeline::update_stage_info_if_progressed($job_num, "sims", "completed");
         }
     }
 
