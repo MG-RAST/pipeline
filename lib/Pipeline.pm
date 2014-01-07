@@ -252,7 +252,7 @@ sub update_stage_info_if_progressed {
     my $pipeline_stage_object = $query->fetchrow_hashref;
     my $prev_stage = $pipeline_stage_object->{stage};
 
-    if($pipeline_stage_to_order_number{$stage} >= $pipeline_stage_to_order_number{$prev_stage}) {
+    if(!exists $pipeline_stage_to_order_number{$stage} || !exists $pipeline_stage_to_order_number{$prev_stage} || $pipeline_stage_to_order_number{$stage} >= $pipeline_stage_to_order_number{$prev_stage}) {
       $query = $dbh->prepare(qq(insert into PipelineStage (`stage`,`status`,`job`,`_job_db`,`timestamp`) values (?,?,?,2,CURRENT_TIMESTAMP) on duplicate key update status=?));
       $query->execute($stage,$status,$job_object->{_id},$status) or die $dbh->errstr;
     }
