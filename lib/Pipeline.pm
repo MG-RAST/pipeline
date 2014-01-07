@@ -227,6 +227,40 @@ sub update_stage_info {
   return 1;
 }
 
+sub update_stage_info_if_progressed { 
+  my ($job, $stage, $status) = @_;
+  my %pipeline_stage_to_order_number = ( 'upload'        => 0,
+                                         'preprocess'    => 1,
+                                         'dereplication' => 2,
+                                         'screen'        => 3,
+                                         'genecalling'   => 4,
+                                         'cluster_aa90'  => 5,
+                                         'loadAWE'       => 6,
+                                         'sims'          => 7,
+                                         'loadDB'        => 8,
+                                         'done'          => 9 );
+
+  if($Pipeline_Conf::jobcache_db_avail == 1) {
+    my $dbh = get_jobcache_dbh();
+    my $query = $dbh->prepare(qq(select * from Job where job_id=?));
+    $query->execute($job) or die $dbh->errstr;  
+    my $job_object = $query->fetchrow_hashref;  
+
+    $query = $dbh->prepare(qq(select * from PipelineStage where job=?));
+    $query->execute($job_object->{_id}) or die $dbh->errstr;
+
+    my $pipeline_stage_object = $query->fetchrow_hashref;
+    my $prev_stage = $pipeline_stage_object->{stage};
+
+    if($pipeline_stage_to_order_number{$stage} >= $pipeline_stage_to_order_number{$prev_stage}) {
+      $query = $dbh->prepare(qq(insert into PipelineStage (`stage`,`status`,`job`,`_job_db`,`timestamp`) values (?,?,?,2,CURRENT_TIMESTAMP) on duplicate key update status=?));
+      $query->execute($stage,$status,$job_object->{_id},$status) or die $dbh->errstr;
+    }
+  }
+  return 1;
+}
+
+
 sub submit_stage {
   my ($stage) = @_;
   my ($script, $args, $qsub_options) = @{$stage};
