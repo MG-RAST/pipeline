@@ -121,6 +121,11 @@ sub filter_fastq {
 sub reformat_fastq {
   my($fastq_in, $fasta_out) = @_;
 
+  # if input file is empty, generate empty output file.
+  unless(-s $fastq_in) {
+    system("touch $fasta_out");
+  }
+
   my $output;
   my ($fn, $dir, $ext) = fileparse($fasta_out, qr/\.[^.]*/);
   my $fn_fasta_out = $fn . $ext; # path stripped out, if present
