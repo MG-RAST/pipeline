@@ -82,7 +82,7 @@ unless ( $filter_options =~ /^skip$/i ) {
     if ($ov =~ /=/) {
       my ($option, $value) = split "=", $ov;
       $cmd_options .= "-".$option." ".$value." ";
-    } else {
+    } elsif($ov ne "dynamic_trim") {
       $cmd_options .= "-".$ov." ";
     }
   }
