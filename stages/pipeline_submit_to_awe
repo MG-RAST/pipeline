@@ -111,7 +111,7 @@ if ($help) {
 }
 
 if(length($job_num)==0) {
-    print STDERR "$stage_name failed, job_num was not specified.\n";
+    $log->error("$stage_name failed, job_num was not specified.");
     print_usage();
     exit 1;
 }
@@ -281,7 +281,7 @@ open OUT, ">$awe_dump_file" || fail($log, "Could not open $awe_dump_file for wri
 print OUT Dumper($res);
 close OUT;
 
-if($state ne "submitted") {
+if($state ne "init") {
     $log->error("$stage_name failed on job: AWE job submission was not successful, please see '$awe_dump_file' for more info.");
     exit(1);
 }
