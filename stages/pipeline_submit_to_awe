@@ -110,14 +110,14 @@ if ($help) {
     exit 0;
 }
 
+my $log = Pipeline::logger($job_num);
+$log->info("Starting $stage_name on job: $job_num");
+
 if(length($job_num)==0) {
     $log->error("$stage_name failed, job_num was not specified.");
     print_usage();
     exit 1;
 }
-
-my $log = Pipeline::logger($job_num);
-$log->info("Starting $stage_name on job: $job_num");
 
 if (length($vars{inputfile})==0) {
     $log->error("$stage_name failed on job: $job_num, please specify the local path of the input file.");
