@@ -208,7 +208,7 @@ if (-s $aa_pred) {
 }
 load_stats($job_num, [['read_count_processed_aa', $aa_reads]]);
 
-unless (-s "$results_dir/700.annotation.sims.stats" == 0 && "$results_dir/$stage_id.$stage_name.sims.stats" != 0) {
+unless (!(-e "$results_dir/700.annotation.sims.stats") && -e "$results_dir/$stage_id.$stage_name.sims.stats") {
   move("$results_dir/700.annotation.sims.stats", "$results_dir/$stage_id.$stage_name.sims.stats") or fail($log, "$stage_name failed on job: $job_num, can not move $results_dir/700.annotation.sims.stats to $results_dir/$stage_id.$stage_name.sims.stats");
 }
 load_fasta_stats($job_num, $raw_fna, "$results_dir/$stage_id.$stage_name.sims.stats", ['sequence_count_sims_rna', 'sequence_count_sims_aa', 'sequence_count_ontology'], 0);
