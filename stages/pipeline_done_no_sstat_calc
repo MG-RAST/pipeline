@@ -295,10 +295,6 @@ foreach my $sf (@stats) {
 # set job as viewable
 Pipeline::set_jobcache_info($job_num, "viewable", 1);
 
-# cleanup AWE
-system("rm ".$Pipeline_Conf::AWEdata."/".$job_num);
-system("rm -rf ".$Pipeline_Conf::AWEdata."/".$job_num.".results");
-
 # email owner on completion
 if ($email) {
   my $mailer   = Mail::Mailer->new();
