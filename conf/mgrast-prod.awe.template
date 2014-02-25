@@ -10,7 +10,7 @@
         "tasks": [
             {
                 "cmd": {
-                    "args": "-input=@#inputfile -out_prefix_qc=#jobname.075 -out_prefix_prep=#jobname.100.preprocess -filter_options=#filter_options", 
+                    "args": "-input=@#inputfile -assembled=#assembled -out_prefix_qc=#jobname.075 -out_prefix_prep=#jobname.100.preprocess -filter_options=#filter_options", 
                     "description": "preprocess_qc",
                     "name": "awe_preprocess_qc.pl"
                 }, 
@@ -303,7 +303,7 @@
             {
                 "cmd": {
                     "name": "awe_annotate.pl",
-                    "args": "-raw=@#inputfile -job=#jobname -aa_sims=@#jobname.650.superblat.sims -rna_sims=@#jobname.450.rna.sims -clust_aa=@#jobname.550.cluster.aa90.mapping -map_rna=@#jobname.440.cluster.rna97.mapping -out_prefix=#jobname.700.annotation -nr_ver=#ach_annotation_ver -mem_host=#mem_host", 
+                    "args": "-raw=@#inputfile -job=#jobname -aa_sims=@#jobname.650.superblat.sims -rna_sims=@#jobname.450.rna.sims -clust_aa=@#jobname.550.cluster.aa90.mapping -map_rna=@#jobname.440.cluster.rna97.mapping -out_prefix=#jobname.700.annotation -nr_ver=#ach_annotation_ver -mem_host=#mem_host -assembled=#assembled", 
                     "description": "annotation"
                 }, 
                 "dependsOn": ["4", "5", "7", "8"],  

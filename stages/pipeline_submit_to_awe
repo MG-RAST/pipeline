@@ -249,6 +249,9 @@ if($file_size >= $lg_size) {
 # inputfile in awe workflow cannot contain directory path, only filename, so removing path here.
 $vars{inputfile} =~ s/.*\/(.*)/$1/;
 
+my $job_attribs = Pipeline::get_job_attributes($job_num);
+$vars{assembled} = exists($job_attribs->{assembled}) ? $job_attribs->{assembled} : 0;
+
 # Replace # vars in template
 my $text = read_file($pipeline_template);
 foreach my $key (keys %vars) {

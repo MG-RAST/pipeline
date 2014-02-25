@@ -18,12 +18,14 @@ my $qc_cmd   = "awe_qc.pl";
 
 # options
 my $input_file = "";
+my $assembled = 0;
 my $out_prefix_prep = "prep";
 my $out_prefix_qc = "qc";
 my $filter_options = "";
 my $out_file = "";
 my $help = "";
 my $options = GetOptions ("input=s"   => \$input_file,
+                          "assembled=i" => \$assembled,
 			  "out_prefix_prep=s" => \$out_prefix_prep,
 			  "filter_options=s" => \$filter_options,
 			  "output=s" => \$out_file, #deprecated
@@ -102,13 +104,13 @@ else {
 }
 
 # run qc
-print "$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc";
-run_cmd("$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc");
+print "$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc -assembled=$assembled";
+run_cmd("$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc -assembled=$assembled");
 
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_preprocess_qc.pl -input=<input fasta or fastq> [-out_prefix_qc=<output prefix for qc> -out_prefix_prep=<output prefix for preproces> -filter_options=<string_filter_options>]\n";
+    print "USAGE: awe_preprocess_qc.pl -input=<input fasta or fastq> [-assembled=<0 or 1, default 0> -out_prefix_qc=<output prefix for qc> -out_prefix_prep=<output prefix for preproces> -filter_options=<string_filter_options>]\n";
     print "outputs: \${out_prefix_prep}.passed.fna, \${out_prefix_prep}.removed.fna and 5 qc stats files\n"; 
 }
 

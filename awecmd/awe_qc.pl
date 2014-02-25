@@ -96,24 +96,7 @@ for my $ov (split ":", $filter_options) {
     }
 }
 
-if($assembled == 1) {
-  print "Printing out assembly abundance to file: $infile.abundance\n";
-  open ABUN, ">$infile.abundance" or exit __LINE__;
-  open SEQS, $infile or exit __LINE__;
-  while(my $line=<SEQS>) {
-    chomp $line;
-    if($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
-      my $seq = $1;
-      my $abun = $2;
-      print ABUN "$seq\t$abun\n";
-    } elsif($line =~ /^>(\S+).*$/) {
-      my $seq = $1;
-      print ABUN "$seq\t1\n";
-    }
-  }
-  close SEQS;
-  close ABUN;
-} else {
+unless($assembled == 1) {
   my $d_stats  = $basename.".drisee.stats";
   # create drisee table
   system("echo 'running drisee ... ' >> $log_file ");
@@ -162,7 +145,7 @@ foreach my $len (@kmers) {
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_qc.pl -seqs=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 4>, -kmers=<kmer list, default 6,15>]\n";
+    print "USAGE: awe_qc.pl -seqs=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 4>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
 }
 
 
