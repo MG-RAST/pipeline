@@ -36,7 +36,7 @@ my $aa_sims  = "";
 my $rna_sims = "";
 my $clust_aa = "";
 my $map_rna = "";
-my $abundance_file = ""; 
+my $assembled = 0; 
 
 my $options = GetOptions ("job=s"    => \$job_id,
 			  "raw=s"    => \$raw_input,
@@ -48,7 +48,7 @@ my $options = GetOptions ("job=s"    => \$job_id,
 			  "mem_host=s" => \$mem_host,
 			  "mem_key=s" => \$mem_key,
 			  "nr_ver=s" => \$ver_db,
-			  "abundance_file=s"  =>$abundance_file,
+			  "assembled=i"  =>$assembled,
 			 );
 
 my $prefix_aa = $out_prefix.".aa";
@@ -91,7 +91,24 @@ if (-s $map_rna) {
 }
 
 my $assembly_abun_opt = "";
-if (-e $abundance_file) {
+if($assembled eq '1') {
+  my $abundance_file = "$raw_input.abundance";
+  print "Printing out assembly abundance to file: $abundance_file\n");
+  open ABUN, ">$abundance_file" || exit __LINE__;
+  open SEQS, $raw_input || exit __LINE__;
+  while(my $line=<SEQS>) {
+    chomp $line;
+    if($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
+      my $seq = $1;
+      my $abun = $2;
+      print ABUN "$seq\t$abun\n";
+    } elsif($line =~ /^>(\S+).*$/) {
+      my $seq = $1;
+      print ABUN "$seq\t1\n";
+    }
+  }
+  close SEQS;
+  close ABUN;
   $assembly_abun_opt = "--abun_file $abundance_file";
 }
 
@@ -112,5 +129,6 @@ sub print_usage{
 				  -map_rna=<rna clust map>
 				  -mem_host=<memcache host>
 				  -nr_ver=<nr db version>
-				  [-out_prefix=<prefix for output files>]\n";
+				  [-out_prefix=<prefix for output files>]
+				  [-assembled=<0 or 1, default 0]\n";
 }
