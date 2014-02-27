@@ -206,7 +206,6 @@
                      "output": "#jobname.650.superblat.sims"
                 },
                 "taskid": "5",
-                "totalwork": #totalwork,
                 "maxworksize": 50
             },
             {
@@ -298,7 +297,7 @@
                      "output": "#jobname.450.rna.sims"
                 },
                 "taskid": "8",
-                "totalwork": 1
+                "maxworksize": 50
             },
             {
                 "cmd": {
