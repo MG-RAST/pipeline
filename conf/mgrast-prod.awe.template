@@ -109,7 +109,8 @@
                      "output": "#jobname.299.screen.passed.fna"
                 },
                 "taskid": "2", 
-                "totalwork": #totalwork
+                "totalwork": 1,
+                "maxworksize": 500
             },
             {
                 "cmd": {
@@ -140,7 +141,8 @@
                      "output": "#jobname.350.genecalling.coding.faa"
                 },
                 "taskid": "3", 
-                "totalwork": #totalwork
+                "totalwork": 1,
+                "maxworksize": 500
             },
             {   
                 "cmd": {
@@ -171,7 +173,8 @@
                      "output": "#jobname.550.cluster.aa90.faa"
                 },
                 "taskid": "4",
-                "totalwork": 1
+                "totalwork": 1,
+                "maxworksize": 2000
             },
             {
                 "cmd": {
@@ -266,7 +269,8 @@
                      "output": "#jobname.440.cluster.rna97.fna"
                 },
                 "taskid": "7",
-                "totalwork": 1
+                "totalwork": 1,
+                "maxworksize": 2000
             },
             {
                 "cmd": {
