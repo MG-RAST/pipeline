@@ -93,7 +93,7 @@ if (-s $map_rna) {
 my $assembly_abun_opt = "";
 if($assembled eq '1') {
   my $abundance_file = "$raw_input.abundance";
-  print "Printing out assembly abundance to file: $abundance_file\n");
+  print "Printing out assembly abundance to file: $abundance_file\n";
   open ABUN, ">$abundance_file" || exit __LINE__;
   open SEQS, $raw_input || exit __LINE__;
   while(my $line=<SEQS>) {
