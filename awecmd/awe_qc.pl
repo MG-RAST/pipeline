@@ -96,7 +96,7 @@ for my $ov (split ":", $filter_options) {
     }
 }
 
-unless($assembled == 1) {
+if($assembled != 1) {
   my $d_stats  = $basename.".drisee.stats";
   # create drisee table
   system("echo 'running drisee ... ' >> $log_file ");
@@ -134,6 +134,10 @@ unless($assembled == 1) {
   #  print "loading drisee_score_$name stat: $d_score\n";
   #}
   ###end of note
+} else {
+  system("touch $basename.drisee.info");
+  system("touch $basename.drisee.stats");
+  system("touch $basename.consensus.stats");
 }
 
 # create kmer profile
