@@ -90,7 +90,7 @@ unless ( $filter_options =~ /^skip$/i ) {
   }
 
   # run cmd
-  print "$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options";
+  print "$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options\n";
   run_cmd("$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
 }
 # skip it
@@ -104,7 +104,7 @@ else {
 }
 
 # run qc
-print "$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc -assembled=$assembled";
+print "$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc -assembled=$assembled\n";
 run_cmd("$qc_cmd -seqs=$input_file -out_prefix=$out_prefix_qc -assembled=$assembled");
 
 exit(0);
