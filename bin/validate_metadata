@@ -13,19 +13,12 @@ from openpyxl.reader.excel import load_workbook
 
 __doc__ = """Script to validate metadata from filled out MG-RAST v3 xlsx template"""
 
-MGRAST_URL = 'http://api.metagenomics.anl.gov/1/'
-BIOP_KEY = '56a9721b-0d62-4185-933d-81447db2457a'
-BIOP_URL = 'http://bioportal.bioontology.org'
-ENVO_URL = 'http://www.ontobee.org/browser/rdf.php?o=ENVO&iri=http://purl.obolibrary.org/obo/'
-SRCH_URL = 'http://rest.bioontology.org/bioportal/search'
-ONT_URL  = 'http://rest.bioontology.org/bioportal/ontologies/'
-CON_URL  = 'http://rest.bioontology.org/bioportal/concepts/'
+MGRAST_URL = 'http://dunkirk.mcs.anl.gov/~tharriso/mgrast/api.cgi/'
+#MGRAST_URL = 'http://api.metagenomics.anl.gov/1/'
 MGRASTID = 'mgrast_id'
 GEO_DIR  = {'N':1, 'S':-1, 'E':1, 'W':-1}
 ID_COL   = 0
 HEADER   = 1
-ONT_MAP  = {}
-ONT_NEW  = {}
 TEMPLATE = None
 CV_PARAM = None
 LOG_FILE = None
@@ -78,72 +71,13 @@ def obj_from_url(url):
             eobj = json.loads(error.read())
         except:
             pass
-        if (ONT_URL in url) or (SRCH_URL in url) or (CON_URL in url):
-            # in this state, ID not found
-            if eobj and ('errorStatus' in eobj) and (eobj['errorStatus']['errorCode'] == 404):
-                return None
-            # some other unknown error
-            else:
-                errorMsg("Bioportal (%s) inaccessable for ontology term lookup: can not connect to: %s\nPlease try again in 30 mins."%(BIOP_URL,url), 1)
-        # mgrast error
-        elif MGRAST_URL in url:
-            errorMsg("MG-RAST API (%s) inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%(MGRAST_URL,url), 1)
+        errorMsg("MG-RAST API (%s) inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%(MGRAST_URL,url), 1)
     if not res:
         return None
     obj = json.loads(res.read())
     if not (obj and isinstance(obj, dict)):
         return None
     return obj
-
-def test_ontology():
-    for bioid in set(CV_PARAM['ontology'].values()):
-        arr = bioid.split('.')
-        ontID = arr[0]
-        ontver = arr[1]
-        url = ONT_URL+ontver+'?'+urllib.urlencode({'apikey': BIOP_KEY})
-        obj =  obj_from_url(url)
-        if not (obj and ('success' in obj)):
-            return False
-    return True
-
-def check_ontology(ontID, term, subID):
-    term = unicode(term)
-    part = term.split(':',1)
-    arr = ontID.split('.')
-    ontID = arr[0]
-    ontver = arr[1]
-    # test if term is ID
-    if (len(part) == 2) and part[1].isdigit():
-        params = {'conceptid':term, 'apikey':BIOP_KEY}
-        if subID != 'none':
-            params['subtreerootconceptid'] = subID
-        url = CON_URL+ontver+'?'+urllib.urlencode(params)
-        obj = obj_from_url(url)
-        if obj and ('success' in obj):
-            try:
-                oid  = obj['success']['data'][0]['classBean']['id']
-                name = obj['success']['data'][0]['classBean']['label']
-            except (KeyError, TypeError, IndexError, AttributeError):
-                errorMsg("Bioportal ontology ID %s, version %s has malformed return structure from %s"%(ontID, ontver, url), 1)
-            if oid == term:
-                return name
-    # test if term is name
-    base = part[1] if len(part) == 2 else part[0]
-    params = {'isexactmatch':1, 'apikey':BIOP_KEY, 'ontologyids':ontID, 'ontologyVersionId':ontver, 'query':base}
-    #if subID != 'none':
-    #    params['subtreerootconceptid'] = subID
-    url  = SRCH_URL+'?'+urllib.urlencode(params)
-    obj  = obj_from_url(url)
-    if not (obj and ('success' in obj)):
-        errorMsg("Bioportal ontology ID %s, version %s is not available from %s"%(ontID, ontver, url), 1)
-    try:
-        contents = obj['success']['data'][0]['page']['contents']['ontologyHitList']['ontologyHitBean']
-    except (KeyError, TypeError, IndexError, AttributeError):
-        errorMsg("Bioportal ontology ID %s, version %s has malformed return structure from %s"%(ontID, ontver, url), 1)
-    if int(contents['numHits']) > 0:
-        return base
-    else:
-        return None
 
 def mgrast_api(request):
     url = MGRAST_URL+'metadata/'+request
@@ -251,6 +185,16 @@ def validate_type(key, val, atype):
             return cleanVal.lower()
         else:
             return None
+    elif (atype == 'ontology') and (key in CV_PARAM['ontology']):
+        try:
+            cleanVal = int(val)
+            cleanVal = unicode(cleanVal)
+        except ValueError:
+            cleanVal = unicode(val)
+        for oterm, oid in CV_PARAM['ontology'][key]:
+            if (cleanVal == oterm) or (cleanVal == oid):
+                return oterm
+        return None
     else:
         return None
 
@@ -604,25 +548,9 @@ def validate_mdraw(mdraw, skip):
         mdvalid['samples'][i]['envPackage']['data'] = validate_data(sample['envPackage']['type'], sample['envPackage']['name'], sample['envPackage']['data'], TEMPLATE['ep'], skip)
         for j, lib in enumerate(sample['libraries']):
             mdvalid['samples'][i]['libraries'][j]['data'] = validate_data(lib['type'], lib['name'], lib['data'], TEMPLATE['library'], skip)
-    validate_ontology()
-    ## replace ontology terms if needed
-    for cat in ONT_NEW.iterkeys():
-        if cat == 'project':
-            for key, val in ONT_NEW[cat][mdvalid['name']].iteritems():
-                mdvalid['data'][key]['value'] = val
-        elif cat =='sample':
-            for i, sample in enumerate(mdvalid['samples']):
-                for key, val in ONT_NEW[cat][sample['name']].iteritems():
-                    mdvalid['samples'][i]['data'][key]['value'] = val
-        elif cat == 'library':
-            for i, sample in enumerate(mdvalid['samples']):
-                for j, lib in enumerate(sample['libraries']):
-                    for key, val in ONT_NEW[cat][lib['name']].iteritems():
-                        mdvalid['samples'][i]['libraries'][j]['data'][key]['value'] = val
     return mdvalid
 
 def validate_data(cat, name, data, template, skip):
-    global ONT_MAP
     validData = {}
     dataMap = template[cat]
     for key in data.iterkeys():
@@ -641,47 +569,19 @@ def validate_data(cat, name, data, template, skip):
                 data[key] = data[key].strip()
             except (ValueError, AttributeError, TypeError):
                 pass
-            if items['type'] == 'ontology':
-                validVal = data[key]
-                if validVal not in ONT_MAP:
-                    ONT_MAP[validVal] = defaultdict(list)
-                ont_branch = CV_PARAM['ont_id'][key] if key in CV_PARAM['ont_id'] else 'none'
-                ONT_MAP[validVal][ont_branch+'||'+CV_PARAM['ontology'][key]].append([cat, key, name])
-            else:
-                validVal = validate_type(key, data[key], items['type'])
-                if validVal is None:
-                    bad_type = 'found in %s ontology'%key if items['type'] == 'ontology' else 'type '+items['type']
-                    bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
-                    add_invalid(cat, key, name, data[key], 'not '+bad_type)
-                    errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key]).encode('ascii','replace')))
+            # hack for different country terms
+            term = key
+            if (items['type'] == 'select') and key.endswith('country'):
+                term = 'country'
+            validVal = validate_type(term, data[key], items['type'])
+            if validVal is None:
+                bad_type = 'found in %s ontology'%key if items['type'] == 'ontology' else 'type '+items['type']
+                bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
+                add_invalid(cat, key, name, data[key], 'not '+bad_type)
+                errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key]).encode('ascii','replace')))
             validData[key] = copy.deepcopy(items)
             validData[key]['value'] = validVal
     return validData
-
-def validate_ontology():
-    for value in ONT_MAP.iterkeys():
-        for oset in ONT_MAP[value].iterkeys():
-            subid, oid = oset.split('||')
-            # exception for country handling
-            oterm = validate_type('country', value, 'select') if 'country' in ONT_MAP[value][oset][0][1] else None
-            if oterm is None:
-                oterm = check_ontology(oid, value, subid)
-            # ontology is missing
-            if oterm is None:
-                for items in ONT_MAP[value][oset]:
-                    (cat, key, name) = items
-                    if subid != 'none':
-                        url = ENVO_URL+subid.replace(':', '_')
-                    else:
-                        url = "%s/visualize/%s"%(BIOP_URL, oid)
-                    add_invalid(cat, key, name, value, 'not found in %s ontology (%s): see %s'%(key, oid, url))
-                    errorMsg("%s '%s' field '%s' value '%s' not found in ontology %s: see %s"%(cat, name, key, value, oid, url))
-            elif oterm != value:
-                for items in ONT_MAP[value][oset]:
-                    (cat, key, name) = items
-                    if cat not in ONT_NEW:
-                        ONT_NEW[cat] = defaultdict(dict)
-                    ONT_NEW[cat][name][key] = oterm
 
 def has_name_dupe(nameList):
     if len(nameList) == 0:
@@ -714,11 +614,11 @@ def main(args):
     parser.add_option("-s", "--skip_required", dest="skip", action="store_true", default=False, help="Skip checking for required metadata (other than needed for mapping)")
     parser.add_option("-d", "--allow_duplicate", dest="dupe", action="store_true", default=False, help="Allow duplicate metagenome_name values")
     parser.add_option("-i", "--allow_incomplete", dest="inc", action="store_true", default=False, help="Allow incomplete metadata speadsheets (will validate fields with empty library and ep tabs.)")
-
+    
     (opts, args) = parser.parse_args()
     if len(args) < 1:
         parser.error("Missing input file name")
-
+    
     md_source = args[0]
     LOG_FILE  = opts.log
     JSON_FILE = opts.json
@@ -728,15 +628,11 @@ def main(args):
         parser.error("Invalid %s file: %s"%(opts.format, md_source))
     if (opts.format == 'google') and (not valid_http_url(md_source)):
         parser.error("Invalid %s url: %s"%(opts.format, md_source))
-
+    
     # get template / controled vocab from mgrast
     TEMPLATE = mgrast_api('template')
     CV_PARAM = mgrast_api('cv')
-
-    # test bioportal lookup
-    if not test_ontology():
-        errorMsg("Ontology lookup service '%s' is currently unavailable"%ONT_URL, 1)
-
+    
     # object from source (xlsx file or google link): create hierarchy / test connections
     if opts.format == 'xlsx':
         try:
