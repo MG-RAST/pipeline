@@ -71,7 +71,7 @@ def main(args):
     parser.add_option("-o", "--output", dest="output", default=None, help="output .json file")
     parser.add_option("-g", "--get", dest="get", default='all', help="output to get: all, ancestors, parents, children, descendents. 'all' if no term_id")
     parser.add_option("-t", "--term_id", dest="term_id", default=None, help="term id if doing relationship lookup")
-    parser.add_option("-r", "--relations", dest="relations", default='is_a,part_of', help="comma seperated list of relations to use, default is 'is_a,part_of'")
+    parser.add_option("-r", "--relations", dest="relations", default='is_a,part_of,located_in', help="comma seperated list of relations to use, default is 'is_a,part_of,located_in'")
     (opts, args) = parser.parse_args()
     if not (opts.input and os.path.isfile(opts.input)):
         parser.error("missing input")
