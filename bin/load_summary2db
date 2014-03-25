@@ -176,7 +176,7 @@ sub create_child_tables_if_missing {
     my $child_table_name = $master_table_name."_".$range;
     my $has_table = $dbh->selectcol_arrayref("SELECT count(*) FROM pg_class WHERE relname='$child_table_name'");
     unless($has_table && @$has_table > 0 && $has_table->[0] > 0) {
-      $dbh->do("CREATE TABLE $child_table_name () INHERITS ($master_table_name);");
+      $dbh->do("CREATE TABLE $child_table_name ( CONSTRAINT $child_table_name\_job_check CHECK ((job >= $range_min) AND (job < ".($range_max+1).")) ) INHERITS ($master_table_name);");
       $dbh->do(&create_indexes_code($file_type, $range));
       $dbh->commit;
     }
