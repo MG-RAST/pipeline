@@ -147,7 +147,13 @@ foreach my $req_file ('075.consensus.stats', '075.drisee.info', '075.drisee.stat
                       '550.cluster.aa90.mapping', '650.superblat.sims', '700.annotation.function.summary',
                       '700.annotation.lca.summary', '700.annotation.md5.summary', '700.annotation.ontology.summary',
                       '700.annotation.organism.summary', '700.annotation.sims.filter.seq', '700.annotation.sims.stats',
-                      '700.annotation.source.stats') {
+                      '700.annotation.source.stats', '700.annotation.coverage.summary') {
+
+    # Temporarily allowing coverage summary file to be missing while we switch to new job template.
+    if(! exists $filename_to_shock_info{$req_file} && $req_file eq '700.annotation.coverage.summary') {
+        next;
+    }
+
     unless(exists $filename_to_shock_info{$req_file}) {
         $log->error("Required file: $req_file is missing from AWE job output.");
         exit(1);

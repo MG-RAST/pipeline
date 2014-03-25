@@ -104,6 +104,18 @@ unless ($res) {
   $log->info("loaded drisee_score_raw stat: $d_score");
 }
 
+# load percentage of total reads for which a coverage score was read from seq header
+my $cov_sum = "$results_dir/700.annotation.coverage.summary";
+if (-s $cov_sum) {
+  my $cov_per = 0;
+  $cov_per = `head -1 $cov_sum | cut -f2`;
+  chomp $cov_per;
+  my $stat_res = Pipeline::set_job_statistics($job_num, [["percent_reads_with_coverage", $cov_per]]);
+  unless ($stat_res) {
+    $log->info("loaded percent_reads_with_coverage stat: $cov_per");
+  }
+}
+
 my (@fna_files, @faa_files);
 my $result_files = Pipeline::get_result_files();
 my $stat_tags    = Pipeline::get_job_stat_tags();

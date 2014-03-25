@@ -7,6 +7,7 @@ use warnings;
 no warnings('once');
 
 use Getopt::Long;
+use Math::Round;
 use File::Copy;
 use File::Basename;
 use POSIX qw(strftime);
@@ -91,17 +92,21 @@ if (-s $map_rna) {
 }
 
 my $assembly_abun_opt = "";
+my $cov_found_count = 0;
+my $total_reads = 0;
 if($assembled == 1) {
-  my $abundance_file = "$raw_input.abundance";
+  my $abundance_file = "$job_id.abundance";
   print "Printing out assembly abundance to file: $abundance_file\n";
   open ABUN, ">$abundance_file" || exit __LINE__;
   open SEQS, $raw_input || exit __LINE__;
   while(my $line=<SEQS>) {
     chomp $line;
+    $total_reads++;
     if($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
       my $seq = $1;
       my $abun = $2;
       print ABUN "$seq\t$abun\n";
+      $cov_found_count++;
     } elsif($line =~ /^>(\S+).*$/) {
       my $seq = $1;
       print ABUN "$seq\t1\n";
@@ -110,6 +115,10 @@ if($assembled == 1) {
   close SEQS;
   close ABUN;
   $assembly_abun_opt = "--abun_file $abundance_file";
+
+  open OUT, ">$job_id.700.annotation.coverage.summary" || exit __LINE__;
+  print OUT "Percentage_of_reads_with_coverage_info:\t".(nearest(0.0001, $cov_found_count/$total_reads) * 100)."\n";
+  close OUT;
 }
 
 print "input_file_str=".$input_file_str."\n";

@@ -364,6 +364,11 @@
                     "#jobname.700.annotation.source.stats": {
                         "host": "http://#shockurl",
                         "node": "-"
+                    },
+                    "#jobname.700.annotation.coverage.summary": {
+                        "host": "http://#shockurl",
+                        "node": "-",
+			"optional": true
                     }
                 },
                 "taskid": "9",
