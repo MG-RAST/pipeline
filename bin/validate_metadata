@@ -191,7 +191,7 @@ def validate_type(key, val, atype):
         except ValueError:
             cleanVal = unicode(val)
         for oterm, oid in CV_PARAM['ontology'][key]:
-            if (cleanVal == oterm) or (cleanVal == oid):
+            if (cleanVal.lower() == oterm.lower()) or (cleanVal == oid):
                 return oterm
         return None
     else:
