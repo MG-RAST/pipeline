@@ -48,7 +48,7 @@ my $options = GetOptions ("job=s"    => \$job_id,
 			  "mem_host=s" => \$mem_host,
 			  "mem_key=s" => \$mem_key,
 			  "nr_ver=s" => \$ver_db,
-			  "assembled=i"  =>$assembled,
+			  "assembled=i"  => \$assembled
 			 );
 
 my $prefix_aa = $out_prefix.".aa";
@@ -91,7 +91,7 @@ if (-s $map_rna) {
 }
 
 my $assembly_abun_opt = "";
-if($assembled eq '1') {
+if($assembled == 1) {
   my $abundance_file = "$raw_input.abundance";
   print "Printing out assembly abundance to file: $abundance_file\n";
   open ABUN, ">$abundance_file" || exit __LINE__;
