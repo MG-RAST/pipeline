@@ -117,7 +117,7 @@ if($assembled == 1) {
   $assembly_abun_opt = "--abun_file $abundance_file";
 
   open OUT, ">$job_id.700.annotation.coverage.summary" || exit __LINE__;
-  my $percent = ( int ( ( ($cov_found_count/$total_reads) * 10000 ) + 0.5 ) ) / 100;
+  my $percent = sprintf( "%.2f", ( int ( ( ($cov_found_count/$total_reads) * 10000 ) + 0.5 ) ) / 100 );
   print OUT "Percentage_of_reads_with_coverage_info:\t$percent\n";
   close OUT;
 } else {
