@@ -119,6 +119,8 @@ if($assembled == 1) {
   open OUT, ">$job_id.700.annotation.coverage.summary" || exit __LINE__;
   print OUT "Percentage_of_reads_with_coverage_info:\t".(nearest(0.0001, $cov_found_count/$total_reads) * 100)."\n";
   close OUT;
+} else {
+  system("touch $job_id.700.annotation.coverage.summary 2>&1") == 0 or exit __LINE__;
 }
 
 print "input_file_str=".$input_file_str."\n";
