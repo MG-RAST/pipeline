@@ -100,15 +100,16 @@ if($assembled == 1) {
   open SEQS, $raw_input || exit __LINE__;
   while(my $line=<SEQS>) {
     chomp $line;
-    $total_reads++;
     if($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
       my $seq = $1;
       my $abun = $2;
       print ABUN "$seq\t$abun\n";
       $cov_found_count++;
+      $total_reads++;
     } elsif($line =~ /^>(\S+).*$/) {
       my $seq = $1;
       print ABUN "$seq\t1\n";
+      $total_reads++;
     }
   }
   close SEQS;
