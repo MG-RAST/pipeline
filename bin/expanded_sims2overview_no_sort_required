@@ -288,11 +288,16 @@ sub print_md5_stats {
 
         my ($seek, $len)     = exists($imap->{$md5}) ? @{$imap->{$md5}} : ('', '');
 
+        my @e_bins = ();
+        foreach my $val (@{$data->{$md5}{e_bins}}) {
+            push @e_bins, int($val + 0.5);
+        }
+
         print OUTFILE join("\t", ($version,
                                   $jobID,
                                   $md5,
-                                  $data->{$md5}{abun},
-                                  "{".join(",", @{$data->{$md5}{e_bins}})."}",
+                                  int($data->{$md5}{abun} + 0.5),
+                                  "{".join(",", @e_bins)."}",
                                   $e_mean,
                                   $e_std,
                                   $l_mean,
@@ -322,7 +327,7 @@ sub print_lca_stats {
         print OUTFILE join("\t", ($version,
                                   $jobID,
                                   $lca,
-                                  $data->{$lca}{abun},
+                                  int($data->{$lca}{abun} + 0.5),
                                   $e_mean,
                                   $e_std,
                                   $l_mean,
@@ -352,7 +357,7 @@ sub print_type_stats {
             print OUTFILE join("\t", ($version,
                                       $jobID,
                                       $id,
-                                      $data->{$id}{$source}{abun},
+                                      int($data->{$id}{$source}{abun} + 0.5),
                                       $e_mean,
                                       $e_std,
                                       $l_mean,
