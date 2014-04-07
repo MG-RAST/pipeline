@@ -139,6 +139,10 @@ while(my $line=<INFILE>) {
         if(!exists $frag_keys{$md5}) {
             my $eval_exp = &get_exponent($eval);
             my $abun = &get_abundance($frag);
+            if($abun < 1) {
+                next;
+            }
+
             $data->{$md5}{abun} += $abun;
             $data->{$md5}{e_sum} += $abun * ($eval_exp);
             $data->{$md5}{e_sos} += $abun * ($eval_exp * $eval_exp);
@@ -157,6 +161,10 @@ while(my $line=<INFILE>) {
         my $level = $oid;
 
         my $abun = &get_abundance($frag);
+        if($abun < 1) {
+            next;
+        }
+
         my @evals  = split(/;/, $eval);
         my @lens   = split(/;/, $len);
         my @idents = split(/;/, $ident);
@@ -193,6 +201,10 @@ while(my $line=<INFILE>) {
         if(!exists $frag_keys{$fid}{$source}) {
             my $eval_exp = &get_exponent($eval);
             my $abun = &get_abundance($frag);
+            if($abun < 1) {
+                next;
+            }
+
             $data->{$fid}{$source}{abun} += $abun;
             $data->{$fid}{$source}{e_sum} += $abun * ($eval_exp);
             $data->{$fid}{$source}{e_sos} += $abun * ($eval_exp * $eval_exp);
@@ -211,6 +223,10 @@ while(my $line=<INFILE>) {
         if(!exists $frag_keys{$oid}{$source}) {
             my $eval_exp = &get_exponent($eval);
             my $abun = &get_abundance($frag);
+            if($abun < 1) {
+                next;
+            }
+
             $data->{$oid}{$source}{abun} += $abun;
             $data->{$oid}{$source}{e_sum} += $abun * ($eval_exp);
             $data->{$oid}{$source}{e_sos} += $abun * ($eval_exp * $eval_exp);
@@ -238,6 +254,10 @@ while(my $line=<INFILE>) {
         unless($source) { next; }
         my $eval_exp = &get_exponent($eval);
         my $abun = &get_abundance($frag);
+        if($abun < 1) {
+            next;
+        }
+
         my $e_bin = &get_e_bin($eval_exp);
         my $i_bin = &get_i_bin($ident);
         if($e_bin eq "error") {
