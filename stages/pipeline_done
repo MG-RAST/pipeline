@@ -7,18 +7,16 @@ no warnings('once');
 use Pipeline;
 use Pipeline_Conf;
 
+use JSON;
 use Data::Dumper;
 use Mail::Mailer;
 use Getopt::Long;
 use File::Copy;
+use LWP::UserAgent;
 umask 000;
 
 my $stage_name = "done";
-my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'default'}}){
-  $stage = $s if $s->{name} eq $stage_name; 
-}
-my $stage_id = $stage->{id};
+my $stage_id = "999";
 my $revision = "0";
 my $version  = $Pipeline_Conf::pipeline_version . "." . $revision;
 my $runcmd   = "seq_length_stats.py";
@@ -48,7 +46,7 @@ if ( $ver ) {
   print STDERR "$stage_name - $version\n";
   exit(0);
 } elsif ( $help or (! $job_num) ) {
-  print STDERR "Usage: pipeline_$stage_name -j <job number> [-r <raw fasta> --ver_db <db version> --email --no_stats --no_file]\n";
+  print STDERR "Usage: pipeline_done_no_sstat_calc -j <job number> [-r <raw fasta> --ver_db <db version> --email --no_stats --no_file]\n";
   exit(1);
 } 
 
@@ -93,6 +91,30 @@ $log->info("Running on host $hostname, using dir $run_dir");
 
 my $out_file = "$run_dir/$runcmd.out";
 my $message  = "$stage_name failed on job: $job_num, see $out_file for details.";
+
+# store drisee score
+my $d_stats  = "$results_dir/075.drisee.stats";
+my $d_score = 0;
+if (-s $d_stats) {
+  $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
+  chomp $d_score;
+}
+my $res = Pipeline::set_job_statistics($job_num, [["drisee_score_raw", sprintf("%.3f", $d_score)]]);
+unless ($res) {
+  $log->info("loaded drisee_score_raw stat: $d_score");
+}
+
+# load percentage of total reads for which a coverage score was read from seq header
+my $cov_sum = "$results_dir/700.annotation.coverage.summary";
+if (-s $cov_sum) {
+  my $cov_per = 0;
+  $cov_per = `head -1 $cov_sum | cut -f2`;
+  chomp $cov_per;
+  my $stat_res = Pipeline::set_job_statistics($job_num, [["percent_reads_with_coverage", $cov_per]]);
+  unless ($stat_res) {
+    $log->info("loaded percent_reads_with_coverage stat: $cov_per");
+  }
+}
 
 my (@fna_files, @faa_files);
 my $result_files = Pipeline::get_result_files();
@@ -198,21 +220,10 @@ if (-s $aa_pred) {
 }
 load_stats($job_num, [['read_count_processed_aa', $aa_reads]]);
 
-# run / load sims stats
-my $sim_stats = [ [$results_dir."/".$Pipeline::sims_filter_rna, 1, 'sequence_count_sims_rna', 0],
-		  [$results_dir."/".$Pipeline::sims_filter_aa, 1, 'sequence_count_sims_aa', 0],
-		  [$results_dir."/".$Pipeline::sims_ontology, 2, 'sequence_count_ontology', 0] ];
-open(SSTAT, ">$run_dir/$stage_id.$stage_name.sims.stats") or fail($log, "$stage_name failed on job: $job_num, can not open $run_dir/$stage_id.$stage_name.sims.stats: $!");
-foreach my $set (@$sim_stats) {
-  my ($sfile, $scut, $skey, $sstat) = @$set;
-  if (-s $sfile) {
-    $sstat = `cut -f$scut $sfile | uniq | wc -l`;
-    chomp $sstat;
-  }
-  print SSTAT "$skey\t$sstat\n";
+unless (!(-e "$results_dir/700.annotation.sims.stats") && -e "$results_dir/$stage_id.$stage_name.sims.stats") {
+  move("$results_dir/700.annotation.sims.stats", "$results_dir/$stage_id.$stage_name.sims.stats") or fail($log, "$stage_name failed on job: $job_num, can not move $results_dir/700.annotation.sims.stats to $results_dir/$stage_id.$stage_name.sims.stats");
 }
-close SSTAT;
-load_fasta_stats($job_num, $raw_fna, "$run_dir/$stage_id.$stage_name.sims.stats", [$sim_stats->[0][2], $sim_stats->[1][2], $sim_stats->[2][2]], 0);
+load_fasta_stats($job_num, $raw_fna, "$results_dir/$stage_id.$stage_name.sims.stats", ['sequence_count_sims_rna', 'sequence_count_sims_aa', 'sequence_count_ontology'], 0);
 
 # annotated read stat
 my $ann_read = '0';
@@ -231,6 +242,14 @@ foreach my $taxa (('domain', 'phylum', 'class', 'order', 'family', 'genus', 'spe
     print TSTAT join("\n", map { $_->[0] . "\t" . $_->[1] } @$taxa_stats) . "\n";
     close TSTAT;
   }
+}
+
+# calculate function abundances
+my $func_stats = Pipeline::get_function_abundances($job_num, $ver_db);
+if (@$func_stats > 0) {
+  open(FSTAT, ">$run_dir/$stage_id.$stage_name.functions.stats") or fail($log, "$stage_name failed on job: $job_num, can not open $run_dir/$stage_id.$stage_name.functions.stats: $!");
+  print FSTAT join("\n", map { $_->[0] . "\t" . $_->[1] } @$func_stats) . "\n";
+  close FSTAT;
 }
 
 # calculate ontology abundance
@@ -298,10 +317,6 @@ foreach my $sf (@stats) {
 # set job as viewable
 Pipeline::set_jobcache_info($job_num, "viewable", 1);
 
-# cleanup AWE
-system("rm ".$Pipeline_Conf::AWEdata."/".$job_num);
-system("rm -rf ".$Pipeline_Conf::AWEdata."/".$job_num.".results");
-
 # email owner on completion
 if ($email) {
   my $mailer   = Mail::Mailer->new();
@@ -320,6 +335,39 @@ if ($email) {
     or die "Can't open Mail::Mailer: $!\n";
   print $mailer $body_txt;
   $mailer->close();
+}
+
+# last task should be to remove nodes (files) from Shock
+unless(-s "$results_dir/800.download_from_awe.awf" != 0) {
+  fail($log, "$stage_name failed on job: $job_num, AWE workflow document is empty or size zero.");
+}
+open AWE_JOB, "$results_dir/800.download_from_awe.awf" || fail($log, "$stage_name failed on job: $job_num, cannot open AWE workflow document.");
+my $line=<AWE_JOB>;
+close AWE_JOB;
+chomp $line;
+my $json = from_json( $line, { utf8 => 1 } );
+my %shock_nodes = ();
+foreach my $task (@{$json->{data}->{tasks}}) {
+  foreach my $input (keys %{$task->{inputs}}) {
+    my $node = $task->{inputs}->{$input}->{node};
+    $shock_nodes{$node} = 1;
+  }
+  foreach my $output (keys %{$task->{outputs}}) {
+    my $node = $task->{outputs}->{$output}->{node};
+    $shock_nodes{$node} = 1;
+  }
+}
+
+$log->info("Removing nodes from Shock");
+my $ua = LWP::UserAgent->new();
+foreach my $node (keys %shock_nodes) {
+  my $delete = $ua->delete("http://".$Pipeline_Conf::shock_url_from_mgrast."/node/$node",
+                           Authorization => "OAuth $Pipeline_Conf::awe_pipeline_token");
+  if($delete->{'_msg'} eq 'OK') {
+    $log->info("Deleted node $node from Shock.");
+  } else {
+    $log->info("Could not delete node $node from Shock, msg returned was: ".$delete->{'_msg'});
+  }
 }
 
 $log->info("Finished $stage_name on job: $job_num");
