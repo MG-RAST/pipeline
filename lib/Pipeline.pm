@@ -305,6 +305,38 @@ sub get_source_map {
     return \%data;
 }
 
+sub get_function_abundances {
+  my ($job, $v) = @_;
+
+  my $data = {}; # id => function
+  my $data_dbh = get_analysis_dbh();
+  my $func_md5  = {}; # function => { md5s }
+  my $func_num  = []; # [ function, abundance ]
+
+  my $rows = $data_dbh->selectall_arrayref("SELECT _id, name FROM functions");
+  unless ($rows && (@$rows > 0)) { return []; }
+  %$data = map { $_->[0], $_->[1] } grep { $_->[1] && ($_->[1] =~ /\S/) } @$rows;
+  
+  my $funcs = get_function_md5s($job, $v);
+  foreach my $f (keys %$funcs) {
+    if (exists $data->{$f}) {
+      map { $func_md5->{$data->{$f}}->{$_} = 1 } @{ $funcs->{$f} };
+    }
+  }
+
+  my $md5s  = get_md5_abundance($job, $v);
+  my $other = 0;
+  foreach my $f (sort keys %$func_md5) {
+    my $num = 0;
+    map { $num += $md5s->{$_} } grep { exists $md5s->{$_} } keys %{ $func_md5->{$f} };
+    if ($num > 0) {
+      push @$func_num, [ $f, $num ];
+    }
+  }
+
+  return $func_num;
+}
+
 sub get_taxa_abundances {
   my ($job, $taxa, $clump, $v) = @_;
 
@@ -345,6 +377,7 @@ sub get_taxa_abundances {
 }
 
 our $ontology_md5s = {}; # src => ont => [md5s]
+our $function_md5s = {}; # func => [md5s]
 our $organism_md5s = {}; # org => [md5s]
 our $md5_abundance = {}; # md5 => abund
 
@@ -360,6 +393,19 @@ sub get_ontology_md5s {
     }
   }
   return $ontology_md5s;
+}
+
+sub get_function_md5s {
+  my ($job, $v) = @_;
+
+  unless (scalar(keys %$function_md5s) > 0) {
+    my $dbh  = get_analysis_dbh();
+    my $rows = $dbh->selectall_arrayref("SELECT distinct id, md5s FROM job_functions WHERE version=$v AND job=$job");
+    if ($rows && (@$rows > 0)) {
+      %$function_md5s = map { $_->[0], $_->[1] } @$rows;
+    }
+  }
+  return $function_md5s;
 }
 
 sub get_organism_md5s {
