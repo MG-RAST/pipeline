@@ -46,7 +46,7 @@ if ( $ver ) {
   print STDERR "$stage_name - $version\n";
   exit(0);
 } elsif ( $help or (! $job_num) ) {
-  print STDERR "Usage: pipeline_done_no_sstat_calc -j <job number> [-r <raw fasta> --ver_db <db version> --email --no_stats --no_file]\n";
+  print STDERR "Usage: pipeline_done -j <job number> [-r <raw fasta> --ver_db <db version> --email --no_stats --no_file]\n";
   exit(1);
 } 
 
