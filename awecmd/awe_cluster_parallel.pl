@@ -77,7 +77,7 @@ if ((-s $fasta_file) > 1024) {
       system("cp $input_fasta $output_prefix.$fext");
       system("touch $output_prefix.mapping");
   } else {
-     if ((-s $output_prefix.$fext) == 0) {
+     if ((-s "$output_prefix.$fext") == 0) {
         system("cp $input_fasta $output_prefix.$fext");
         system("touch $output_prefix.mapping");
      }
