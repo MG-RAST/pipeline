@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
 import json
 from optparse import OptionParser
@@ -8,6 +9,7 @@ from collections import defaultdict
 
 # declare a blank dictionary, keys are the term_ids
 terms = {}
+quote = re.compile(r'\"(.+?)\"')
 
 def getTerm(stream):
     block = []
@@ -24,45 +26,66 @@ def parseTagValue(term):
     for line in term:
         tag = line.split(': ',1)[0]
         value = line.split(': ',1)[1]
+        qval  = quote.match(value)
         if tag == 'relationship':
             tag = value.split(' ', 1)[0]
             value = value.split(' ', 1)[1]
+        if qval:
+            value = qval.group(1)
         data[tag].append(value)
     return data
 
-def getDescendents(tid):
-    recursiveArray = []
+def getDescendents(tid, full=False):
+    decendents = {} if full else []
     if terms.has_key(tid):
-        recursiveArray = [(terms[tid]['name'], tid)]
-        children = terms[tid]['c']
+        decendents = {tid: terms[tid]} if full else [(terms[tid]['label'], tid)]
+        children = terms[tid]['childNodes']
         if len(children) > 0:
             for child in children:
-                recursiveArray.extend(getDescendents(child))
-    return list(set(recursiveArray))
+                if full:
+                    decendents.update(getDescendents(child, full=full))
+                else:
+                    decendents.extend(getDescendents(child, full=full))
+    return decendents if full else list(set(decendents))
 
-def getAncestors(tid):
-    recursiveArray = []
+def getAncestors(tid, full=False):
+    ancestors = {} if full else []
     if terms.has_key(tid):
-        recursiveArray = [(terms[tid]['name'], tid)]
-        parents = terms[tid]['p']
+        ancestors = {tid: terms[tid]} if full else [(terms[tid]['label'], tid)]
+        parents = terms[tid]['parentNodes']
         if len(parents) > 0:
             for parent in parents:
-                recursiveArray.extend(getAncestors(parent))
-    return list(set(recursiveArray))
+                if full:
+                    ancestors.update(getAncestors(parent, full=full))
+                else:
+                    ancestors.extend(getAncestors(parent, full=full))
+    return ancestors if full else list(set(ancestors))
 
-def getChildren(tid):
-    children = []
+def getChildren(tid, full=False):
+    children = {} if full else []
     if terms.has_key(tid):
-        for c in terms[tid]['c']:
-            children.append((terms[c]['name'], c))
-    return list(set(children))
+        for c in terms[tid]['childNodes']:
+            if full:
+                children[c] = terms[c]
+            else:
+                children.append((terms[c]['label'], c))
+    return children if full else list(set(children))
 
-def getParents(tid):
-    parents = []
+def getParents(tid, full=False):
+    parents = {} if full else []
     if terms.has_key(tid):
-        for p in terms[tid]['p']:
-            parents.append((terms[p]['name'], p))
-    return list(set(parents))
+        for p in terms[tid]['parentNodes']:
+            if full:
+                parents[p] = terms[p]
+            else:
+                parents.append((terms[p]['label'], p))
+    return parents if full else list(set(parents))
+
+def outputData(data, ofile):
+    if ofile:
+        json.dump(data, open(ofile, 'w'))
+    else:
+        print json.dumps(data, sort_keys=True, indent=4)
 
 def main(args):
     global terms
@@ -70,8 +93,10 @@ def main(args):
     parser.add_option("-i", "--input", dest="input", default=None, help="input .obo file")
     parser.add_option("-o", "--output", dest="output", default=None, help="output .json file")
     parser.add_option("-g", "--get", dest="get", default='all', help="output to get: all, ancestors, parents, children, descendents. 'all' if no term_id")
+    parser.add_option("-f", "--full", dest="full", action="store_true", default=False, help="return output as struct with relationships, default is list of tuples (name, id)")
     parser.add_option("-t", "--term_id", dest="term_id", default=None, help="term id if doing relationship lookup")
     parser.add_option("-r", "--relations", dest="relations", default='is_a,part_of,located_in', help="comma seperated list of relations to use, default is 'is_a,part_of,located_in'")
+    parser.add_option("-m", "--metadata", dest="metadata", default=None, help="add the given JSON data as top level metadata info to return struct, only usable with --full option")
     (opts, args) = parser.parse_args()
     if not (opts.input and os.path.isfile(opts.input)):
         parser.error("missing input")
@@ -94,7 +119,8 @@ def main(args):
         if len(term) != 0:
             termID = term['id'][0]
             termName = term['name'][0]
-        
+            termDesc = term['def'][0] if 'def' in term else term['name'][0]
+            
             # only add to the structure if the term has a relation tag
             # the relation value contains ID and term definition, we only want ID
             termParents = []
@@ -104,37 +130,48 @@ def main(args):
         
             # each ID will have two arrays of parents and children
             if not terms.has_key(termID):
-                terms[termID] = {'p':[],'c':[]}
-            terms[termID]['name'] = termName
-        
+                terms[termID] = {'parentNodes':[], 'childNodes':[]}
+            terms[termID]['id'] = termID
+            terms[termID]['label'] = termName
+            terms[termID]['description'] = termDesc
+            
             # append parents of the current term
-            terms[termID]['p'] = termParents
-        
+            terms[termID]['parentNodes'] = termParents
+            
             # for every parent term, add this current term as children
             for termParent in termParents:
                 if not terms.has_key(termParent):
-                    terms[termParent] = {'p':[],'c':[]}
-                terms[termParent]['c'].append(termID)
+                    terms[termParent] = {'parentNodes':[], 'childNodes':[]}
+                terms[termParent]['childNodes'].append(termID)
         else:
             break
     
     # output
     data = None
     if opts.get == 'ancestors':
-        data = getAncestors(opts.term_id)
+        data = getAncestors(opts.term_id, full=opts.full)
     elif opts.get == 'parents':
-        data = getParents(opts.term_id)
+        data = getParents(opts.term_id, full=opts.full)
     elif opts.get == 'children':
-        data = getChildren(opts.term_id)
+        data = getChildren(opts.term_id, full=opts.full)
     elif opts.get == 'descendents':
-        data = getDescendents(opts.term_id)
-    else:
+        data = getDescendents(opts.term_id, full=opts.full)
+    elif opts.full:
         data = terms
-        
-    if opts.output:
-        json.dump(data, open(opts.output, 'w'))
     else:
-        print json.dumps(data, sort_keys=True, indent=4)
+        data = [(terms[k]['label'], k) for k in sorted(terms)]
+    
+    # have global info
+    if opts.full and opts.metadata:
+        try:
+            mdata = json.loads(opts.metadata)
+            mdata['nodes'] = data
+            outputData(mdata, opts.output)
+        except:
+            outputData(data, opts.output)
+    # just dump as is
+    else:
+        outputData(data, opts.output)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
