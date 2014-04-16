@@ -331,15 +331,15 @@ close FUNCS;
 
 print SOLR "   ],\n   \"md5:\" : [\n";
 
-my %md5_hash = ();
+my $last_md5 = "";
 open MD5S, "$md5_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $md5_fn");
 while(my $line=<MD5S>) {
   chomp $line;
   my @array = split(/\t/, $line);
-  unless(exists $md5_hash{$array[1]}) {
+  unless($array[1] eq $last_md5) {
     print SOLR "      \"$array[1]\",\n";
-    $md5_hash{$array[1]} = 1;
   }
+  $last_md5 = $array[1];
 }
 print SOLR "   ]\n}\n]";
 close SOLR;
