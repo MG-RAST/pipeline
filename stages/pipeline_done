@@ -302,6 +302,48 @@ else {
   Pipeline::set_jobcache_info($job_num, 'sequence_type', $ratio_guess);
 }
 
+# create solr document for metagenome search
+my $solr_fn = "999.done.solr.json";
+my $func_fn = "999.done.functions.stats";
+my $org_fn = "999.done.species.stats";
+my $md5_fn = "900.loadDB.sims.filter.seq";
+
+open SOLR, ">$solr_fn" or fail($log, "$stage_name failed on job: $job_num, can not write file $solr_fn");
+print SOLR "[\n{\n   \"function:\" : [\n";
+
+open FUNCS, "$func_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $func_fn");
+while(my $line=<FUNCS>) {
+  chomp $line;
+  my @array = split(/\t/, $line);
+  print SOLR "      \"$array[0]\",\n";
+}
+close FUNCS;
+
+print SOLR "   ],\n   \"organism:\" : [\n";
+
+open ORGS, "$org_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $org_fn");
+while(my $line=<ORGS>) {
+  chomp $line;
+  my @array = split(/\t/, $line);
+  print SOLR "      \"$array[0]\",\n";
+}
+close FUNCS;
+
+print SOLR "   ],\n   \"md5:\" : [\n";
+
+my $last_md5 = "";
+open MD5S, "$md5_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $md5_fn");
+while(my $line=<MD5S>) {
+  chomp $line;
+  my @array = split(/\t/, $line);
+  unless($array[1] eq $last_md5) {
+    print SOLR "      \"$array[1]\",\n";
+  }
+  $last_md5 = $array[1];
+}
+print SOLR "   ]\n}\n]";
+close SOLR;
+
 # gzip files
 system("compress_job -j $job_num") == 0 or fail($log, "compress_job: ".$message);
 
