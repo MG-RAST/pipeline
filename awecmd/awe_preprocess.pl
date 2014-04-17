@@ -13,20 +13,17 @@ use File::Basename;
 use POSIX qw(strftime);
 umask 000;
 
-my $runcmd   = "filter_sequences";
-
 # options
 my $input_file = "";
 my $out_prefix = "prep";
 my $filter_options = "";
-my $out_file = "";
 my $help = "";
-my $options = GetOptions ("input=s"   => \$input_file,
-			  "out_prefix=s"  => \$out_prefix,
-			  "filter_options=s" => \$filter_options,
-			  "output=s" => \$out_file, #deprecated
-			  "help!" => \$help
-			 );
+my $options = GetOptions (
+        "input=s" => \$input_file,
+		"out_prefix=s" => \$out_prefix,
+		"filter_options=s" => \$filter_options,
+		"help!" => \$help
+);
 
 if ($help){
     print_usage();
@@ -47,9 +44,6 @@ if ($help){
 
 my $passed_seq = $out_prefix.".passed.fna";
 my $removed_seq = $out_prefix.".removed.fna";
-if (length($out_file)>0) { #for compatibility with old pipeline templates (-output is deprecated)
-    $passed_seq = $out_file;
-}
 
 # get filter options
 # default => filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5
@@ -85,8 +79,8 @@ unless ( $filter_options =~ /^skip$/i ) {
   }
 
   # run cmd
-  print "$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options";
-  run_cmd("$runcmd -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
+  print "filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options\n";
+  run_cmd("filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
 }
 # skip it
 else {

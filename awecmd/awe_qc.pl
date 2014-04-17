@@ -10,39 +10,41 @@ use File::Copy;
 use Cwd;
 umask 000;
 
-my $stage_name="qc";
-my $stage;
-for my $s (@{$Pipeline_Conf::pipeline->{'default'}}) {
-  $stage = $s if $s->{name} eq $stage_name; 
-}
-my $stage_id = '075';
-my $revision = "0";
-
 # options
-my $job_num = "";
-my $seqs    = "";
-my $name    = "raw";
-my $procs   = 4;
-my $kmers   = '15,6';
+my $infile = "";
+my $name   = "raw";
+my $procs  = 8;
+my $kmers  = '15,6';
 my $output_prefix = "";
 my $assembled = 0;
-my $help    = 0;
+my $help = 0;
 my $filter_options = "";
-my $options = GetOptions ("job=i"    => \$job_num,
-			  "seqs=s"   => \$seqs,
-			  "name=s"   => \$name,
-			  "procs=i"  => \$procs,
-			  "kmers=s"  => \$kmers,
-			  "out_prefix=s"  => \$output_prefix,
-                          "assembled=i" => \$assembled,
-                          "filter_options=s" => \$filter_options,
-			  "help!"    => \$help,
-			 );
+my $options = GetOptions (
+		"input=s"  => \$infile,
+		"name=s"   => \$name,
+		"procs=i"  => \$procs,
+		"kmers=s"  => \$kmers,
+		"out_prefix=s"  => \$output_prefix,
+        "assembled=i" => \$assembled,
+        "filter_options=s" => \$filter_options,
+		"help!"    => \$help,
+);
 
-unless (-s $seqs) {
-    print "ERROR: The input sequence file [$seqs] does not exist.\n";
+if ($help){
+    print_usage();
+    exit 0;
+}elsif (length($infile)==0){
+    print "ERROR: An input file was not specified.\n";
+    print_usage();
+    exit __LINE__;
+}elsif (! -e $infile){
+    print "ERROR: The input sequence file [$infile] does not exist.\n";
     print_usage();
     exit __LINE__;  
+}elsif ($infile !~ /\.(fna|fasta|fq|fastq)$/i) {
+    print "ERROR: The input sequence file must be fasta or fastq format.\n";
+    print_usage();
+    exit __LINE__;
 }
 
 unless (length($output_prefix) > 0) {
@@ -61,46 +63,25 @@ if ((@kmers == 0) || $bad_kmer) {
   exit(1);
 }
 
-# format
-my $format  = '';
-my $gzipped = 0;
-if ($seqs =~ /^(\S+)\.gz$/) {
-  $gzipped = 1;
-  $format = ($1 =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
-}
-else {
-  $format = ($seqs =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
-}
-
-# files
-my $run_dir = getcwd();
-my $basename = $run_dir."/".$output_prefix;
-my $log_file = $basename.".qc.out";
-my $infile   = $basename.".input.".$format;
-#my $message  = "$stage_name failed on job: $job_num, see $stage_dir/$stage_id.qc.out for details.";
-
-if ($gzipped) {
-  system("zcat $seqs > $infile") == 0 or exit __LINE__;
-} else {
-  system("cp $seqs $infile") == 0 or exit __LINE__;
-}
+my $format = ($infile =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
 
 my %value_opts = ();
-my %boolean_opts = ();
 for my $ov (split ":", $filter_options) {
     if ($ov =~ /=/) {
-      my ($option, $value) = split "=", $ov;
-      $value_opts{$option} = $value;
-    } else {
-      $boolean_opts{$ov} = 1;
+        my ($option, $value) = split "=", $ov;
+        $value_opts{$option} = $value;
     }
 }
 
-if($assembled != 1) {
-  my $d_stats  = $basename.".drisee.stats";
+my $d_stats = $output_prefix.".drisee.stats";
+my $d_info  = $output_prefix.".drisee.info";
+my $c_stats = $output_prefix.".consensus.stats";
+my $run_dir = getcwd;
+
+if ($assembled != 1) {
   # create drisee table
-  system("echo 'running drisee ... ' >> $log_file ");
-  system("drisee -v -p $procs -t $format -d $run_dir -l $log_file -f $infile $d_stats > $basename.drisee.info 2>&1") == 0 or exit __LINE__;
+  print "drisee -v -p $procs -t $format -d $run_dir -f $infile $d_stats\n";
+  system("drisee -v -p $procs -t $format -d $run_dir -f $infile $d_stats > $d_info 2>&1") == 0 or exit __LINE__;
 
   # create consensus table
   my $max_ln = 600;
@@ -118,38 +99,33 @@ if($assembled != 1) {
       $max_ln = 100;
     }
   }
-  print "running consensus ...";
-  system("echo 'running consensus ... ' >> $log_file ");
-  system("consensus.py -v -b $max_ln -t $format -i $infile -o $basename.consensus.stats >> $log_file 2>&1") == 0 or exit __LINE__;
+  print "consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats\n";
+  run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
   
-  # !!note: following code needs to be moved to "done" stage to write to db
-  # load drisee stats
-  #my $d_score = 0;
-  #if (-s $d_stats) {
-  #  $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
-  #  chomp $d_score;
-  #}
-  #my $res = Pipeline::set_job_statistics($job_num, [["drisee_score_$name", sprintf("%.3f", $d_score)]]);
-  #unless ($res) {
-  #  print "loading drisee_score_$name stat: $d_score\n";
-  #}
-  ###end of note
 } else {
-  system("touch $basename.drisee.info");
-  system("touch $basename.drisee.stats");
-  system("touch $basename.consensus.stats");
+  run_cmd("touch $d_stats");
+  run_cmd("touch $d_info");
+  run_cmd("touch $c_stats");
 }
 
 # create kmer profile
 foreach my $len (@kmers) {
-  system("echo 'running kmer-tool for size $len ... ' >> $log_file ");
-  system("kmer-tool -l $len -p $procs -i $infile -t $format -o $basename.kmer.$len.stats -f histo -r -d $run_dir >> $log_file 2>&1") == 0 or exit __LINE__;
+  print "kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir\n";
+  run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir");
 }
 
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_qc.pl -seqs=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 4>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
+    print "USAGE: awe_qc.pl -input=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
 }
 
-
+sub run_cmd{
+    my ($cmd) = @_;
+    my $run = (split(/ /, $cmd))[0];
+    system($cmd);
+    if ($? != 0) {
+        print "ERROR: $run returns value $?\n";
+        exit $?;
+    }
+}
