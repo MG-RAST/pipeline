@@ -80,7 +80,7 @@ def main(args):
     rep_file  = out_name+'.derep'
     pass_file = out_name+'.passed.fna'
     fail_file = out_name+'.removed.fna'
-    create_prefix_file(in_seq, rep_file, opts.prefix, opts.memory, opts.seq_type)
+    create_prefix_file(in_seq, rep_file, opts.prefix_length, opts.memory, opts.seq_type)
     remove_reps(rep_file, pass_file, fail_file)
     return 0
 
