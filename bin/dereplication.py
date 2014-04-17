@@ -21,6 +21,13 @@ def split_rec(rec, stype):
     else:
         return rec.id, str(rec.seq).upper(), None
 
+def run_cmd(cmd):
+    proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    stdout, stderr = proc.communicate()
+    if proc.returncode != 0:
+        raise IOError("%s\n%s"%(" ".join(cmd), stderr))
+    return stdout, stderr
+
 def create_prefix_file(in_file, out_file, prefix_len, memory, fformat):
     tmp_file  = out_file+'.tmp'
     tmp_hdl   = open(tmp_file, 'w')
