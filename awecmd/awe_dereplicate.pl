@@ -45,8 +45,8 @@ if ($help){
 }
 
 if ($run_derep == 0) {
-  run_cmd("cp $fasta_file $passed_seq");
-  run_cmd("touch $removed_seq");
+  run_cmd("cp $fasta_file $out_prefix.passed.fna");
+  run_cmd("touch $out_prefix.removed.fna");
   exit (0);
 }
 
