@@ -3,6 +3,7 @@
 import os
 import sys
 import hashlib
+import subprocess
 from Bio import SeqIO
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from optparse import OptionParser
