@@ -58,7 +58,7 @@ usage = "usage: %prog [options] input_fasta output_name\n"
 
 def main(args):
     global TMP_DIR
-    parser = OptionParser(usage=usage, version=version)
+    parser = OptionParser(usage=usage)
     parser.add_option("-l", "--prefix_length", dest="prefix_length", type="int", default=50, help="Length of prefix [default '50']")
     parser.add_option("-s", "--seq_type", dest="seq_type", default='fasta', help="Sequence type: fasta, fastq [default 'fasta']")
     parser.add_option("-d", "--tmp_dir", dest="tmpdir", default="/tmp", help="DIR for sorting files (must be full path) [default '/tmp']")
