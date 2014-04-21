@@ -25,6 +25,12 @@ OUTPUT:
   average_ambig_chars
   sequence_type"""
 
+IUPAC = [
+    'a', 'c', 'g', 't', 'u', 'r', 'y', 's', 'w', 'k', 'm', 'b', 'd', 'h', 'v', 'n', 'x',
+    'A', 'C', 'G', 'T', 'U', 'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N', 'X',
+    '-', ' ', '\n'
+]
+
 def sum_map(aMap):
     total = 0
     for k, v in aMap.iteritems():
@@ -128,6 +134,9 @@ def main(args):
             if not opts.fast:
                 char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
                 for c in seq:
+                    if c not in IUPAC:
+                        sys.stderr.write("[error] character '%s' in sequence %d is not a valid IUPAC code\n" %(c, seqnum))
+                        os._exit(1)
                     if c in char:
                         char[c] += 1
                 atgc  = char['A'] + char['T'] + char['G'] + char['C']
