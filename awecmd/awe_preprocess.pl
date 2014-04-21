@@ -7,6 +7,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+use PipelineAWE;
 use Getopt::Long;
 use File::Copy;
 use File::Basename;
@@ -80,16 +81,16 @@ unless ( $filter_options =~ /^skip$/i ) {
 
   # run cmd
   print "filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options\n";
-  run_cmd("filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
+  PipelineAWE::run_cmd("filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
 }
 # skip it
 else {
   if ( $input_file =~ /\.(fna|fasta)$/i ) {
-    run_cmd("cp $input_file $passed_seq");
+    PipelineAWE::run_cmd("cp $input_file $passed_seq");
   } elsif ( $input_file =~ /\.(fq|fastq)$/i ) {
-    run_cmd("seqUtil --fastq2fasta -i $input_file -o $passed_seq");
+    PipelineAWE::run_cmd("seqUtil --fastq2fasta -i $input_file -o $passed_seq");
   }
-  run_cmd("touch $removed_seq");
+  PipelineAWE::run_cmd("touch $removed_seq");
 }
 
 exit(0);
@@ -97,14 +98,4 @@ exit(0);
 sub print_usage{
     print "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n";
     print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
-}
-
-sub run_cmd{
-    my ($cmd) = @_;
-    my $run = (split(/ /, $cmd))[0];
-    system($cmd);
-    if ($? != 0) {
-        print "ERROR: $run returns value $?\n";
-        exit $?;
-    }
 }

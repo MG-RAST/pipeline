@@ -4,6 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+use PipelineAWE;
 use Getopt::Long;
 use File::Copy;
 use File::Basename;
@@ -81,7 +82,6 @@ system("mv $input_file $final_output") == 0 or exit __LINE__;
 
 exit(0);
 
-
 sub print_usage{
-    print "USAGE: awe_bowtie_screen.pl -input=<input_fasta> -output=<final_output> -index=<bowtie_indexes, separated by ,> [-job=<job number> -threads=<number of threads>]\n";
+    print "USAGE: awe_bowtie_screen.pl -input=<input_fasta> -output=<final_output> -index=<bowtie_indexes, separated by ,> [-threads=<number of threads>]\n";
 }

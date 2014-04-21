@@ -4,6 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+use PipelineAWE;
 use List::Util qw(first max min sum);
 use Getopt::Long;
 use File::Copy;
@@ -100,32 +101,22 @@ if ($assembled != 1) {
     }
   }
   print "consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats\n";
-  run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
+  PipelineAWE::run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
   
 } else {
-  run_cmd("touch $d_stats");
-  run_cmd("touch $d_info");
-  run_cmd("touch $c_stats");
+  PipelineAWE::run_cmd("touch $d_stats");
+  PipelineAWE::run_cmd("touch $d_info");
+  PipelineAWE::run_cmd("touch $c_stats");
 }
 
 # create kmer profile
 foreach my $len (@kmers) {
   print "kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir\n";
-  run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir");
+  PipelineAWE::run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir");
 }
 
 exit(0);
 
 sub print_usage{
     print "USAGE: awe_qc.pl -input=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
-}
-
-sub run_cmd{
-    my ($cmd) = @_;
-    my $run = (split(/ /, $cmd))[0];
-    system($cmd);
-    if ($? != 0) {
-        print "ERROR: $run returns value $?\n";
-        exit $?;
-    }
 }

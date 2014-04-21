@@ -7,7 +7,7 @@ use strict;
 use warnings;
 no warnings('once');
 
-
+PipelineAWE;
 use Getopt::Long;
 use File::Copy;
 use File::Basename;
@@ -45,28 +45,18 @@ if ($help){
 }
 
 if ($run_derep == 0) {
-  run_cmd("cp $fasta_file $out_prefix.passed.fna");
-  run_cmd("touch $out_prefix.removed.fna");
+  PipelineAWE::run_cmd("cp $fasta_file $out_prefix.passed.fna");
+  PipelineAWE::run_cmd("touch $out_prefix.removed.fna");
   exit (0);
 }
 
 my $run_dir = getcwd;
 print "dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta_file $out_prefix\n";
-run_cmd("dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta_file $out_prefix");
+PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta_file $out_prefix");
 
 exit(0);
 
 sub print_usage{
     print "USAGE: awe_dereplicate.pl -input=<input_fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n";
     print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
-}
-
-sub run_cmd{
-    my ($cmd) = @_;
-    my $run = (split(/ /, $cmd))[0];
-    system($cmd);
-    if ($? != 0) {
-        print "ERROR: $run returns value $?\n";
-        exit $?;
-    }
 }
