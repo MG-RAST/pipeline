@@ -61,22 +61,27 @@ def split_fasta(infile, bytes):
 def run_search(fname):
     runtmp = os.path.join(TMPDIR, 'tmp.'+os.path.basename(fname))
     os.mkdir(runtmp)
+    sortf = fname+'.sort'
+    srchf = fname+'.uc'
+    hitf  = fname+'.uc.H'
+    outf  = fname+'.hit.fa'
     # sort by seq length
-    cmd1 = ['seqUtil', '-i', fname, '-o', fname+'.sort', '-t', runtmp, '--sortbyseq']
+    cmd1 = ['seqUtil', '-i', fname, '-o', sortf, '-t', runtmp, '--sortbyseq']
     so1, se1 = run_cmd(cmd1)
     # search against clusters
-    cmd2 = ['usearch', '--query', fname+'.sort', '--db', LIBF, '--uc', fname+'.uc', '--id', str(IDENT), '--rev']
+    cmd2 = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
     so2, se2 = run_cmd(cmd2)
     # keep only hits
-    cmd3 = ['grep', '^[#|H]', fname+'.uc']
-    so3, se3 = run_cmd(cmd3, fname+'.uc.H')
+    cmd3 = ['grep', '^[#|H]', srchf]
+    so3, se3 = run_cmd(cmd3, hitf)
     # transfomr to fasta
-    cmd4 = ['usearch', '--input', fname+'.sort', '--uc2fasta', fname+'.uc.H', '--output', fname+'.hit.fa', '--tmpdir', runtmp]
+    cmd4 = ['usearch', '--input', sortf, '--uc2fasta', hitf, '--output', outf]
     so4, se4 = run_cmd(cmd4)
     # cleanup
     write_file("".join([so1,se1,so2,se2,so3,se3,so4,se4]), outf+".log", 1)
     os.remove(sortf)
     os.remove(srchf)
+    os.remove(hitf)
     shutil.rmtree(runtmp)
     return outf
 
@@ -123,7 +128,7 @@ def main(args):
     else:
         min_proc = opts.processes
 
-    if opts.verbose: sys.stdout.write("search using %d threades ... "%min_proc)        
+    if opts.verbose: sys.stdout.write("search using %d threades ... "%min_proc)
     pool   = multiprocessing.Pool(processes=min_proc)
     rfiles = pool.map(run_search, sfiles, 1)
     pool.close()
