@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys, re, shutil
-import subprocess, multiprocessing, logging
+import subprocess, multiprocessing
 from Bio import SeqIO
 from optparse import OptionParser
 
@@ -80,7 +80,7 @@ def run_search(fname):
     cmd4 = ['usearch', '--input', sortf, '--uc2fasta', hitf, '--output', outf]
     so4, se4 = run_cmd(cmd4)
     # cleanup
-    write_file("".join([so1,se1,so2,se2,so3,se3,so4,se4]), outf+".log", 1)
+    write_file("".join(filter(lambda x: x, [so1,se1,so2,se2,so3,se3,so4,se4])), outf+".log", 1)
     os.remove(sortf)
     os.remove(srchf)
     os.remove(hitf)
