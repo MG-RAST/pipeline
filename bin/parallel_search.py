@@ -73,7 +73,7 @@ def run_search(fname):
     so2, se2 = run_cmd(cmd2)
     # keep only hits
     cmd3 = ['grep', '^[#|H]', srchf]
-    so3, se3 = run_cmd(cmd3, hitf)
+    so3, se3 = run_cmd(cmd3, output=open(hitf,'w'))
     # transfomr to fasta
     cmd4 = ['usearch', '--input', sortf, '--uc2fasta', hitf, '--output', outf]
     so4, se4 = run_cmd(cmd4)
