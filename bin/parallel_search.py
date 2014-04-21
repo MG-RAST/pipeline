@@ -17,8 +17,10 @@ INFF   = ''
 IDENT  = 0.9
 TMPDIR = None
 
-def run_cmd(cmd):
-    proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+def run_cmd(cmd, output=None):
+    if not output:
+        output = subprocess.PIPE
+    proc = subprocess.Popen( cmd, stdout=output, stderr=subprocess.PIPE )
     stdout, stderr = proc.communicate()
     if proc.returncode != 0:
         raise IOError("%s\n%s"%(" ".join(cmd), stderr))
@@ -59,16 +61,20 @@ def split_fasta(infile, bytes):
 def run_search(fname):
     runtmp = os.path.join(TMPDIR, 'tmp.'+os.path.basename(fname))
     os.mkdir(runtmp)
-    sortf = fname + '.sort'
-    srchf = fname + '.uc'
-    outf  = srchf + '.fa'
-    cmd1  = ['qiime-uclust', '--sort', fname, '--output', sortf, '--tmpdir', runtmp]
-    cmd2  = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
-    cmd3  = ['qiime-uclust', '--input', sortf, '--uc2fasta', srchf, '--output', outf, '--types', 'H', '--origheader', '--tmpdir', runtmp]
+    # sort by seq length
+    cmd1 = ['seqUtil', '-i', fname, '-o', fname+'.sort', '-t', runtmp, '--sortbyseq']
     so1, se1 = run_cmd(cmd1)
+    # search against clusters
+    cmd2 = ['usearch', '--query', fname+'.sort', '--db', LIBF, '--uc', fname+'.uc', '--id', str(IDENT), '--rev']
     so2, se2 = run_cmd(cmd2)
-    so3, se3 = run_cmd(cmd3)
-    write_file("".join([so1,se1,so2,se2,so3,se3]), outf+".log", 1)
+    # keep only hits
+    cmd3 = ['grep', '^[#|H]', fname+'.uc']
+    so3, se3 = run_cmd(cmd3, fname+'.uc.H')
+    # transfomr to fasta
+    cmd4 = ['usearch', '--input', fname+'.sort', '--uc2fasta', fname+'.uc.H', '--output', fname+'.hit.fa', '--tmpdir', runtmp]
+    so4, se4 = run_cmd(cmd4)
+    # cleanup
+    write_file("".join([so1,se1,so2,se2,so3,se3,so4,se4]), outf+".log", 1)
     os.remove(sortf)
     os.remove(srchf)
     shutil.rmtree(runtmp)
