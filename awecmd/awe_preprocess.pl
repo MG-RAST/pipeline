@@ -18,7 +18,7 @@ umask 000;
 my $input_file = "";
 my $out_prefix = "prep";
 my $filter_options = "";
-my $help = "";
+my $help = 0;
 my $options = GetOptions (
         "input=s" => \$input_file,
 		"out_prefix=s" => \$out_prefix,
@@ -32,7 +32,7 @@ if ($help){
 }elsif (length($input_file)==0){
     print "ERROR: An input file was not specified.\n";
     print_usage();
-    exit __LINE__;  #use line number as exit code
+    exit __LINE__;
 }elsif (! -e $input_file){
     print "ERROR: The input sequence file [$input_file] does not exist.\n";
     print_usage();

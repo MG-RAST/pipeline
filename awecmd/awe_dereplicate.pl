@@ -16,14 +16,14 @@ use POSIX qw(strftime);
 umask 000;
 
 # options
-my $fasta_file = "";
+my $fasta = "";
 my $out_prefix = "derep";
 my $prefix_size = 50;
 my $memsize = "1G";
 my $run_derep = 1;
-my $help = "";
+my $help = 0;
 my $options = GetOptions (
-        "input=s" => \$fasta_file,
+        "input=s" => \$fasta,
 		"out_prefix=s" => \$out_prefix,
 		"prefix_length=i" => \$prefix_size,
 		"mem_size=s" => \$memsize,
@@ -34,29 +34,29 @@ my $options = GetOptions (
 if ($help){
     print_usage();
     exit 0;
-}elsif (length($fasta_file)==0){
+}elsif (length($fasta)==0){
     print "ERROR: An input file was not specified.\n";
     print_usage();
-    exit __LINE__;  #use line number as exit code
-}elsif (! -e $fasta_file){
-    print "ERROR: The input sequence file [$fasta_file] does not exist.\n";
+    exit __LINE__;
+}elsif (! -e $fasta){
+    print "ERROR: The input sequence file [$fasta] does not exist.\n";
     print_usage();
     exit __LINE__;   
 }
 
 if ($run_derep == 0) {
-  PipelineAWE::run_cmd("cp $fasta_file $out_prefix.passed.fna");
+  PipelineAWE::run_cmd("cp $fasta $out_prefix.passed.fna");
   PipelineAWE::run_cmd("touch $out_prefix.removed.fna");
   exit (0);
 }
 
 my $run_dir = getcwd;
-print "dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta_file $out_prefix\n";
-PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta_file $out_prefix");
+print "dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta $out_prefix\n";
+PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta $out_prefix");
 
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_dereplicate.pl -input=<input_fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n";
+    print "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n";
     print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
 }
