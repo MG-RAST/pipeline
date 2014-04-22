@@ -55,16 +55,16 @@ if ($help){
 
 my ($cmd, $word, $output);
 if ($aa) {
-    ($cmd, $word, $output) = ("cd-hit", word_length("aa", $pid), $out_prefix.".aa".$pid."faa");
+    ($cmd, $word, $output) = ("cd-hit", word_length("aa", $pid), $out_prefix.".aa".$pid.".faa");
 } elsif ($rna) {
-    ($cmd, $word, $output) = ("cd-hit-est", word_length("rna", $pid), $out_prefix.".rna".$pid."fna");
+    ($cmd, $word, $output) = ("cd-hit-est", word_length("rna", $pid), $out_prefix.".rna".$pid.".fna");
 } elsif ($dna) {
-    ($cmd, $word, $output) = ("cd-hit-est", word_length("dna", $pid), $out_prefix.".dna".$pid."fna");
+    ($cmd, $word, $output) = ("cd-hit-est", word_length("dna", $pid), $out_prefix.".dna".$pid.".fna");
 }
 my $memory = $mem * 1024;
 
 print "$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output\n";
-#PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output");
+PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output");
 
 exit(0);
 
