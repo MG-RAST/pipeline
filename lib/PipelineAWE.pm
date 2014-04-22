@@ -6,7 +6,7 @@ no warnings('once');
 
 use Data::Dumper;
 
-sub run_cmd{
+sub run_cmd {
     my ($cmd) = @_;
     my $run = (split(/ /, $cmd))[0];
     system($cmd);

@@ -1,4 +1,6 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
+
+#input: .fna or .fastq 
 
 use strict;
 use warnings;
@@ -7,7 +9,6 @@ no warnings('once');
 use PipelineAWE;
 use List::Util qw(first max min sum);
 use Getopt::Long;
-use File::Copy;
 use Cwd;
 umask 000;
 
@@ -16,19 +17,19 @@ my $infile = "";
 my $name   = "raw";
 my $procs  = 8;
 my $kmers  = '15,6';
-my $output_prefix = "qc";
-my $assembled = 0;
-my $help = 0;
+my $out_prefix = "qc";
+my $assembled  = 0;
 my $filter_options = "";
+my $help = 0;
 my $options = GetOptions (
 		"input=s"  => \$infile,
 		"name=s"   => \$name,
 		"procs=i"  => \$procs,
 		"kmers=s"  => \$kmers,
-		"out_prefix=s"  => \$output_prefix,
-        "assembled=i" => \$assembled,
+		"out_prefix=s" => \$out_prefix,
+        "assembled=i"  => \$assembled,
         "filter_options=s" => \$filter_options,
-		"help!"    => \$help,
+		"help!" => \$help,
 );
 
 if ($help){
@@ -46,12 +47,6 @@ if ($help){
     print "ERROR: The input sequence file must be fasta or fastq format.\n";
     print_usage();
     exit __LINE__;
-}
-
-unless (length($output_prefix) > 0) {
-    print "ERROR: An output_prefix is required.\n";
-    print_usage();
-    exit __LINE__;  
 }
 
 my @kmers = split(/,/, $kmers);
@@ -74,9 +69,9 @@ for my $ov (split ":", $filter_options) {
     }
 }
 
-my $d_stats = $output_prefix.".drisee.stats";
-my $d_info  = $output_prefix.".drisee.info";
-my $c_stats = $output_prefix.".consensus.stats";
+my $d_stats = $out_prefix.".drisee.stats";
+my $d_info  = $out_prefix.".drisee.info";
+my $c_stats = $out_prefix.".consensus.stats";
 my $run_dir = getcwd;
 
 if ($assembled != 1) {
@@ -111,12 +106,12 @@ if ($assembled != 1) {
 
 # create kmer profile
 foreach my $len (@kmers) {
-  print "kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir\n";
-  PipelineAWE::run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $output_prefix.kmer.$len.stats -f histo -r -d $run_dir");
+  print "kmer-tool -l $len -p $procs -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir\n";
+  PipelineAWE::run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir");
 }
 
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_qc.pl -input=<input_file> -output_prefix=<prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
+    print "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
 }

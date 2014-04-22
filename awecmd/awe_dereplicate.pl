@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 
 #input: fasta
 #outputs: ${out_prefix}.passed.fna, ${out_prefix}.passed.fna
@@ -7,12 +7,9 @@ use strict;
 use warnings;
 no warnings('once');
 
-PipelineAWE;
+use PipelineAWE;
 use Getopt::Long;
-use File::Copy;
-use File::Basename;
 use Cwd;
-use POSIX qw(strftime);
 umask 000;
 
 # options

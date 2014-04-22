@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -6,9 +6,6 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
-use File::Copy;
-use File::Basename;
-use POSIX qw(strftime);
 umask 000;
 
 my $index_ids = {
@@ -26,15 +23,15 @@ my $fasta  = "";
 my $output = "";
 my $run_bowtie = 1;
 my $index   = "";
-my $threads = 1;
+my $proc    = 8;
 my $help    = 0;
 my $options = GetOptions (
-        "input=s"   => \$fasta,
-		"output=s"  => \$output,
-		"index=s"   => \$index,
-		"threads=i" => \$threads,
-		"bowtie=i"  => \$run_bowtie,
-		"help!"     => \$help
+        "input=s"  => \$fasta,
+		"output=s" => \$output,
+		"index=s"  => \$index,
+		"proc=i"   => \$proc,
+		"bowtie=i" => \$run_bowtie,
+		"help!"    => \$help
 );
 
 if ($help){
@@ -76,8 +73,8 @@ if ($ENV{'REFDBPATH'}) {
 my $input_file = $fasta;
 for my $index_name (@indexes) {
   my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
-  print "bowtie2 -f --reorder -p $threads --un $unaligned -x $index_dir/$index_name -U $input_file"
-  system("bowtie2 -f --reorder -p $threads --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null") == 0 or exit __LINE__;
+  print "bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file"
+  system("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null") == 0 or exit __LINE__;
   $input_file = $unaligned;
 }
 
@@ -86,5 +83,5 @@ system("mv $input_file $output") == 0 or exit __LINE__;
 exit(0);
 
 sub print_usage{
-    print "USAGE: awe_bowtie_screen.pl -input=<input fasta> -output=<output fasta> -index=<bowtie indexes separated by ,> [-threads=<number of threads>]\n";
+    print "USAGE: awe_bowtie_screen.pl -input=<input fasta> -output=<output fasta> -index=<bowtie indexes separated by ,> [-proc=<number of threads, default: 8>]\n";
 }

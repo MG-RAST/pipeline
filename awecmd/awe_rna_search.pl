@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -6,7 +6,6 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
-use File::Copy;
 use Cwd;
 umask 000;
 

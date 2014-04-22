@@ -1,7 +1,7 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 
-#input: .fna or .fastq 
-#outputs:  ${out_prefix}.passed.fna and ${out_prefix}.removed.fna
+#input: .fna or .fastq
+#outputs:  ${out_prefix}.passed.fna, ${out_prefix}.removed.fna
 
 use strict;
 use warnings;
@@ -9,9 +9,6 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
-use File::Copy;
-use File::Basename;
-use POSIX qw(strftime);
 umask 000;
 
 # options
