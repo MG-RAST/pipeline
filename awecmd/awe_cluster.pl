@@ -85,6 +85,7 @@ while (my $line = <IN>) {
         push @$clust, $line;
     }
 }
+# process last cluster
 $parse = parse_clust($clust);
 if ($parse) {
     print OUT $parse;
