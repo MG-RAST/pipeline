@@ -8,10 +8,10 @@ use Data::Dumper;
 
 sub run_cmd {
     my ($cmd) = @_;
-    my $run = (split(/ /, $cmd))[0];
-    system($cmd);
+    my $parts = split(/ /, $cmd);
+    system($parts);
     if ($? != 0) {
-        print STDERR "ERROR: $run returns value $?\n";
+        print STDERR "ERROR: ".$parts[0]." returns value $?\n";
         exit $?;
     }
 }
