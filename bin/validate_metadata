@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import os, sys, copy, pprint
-import urllib, urllib2, json
+import os, sys, copy
+import urllib2, json
 import datetime
 import gspread
 import xlrd
@@ -65,17 +65,18 @@ def obj_from_url(url):
         req = urllib2.Request(url, headers={'Accept': 'application/json'})
         res = urllib2.urlopen(req)
     except urllib2.HTTPError, error:
-        eobj = None
         try:
             eobj = json.loads(error.read())
+            errorMsg("%s (%s)"%(eobj['ERROR'], error.code), 1)
         except:
-            pass
-        errorMsg("MG-RAST API (%s) inaccessable for metadata lookup: can not connect to: %s\nPlease try again in 30 mins."%(MGRAST_URL,url), 1)
+            errorMsg("%s (%s)"%(error.read(), error.code), 1)
     if not res:
         return None
     obj = json.loads(res.read())
     if not (obj and isinstance(obj, dict)):
         return None
+    if 'ERROR' in obj:
+        errorMsg(obj['ERROR'], 1)
     return obj
 
 def mgrast_api(request):
