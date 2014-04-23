@@ -37,19 +37,19 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $fasta){
-    print "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print_usage();
+    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif ((! $pid) || ($pid < 40)){
-    print "ERROR: The percent identity must be greater than 50\n";
-    print_usage();
+    print STDERR "ERROR: The percent identity must be greater than 50\n";
+    print STDERR get_usage();
     exit __LINE__;
 }
 
@@ -65,13 +65,68 @@ my $memory = $mem * 1024;
 print "$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output\n";
 PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output");
 
-# TODO
 # turn $output.clstr into $out_prefix.".".$code.$pid.".mapping"
+open(IN, "<".$output.".clstr") || exit __LINE__;
+open(OUT, ">".$out_prefix.".".$code.$pid.".mapping") || exit __LINE__;
+my $clust = [];
+my $parse = "";
+my $junk  = <IN>; # kill first line
+
+while (my $line = <IN>) {
+    chomp $line;
+    # process previous cluster
+    if ($line =~ /^>Cluster/) {
+        $parse = parse_clust($clust);
+        if ($parse) {
+            print OUT $parse;
+        }
+    } else {
+        push @$clust, $line;
+    }
+}
+$parse = parse_clust($clust);
+if ($parse) {
+    print OUT $parse;
+}
+close(IN);
+close(OUT);
+unlink($output.".clstr");
 
 exit(0);
 
-sub print_usage {
-    print "USAGE: awe_cluster.pl -input=<input fasta> <-aa|-rna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -mem=<memory usage in GB, default is 16>]\n";
+sub get_usage {
+    return "USAGE: awe_cluster.pl -input=<input fasta> <-aa|-rna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -mem=<memory usage in GB, default is 16>]\n";
+}
+
+# process cluster file lines
+sub parse_clust {
+    my ($clust) = @_;
+    
+    if (@$clust < 2) {
+        return ""; # cluster of 1
+    }
+    my $seed = "";
+    my $ids  = [];
+    my $pers = [];
+    foreach my $x (@$clust) {
+        if ($x =~ />(\S+)\.\.\.\s+(\S+)$/) {
+            if ($2 eq '*') {
+                $seed = $1;
+            } else {
+                push @$ids, $1;
+                push @$pers, $2;
+            }
+        } else {
+            print STDERR "Warning: bad cluster line: $x\n";
+            return "";
+        }
+    }
+    unless ($seed && (@$ids > 0)) {
+        print STDERR "Warning: bad cluster block\n";
+        return "";
+    } else {
+        return $seed."\t".join(",", @$ids)."\t".join(",", @$pers)."\n";
+    }
 }
 
 # determine optimal word length for clustering
