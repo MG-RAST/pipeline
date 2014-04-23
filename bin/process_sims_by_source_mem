@@ -349,25 +349,27 @@ sub get_md5_data {
     my @set = map { $_ . $memkey } @$md5s[$i..($i+$step-1)];
     my $tmp = $mch->get_multi(@set);
     my $try = 1;
-    while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
-      if (! $tmp) {
+    while ( ($try <= $max) && ((! $tmp) || (! ref ($tmp))) ) {
+    #while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
+      #if (! $tmp) {
 	    print STDERR "Warning (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
-      } else {
-	    print STDERR "Warning (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
-	    @cache{ keys %$tmp } = values %$tmp;
-	    @set = grep {! exists $tmp->{$_}} @set;
-	    print STDERR "Missing keys: ".join(",", @set)."\n";
-      }
+      #} else {
+	    #print STDERR "Warning (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
+	    #@cache{ keys %$tmp } = values %$tmp;
+	    #@set = grep {! exists $tmp->{$_}} @set;
+	    #print STDERR "Missing keys: ".join(",", @set)."\n";
+      #}
       $tmp = $mch->get_multi(@set);
       $try += 1;
     }
-    unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
-      if (! $tmp) {
+    unless ($tmp && ref($tmp)) {
+    #unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
+      #if (! $tmp) {
 	    print STDERR "Error (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
-      } else {
-	    print STDERR "Error (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
-	    print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
-      }
+      #} else {
+	    #print STDERR "Error (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
+	    #print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
+      #}
     }
     @cache{ keys %$tmp } = values %$tmp;
   }

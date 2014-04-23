@@ -100,25 +100,27 @@ sub process_seeks {
     my @keys = map { $_->[0].$memkey } @$seeks;
     my $tmp  = $mch->get_multi(@keys);
     
-    while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@keys))) ) {
-        if (! $tmp) {
-            print STDERR "Warning: Unable to call get_multi from memcache on ".scalar(@keys)." keys, trying again\n";
-        } else {
-            print STDERR "Warning: Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@keys)." keys from memcache, trying again\n";
-    	    @cache{ keys %$tmp } = values %$tmp;
-    	    @keys = grep {! exists $tmp->{$_}} @keys;
-    	    print STDERR "Missing keys: ".join(",", @keys)."\n";
-        }
+    while ( ($try <= $max) && ((! $tmp) || (! ref ($tmp))) ) {
+    #while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@keys))) ) {
+        #if (! $tmp) {
+        print STDERR "Warning: Unable to call get_multi from memcache on ".scalar(@keys)." keys, trying again\n";
+        #} else {
+        #    print STDERR "Warning: Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@keys)." keys from memcache, trying again\n";
+    	#    @cache{ keys %$tmp } = values %$tmp;
+    	#    @keys = grep {! exists $tmp->{$_}} @keys;
+    	#    print STDERR "Missing keys: ".join(",", @keys)."\n";
+        #}
         $tmp = $mch->get_multi(@keys);
         $try += 1;
     }
-    unless ($tmp && (scalar(keys %$tmp) == scalar(@keys))) {
-        if (! $tmp) {
-	        print STDERR "Error: Unable to call get_multi from memcache on ".scalar(@keys)." keys, tried 3 times\n"; exit 1;
-        } else {
-	        print STDERR "Error: Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@keys)." keys from memcache, tried 3 times\n";
-	        print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @keys)."\n";
-        }
+    unless ($tmp && ref($tmp)) {
+    #unless ($tmp && (scalar(keys %$tmp) == scalar(@keys))) {
+        #if (! $tmp) {
+	    print STDERR "Error: Unable to call get_multi from memcache on ".scalar(@keys)." keys, tried 3 times\n"; exit 1;
+        #} else {
+	    #    print STDERR "Error: Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@keys)." keys from memcache, tried 3 times\n";
+	    #    print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @keys)."\n";
+        #}
     }
     @cache{ keys %$tmp } = values %$tmp;
     
