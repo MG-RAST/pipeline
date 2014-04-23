@@ -29,22 +29,22 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $fasta){
-    print "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print_usage();
+    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }
 
 my %types = (sanger => 'sanger_10', 454 => '454_30', illumina => 'illumina_10', complete => "complete");
 unless (exists $types{$type}) {
-    print "ERROR: The input type [$type] is not supported.\n";
-    print_usage();
+    print STDERR "ERROR: The input type [$type] is not supported.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }
 
@@ -54,6 +54,6 @@ PipelineAWE::run_cmd("parallel_FragGeneScan.py -v -p $proc -s $size -t $types{$t
 
 exit(0);
 
-sub print_usage{
-    print "USAGE: awe_genecalling.pl -input=<input fasta> [-out_prefix=<output prefix> -type=<454 | sanger | illumina | complete> -proc=<number of threads, default: 8> -size=<size, default: 100>]\n";
+sub get_usage {
+    return "USAGE: awe_genecalling.pl -input=<input fasta> [-out_prefix=<output prefix> -type=<454 | sanger | illumina | complete> -proc=<number of threads, default: 8> -size=<size, default: 100>]\noutputs: \${out_prefix}.faa, \${out_prefix}.fna, \${out_prefix}.out\n";
 }

@@ -28,19 +28,19 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (length($output)==0){
-    print "ERROR: An output file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An output file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $fasta){
-    print "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print_usage();
+    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }
 
@@ -50,8 +50,8 @@ if ($ENV{'REFDBPATH'}) {
 }
 my $rna_nr_path = $refdb_dir."/".$rna_nr;
 unless (-s $rna_nr_path) {
-    print "ERROR: rna_nr not exist: $rna_nr_path\n";
-    print_usage();
+    print STDERR "ERROR: rna_nr not exist: $rna_nr_path\n";
+    print STDERR print_usage();
     exit __LINE__;
 }
 
@@ -61,6 +61,6 @@ PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $ru
 
 exit(0);
 
-sub print_usage{
-    print "USAGE: awe_rna_search.pl -input=<input fasta> [-rna_nr=<rna_nr_file, default: md5nr.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -output=<output fasta default:425.rna.fna> -ident=<ident percentage, default: 70>] \n";
+sub get_usage {
+    return "USAGE: awe_rna_search.pl -input=<input fasta> [-rna_nr=<rna_nr_file, default: md5nr.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -output=<output fasta default:425.rna.fna> -ident=<ident percentage, default: 70>] \n";
 }

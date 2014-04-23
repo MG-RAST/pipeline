@@ -29,22 +29,22 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $fasta){
-    print "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print_usage();
-    exit __LINE__;   
+    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
+    print STDERR get_usage();
+    exit __LINE__;
 }
 
 if ($run_derep == 0) {
-  PipelineAWE::run_cmd("cp $fasta $out_prefix.passed.fna");
-  PipelineAWE::run_cmd("touch $out_prefix.removed.fna");
-  exit (0);
+    PipelineAWE::run_cmd("cp $fasta $out_prefix.passed.fna");
+    PipelineAWE::run_cmd("touch $out_prefix.removed.fna");
+    exit(0);
 }
 
 my $run_dir = getcwd;
@@ -53,7 +53,7 @@ PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memsize -d $run_dir $
 
 exit(0);
 
-sub print_usage{
-    print "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n";
-    print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
+sub get_usage {
+    return "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n".
+           "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n";
 }

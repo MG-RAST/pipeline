@@ -33,19 +33,19 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($infile)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $infile){
-    print "ERROR: The input sequence file [$infile] does not exist.\n";
-    print_usage();
-    exit __LINE__;  
+    print STDERR "ERROR: The input sequence file [$infile] does not exist.\n";
+    print STDERR get_usage();
+    exit __LINE__;
 }elsif ($infile !~ /\.(fna|fasta|fq|fastq)$/i) {
-    print "ERROR: The input sequence file must be fasta or fastq format.\n";
-    print_usage();
+    print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }
 
@@ -55,7 +55,7 @@ foreach (@kmers) {
   if ($_ !~ /^\d+$/) { $bad_kmer = 1; }
 }
 if ((@kmers == 0) || $bad_kmer) {
-  print "ERROR: invalid kmeer list: $kmers.\n";
+  print STDERR "ERROR: invalid kmeer list: $kmers.\n";
   exit(1);
 }
 
@@ -112,6 +112,6 @@ foreach my $len (@kmers) {
 
 exit(0);
 
-sub print_usage{
-    print "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
+sub get_usage {
+    return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
 }

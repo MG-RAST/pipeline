@@ -24,19 +24,19 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($input_file)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $input_file){
-    print "ERROR: The input sequence file [$input_file] does not exist.\n";
-    print_usage();
+    print STDERR "ERROR: The input sequence file [$input_file] does not exist.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif ($input_file !~ /\.(fna|fasta|fq|fastq)$/i) {
-    print "ERROR: The input sequence file must be fasta or fastq format.\n";
-    print_usage();
+    print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }
 
@@ -92,7 +92,7 @@ else {
 
 exit(0);
 
-sub print_usage{
-    print "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n";
-    print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
+sub get_usage {
+    return "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n".
+           "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n";
 }

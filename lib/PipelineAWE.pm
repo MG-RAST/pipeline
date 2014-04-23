@@ -11,7 +11,7 @@ sub run_cmd {
     my $run = (split(/ /, $cmd))[0];
     system($cmd);
     if ($? != 0) {
-        print "ERROR: $run returns value $?\n";
+        print STDERR "ERROR: $run returns value $?\n";
         exit $?;
     }
 }

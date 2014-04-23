@@ -35,20 +35,20 @@ my $options = GetOptions (
 );
 
 if ($help){
-    print_usage();
+    print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (length($output)==0){
-    print "ERROR: An output file was not specified.\n";
-    print_usage();
+    print STDERR "ERROR: An output file was not specified.\n";
+    print STDERR get_usage();
     exit __LINE__;
 }elsif (! -e $fasta){
-    print "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print_usage();
-    exit __LINE__;   
+    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
+    print STDERR get_usage();
+    exit __LINE__;
 }
 
 if ($run_bowtie == 0) {
@@ -60,7 +60,7 @@ if ($run_bowtie == 0) {
 my @indexes = split(/,/, $index);
 for my $i (@indexes) {
   unless ( defined $index_ids->{$i} ) {
-    print "undefined index name: $i\n";
+    print STDERR "undefined index name: $i\n";
     exit __LINE__
   }
 }
@@ -73,15 +73,15 @@ if ($ENV{'REFDBPATH'}) {
 my $input_file = $fasta;
 for my $index_name (@indexes) {
   my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
-  print "bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file"
+  print "bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file\n";
   system("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null") == 0 or exit __LINE__;
   $input_file = $unaligned;
 }
 
-system("mv $input_file $output") == 0 or exit __LINE__;
+PipelineAWE::run_cmd("mv $input_file $output");
 
 exit(0);
 
-sub print_usage{
-    print "USAGE: awe_bowtie_screen.pl -input=<input fasta> -output=<output fasta> -index=<bowtie indexes separated by ,> [-proc=<number of threads, default: 8>]\n";
+sub get_usage {
+    return "USAGE: awe_bowtie_screen.pl -input=<input fasta> -output=<output fasta> -index=<bowtie indexes separated by ,> [-proc=<number of threads, default: 8>]\n";
 }
