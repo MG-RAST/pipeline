@@ -109,12 +109,12 @@ sub parse_clust {
     my $ids  = [];
     my $pers = [];
     foreach my $x (@$clust) {
-        if ($x =~ />(\S+)\.\.\.\s+(\S+)$/) {
+        if ($x =~ /\s>(\S+)\.\.\.\s+(\S.*)$/) {
             if ($2 eq '*') {
                 $seed = $1;
             } else {
                 push @$ids, $1;
-                push @$pers, $2;
+                push @$pers, (split(/\s+/, $2))[1];
             }
         } else {
             print STDERR "Warning: bad cluster line: $x\n";
