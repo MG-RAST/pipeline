@@ -13,27 +13,26 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
-use Cwd;
 umask 000;
 
 # options
 my $out_prefix = "cluster";
 my $fasta   = "";
 my $pid     = 90;
-my $mem     = 16;
+my $memory  = 16;
 my $aa      = 0;
 my $rna     = 0;
 my $dna     = 0;
 my $help    = 0;
 my $options = GetOptions (
         "out_prefix=s" => \$out_prefix,
-        "input=s" => \$fasta,
-		"pid=i"   => \$pid,
-		"mem=i"   => \$mem,
-		"aa!"     => \$aa,
-        "rna!"    => \$rna,
-        "dna!"    => \$dna,
-        "help!"   => \$help
+        "input=s"  => \$fasta,
+		"pid=i"    => \$pid,
+		"memory=i" => \$memory,
+		"aa!"      => \$aa,
+        "rna!"     => \$rna,
+        "dna!"     => \$dna,
+        "help!"    => \$help
 );
 
 if ($help){
@@ -51,6 +50,10 @@ if ($help){
     print STDERR "ERROR: The percent identity must be greater than 50\n";
     print STDERR get_usage();
     exit __LINE__;
+}elsif ((! $aa) && (! $rna) && (! $dna)){
+    print STDERR "ERROR: one of the following modes is required: aa, rna, dna\n";
+    print STDERR get_usage();
+    exit __LINE__;
 }
 
 my ($cmd, $word, $code, $output);
@@ -60,10 +63,10 @@ if ($aa) {
     $code = $rna ? 'rna' : 'dna';
     ($cmd, $word, $output) = ("cd-hit-est", word_length($code, $pid), $out_prefix.".".$code.$pid.".fna");
 }
-my $memory = $mem * 1024;
+my $mem = $memory * 1024;
 
-print "$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output\n";
-PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output");
+print "$cmd -n $word -d 0 -T 0 -M $mem -c 0.$pid -i $fasta -o $output\n";
+PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $mem -c 0.$pid -i $fasta -o $output");
 
 # turn $output.clstr into $out_prefix.".".$code.$pid.".mapping"
 my $clust = [];
@@ -96,7 +99,7 @@ unlink($output.".clstr");
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_cluster.pl -input=<input fasta> <-aa|-rna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -mem=<memory usage in GB, default is 16>]\n";
+    return "USAGE: awe_cluster.pl -input=<input fasta> <-aa|-rna|-dna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -memory=<memory usage in GB, default is 16>]\n";
 }
 
 # process cluster file lines
