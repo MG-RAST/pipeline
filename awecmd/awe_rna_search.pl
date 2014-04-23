@@ -62,5 +62,5 @@ PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $ru
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_rna_search.pl -input=<input fasta> [-rna_nr=<rna_nr_file, default: md5nr.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -output=<output fasta default:425.rna.fna> -ident=<ident percentage, default: 70>] \n";
+    return "USAGE: awe_rna_search.pl -input=<input fasta> [-rna_nr=<rna cluster file, default: md5rna.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -output=<output fasta default:425.rna.fna> -ident=<ident percentage, default: 70>] \n";
 }
