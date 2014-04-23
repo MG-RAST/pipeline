@@ -66,11 +66,10 @@ print "$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output\n";
 PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $memory -c 0.$pid -i $fasta -o $output");
 
 # turn $output.clstr into $out_prefix.".".$code.$pid.".mapping"
-open(IN, "<".$output.".clstr") || exit __LINE__;
-open(OUT, ">".$out_prefix.".".$code.$pid.".mapping") || exit __LINE__;
 my $clust = [];
 my $parse = "";
-my $junk  = <IN>; # kill first line
+open(IN, "<".$output.".clstr") || exit __LINE__;
+open(OUT, ">".$out_prefix.".".$code.$pid.".mapping") || exit __LINE__;
 
 while (my $line = <IN>) {
     chomp $line;
