@@ -123,7 +123,17 @@ def main(args):
     prefix_map = defaultdict(int)
     in_hdl = open(opts.input, "rU")
 
+    # test valid sequence file
+    first_char = in_hdl.read(1)
+    if (opts.type == 'fasta') and (first_char != '>'):
+        sys.stderr.write("[error] invalid fasta file, first character must be '>'\n")
+        os._exit(1)
+    elif (opts.type == 'fastq') and (first_char != '@'):
+        sys.stderr.write("[error] invalid fasta file, first character must be '>'\n")
+        os._exit(1)
+
     # parse sequences
+    in_hdl.seek(0)
     try:
         for rec in seq_iter(in_hdl, opts.type):
             head, seq, qual = split_rec(rec, opts.type)
