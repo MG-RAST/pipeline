@@ -9,7 +9,7 @@ Max_Eval = 0.001
 EXIT_MISSING_INPUT = 1
 EXIT_RUNBLAT_FAIL = 2
 ENV_VAR_DBPATH = 'REFDBPATH'
-Info_log = open("awe_prot_blat.info", "w")
+Info_log = open("awe_blat_prot.info", "w")
 
 def sortandbleach(sims_file, out_file, sort_dir):
     print "started sort and bleach"
@@ -92,7 +92,7 @@ def runBlatProcess(infile, nr, output):
         sys.exit(EXIT_RUNBLAT_FAIL)
 
 if __name__ == "__main__":
-    usage  = "usage: awe_prot_blat.py --input=<input file name (*.faa)> --output=<output file name>"
+    usage  = "usage: awe_blat_prot.py --input=<input file name (*.faa)> --output=<output file name>"
     parser = OptionParser(usage)
     parser.add_option("-i", "--input",  dest="input", type = "string", default=None, help="input file path")
     parser.add_option("-o", "--output", dest="output", type = "string", default=None, help="output file path")
