@@ -80,6 +80,7 @@ while (my $line = <IN>) {
         if ($parse) {
             print OUT $parse;
         }
+        $clust = [];
     } else {
         push @$clust, $line;
     }
