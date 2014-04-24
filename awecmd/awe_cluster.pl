@@ -64,8 +64,7 @@ if ($aa) {
     ($cmd, $word, $output) = ("cd-hit-est", word_length($code, $pid), $out_prefix.".".$code.$pid.".fna");
 }
 my $mem = $memory * 1024;
-
-print "$cmd -n $word -d 0 -T 0 -M $mem -c 0.$pid -i $fasta -o $output\n";
+# run clustering
 PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $mem -c 0.$pid -i $fasta -o $output");
 
 # turn $output.clstr into $out_prefix.".".$code.$pid.".mapping"

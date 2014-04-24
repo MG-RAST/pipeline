@@ -76,8 +76,7 @@ my $run_dir = getcwd;
 
 if ($assembled != 1) {
   # create drisee table
-  print "drisee -v -p $procs -t $format -d $run_dir -f $infile $d_stats\n";
-  system("drisee -v -p $procs -t $format -d $run_dir -f $infile $d_stats > $d_info 2>&1") == 0 or exit __LINE__;
+  PipelineAWE::run_cmd("drisee -v -p $procs -t $format -d $run_dir -f $infile $d_stats > $d_info", 1);
 
   # create consensus table
   my $max_ln = 600;
@@ -95,7 +94,6 @@ if ($assembled != 1) {
       $max_ln = 100;
     }
   }
-  print "consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats\n";
   PipelineAWE::run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
   
 } else {
@@ -106,7 +104,6 @@ if ($assembled != 1) {
 
 # create kmer profile
 foreach my $len (@kmers) {
-  print "kmer-tool -l $len -p $procs -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir\n";
   PipelineAWE::run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir");
 }
 

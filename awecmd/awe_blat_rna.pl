@@ -47,9 +47,7 @@ unless (-s $rna_nr_path) {
     print STDERR print_usage();
     exit __LINE__;
 }
-
-print "blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0";
-system("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0 > blat.out 2>&1") == 0 or exit __LINE__;
+PipelineAWE::run_cmd("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0", 1);
 
 exit(0);
 

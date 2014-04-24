@@ -53,22 +53,25 @@ if ($help){
     exit __LINE__;
 }
 
-my $sim_file = "sims.filter";
+my $sim_file = "sims.filter.".time();
 if (@in_sims > 1) {
-    system("cat ".join(" ", @in_sims)." > ".$sim_file) == 0 or exit __LINE__;
+    PipelineAWE::run_cmd("cat ".join(" ", @in_sims)." > ".$sim_file, 1);
+    PipelineAWE::run_cmd("rm ".join(" ", @in_sims));
 } else {
     PipelineAWE::run_cmd("mv ".$in_sims[0]." ".$sim_file);
 }
 
-my $map_file = "mapping";
+my $map_file = "mapping.".time();
 if (@in_maps > 1) {
-    system("cat ".join(" ", @in_maps)." > ".$map_file) == 0 or exit __LINE__;
+    PipelineAWE::run_cmd("cat ".join(" ", @in_maps)." > ".$map_file, 1);
+    PipelineAWE::run_cmd("rm ".join(" ", @in_maps));
 } else {
     PipelineAWE::run_cmd("mv ".$in_maps[0]." ".$map_file);
 }
 
 my $run_dir = getcwd;
 
+# TODO - all the child scripts that need to run
 
 exit(0);
 

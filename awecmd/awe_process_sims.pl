@@ -48,17 +48,16 @@ if ($help){
 my $cmd = "process_sims_by_source_mem --verbose --mem_host $memhost --mem_key $memkey --in_sim $input";
 if ($aa) {
     $out_prefix = $out_prefix.".aa";
-    $cmd .= " --out_filter $out_prefix.sims.filter --out_expand $out_prefix.expand.protein --out_lca $out_prefix.expand.lca --out_ontology $out_prefix.expand.ontology";
+    $cmd .= " --out_expand $out_prefix.expand.protein --out_ontology $out_prefix.expand.ontology";
 } elsif ($rna) {
     $out_prefix = $out_prefix.".rna";
-    $cmd .= " --out_filter $out_prefix.sims.filter --out_rna $out_prefix.expand.rna --out_lca $out_prefix.expand.lca";
+    $cmd .= " --out_rna $out_prefix.expand.rna";
 } else {
     print STDERR "ERROR: one of the following modes is required: aa, rna\n";
     print STDERR get_usage();
     exit __LINE__;
 }
-
-print $cmd."\n";
+$cmd .= " --out_filter $out_prefix.sims.filter --out_lca $out_prefix.expand.lca"
 PipelineAWE::run_cmd($cmd);
 
 exit(0);

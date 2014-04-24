@@ -77,7 +77,6 @@ unless ( $filter_options =~ /^skip$/i ) {
   }
 
   # run cmd
-  print "filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options\n";
   PipelineAWE::run_cmd("filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
 }
 # skip it

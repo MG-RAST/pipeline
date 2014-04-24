@@ -52,32 +52,30 @@ if ($help){
 }
 
 if ($run_bowtie == 0) {
-  system("cp $fasta $output") == 0 or exit __LINE__;
-  exit (0);
+    PipelineAWE::run_cmd("cp $fasta $output");
+    exit(0);
 }
 
 # check indexes
 my @indexes = split(/,/, $index);
 for my $i (@indexes) {
-  unless ( defined $index_ids->{$i} ) {
-    print STDERR "undefined index name: $i\n";
-    exit __LINE__
-  }
+    unless ( defined $index_ids->{$i} ) {
+        print STDERR "ERROR: undefined index name: $i\n";
+        exit __LINE__
+    }
 }
 
 my $index_dir = ".";
 if ($ENV{'REFDBPATH'}) {
-  $index_dir = "$ENV{'REFDBPATH'}";
+    $index_dir = "$ENV{'REFDBPATH'}";
 }
 
 my $input_file = $fasta;
 for my $index_name (@indexes) {
-  my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
-  print "bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file\n";
-  system("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null") == 0 or exit __LINE__;
-  $input_file = $unaligned;
+    my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
+    PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null", 1);
+    $input_file = $unaligned;
 }
-
 PipelineAWE::run_cmd("mv $input_file $output");
 
 exit(0);

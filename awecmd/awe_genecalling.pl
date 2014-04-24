@@ -49,7 +49,6 @@ unless (exists $types{$type}) {
 }
 
 my $run_dir = getcwd;
-print "parallel_FragGeneScan.py -v -p $proc -s $size -t $types{$type} -d $run_dir $fasta $out_prefix\n";
 PipelineAWE::run_cmd("parallel_FragGeneScan.py -v -p $proc -s $size -t $types{$type} -d $run_dir $fasta $out_prefix");
 
 exit(0);

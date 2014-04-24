@@ -94,9 +94,9 @@ def runBlatProcess(infile, nr, output):
 if __name__ == "__main__":
     usage  = "usage: awe_blat_prot.py --input=<input file name (*.faa)> --output=<output file name>"
     parser = OptionParser(usage)
-    parser.add_option("-i", "--input",  dest="input", type = "string", default=None, help="input file path")
+    parser.add_option("-i", "--input", dest="input", type = "string", default=None, help="input file path")
     parser.add_option("-o", "--output", dest="output", type = "string", default=None, help="output file path")
-    parser.add_option("-d", "--sort_dir",  dest="sort_dir", type = "string", default='.', help="temporary sort directory")
+    parser.add_option("-d", "--sort_dir", dest="sort_dir", type = "string", default='.', help="temporary sort directory")
     (opts, args) = parser.parse_args()
     
     if not (opts.input and os.path.isfile(opts.input)):

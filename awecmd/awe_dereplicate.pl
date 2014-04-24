@@ -48,7 +48,6 @@ if ($run_derep == 0) {
 }
 
 my $run_dir = getcwd;
-print "dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta $out_prefix\n";
 PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memsize -d $run_dir $fasta $out_prefix");
 
 exit(0);

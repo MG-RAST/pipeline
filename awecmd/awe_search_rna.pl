@@ -56,7 +56,6 @@ unless (-s $rna_nr_path) {
 }
 
 my $run_dir = getcwd;
-print "parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output\n";
 PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
 
 exit(0);
