@@ -9,7 +9,8 @@ use Data::Dumper;
 sub run_cmd {
     my ($cmd, $shell) = @_;
     
-    my @parts = split(/ /, $cmd);
+    my $status = undef;
+    my @parts  = split(/ /, $cmd);
     print STDOUT $cmd."\n";
     
     if ($shell) {
