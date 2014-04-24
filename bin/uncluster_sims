@@ -24,68 +24,69 @@ m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s
 
 );
 
-if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
-if ( ! GetOptions( "verbose!"  => \$verbose,
-		   "in_sim=s"  => \$in_sim,
-		   "out_sim=s" => \$out_sim,
-		   "cluster:s" => \$cluster
-		 ) )
-  { print print STDERR $usage; exit 1; }
-
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) {
+    print STDERR $usage; exit 1;
+}
+if ( ! GetOptions(
+        "verbose!"  => \$verbose,
+		"in_sim=s"  => \$in_sim,
+		"out_sim=s" => \$out_sim,
+		"cluster:s" => \$cluster
+	) ) {
+    print STDERR $usage; exit 1;
+}
 unless ($in_sim && $out_sim && (-s $in_sim)) {
-  print STDERR $usage . "Missing file input.\n"; exit 1;
+    print STDERR $usage . "Missing file input.\n"; exit 1;
 }
 
 my $q_num = 0;
 my $s_num = 0;
 my $cmap  = {};
 
+# cluster file format:
+# seed_id \t comma seperated list ids \t comma seperated list percents
 if ($cluster && (-s $cluster)) {
-  print STDOUT "Reading file $cluster ... " if ($verbose);
-  open(CLUST, "<$cluster") || die "Can't open file $cluster!\n";
-  while (my $line = <CLUST>) {
-    chomp $line;
-    my @tabs = split(/\t/, $line);
-    my %ids  = ();
-    foreach my $id ( ($tabs[1], split(/,/, $tabs[2])) ) {
-      $id =~ s/_\d+_\d+_[+-]$// if ($id);
-      $ids{$id} = 1 if ($id);
+    print STDOUT "Reading file $cluster ... " if ($verbose);
+    open(CLUST, "<$cluster") || die "Can't open file $cluster!\n";
+    while (my $line = <CLUST>) {
+        chomp $line;
+        my @tabs = split(/\t/, $line);
+        my %ids  = map { $_, 1 } split(/,/, $tabs[2]);
+        $cmap->{ $tabs[0] } = [ keys %ids ];
     }
-    $cmap->{ $tabs[0] } = [ keys %ids ];
-  }
-  close CLUST;
-  print STDOUT "Done\n" if ($verbose);
+    close CLUST;
+    print STDOUT "Done\n" if ($verbose);
 }
 
-#if (scalar(keys %$cmap) == 0) {
-#  print STDOUT "Cluster file is empty, copying $in_sim to $out_sim ... " if ($verbose);
-#  system("cp $in_sim $out_sim");
-#  print STDOUT "Done\n";
-#  exit 0;
-#}
+# no clusters
+if (scalar(keys %$cmap) == 0) {
+    print STDOUT "Cluster file is empty, copying $in_sim to $out_sim ... " if ($verbose);
+    system("cp $in_sim $out_sim");
+    print STDOUT "Done\n";
+    exit 0;
+}
 
+# unroll clusters
 print STDOUT "Reading file $in_sim ... " if ($verbose);
 open(SIM, "<$in_sim")  || die "Can't open file $in_sim!\n";
 open(OUT, ">$out_sim") || die "Can't open file $out_sim!\n";
-
 while (my $siml = <SIM>) {
-  chomp $siml;
-  if ($siml =~ /^(.+?)\t(.+)$/) {
-    $s_num += 1;
-    my $query = $1;
-    my $rest  = $2;
-    unless ($query) { next; }
-    if (exists $cmap->{$query}) {
-      foreach my $id ( @{$cmap->{$query}} ) {
-	$q_num += 1;
-	print OUT "$id\t$rest\n";
-      }
-    } else {
-      $query =~ s/_\d+_\d+_[+-]$//;
-      $q_num += 1;
-      print OUT "$query\t$rest\n";
+    chomp $siml;
+    if ($siml =~ /^(.+?)\t(.+)$/) {
+        $s_num += 1;
+        my $query = $1;
+        my $rest  = $2;
+        unless ($query) { next; }
+        if (exists $cmap->{$query}) {
+            foreach my $id ( @{$cmap->{$query}} ) {
+	            $q_num += 1;
+                print OUT "$id\t$rest\n";
+            }
+        } else {
+            $q_num += 1;
+            print OUT "$query\t$rest\n";
+        }
     }
-  }
 }
 close OUT;
 close SIM;
