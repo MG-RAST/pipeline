@@ -1,6 +1,6 @@
 #!/usr/bin/env perl 
 
-#input: m8 format
+#input: .sims file(s), .mapping files(s), sequence file
 #outputs: $output and ${output}.index
 
 use strict;
@@ -59,13 +59,13 @@ my $sim_file = "sims.filter.".time();
 my $map_file = "mapping.".time();
 my $seq_file = "sequence.".time();
 
+# cat file sets
 if (@in_sims > 1) {
     PipelineAWE::run_cmd("cat ".join(" ", @in_sims)." > ".$sim_file, 1);
     PipelineAWE::run_cmd("rm ".join(" ", @in_sims));
 } else {
     PipelineAWE::run_cmd("mv ".$in_sims[0]." ".$sim_file);
 }
-
 if (@in_maps > 1) {
     PipelineAWE::run_cmd("cat ".join(" ", @in_maps)." > ".$map_file, 1);
     PipelineAWE::run_cmd("rm ".join(" ", @in_maps));
