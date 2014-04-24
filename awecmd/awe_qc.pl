@@ -1,6 +1,9 @@
 #!/usr/bin/env perl
 
-#input: .fna or .fastq 
+#input: .fna or .fastq
+#outputs: ${out_prefix}.drisee.stats, ${out_prefix}.drisee.info,
+#         ${out_prefix}.consensus.stats, ${out_prefix}.kmer.$len.stats,
+#         ${out_prefix}.assembly.coverage, ${out_prefix}.assembly.coverage.stats
 
 use strict;
 use warnings;
@@ -72,6 +75,7 @@ for my $ov (split ":", $filter_options) {
 my $d_stats = $out_prefix.".drisee.stats";
 my $d_info  = $out_prefix.".drisee.info";
 my $c_stats = $out_prefix.".consensus.stats";
+my $a_file  = $out_prefix.".assembly.coverage";
 my $run_dir = getcwd;
 
 if ($assembled != 1) {
@@ -95,11 +99,38 @@ if ($assembled != 1) {
     }
   }
   PipelineAWE::run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
-  
+  PipelineAWE::run_cmd("touch $a_file");
+  PipelineAWE::run_cmd("touch $a_file.stats");
 } else {
   PipelineAWE::run_cmd("touch $d_stats");
   PipelineAWE::run_cmd("touch $d_info");
   PipelineAWE::run_cmd("touch $c_stats");
+  # create assembly abundance file
+  my $cov_found_count = 0;
+  my $total_reads = 0;
+  open ABUN, ">$a_file" || exit __LINE__;
+  open SEQS, $infile || exit __LINE__;
+  while (my $line = <SEQS>) {
+    chomp $line;
+    if ($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
+      my $seq = $1;
+      my $abun = $2;
+      print ABUN "$seq\t$abun\n";
+      $cov_found_count++;
+      $total_reads++;
+    } elsif ($line =~ /^>(\S+).*$/) {
+      my $seq = $1;
+      print ABUN "$seq\t1\n";
+      $total_reads++;
+    }
+  }
+  close SEQS;
+  close ABUN;
+  # create assembly abundace summary
+  open OUT, ">$a_file.stats" || exit __LINE__;
+  my $percent = sprintf( "%.2f", ( int ( ( ($cov_found_count / $total_reads) * 10000 ) + 0.5 ) ) / 100 );
+  print OUT "Percentage_of_reads_with_coverage_info:\t$percent\n";
+  close OUT;
 }
 
 # create kmer profile
@@ -110,5 +141,5 @@ foreach my $len (@kmers) {
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\n";
+    return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\noutputs: \${out_prefix}.drisee.stats, \${out_prefix}.drisee.info, \${out_prefix}.consensus.stats, \${out_prefix}.kmer.\$len.stats, \${out_prefix}.assembly.coverage, \${out_prefix}.assembly.coverage.stats\n";
 }
