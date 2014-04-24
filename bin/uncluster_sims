@@ -51,8 +51,15 @@ if ($cluster && (-s $cluster)) {
     while (my $line = <CLUST>) {
         chomp $line;
         my @tabs = split(/\t/, $line);
+        my $seed = $tabs[0];
         my %ids  = map { $_, 1 } split(/,/, $tabs[2]);
-        $cmap->{ $tabs[0] } = [ keys %ids ];
+        if (exists $cmap->{$seed}) {
+            map { $ids->{$_} = 1 } @{$cmap->{$seed}};
+        }
+        if (exists $ids{$seed}) {
+            delete $ids{$seed};
+        }
+        $cmap->{$seed} = [ keys %ids ];
     }
     close CLUST;
     print STDOUT "Done\n" if ($verbose);
