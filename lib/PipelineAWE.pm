@@ -4,6 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+use JSON;
 use Data::Dumper;
 
 sub run_cmd {
@@ -23,6 +24,33 @@ sub run_cmd {
         print STDERR "ERROR: ".$parts[0]." returns value $status\n";
         exit $status;
     }
+}
+
+sub create_attr {
+    my ($name, $stats, $other) = @_;
+    
+    my $attr;
+    my $json = JSON->new;
+    $json = $json->utf8();
+    $json->max_size(0);
+    $json->allow_nonref;
+    
+    open(IN, "<userattr.json" or die "Couldn't open file: $!";
+    $attr = $json->decode(join("", <IN>)); 
+    close(IN);
+    
+    if ($stats && ref($stats)) {
+        $attr->{statistics} = $stats;
+    }
+    if ($other && ref($other)) {
+        foreach my $key (keys %$other) {
+            $attr->{$key} = $other->{$key};
+        }
+    }
+    
+    open(OUT, ">$name") or die "Couldn't open file: $!";
+    print OUT $json->encode($attr);
+    close(OUT);
 }
 
 1;
