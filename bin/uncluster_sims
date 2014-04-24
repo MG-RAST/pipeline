@@ -29,9 +29,9 @@ if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) {
 }
 if ( ! GetOptions(
         "verbose!"  => \$verbose,
-		"in_sim=s"  => \$in_sim,
-		"out_sim=s" => \$out_sim,
-		"cluster:s" => \$cluster
+        "in_sim=s"  => \$in_sim,
+        "out_sim=s" => \$out_sim,
+        "cluster:s" => \$cluster
 	) ) {
     print STDERR $usage; exit 1;
 }
