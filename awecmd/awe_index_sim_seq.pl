@@ -20,6 +20,7 @@ my $output  = "";
 my $memory  = 16;
 my $memhost = "localhost:11211";
 my $memkey  = '_ach';
+my $max_seq = 500000;
 my $help    = 0;
 my $options = GetOptions (
 		"in_sims=s"  => \@in_sims,
@@ -53,7 +54,11 @@ if ($help){
     exit __LINE__;
 }
 
+# temp files
 my $sim_file = "sims.filter.".time();
+my $map_file = "mapping.".time();
+my $seq_file = "sequence.".time();
+
 if (@in_sims > 1) {
     PipelineAWE::run_cmd("cat ".join(" ", @in_sims)." > ".$sim_file, 1);
     PipelineAWE::run_cmd("rm ".join(" ", @in_sims));
@@ -61,7 +66,6 @@ if (@in_sims > 1) {
     PipelineAWE::run_cmd("mv ".$in_sims[0]." ".$sim_file);
 }
 
-my $map_file = "mapping.".time();
 if (@in_maps > 1) {
     PipelineAWE::run_cmd("cat ".join(" ", @in_maps)." > ".$map_file, 1);
     PipelineAWE::run_cmd("rm ".join(" ", @in_maps));
@@ -69,12 +73,41 @@ if (@in_maps > 1) {
     PipelineAWE::run_cmd("mv ".$in_maps[0]." ".$map_file);
 }
 
+# get max seq size
+my $format = ($in_seq =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+my @out = `seq_length_stats.py -f -t $format -i $in_seq | cut -f2`;
+chomp @out;
+my $max = $out[5];
+
+my $mem = $memory * 1024;
 my $run_dir = getcwd;
 
-# TODO - all the child scripts that need to run
+PipelineAWE::run_cmd("uncluster_sims -v -c $map_file -i $sim_file -o $sim_file.unclust");
+PipelineAWE::run_cmd("rm $sim_file $map_file");
+if ($max < $max_seq) {
+    my $seq_opt = ($format eq 'fastq') ? '--fastq' : '';
+    PipelineAWE::run_cmd("seqUtil -t $run_dir -i $in_seq -o $seq_file.tab --sortbyid2tab $seq_opt");
+    PipelineAWE::run_cmd("rm $in_seq");
+    PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 1,1 -o $sim_file.sort $sim_file.unclust");
+    PipelineAWE::run_cmd("rm $sim_file.unclust");
+    PipelineAWE::run_cmd("add_seq2sims -v -i $sim_file.sort -o $sim_file.seq -s $seq_file.tab");
+    PipelineAWE::run_cmd("rm $sim_file.sort $seq_file.tab");
+    PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.final $sim_file.seq");
+    PipelineAWE::run_cmd("rm $sim_file.seq");
+} else {
+    print "Skipping adding of sequences to index sims file, max sequence length is $max bps\n";
+    PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.final $sim_file.unclust");
+    PipelineAWE::run_cmd("rm $sim_file.unclust");
+}
+
+# index file
+PipelineAWE::run_cmd("index_sims_file_md5 --verbose --mem_host $memhost --mem_key $memkey --in_file $sim_file.final --out_file $sim_file.index");
+# final output
+PipelineAWE::run_cmd("mv $sim_file.final $output");
+PipelineAWE::run_cmd("mv $sim_file.index $output.index");
 
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_index_sim_seq.pl [-memory=<memory usage in GB, default is 16> -mem_host=<memcache host> -mem_key=<memcache key>]\n";
+    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seq=<input fasta> -output=<output file> [-memory=<memory usage in GB, default is 16> -mem_host=<memcache host> -mem_key=<memcache key>]\noutputs: \${output} and \${output}.index\n";
 }
