@@ -1,381 +1,837 @@
     {
         "info": {
             "pipeline": "mgrast-prod",
-            "name": "#jobname",
-            "project": "#project",
-            "user": "#user",
-            "xref": "#xref",
-            "clientgroups":"#clientgroups"
+            "name": "[% job_id %]",
+            "project": "[% project_name %]",
+            "user": "[% user %]",
+            "xref": "[% xref %]",
+            "clientgroups": "[% clientgroups %]",
+            "userattr": {
+                "id": "[% mg_id %]",
+                "job_id": "[% job_id %]",
+                "name": "[% mg_name %]",
+                "created": "",
+                "status": "",
+                "sequence_type": "",
+                "project_id": "[% project_id %]",
+                "project_name": "[% project_name %]",
+                "type": "metagenome",
+                "pipeline_version": "3.0"
+            }
         }, 
         "tasks": [
             {
                 "cmd": {
-                    "args": "-input=@#inputfile -assembled=#assembled -out_prefix_qc=#jobname.075 -out_prefix_prep=#jobname.100.preprocess -filter_options=#filter_options", 
-                    "description": "preprocess_qc",
-                    "name": "awe_preprocess_qc.pl"
+                    "name": "awe_qc.pl",
+                    "args": "-input=@[% inputfile %] -out_prefix_qc=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
+                    "description": "qc_stats"
                 }, 
-                "dependsOn": [], 
+                "dependsOn": [],
                 "inputs": {
-                   "#inputfile": {
-                        "host": "http://#shockurl",
-                        "node": "#shocknode"
+                   "[% inputfile %]": {
+                        "host": "http://[% shockurl %]",
+                        "node": "[% shocknode %]"
                     }
                 }, 
                 "outputs": {
-                    "#jobname.075.consensus.stats": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.075.drisee.info": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.assembly.coverage.stats": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.075.drisee.stats": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.consensus.stats": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.075.kmer.15.stats": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.drisee.info": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.075.kmer.6.stats": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.drisee.stats": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.100.preprocess.passed.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.kmer.15.stats": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.100.preprocess.removed.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].075.kmer.6.stats": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
+                },
+                "userattr": {
+                    "stage_id": "075",
+                    "stage_name": "qc"
                 },
                 "taskid": "0", 
                 "totalwork": 1
             },
             {
                 "cmd": {
-                    "args": "-input=@#jobname.100.preprocess.passed.fna -out_prefix=#jobname.150.dereplication -mem_size=4G -prefix_length=#prefix_length -dereplicate=#dereplicate", 
-                    "description": "dereplication",
-                    "name": "awe_dereplicate.pl"
-                }, 
-                "dependsOn": ["0"], 
+                    "name": "awe_preprocess.pl",
+                    "args": "-input=@[% inputfile %] -out_prefix_qc=[% job_id %].100.preprocess -assembled=[% assembled %] -filter_options=[% filter_options %]",
+                    "description": "preprocess"
+                },
+                "dependsOn": [], 
                 "inputs": {
-                   "#jobname.100.preprocess.passed.fna": {
-                        "host": "http://#shockurl",
-                        "node": "-",
-                        "origin": "0"
+                   "[% inputfile %]": {
+                        "host": "http://[% shockurl %]",
+                        "node": "[% shocknode %]"
                     }
-                }, 
+                },
                 "outputs": {
-                    "#jobname.150.dereplication.passed.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].100.preprocess.passed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.150.dereplication.removed.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].100.preprocess.removed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
+                },
+                "userattr": {
+                    "stage_id": "100",
+                    "stage_name": "preprocess"
                 },
                 "taskid": "1", 
                 "totalwork": 1
             },
             {
                 "cmd": {
-                    "args": "-input=@#jobname.150.dereplication.passed.fna -output=#jobname.299.screen.passed.fna -index=#screen_indexes -bowtie=#bowtie",
-                    "description": "screen", 
-                    "name": "awe_bowtie_screen.pl"
+                    "name": "awe_dereplicate.pl",
+                    "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length% ] -dereplicate=[% dereplicate %] -memory=20",
+                    "description": "dereplication"
                 }, 
-                "dependsOn": ["1"], 
+                "dependsOn": ["1"],
                 "inputs": {
-                   "#jobname.150.dereplication.passed.fna": {
-                        "host": "http://#shockurl",
+                   "[% job_id %].100.preprocess.passed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-",
                         "origin": "1"
                     }
-                }, 
+                },
                 "outputs": {
-                    "#jobname.299.screen.passed.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].150.dereplication.passed.fna": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    },
+                    "[% job_id %].150.dereplication.removed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
                 },
-                "predata": {
-                    #predata
+                "userattr": {
+                    "stage_id": "150",
+                    "stage_name": "dereplication"
                 },
-                "partinfo": {
-                     "input": "#jobname.150.dereplication.passed.fna",
-                     "output": "#jobname.299.screen.passed.fna"
-                },
-                "taskid": "2", 
-                "totalwork": 1,
-                "maxworksize": 500
+                "taskid": "2",
+                "totalwork": 1
             },
             {
                 "cmd": {
-                    "args": "-input=@#jobname.299.screen.passed.fna -out_prefix=#jobname.350.genecalling.coding -fgs_type=#fgs_type",
-                    "description": "genecalling", 
-                    "name": "awe_genecalling.pl"
+                    "name": "awe_bowtie_screen.pl",
+                    "args": "-input=@[% job_id %].150.dereplication.passed.fna -output=[% job_id %].299.screen.passed.fna -index=[% screen_indexes %] -bowtie=[% bowtie %] -proc=8",
+                    "description": "screen"
                 }, 
                 "dependsOn": ["2"], 
                 "inputs": {
-                   "#jobname.299.screen.passed.fna": {
-                        "host": "http://#shockurl",
+                   "[% job_id %].150.dereplication.passed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-",
                         "origin": "2"
                     }
                 }, 
                 "outputs": {
-                    "#jobname.350.genecalling.coding.faa": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    },
-                    "#jobname.350.genecalling.coding.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].299.screen.passed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
                 },
-                "partinfo": {
-                     "input": "#jobname.299.screen.passed.fna",
-                     "output": "#jobname.350.genecalling.coding.faa"
+                "predata": {
+                },
+                "userattr": {
+                    "stage_id": "299",
+                    "stage_name": "screen"
                 },
                 "taskid": "3", 
-                "totalwork": 1,
-                "maxworksize": 500
+                "totalwork": 1
             },
-            {   
+            {
                 "cmd": {
-                    "args": "-input=@#jobname.350.genecalling.coding.faa --output=#jobname.550.cluster.aa90.faa -aa -pid=#aa_pid",
-                    "description": "cluster_aa90",
-                    "name": "awe_cluster_parallel.pl"
+                    "name": "awe_genecalling.pl",
+                    "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=8",
+                    "description": "genecalling"
                 },
                 "dependsOn": ["3"],
                 "inputs": {
-                    "#jobname.350.genecalling.coding.faa": {
-                        "host": "http://#shockurl",
+                   "[% job_id %].299.screen.passed.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-",
                         "origin": "3"
                     }
                 },
                 "outputs": {
-                    "#jobname.550.cluster.aa90.faa": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].350.genecalling.coding.faa": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.550.cluster.aa90.mapping": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].350.genecalling.coding.fna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
                 },
                 "partinfo": {
-                     "input": "#jobname.350.genecalling.coding.faa",
-                     "output": "#jobname.550.cluster.aa90.faa"
+                     "input": "[% job_id %].299.screen.passed.fna",
+                     "output": "[% job_id %].350.genecalling.coding.faa"
+                },
+                "userattr": {
+                    "stage_id": "350",
+                    "stage_name": "genecalling"
                 },
                 "taskid": "4",
                 "totalwork": 1,
-                "maxworksize": 2000
+                "maxworksize": 800
+            },
+            {   
+                "cmd": {
+                    "name": "awe_cluster.pl",
+                    "args": "-input=@[% job_id %].350.genecalling.coding.faa -out_prefix=[% job_id %].550.cluster -aa -pid=[% aa_pid %]  -memory=20",
+                    "description": "aa clustering"
+                },
+                "dependsOn": ["4"],
+                "inputs": {
+                    "[% job_id %].350.genecalling.coding.faa": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-",
+                        "origin": "4"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].550.cluster.aa[% aa_pid %].faa": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "partinfo": {
+                     "input": "[% job_id %].350.genecalling.coding.faa",
+                     "output": "[% job_id %].550.cluster.aa[% aa_pid %].faa"
+                },
+                "userattr": {
+                    "stage_id": "550",
+                    "stage_name": "protein.cluster"
+                },
+                "taskid": "5",
+                "totalwork": 1,
+                "maxworksize": 4000
             },
             {
                 "cmd": {
-                    "name": "awe_blat.py",
-                    "args": "--input=@#jobname.550.cluster.aa90.faa --output=#jobname.650.superblat.sims", 
-                    "description": "aa sims"
+                    "name": "awe_blat_prot.py",
+                    "args": "--input=@[% job_id %].550.cluster.aa[% aa_pid %].faa --output=[% job_id %].650.superblat.sims",
+                    "description": "aa sims blat"
                 }, 
-                "dependsOn": ["4"],  
+                "dependsOn": ["5"],  
                 "inputs": {
-                    "#jobname.550.cluster.aa90.faa": {
-                        "host": "http://#shockurl",
-                        "origin": "4",
+                    "[% job_id %].550.cluster.aa[% aa_pid %].faa": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
                         "node": "-"
                     }
                 }, 
                 "outputs": {
-                    "#jobname.650.superblat.sims": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].650.superblat.sims": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
                 },
                 "predata": {
                     "md5nr.1":{
-                        "url":"#md5nr1_download_url"
+                        "url": "[% md5nr1_download_url %]"
                     },
                     "md5nr.2":{
-                        "url":"#md5nr2_download_url"
+                        "url": "[% md5nr2_download_url %]"
                     }
                 },
                 "partinfo": {
-                     "input": "#jobname.550.cluster.aa90.faa",
-                     "output": "#jobname.650.superblat.sims"
+                     "input": "[% job_id %].550.cluster.aa[% aa_pid %].faa",
+                     "output": "[% job_id %].650.superblat.sims"
                 },
-                "taskid": "5",
+                "userattr": {
+                    "stage_id": "650",
+                    "stage_name": "protein.sims"
+                },
+                "taskid": "6",
                 "maxworksize": 50
             },
             {
                 "cmd": {
-                    "name": "awe_rna_search.pl",
-                    "args": "-input=@#jobname.100.preprocess.passed.fna -output=#jobname.425.search.rna.fna -rna_nr=md5rna.clust",
-                    "description": "rna detection"
+                    "name": "awe_annotate_sims.pl",
+                    "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -mem_host=[% mem_host% ]", 
+                    "description": "aa sims annotation"
                 }, 
-                "dependsOn": ["0"],  
+                "dependsOn": ["6"],  
                 "inputs": {
-                   "#jobname.100.preprocess.passed.fna": {
-                        "host": "http://#shockurl",
-                        "node": "-",
-                        "origin": "0"
-                    }
-                },
-                "predata": {
-                    "md5rna.clust":{
-                        "url":"#md5rna_clust_download_url"
-                    }
-                },
-                "outputs": {
-                    "#jobname.425.search.rna.fna": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    }
-                },
-                "taskid": "6",
-                "totalwork": 1
-            },          
-            {
-                "cmd": {
-                    "name": "awe_cluster_parallel.pl",
-                    "args": "-input=@#jobname.425.search.rna.fna --output=#jobname.440.cluster.rna97.fna -rna -pid=#rna_pid", 
-                    "description": "rna clustering"
-                }, 
-                "dependsOn": ["6"],
-                "inputs": {
-                    "#jobname.425.search.rna.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].650.superblat.sims": {
+                        "host": "http://[% shockurl %]",
                         "origin": "6",
                         "node": "-"
                     }
                 }, 
                 "outputs": {
-                    "#jobname.440.cluster.rna97.fna": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].650.aa.sims.filter": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.440.cluster.rna97.mapping": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].650.aa.expand.protein": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.lca": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.ontology": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "650",
+                    "stage_name": "protein.sims"
+                },
+                "taskid": "7",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_search_rna.pl",
+                    "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=md5rna.clust -size=100 -proc=8",
+                    "description": "rna detection"
+                }, 
+                "dependsOn": ["1"],
+                "inputs": {
+                   "[% job_id %].100.preprocess.passed.fna": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-",
+                        "origin": "1"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].425.search.rna.fna": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "predata": {
+                    "md5rna.clust":{
+                        "url": "[% md5rna_clust_download_url %]"
+                    }
+                },
+                "partinfo": {
+                     "input": "[% job_id %].100.preprocess.passed.fna",
+                     "output": "[% job_id %].425.search.rna.fna"
+                },
+                "userattr": {
+                    "stage_id": "425",
+                    "stage_name": "search.rna"
+                },
+                "taskid": "8",
+                "totalwork": 1,
+                "maxworksize": 800
+            },          
+            {
+                "cmd": {
+                    "name": "awe_cluster.pl",
+                    "args": "-input=@[% job_id %].425.search.rna.fna -out_prefix=[% job_id %].440.cluster -rna -pid=[% rna_pid %]  -memory=20", 
+                    "description": "rna clustering"
+                }, 
+                "dependsOn": ["8"],
+                "inputs": {
+                    "[% job_id %].425.search.rna.fna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "8",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
                 },
                 "partinfo": {
-                     "input": "#jobname.425.search.rna.fna",
-                     "output": "#jobname.440.cluster.rna97.fna"
+                     "input": "[% job_id %].425.search.rna.fna",
+                     "output": "[% job_id %].440.cluster.rna[% rna_pid %].fna"
                 },
-                "taskid": "7",
+                "userattr": {
+                    "stage_id": "440",
+                    "stage_name": "rna.cluster"
+                },
+                "taskid": "9",
                 "totalwork": 1,
-                "maxworksize": 2000
+                "maxworksize": 4000
             },
             {
                 "cmd": {
-                    "name": "awe_rna_blat.sh",
-                    "args": "-i @#jobname.440.cluster.rna97.fna -o #jobname.450.rna.sims",
-                    "description": "rna sims"
+                    "name": "awe_blat_rna.sh",
+                    "args": "-input=@[% job_id %].440.cluster.rna97.fna -output=[% job_id %].450.rna.sims",
+                    "description": "rna sims blat"
                 }, 
-                "dependsOn": ["7"],  
+                "dependsOn": ["9"],
                 "inputs": {
-                    "#jobname.440.cluster.rna97.fna": {
-                        "host": "http://#shockurl",
-                        "origin": "7",
+                    "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
                         "node": "-"
                     }
-                }, 
+                },
                 "outputs": {
-                    "#jobname.450.rna.sims": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].450.rna.sims": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     }
                 },
                 "predata": {
                     "md5rna":{
-                        "url":"#md5rna_download_url"
+                        "url":"[% md5rna_download_url %]"
                     }
                 },
                 "partinfo": {
-                     "input": "#jobname.440.cluster.rna97.fna",
-                     "output": "#jobname.450.rna.sims"
+                     "input": "[% job_id %].440.cluster.rna[% rna_pid %].fna",
+                     "output": "[% job_id %].450.rna.sims"
                 },
-                "taskid": "8",
+                "userattr": {
+                    "stage_id": "450",
+                    "stage_name": "rna.sims"
+                },
+                "taskid": "10",
                 "maxworksize": 50
             },
             {
                 "cmd": {
-                    "name": "awe_annotate.pl",
-                    "args": "-raw=@#inputfile -job=#jobname -aa_sims=@#jobname.650.superblat.sims -rna_sims=@#jobname.450.rna.sims -clust_aa=@#jobname.550.cluster.aa90.mapping -map_rna=@#jobname.440.cluster.rna97.mapping -out_prefix=#jobname.700.annotation -nr_ver=#ach_annotation_ver -mem_host=#mem_host -assembled=#assembled", 
-                    "description": "annotation"
+                    "name": "awe_annotate_sims.pl",
+                    "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -mem_host=[% mem_host% ]", 
+                    "description": "rna sims annotation"
                 }, 
-                "dependsOn": ["4", "5", "7", "8"],  
+                "dependsOn": ["10"],
                 "inputs": {
-                    "#inputfile": {
-                        "host": "http://#shockurl",
-                        "node": "#shocknode"
-                    },
-                    "#jobname.550.cluster.aa90.mapping": {
-                        "host": "http://#shockurl",
-                        "origin": "4",
-                        "node": "-"
-                    },
-                    "#jobname.650.superblat.sims": {
-                        "host": "http://#shockurl",
-                        "origin": "5",
-                        "node": "-"
-                    },
-                    "#jobname.440.cluster.rna97.mapping": {
-                        "host": "http://#shockurl",
-                        "origin": "7",
-                        "node": "-"
-                    },
-                    "#jobname.450.rna.sims": {
-                        "host": "http://#shockurl",
-                        "origin": "8",
+                    "[% job_id %].450.rna.sims": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "10",
                         "node": "-"
                     }
                 }, 
                 "outputs": {
-                    "#jobname.700.annotation.function.summary": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].450.rna.sims.filter": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.700.annotation.md5.summary": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].450.rna.expand.rna": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "#jobname.700.annotation.organism.summary": {
-                        "host": "http://#shockurl",
+                    "[% job_id %].450.rna.expand.lca": {
+                        "host": "http://[% shockurl %]",
                         "node": "-"
-                    },
-                    "#jobname.700.annotation.lca.summary": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    },
-                    "#jobname.700.annotation.ontology.summary": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    },
-                    "#jobname.700.annotation.sims.stats": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    },
-                    "#jobname.700.annotation.sims.filter.seq": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    },
-                    "#jobname.700.annotation.source.stats": {
-                        "host": "http://#shockurl",
-                        "node": "-"
-                    },
-                    "#jobname.700.annotation.coverage.summary": {
-                        "host": "http://#shockurl",
-                        "node": "-",
-			"optional": true
                     }
                 },
-                "taskid": "9",
+                "userattr": {
+                    "stage_id": "450",
+                    "stage_name": "rna.sims"
+                },
+                "taskid": "11",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_index_sim_seq.pl",
+                    "args": "-in_seq=@[% job_id %].100.preprocess.passed.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -mem_host=[% mem_host% ] -memory=20", 
+                    "description": "index sim seq"
+                }, 
+                "dependsOn": ["1", "5", "7", "9", "11"],
+                "inputs": {
+                    "[% job_id %].100.preprocess.passed.fna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "1",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.sims.filter": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
+                        "node": "-"
+                    },
+                    "[% job_id %].450.rna.sims.filter": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "11",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.sims.filter.seq": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    },
+                    "[% job_id %].700.annotation.sims.filter.seq.index": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "filter.sims"
+                },
+                "taskid": "12",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_annotate.pl",
+                    "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
+                    "description": "md5 annotation summary"
+                },
+                "dependsOn": ["0", "5", "7", "9", "11", "12"],
+                "inputs": {
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "0",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.protein": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
+                        "node": "-"
+                    },
+                    "[% job_id %].450.rna.expand.rna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "11",
+                        "node": "-"
+                    },
+                    "[% job_id %].700.annotation.sims.filter.seq.index": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "12",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.md5.summary": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "annotation.summary"
+                },
+                "taskid": "13",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_loaddb.pl",
+                    "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5 -dbhost=[% analysis_dbhost %] -dbname=[% analysis_dbname %] -dbuser=[% analysis_dbuser %]",
+                    "description": "md5 summary load"
+                },
+                "dependsOn": ["13"],
+                "inputs": {
+                    "[% job_id %].700.annotation.md5.summary": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "13",
+                        "node": "-"
+                    }
+                },
+                "taskid": "14",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_annotate.pl",
+                    "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
+                    "description": "function annotation summary"
+                },
+                "dependsOn": ["0", "5", "7", "9", "11"],
+                "inputs": {
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "0",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.protein": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
+                        "node": "-"
+                    },
+                    "[% job_id %].450.rna.expand.rna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "11",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.function.summary": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "annotation.summary"
+                },
+                "taskid": "15",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_loaddb.pl",
+                    "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function -dbhost=[% analysis_dbhost %] -dbname=[% analysis_dbname %] -dbuser=[% analysis_dbuser %]",
+                    "description": "function summary load"
+                },
+                "dependsOn": ["15"],
+                "inputs": {
+                    "[% job_id %].700.annotation.function.summary": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "15",
+                        "node": "-"
+                    }
+                },
+                "taskid": "16",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_annotate.pl",
+                    "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
+                    "description": "organism annotation summary"
+                },
+                "dependsOn": ["0", "5", "7", "9", "11"],
+                "inputs": {
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "0",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.protein": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
+                        "node": "-"
+                    },
+                    "[% job_id %].450.rna.expand.rna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "11",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.organism.summary": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "annotation.summary"
+                },
+                "taskid": "17",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_loaddb.pl",
+                    "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism -dbhost=[% analysis_dbhost %] -dbname=[% analysis_dbname %] -dbuser=[% analysis_dbuser %]",
+                    "description": "organism summary load"
+                },
+                "dependsOn": ["17"],
+                "inputs": {
+                    "[% job_id %].700.annotation.organism.summary": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "17",
+                        "node": "-"
+                    }
+                },
+                "taskid": "18",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_annotate.pl",
+                    "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
+                    "description": "lca annotation summary"
+                },
+                "dependsOn": ["0", "5", "7", "9", "11"],
+                "inputs": {
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "0",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.lca": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
+                        "node": "-"
+                    },
+                    "[% job_id %].450.rna.expand.lca": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "11",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.lca.summary": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "annotation.summary"
+                },
+                "taskid": "19",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_loaddb.pl",
+                    "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca -dbhost=[% analysis_dbhost %] -dbname=[% analysis_dbname %] -dbuser=[% analysis_dbuser %]",
+                    "description": "lca summary load"
+                },
+                "dependsOn": ["19"],
+                "inputs": {
+                    "[% job_id %].700.annotation.lca.summary": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "19",
+                        "node": "-"
+                    }
+                },
+                "taskid": "20",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_annotate.pl",
+                    "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
+                    "description": "ontology annotation summary"
+                },
+                "dependsOn": ["0", "5", "7"],
+                "inputs": {
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "0",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.ontology": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.ontology.summary": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "annotation.summary"
+                },
+                "taskid": "21",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_loaddb.pl",
+                    "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology -dbhost=[% analysis_dbhost %] -dbname=[% analysis_dbname %] -dbuser=[% analysis_dbuser %]",
+                    "description": "ontology summary load"
+                },
+                "dependsOn": ["21"],
+                "inputs": {
+                    "[% job_id %].700.annotation.ontology.summary": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "21",
+                        "node": "-"
+                    }
+                },
+                "taskid": "22",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
+                    "name": "awe_done.pl",
+                    "args": "-job=[% job_id %] -dbhost=[% job_dbhost %] -dbname=[% job_dbname %] -dbuser=[% job_dbuser %]",
+                    "description": "done stage"
+                },
+                "dependsOn": ["14", "16", "18", "20", "22"],
+                "userattr": {
+                    "stage_id": "999",
+                    "stage_name": "done"
+                },
+                "taskid": "23",
                 "totalwork": 1
             }
         ]
