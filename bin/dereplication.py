@@ -44,7 +44,7 @@ def create_prefix_file(in_file, out_file, prefix_len, memory, fformat):
     finally:
         input_hdl.close()
         tmp_hdl.close()
-    run_cmd(['sort', '-T', TMP_DIR, '-S', memory, '-t', "\t", '-k', '1,1', '-k', '3,3nr', '-o', out_file, tmp_file])
+    run_cmd(['sort', '-T', TMP_DIR, '-S', str(memory)+'G', '-t', "\t", '-k', '1,1', '-k', '3,3nr', '-o', out_file, tmp_file])
     os.remove(tmp_file)
 
 def remove_reps(rep_file, pass_file, fail_file):
@@ -70,7 +70,7 @@ def main(args):
     parser.add_option("-l", "--prefix_length", dest="prefix_length", type="int", default=50, help="Length of prefix [default '50']")
     parser.add_option("-s", "--seq_type", dest="seq_type", default='fasta', help="Sequence type: fasta, fastq [default 'fasta']")
     parser.add_option("-d", "--tmp_dir", dest="tmpdir", default="/tmp", help="DIR for sorting files (must be full path) [default '/tmp']")
-    parser.add_option("-m", "--memory", dest="memory", default='4G', help="Memory for sorting [default '4G']")
+    parser.add_option("-m", "--memory", dest="memory", type="int", default=4, help="Memory for sorting in GB [default 4]")
     
     (opts, args) = parser.parse_args()
     if len(args) != 2:

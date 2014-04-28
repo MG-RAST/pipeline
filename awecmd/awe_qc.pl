@@ -18,7 +18,7 @@ umask 000;
 # options
 my $infile = "";
 my $name   = "raw";
-my $procs  = 8;
+my $proc   = 8;
 my $kmers  = '15,6';
 my $out_prefix = "qc";
 my $assembled  = 0;
@@ -27,7 +27,7 @@ my $help = 0;
 my $options = GetOptions (
 		"input=s"  => \$infile,
 		"name=s"   => \$name,
-		"procs=i"  => \$procs,
+		"proc=i"   => \$proc,
 		"kmers=s"  => \$kmers,
 		"out_prefix=s" => \$out_prefix,
         "assembled=i"  => \$assembled,
@@ -80,7 +80,7 @@ my $run_dir = getcwd;
 
 if ($assembled != 1) {
   # create drisee table
-  PipelineAWE::run_cmd("drisee -v -p $procs -t $format -d $run_dir -f $infile $d_stats > $d_info", 1);
+  PipelineAWE::run_cmd("drisee -v -p $proc -t $format -d $run_dir -f $infile $d_stats > $d_info", 1);
 
   # create consensus table
   my $max_ln = 600;
@@ -135,11 +135,11 @@ if ($assembled != 1) {
 
 # create kmer profile
 foreach my $len (@kmers) {
-  PipelineAWE::run_cmd("kmer-tool -l $len -p $procs -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir");
+  PipelineAWE::run_cmd("kmer-tool -l $len -p $proc -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir");
 }
 
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-procs=<number cpus, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\noutputs: \${out_prefix}.drisee.stats, \${out_prefix}.drisee.info, \${out_prefix}.consensus.stats, \${out_prefix}.kmer.\$len.stats, \${out_prefix}.assembly.coverage, \${out_prefix}.assembly.coverage.stats\n";
+    return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-proc=<number of threads, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\noutputs: \${out_prefix}.drisee.stats, \${out_prefix}.drisee.info, \${out_prefix}.consensus.stats, \${out_prefix}.kmer.\$len.stats, \${out_prefix}.assembly.coverage, \${out_prefix}.assembly.coverage.stats\n";
 }
