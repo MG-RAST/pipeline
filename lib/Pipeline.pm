@@ -142,6 +142,15 @@ sub set_jobcache_info {
   $query->execute($val, $job) or die $dbh->errstr;
 }
 
+sub get_job_project_name {
+  my $job = shift;
+  my $dbh = get_jobcache_dbh();
+  my $query = $dbh->prepare(qq(select Project.name from Project, Job, ProjectJob where Job.job_id = ? and Job._id = ProjectJob.job and ProjectJob.project = Project._id));
+  $query->execute($job);
+  my $ref = $query->fetchrow_arrayref;
+  return $ref->[0];
+}
+
 sub get_job_attributes {
   my ($job, $tags) = @_;
   return get_job_tag_data($job, $tags, "JobAttributes");
