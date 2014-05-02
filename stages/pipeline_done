@@ -363,6 +363,7 @@ while(my $line=<FUNCS>) {
   chomp $line;
   $line_count++;
   my @array = split(/\t/, $line);
+  $array[0] =~ s/\"/\\"/g;
   if($line_count == 1) {
     print SOLR "      \"$array[0]\"";
   } else {
@@ -378,6 +379,7 @@ while(my $line=<ORGS>) {
   chomp $line;
   $line_count++;
   my @array = split(/\t/, $line);
+  $array[0] =~ s/\"/\\"/g;
   if($line_count == 1) {
     print SOLR "      \"$array[0]\"";
   } else {
