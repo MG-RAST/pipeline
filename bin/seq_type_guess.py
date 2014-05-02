@@ -4,6 +4,19 @@ import os, sys, math, random, subprocess, gzip
 from collections import defaultdict
 from optparse import OptionParser
 from Bio import SeqIO
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
+
+def seq_iter(file_hdl, stype):
+    if stype == 'fastq':
+        return FastqGeneralIterator(file_hdl)
+    else:
+        return SeqIO.parse(file_hdl, stype)
+
+def split_rec(rec, stype):
+    if stype == 'fastq':
+        return rec[0].split()[0], rec[1].upper(), rec[2]
+    else:
+        return rec.id, str(rec.seq).upper(), None
 
 def countseqs(infile, gzip, stype):
     headchar = '>'
@@ -72,8 +85,8 @@ def main(args):
 
     # parse sequences
     snum = 0
-    for rec in SeqIO.parse(in_hdl, opts.type):
-        seq = str(rec.seq).upper()
+    for rec in seq_iter(in_hdl, opts.type):
+        head, seq, qual = split_rec(rec, opts.type)
         if (len(seq) >= kmer_len) and (seqper >= random.random()):
             prefix_map[ seq[:kmer_len] ] += 1
             snum += 1
