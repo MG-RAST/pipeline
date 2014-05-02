@@ -396,7 +396,6 @@ while(my $line=<MD5S>) {
   chomp $line;
   $line_count++;
   my @array = split(/\t/, $line);
-  $array[0] =~ s/\"/\\"/g;
   if($line_count == 1) {
     print SOLR "      \"$array[1]\"";
   } elsif($array[1] ne $last_md5) {
