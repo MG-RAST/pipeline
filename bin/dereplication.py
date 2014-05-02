@@ -74,12 +74,10 @@ def main(args):
     
     (opts, args) = parser.parse_args()
     if len(args) != 2:
-        parser.print_help()
-        print "[error] incorrect number of arguments"
+        parser.error("[error] incorrect number of arguments")
         return 1
     if not os.path.isdir(opts.tmpdir):
-        parser.print_help()
-        print "[error] invalid tmpdir"
+        parser.error("[error] invalid tmpdir")
         return 1
 
     (in_seq, out_name) = args
