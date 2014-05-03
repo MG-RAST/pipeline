@@ -142,11 +142,12 @@ def main(args):
             lengths[slen] += 1
             
             if not opts.fast:
-                for q in qual:
-                    ascii_value = ord(q)
-                    if ascii_value < 33 or ascii_value > 126:
-                        sys.stderr.write("[error] quality value with ASCII value: %d in sequence: %s (sequence number %d) is not within ASCII range 33 to 126\n" %(ascii_value, head, seqnum))
-                        os._exit(1)
+                if opts.type == 'fastq':
+                    for q in qual:
+                        ascii_value = ord(q)
+                        if ascii_value < 33 or ascii_value > 126:
+                            sys.stderr.write("[error] quality value with ASCII value: %d in sequence: %s (sequence number %d) is not within ASCII range 33 to 126\n" %(ascii_value, head, seqnum))
+                            os._exit(1)
                 char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
                 for c in seq:
                     if c not in IUPAC:
