@@ -35,7 +35,7 @@ sub create_attr {
     $json->max_size(0);
     $json->allow_nonref;
     
-    open(IN, "<userattr.json" or die "Couldn't open file: $!";
+    open(IN, "<userattr.json") or die "Couldn't open file: $!";
     $attr = $json->decode(join("", <IN>)); 
     close(IN);
     
