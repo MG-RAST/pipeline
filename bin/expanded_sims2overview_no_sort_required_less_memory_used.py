@@ -221,7 +221,7 @@ def main(args):
     parser.add_option('-j', '--job', dest="job", default=None, help="job identifier")
     parser.add_option('-t', '--type', dest="type", default=None, help="type of summary, one of: "+",".join(TYPES))
     parser.add_option('-v', '--m5nr_version', dest="m5nr_version", type="int", default=1, help="version of m5nr annotation")   
-    parser.add_option('-m', '--memory', dest="memory", action="store_true", default=False, help="log memory usage to *.mem.log [default off]")
+    parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
     parser.add_option('--coverage', dest="coverage", default=None, help="optional input file: assembely coverage")
     parser.add_option('--cluster', dest="cluster", default=None, help="optional input file: cluster mapping")
     parser.add_option('--md5_index', dest="md5_index", default=None, help="optional input file: md5,seek,length")
@@ -250,11 +250,11 @@ def main(args):
     # we are the parent
     if pid:
         info = os.waitpid(pid, os.WNOHANG)
-        mhdl = open(opts.output+'.memory.log', 'w')
+        mhdl = open(opts.output+'.mem.log', 'w')
         while(info[0] == 0):
             mem = memory_usage(pid)['rss']
             mhdl.write("%d\n"%mem)
-            time.sleep(300)
+            time.sleep(opts.memory)
             info = os.waitpid(pid, os.WNOHANG)
         mhdl.close()
     
