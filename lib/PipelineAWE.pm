@@ -56,7 +56,10 @@ sub create_attr {
 sub get_seq_stats {
     my ($file, $type, $fast) = @_;
     
-    my $stats = {};
+    unless ($file && (-s $file)) {
+        return {};
+    }
+    
     my $cmd = "seq_length_stats.py -i $file";
     if ($type) {
         $cmd .= " -t $type";
@@ -67,6 +70,7 @@ sub get_seq_stats {
     my @out = `$cmd`;
     chomp @out;
     
+    my $stats = {};
     foreach my $line (@out) {
         if ($line =~ /^\[error\]/) {
             print STDERR $line."\n";
