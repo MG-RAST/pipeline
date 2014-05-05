@@ -82,13 +82,13 @@ def get_e_bin(val):
     for e in EVALS:
         if val >= e:
             return e
-    return "error"
+    return EVALS[0]
 
 def get_i_bin(val):
     for i in IDENTS:
         if val <= i:
             return i
-    return "error"
+    return IDENTS[0]
 
 def update_e_bin(exp, abun, bins):
     if exp == 0:
@@ -154,7 +154,29 @@ def print_md5_stats(ohdl, data, imap):
                  str_round(stddev(l_mean, stats['isos'], stats['abun'])),
                  seek,
                  length,
-                 "1" if stats['isp'] else "2" ]
+                 "1" if stats['isp'] else "0" ]
+        ohdl.write("\t".join(line)+"\n")
+
+def print_lca_stats(ohdl, data, md5s):
+    if len(data) == 0:
+        return
+    for lca in sorted(data):
+        stats  = data[lca][0]
+        e_mean = stats['esum'] / stats['abun']
+        l_mean = stats['lsum'] / stats['abun']
+        i_mean = stats['isum'] / stats['abun']
+        line = [ DB_VER,
+                 JOBID,
+                 str(lca),
+                 str(stats['abun']),
+                 str_round(e_mean),
+                 str_round(stddev(e_mean, stats['esos'], stats['abun'])),
+                 str_round(l_mean),
+                 str_round(stddev(e_mean, stats['esos'], stats['abun'])),
+                 str_round(i_mean),
+                 str_round(stddev(l_mean, stats['isos'], stats['abun'])),
+                 str(len(md5s[lca])),
+                 str(stats['lvl']) ]
         ohdl.write("\t".join(line)+"\n")
 
 def print_type_stats(ohdl, data, md5s):
@@ -181,6 +203,13 @@ def print_type_stats(ohdl, data, md5s):
                      "{"+",".join(map(str, md5s[aid]))+"}",
                      str_round(stats['source']) ]
             ohdl.write("\t".join(line)+"\n")
+
+def print_source_stats(ohdl, data):
+    if len(data) == 0:
+        return
+    for i in range(SOURCES):
+        source = i+1
+        ohdl.write(str(source))
 
 usage = "usage: %prog [options]\n"
 
@@ -225,7 +254,7 @@ def main(args):
         while(info[0] == 0):
             mem = memory_usage(pid)['rss']
             mhdl.write(mem+'\n')
-            sleep(300)
+            time.sleep(300)
             info = os.waitpid(pid, os.WNOHANG)
         mhdl.close()
     
@@ -253,11 +282,13 @@ def main(args):
         ihdl = open(opts.input, 'rU')
         for line in ihdl:
             parts = line.strip().split('\t')
-            (md5, frag, ident, length, e_val, fid, oid, source) = parts[:8]
+            (md5, frag, ident, length, e_val, fid, oid) = parts[:7]
             is_protein = False if (len(parts) > 8) and (parts[8] == 1) else True
             if not (frag and md5):
                 continue
-        
+            if opts.type != 'lca':
+                (md5, ident, length, e_val, source) = (int(md5), float(ident), int(length), float(e_val), int(parts[7]))
+            
             if opts.type == 'md5':
                 if frag != prev_frag:
                     frag_keys.clear()
@@ -278,15 +309,43 @@ def main(args):
                     data[md5][0]['ebin'] = update_e_bin(eval_exp, abun, data[md5][0]['ebin'])
                     data[md5][0]['isp']  = is_protein
                     frag_keys.add(md5)
-            elif opts.type in ['function', 'organism', 'ontology']:
-                if opts.type == 'function':
-                    aid = fid
-                    akey = (fid, source)
-                elif (opts.type == 'ontology') or (opts.type == 'organism'):
-                    aid = oid
-                    akey = (oid, source)                
-                if not aid:
+            elif opts.type == 'lca':
+                if not fid:
                     continue
+                lca = fid
+                level = int(oid)
+                if lca not in data:
+                    data[lca] = np.zeros(1, dtype=dt)
+                    md5s[lca] = set()
+                abun = get_abundance(frag, amap, cmap)
+                if abun < 1:
+                    continue
+                e_line_sum = sum(map(lambda x: get_exponent(float(x)), e_val.split(';')))
+                l_line_sum = sum(map(int, length.split(';')))
+                i_line_sum = sum(map(float, ident.split(';')))
+                md5_count  = 0
+                for m in md5.split(';'):
+                    md5_count += 1
+                    md5s[lca].add(int(m))
+                e_avg = e_line_sum / md5_count
+                l_avg = l_line_sum / md5_count
+                i_avg = i_line_sum / md5_count
+                data[lca][0]['abun'] += abun
+                data[lca][0]['esum'] += abun * e_avg
+                data[lca][0]['esos'] += abun * e_avg * e_avg
+                data[lca][0]['lsum'] += abun * l_avg
+                data[lca][0]['lsos'] += abun * l_avg * l_avg
+                data[lca][0]['isum'] += abun * i_avg
+                data[lca][0]['isos'] += abun * i_avg * i_avg
+                data[lca][0]['lvl']  = level
+            elif opts.type in ['function', 'organism', 'ontology']:
+                if fid and (opts.type == 'function'):
+                    aid = int(fid)
+                elif oid and ((opts.type == 'ontology') or (opts.type == 'organism')):
+                    aid = int(oid)
+                else:
+                    continue
+                akey = (aid, source)
                 if frag != prev_frag:
                     frag_keys.clear()
                 if akey not in frag_keys:
@@ -297,17 +356,27 @@ def main(args):
                     abun = get_abundance(frag, amap, cmap)
                     if abun < 1:
                         continue
-                    data[fid][source-1]['source'] = source
-                    data[fid][source-1]['abun'] += abun
-                    data[fid][source-1]['esum'] += abun * eval_exp
-                    data[fid][source-1]['esos'] += abun * eval_exp * eval_exp
-                    data[fid][source-1]['lsum'] += abun * length
-                    data[fid][source-1]['lsos'] += abun * length * length
-                    data[fid][source-1]['isum'] += abun * ident
-                    data[fid][source-1]['isos'] += abun * ident * ident
-                    md5s[fid][source].add(md5)
+                    data[aid][source-1]['source'] = source
+                    data[aid][source-1]['abun'] += abun
+                    data[aid][source-1]['esum'] += abun * eval_exp
+                    data[aid][source-1]['esos'] += abun * eval_exp * eval_exp
+                    data[aid][source-1]['lsum'] += abun * length
+                    data[aid][source-1]['lsos'] += abun * length * length
+                    data[aid][source-1]['isum'] += abun * ident
+                    data[aid][source-1]['isos'] += abun * ident * ident
+                    md5s[aid][source].add(md5)
                     frag_keys.add(akey)                
-        
+            elif opts.type == 'source':
+                if not source:
+                    continue
+                eval_exp = get_exponent(e_val)
+                abun = get_abundance(frag, amap, cmap)
+                if abun < 1:
+                    continue
+                e_bin = get_e_bin(eval_exp)
+                i_bin = get_i_bin(ident)
+                data['e_val'][source][e_bin] += abun
+                data['ident'][source][i_bin] += abun
             prev_frag = frag
             # end of file looping
         ihdl.close()
@@ -316,8 +385,12 @@ def main(args):
         ohdl = open(opts.output, 'w')
         if opts.type == 'md5':
             print_md5_stats(ohdl, data, imap)
+        elif opts.type == 'lca':
+            print_lca_stats(ohdl, data, md5s)
         elif opts.type in ['function', 'organism', 'ontology']:
             print_md5_stats(ohdl, data, md5s)
+        elif opts.type == 'source':
+            print_source_stats(ohdl, data)
         ohdl.close()
     
     # exit if child fork
