@@ -507,7 +507,7 @@
             },
             {
                 "cmd": {
-                    "name": "awe_annotate.pl",
+                    "name": "awe_annotate_summary.pl",
                     "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
                     "description": "md5 annotation summary"
                 },
@@ -576,7 +576,7 @@
             },
             {
                 "cmd": {
-                    "name": "awe_annotate.pl",
+                    "name": "awe_annotate_summary.pl",
                     "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
                     "description": "function annotation summary"
                 },
@@ -640,7 +640,7 @@
             },
             {
                 "cmd": {
-                    "name": "awe_annotate.pl",
+                    "name": "awe_annotate_summary.pl",
                     "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
                     "description": "organism annotation summary"
                 },
@@ -704,7 +704,7 @@
             },
             {
                 "cmd": {
-                    "name": "awe_annotate.pl",
+                    "name": "awe_annotate_summary.pl",
                     "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
                     "description": "lca annotation summary"
                 },
@@ -768,7 +768,7 @@
             },
             {
                 "cmd": {
-                    "name": "awe_annotate.pl",
+                    "name": "awe_annotate_summary.pl",
                     "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
                     "description": "ontology annotation summary"
                 },
@@ -822,16 +822,68 @@
             },
             {
                 "cmd": {
+                    "name": "awe_annotate_summary.pl",
+                    "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.source.stats -nr_ver=[% ach_annotation_ver %] -type=source",
+                    "description": "source annotation summary"
+                },
+                "dependsOn": ["0", "5", "7", "9", "11"],
+                "inputs": {
+                    "[% job_id %].075.assembly.coverage": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "0",
+                        "node": "-"
+                    },
+                    "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "5",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.ontology": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].650.aa.expand.protein": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "7",
+                        "node": "-"
+                    },
+                    "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "9",
+                        "node": "-"
+                    },
+                    "[% job_id %].450.rna.expand.rna": {
+                        "host": "http://[% shockurl %]",
+                        "origin": "11",
+                        "node": "-"
+                    }
+                },
+                "outputs": {
+                    "[% job_id %].700.annotation.source.stats": {
+                        "host": "http://[% shockurl %]",
+                        "node": "-"
+                    }
+                },
+                "userattr": {
+                    "stage_id": "700",
+                    "stage_name": "annotation.summary"
+                },
+                "taskid": "23",
+                "totalwork": 1
+            },
+            {
+                "cmd": {
                     "name": "awe_done.pl",
                     "args": "-job=[% job_id %] -dbhost=[% job_dbhost %] -dbname=[% job_dbname %] -dbuser=[% job_dbuser %]",
                     "description": "done stage"
                 },
-                "dependsOn": ["14", "16", "18", "20", "22"],
+                "dependsOn": ["14", "16", "18", "20", "22", "23"],
                 "userattr": {
                     "stage_id": "999",
                     "stage_name": "done"
                 },
-                "taskid": "23",
+                "taskid": "24",
                 "totalwork": 1
             }
         ]
