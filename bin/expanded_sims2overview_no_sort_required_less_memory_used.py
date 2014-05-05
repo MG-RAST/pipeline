@@ -394,7 +394,7 @@ def main(args):
         elif opts.type == 'lca':
             print_lca_stats(ohdl, data, md5s)
         elif opts.type in ['function', 'organism', 'ontology']:
-            print_md5_stats(ohdl, data, md5s)
+            print_type_stats(ohdl, data, md5s)
         elif opts.type == 'source':
             print_source_stats(ohdl, data)
         ohdl.close()
