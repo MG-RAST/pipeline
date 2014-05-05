@@ -32,7 +32,7 @@ DB_VER = None
 DTYPES = {
     'md5': np.dtype([ ('abun', np.uint32), ('esum', np.float32), ('esos', np.float32),
                       ('lsum', np.float32), ('lsos', np.float32), ('isum', np.float32),
-                      ('isos', np.float32), ('ebin', np.uint16, (1,5)), ('isp', np.bool_) ]),
+                      ('isos', np.float32), ('ebin', np.uint16, (5)), ('isp', np.bool_) ]),
     'lca': np.dtype([ ('abun', np.uint32), ('esum', np.float32), ('esos', np.float32),
                       ('lsum', np.float32), ('lsos', np.float32), ('isum', np.float32),
                       ('isos', np.float32), ('lvl', np.uint8) ]),
