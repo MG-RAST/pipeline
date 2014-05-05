@@ -98,7 +98,6 @@ def update_e_bin(exp, abun, bins):
             if exp >= e:
                 bins[i] += abun
                 break
-    return bins
 
 def get_abundance(frag, amap, cmap):
     abun = 0
@@ -107,7 +106,7 @@ def get_abundance(frag, amap, cmap):
             abun += amap[x] if x in amap else 1
     else:
         abun += amap[frag] if frag in amap else 1
-    return abun
+    return math.ceil(abun)
 
 def get_exponent(e_val):
     if e_val == 0:
@@ -205,8 +204,8 @@ def print_type_stats(ohdl, data, md5s):
                      str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                      str_round(i_mean),
                      str_round(stddev(l_mean, stats['isos'], stats['abun'])),
-                     "{"+",".join(map(str, md5s[aid]))+"}",
-                     str_round(stats['source']) ]
+                     "{"+",".join(map(str, md5s[aid][stats['source']]))+"}",
+                     str(stats['source']) ]
             ohdl.write("\t".join(line)+"\n")
 
 def print_source_stats(ohdl, data):
@@ -312,8 +311,8 @@ def main(args):
                     data[md5][0]['lsos'] += abun * length * length
                     data[md5][0]['isum'] += abun * ident
                     data[md5][0]['isos'] += abun * ident * ident
-                    data[md5][0]['ebin'] = update_e_bin(eval_exp, abun, data[md5][0]['ebin'])
                     data[md5][0]['isp']  = is_protein
+                    update_e_bin(eval_exp, abun, data[md5][0]['ebin'])
                     frag_keys.add(md5)
             elif opts.type == 'lca':
                 if not fid:
