@@ -13,6 +13,7 @@
 import os
 import re
 import sys
+import time
 import math
 import numpy as np
 from collections import defaultdict
@@ -40,14 +41,13 @@ DTYPES = {
                         ('isum', np.float32), ('isos', np.float32) ])
 }
 
-def memory_usage():
-    """Memory usage of the current process in kilobytes."""
+def memory_usage(pid):
+    """Memory usage of a process in kilobytes."""
     status = None
     result = {'peak': 0, 'rss': 0}
     try:
-        # This will only work on systems with a /proc file system
-        # (like Linux).
-        status = open('/proc/self/status')
+        # This will only work on systems with a /proc file system (like Linux).
+        status = open('/proc/%s/status'%(str(pid) if pid else 'self'))
         for line in status:
             parts = line.split()
             key = parts[0][2:-1].lower()
@@ -133,6 +133,8 @@ def stddev(mean, sos, n):
     return math.sqrt(tmp) if tmp > 0 else 0
 
 def print_md5_stats(ohdl, data, imap):
+    if len(data) == 0:
+        return
     for md5 in sorted(data):
         stats  = data[md5][0]
         e_mean = stats['esum'] / stats['abun']
@@ -156,6 +158,8 @@ def print_md5_stats(ohdl, data, imap):
         ohdl.write("\t".join(line)+"\n")
 
 def print_type_stats(ohdl, data, md5s):
+    if len(data) == 0:
+        return
     for aid in sorted(data):
         for i in range(SOURCES):
             stats = data[aid][i]
@@ -210,107 +214,118 @@ def main(args):
     DB_VER = str(opts.m5nr_version)
     
     # fork the process
-    pid = os.fork()
+    pid = None
+    if opts.memory:
+        pid = os.fork()
+    
+    # we are the parent
     if pid:
-        # we are the parent
+        info = os.waitpid(pid, os.WNOHANG)
+        mhdl = open('memory.log', 'w')
+        while(info[0] == 0):
+            mem = memory_usage(pid)['rss']
+            mhdl.write(mem+'\n')
+            sleep(300)
+            info = os.waitpid(pid, os.WNOHANG)
+        mhdl.close()
+    
+    # we are child or no forking
+    else:
+        # get optional file info
+        amap = parse_file(opts.coverage, 'coverage')
+        cmap = parse_file(opts.cluster, 'cluster')
+        imap = parse_file(opts.md5_index, 'index')
+    
+        # Variables used to track which entries to record.  If the fragment ID (read
+        #  or cluster ID) has changed, then the frag_keys hash will be emptied.  But,
+        #  as long as we're on the same read (the only thing we know the expand file
+        #  to be sorted by), then we want to record all the ID's we're recording so
+        #  that nothing gets recorded in duplicate.
+        prev_frag = ""
+        frag_keys = set()
         
-    
-    # get optional file info
-    amap = parse_file(opts.coverage, 'coverage')
-    cmap = parse_file(opts.cluster, 'cluster')
-    imap = parse_file(opts.md5_index, 'index')
-    
-    # Variables used to track which entries to record.  If the fragment ID (read
-    #  or cluster ID) has changed, then the frag_keys hash will be emptied.  But,
-    #  as long as we're on the same read (the only thing we know the expand file
-    #  to be sorted by), then we want to record all the ID's we're recording so
-    #  that nothing gets recorded in duplicate.
-    prev_frag = ""
-    frag_keys = set()
-    
-    # data structs to fill
-    data = {}
-    md5s = {}
-    dt = DTYPES[opts.type] if opts.type in DTYPES else DTYPES['other']
-    
-    # parse expand file
-    ihdl = open(opts.input, 'rU')
-    for line in ihdl:
-        parts = line.strip().split('\t')
-        (md5, frag, ident, length, e_val, fid, oid, source) = parts[:8]
-        is_protein = False if (len(parts) > 8) and (parts[8] == 1) else True
-        if not (frag and md5):
-            continue
+        # data structs to fill
+        data = {}
+        md5s = {}
+        dt = DTYPES[opts.type] if opts.type in DTYPES else DTYPES['other']
         
-        if opts.type == 'md5':
-            if frag != prev_frag:
-                frag_keys.clear()
-            if md5 not in frag_keys:
-                if md5 not in data:
-                    data[md5] = np.zeros(1, dtype=dt)
-                eval_exp = get_exponent(e_val)
-                abun = get_abundance(frag, amap, cmap)
-                if abun < 1:
-                    continue
-                data[md5][0]['abun'] += abun
-                data[md5][0]['esum'] += abun * eval_exp
-                data[md5][0]['esos'] += abun * eval_exp * eval_exp
-                data[md5][0]['lsum'] += abun * length
-                data[md5][0]['lsos'] += abun * length * length
-                data[md5][0]['isum'] += abun * ident
-                data[md5][0]['isos'] += abun * ident * ident
-                data[md5][0]['ebin'] = update_e_bin(eval_exp, abun, data[md5][0]['ebin'])
-                data[md5][0]['isp']  = is_protein
-                frag_keys.add(md5)
-        elif opts.type in ['function', 'organism', 'ontology']:
-            if opts.type == 'function':
-                aid = fid
-                akey = (fid, source)
-            elif (opts.type == 'ontology') or (opts.type == 'organism'):
-                aid = oid
-                akey = (oid, source)                
-            if not aid:
+        # parse expand file
+        ihdl = open(opts.input, 'rU')
+        for line in ihdl:
+            parts = line.strip().split('\t')
+            (md5, frag, ident, length, e_val, fid, oid, source) = parts[:8]
+            is_protein = False if (len(parts) > 8) and (parts[8] == 1) else True
+            if not (frag and md5):
                 continue
-            if frag != prev_frag:
-                frag_keys.clear()
-            if akey not in frag_keys:
-                if aid not in data:
-                    data[aid] = np.zeros(SOURCES, dtype=dt)
-                    md5s[aid] = defaultdict(set)
-                eval_exp = get_exponent(e_val)
-                abun = get_abundance(frag, amap, cmap)
-                if abun < 1:
-                    continue
-                data[fid][source-1]['source'] = source
-                data[fid][source-1]['abun'] += abun
-                data[fid][source-1]['esum'] += abun * eval_exp
-                data[fid][source-1]['esos'] += abun * eval_exp * eval_exp
-                data[fid][source-1]['lsum'] += abun * length
-                data[fid][source-1]['lsos'] += abun * length * length
-                data[fid][source-1]['isum'] += abun * ident
-                data[fid][source-1]['isos'] += abun * ident * ident
-                md5s[fid][source].add(md5)
-                frag_keys.add(akey)                
         
-        prev_frag = frag
-        # end of file looping
-    ihdl.close()
+            if opts.type == 'md5':
+                if frag != prev_frag:
+                    frag_keys.clear()
+                if md5 not in frag_keys:
+                    if md5 not in data:
+                        data[md5] = np.zeros(1, dtype=dt)
+                    eval_exp = get_exponent(e_val)
+                    abun = get_abundance(frag, amap, cmap)
+                    if abun < 1:
+                        continue
+                    data[md5][0]['abun'] += abun
+                    data[md5][0]['esum'] += abun * eval_exp
+                    data[md5][0]['esos'] += abun * eval_exp * eval_exp
+                    data[md5][0]['lsum'] += abun * length
+                    data[md5][0]['lsos'] += abun * length * length
+                    data[md5][0]['isum'] += abun * ident
+                    data[md5][0]['isos'] += abun * ident * ident
+                    data[md5][0]['ebin'] = update_e_bin(eval_exp, abun, data[md5][0]['ebin'])
+                    data[md5][0]['isp']  = is_protein
+                    frag_keys.add(md5)
+            elif opts.type in ['function', 'organism', 'ontology']:
+                if opts.type == 'function':
+                    aid = fid
+                    akey = (fid, source)
+                elif (opts.type == 'ontology') or (opts.type == 'organism'):
+                    aid = oid
+                    akey = (oid, source)                
+                if not aid:
+                    continue
+                if frag != prev_frag:
+                    frag_keys.clear()
+                if akey not in frag_keys:
+                    if aid not in data:
+                        data[aid] = np.zeros(SOURCES, dtype=dt)
+                        md5s[aid] = defaultdict(set)
+                    eval_exp = get_exponent(e_val)
+                    abun = get_abundance(frag, amap, cmap)
+                    if abun < 1:
+                        continue
+                    data[fid][source-1]['source'] = source
+                    data[fid][source-1]['abun'] += abun
+                    data[fid][source-1]['esum'] += abun * eval_exp
+                    data[fid][source-1]['esos'] += abun * eval_exp * eval_exp
+                    data[fid][source-1]['lsum'] += abun * length
+                    data[fid][source-1]['lsos'] += abun * length * length
+                    data[fid][source-1]['isum'] += abun * ident
+                    data[fid][source-1]['isos'] += abun * ident * ident
+                    md5s[fid][source].add(md5)
+                    frag_keys.add(akey)                
+        
+            prev_frag = frag
+            # end of file looping
+        ihdl.close()
     
-    # no stats !
-    if len(data) == 0:
-        open(opts.output, 'w').close()
-        print "[warning] no summary data computed"
+        # output stats        
+        ohdl = open(opts.output, 'w')
+        if opts.type == 'md5':
+            print_md5_stats(ohdl, data, imap)
+        elif opts.type in ['function', 'organism', 'ontology']:
+            print_md5_stats(ohdl, data, md5s)
+        ohdl.close()
+    
+    # exit if child fork
+    if pid == 0:
+        os._exit(0)
+    else:
         return 0
-    
-    # output stats        
-    ohdl = open(opts.output, 'w')
-    if opts.type == 'md5':
-        print_md5_stats(ohdl, data, imap)
-    elif opts.type in ['function', 'organism', 'ontology']:
-        print_md5_stats(ohdl, data, md5s)
-    ohdl.close()
-    
-    return 0
-    
+
+
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
