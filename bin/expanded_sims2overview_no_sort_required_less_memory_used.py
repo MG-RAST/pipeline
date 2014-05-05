@@ -250,7 +250,7 @@ def main(args):
     # we are the parent
     if pid:
         info = os.waitpid(pid, os.WNOHANG)
-        mhdl = open('memory.log', 'w')
+        mhdl = open(opts.output+'.memory.log', 'w')
         while(info[0] == 0):
             mem = memory_usage(pid)['rss']
             mhdl.write(mem+'\n')
