@@ -58,8 +58,12 @@ unless (-s $rna_nr_path) {
 my $run_dir = getcwd;
 PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
 
+# get stats
+my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta');
+
+
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_search_rna.pl -input=<input fasta> [-rna_nr=<rna cluster file, default: md5rna.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -output=<output fasta default:425.rna.fna> -ident=<ident percentage, default: 70>] \n";
+    return "USAGE: awe_search_rna.pl -input=<input fasta> -output=<output fasta> [-rna_nr=<rna cluster file, default: md5rna.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -ident=<ident percentage, default: 70>] \n";
 }

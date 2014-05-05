@@ -95,6 +95,11 @@ close(IN);
 close(OUT);
 unlink($output.".clstr");
 
+# get stats
+my $fast = $aa ? 1 : 0;
+my $out_stats = PipelineAWE::get_seq_stats($output, 'fasta', $fast);
+
+
 exit(0);
 
 sub get_usage {

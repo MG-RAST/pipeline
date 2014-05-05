@@ -82,12 +82,17 @@ unless ( $filter_options =~ /^skip$/i ) {
 # skip it
 else {
   if ( $input_file =~ /\.(fna|fasta)$/i ) {
-    PipelineAWE::run_cmd("cp $input_file $passed_seq");
+    PipelineAWE::run_cmd("mv $input_file $passed_seq");
   } elsif ( $input_file =~ /\.(fq|fastq)$/i ) {
     PipelineAWE::run_cmd("seqUtil --fastq2fasta -i $input_file -o $passed_seq");
   }
   PipelineAWE::run_cmd("touch $removed_seq");
 }
+
+# get stats
+my $pass_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
+my $fail_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
+
 
 exit(0);
 

@@ -42,13 +42,18 @@ if ($help){
 }
 
 if ($run_derep == 0) {
-    PipelineAWE::run_cmd("cp $input $out_prefix.passed.fna");
+    PipelineAWE::run_cmd("mv $input $out_prefix.passed.fna");
     PipelineAWE::run_cmd("touch $out_prefix.removed.fna");
     exit(0);
 }
 
 my $run_dir = getcwd;
 PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memory -d $run_dir $input $out_prefix");
+
+# get stats
+my $pass_stats = PipelineAWE::get_seq_stats($out_prefix.".passed.fna", 'fasta');
+my $fail_stats = PipelineAWE::get_seq_stats($out_prefix.".removed.fna", 'fasta');
+
 
 exit(0);
 

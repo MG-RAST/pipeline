@@ -52,7 +52,7 @@ if ($help){
 }
 
 if ($run_bowtie == 0) {
-    PipelineAWE::run_cmd("cp $fasta $output");
+    PipelineAWE::run_cmd("mv $fasta $output");
     exit(0);
 }
 
@@ -77,6 +77,10 @@ for my $index_name (@indexes) {
     $input_file = $unaligned;
 }
 PipelineAWE::run_cmd("mv $input_file $output");
+
+# get stats
+my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta');
+
 
 exit(0);
 
