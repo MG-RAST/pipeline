@@ -21,7 +21,7 @@ from optparse import OptionParser
 
 # constants
 SOURCES = 18
-ev_re  = re.compile(r"^(\d\.\d)e([-+])(\d+)$")
+ev_re  = re.compile(r"^(\d(\.\d)?)e([-+])?0?(\d+)$") # .group(4) == abs(exponent)
 TYPES  = ['md5', 'function', 'organism', 'ontology', 'lca', 'source']
 EVALS  = [-5 , -10 , -20 , -30 , -1000]
 IDENTS = [60 , 80 , 90 , 97 , 100]
@@ -114,12 +114,17 @@ def get_exponent(e_val):
         return 0
     ev_match = ev_re.match(str(e_val))
     if not ev_match:
-        (i, f) = str(e_val).split('.')
+        try:
+            (i, f) = str(e_val).split('.')
+            return len(f) * -1
+        except:
+            sys.stderr.write("[warning] bad e-value: "+str(e_val))
+            os._exit(1)
         return len(f) * -1
-    if ev_match.group(2) == '-':
-        return int(ev_match.group(3)) * -1
+    if ev_match.group(3) and (ev_match.group(3) == '-'):
+        return int(ev_match.group(4)) * -1
     else:
-        return int(ev_match.group(3))
+        return int(ev_match.group(4))
 
 # round to nearest thousandth
 def str_round(val):
@@ -253,7 +258,8 @@ def main(args):
         mhdl = open(opts.output+'.mem.log', 'w')
         while(info[0] == 0):
             mem = memory_usage(pid)['rss']
-            mhdl.write("%d\n"%mem)
+            mhdl.write("%d\n"%int(mem/1024))
+            mhdl.flush()
             time.sleep(opts.memory)
             info = os.waitpid(pid, os.WNOHANG)
         mhdl.close()
