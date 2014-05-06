@@ -82,4 +82,24 @@ sub get_seq_stats {
     return $stats;
 }
 
+sub file_to_array {
+    my ($file) = @_;
+
+    my $data = [];
+    unless ($file && (-s $file)) {
+        return $data;
+    }
+    
+    open(FILE, "<$file") || return $data;
+    while (my $line = <FILE>) {
+        chomp $line;
+        my @parts = split(/\t/, $line);
+        push @$data, [ @parts ];
+    }
+    close(FILE);
+    
+    return $data;
+}
+
+
 1;
