@@ -16,6 +16,7 @@ import sys
 import time
 import math
 import numpy as np
+import subprocess
 from collections import defaultdict
 from optparse import OptionParser
 
@@ -58,22 +59,46 @@ def memory_usage(pid):
             status.close()
     return result
 
-def parse_file(fname, ftype):
+def index_map(fname):
     if not (fname and os.path.isfile(fname)):
-        return {}
-    data = {}
+        return None
+    # line count
+    p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    result, err = p.communicate()
+    if p.returncode != 0:
+        raise IOError(err)
+    length = int(result.strip().split()[0])
+    # make array
+    dt = np.dtype([ ('md5', np.str_, 32), ('seek', np.uint64), ('length', np.uint32) ])
+    ia = np.zeros(length, dtype=dt)
+    # populate array
     with open(fname, 'rU') as fhdl:
-        for line in fhdl:
+        for i, line in enumerate(fhdl):
             tabs = line.strip().split('\t')
-            if ftype == 'coverage':
-                data[tabs[0]] = tabs[1]
-            elif ftype == 'cluster':
+            ia[i][0] = tabs[0]
+            ia[i][1] = int(tabs[1])
+            ia[i][2] = int(tabs[2])
+    return ia
+
+def abundance_map(afile, cfile):
+    data = defaultdict(int)
+    if afile and os.path.isfile(afile):
+        with open(afile, 'rU') as fhdl:
+            for line in fhdl:
+                tabs = line.strip().split('\t')
+                data[tabs[0]] = int(tabs[1])
+    if cfile and os.path.isfile(cfile):
+        with open(cfile, 'rU') as fhdl:
+            for line in fhdl:
+                tabs = line.strip().split('\t')
                 ids = tabs[2].split(',') # old way
-                ids.append(tabs[1])
+                ids.append(tabs[1])      # old way
                 #ids = tabs[1].split(',') # new way
-                data[tabs[0]] = ids
-            elif ftype == 'index':
-                data[tabs[0]] = (tabs[1], tabs[2])
+                for i in ids:
+                    if i in data:
+                        data[tabs[0]] += data[i]
+                    else:
+                        data[tabs[0]] += 1
     return data
 
 def get_e_bin(val):
@@ -99,13 +124,8 @@ def update_e_bin(exp, abun, bins):
                 bins[i] += abun
                 break
 
-def get_abundance(frag, amap, cmap):
-    abun = 0
-    if frag in cmap:
-        for x in cmap[frag]:
-            abun += amap[x] if x in amap else 1
-    else:
-        abun += amap[frag] if frag in amap else 1
+def get_abundance(frag, amap):
+    abun = amap[frag] if frag in amap else 1
     return math.ceil(abun)
 
 def get_exponent(e_val):
@@ -144,7 +164,14 @@ def print_md5_stats(ohdl, data, imap):
         e_mean = stats['esum'] / stats['abun']
         l_mean = stats['lsum'] / stats['abun']
         i_mean = stats['isum'] / stats['abun']
-        (seek, length) = imap[md5] if md5 in imap else ('', '')
+        # get indexes
+        rows, cols = np.where(imap==md5)
+        if (len(rows) > 0) and (len(cols) > 0):
+            first_idx = sorted([r for r, c in zip(rows, cols) if c == 0])[0]
+            seek, length = str(imap[first_idx][1]), str(imap[first_idx][2])
+        else:
+            seek, length = '', ''
+        # output
         line = [ DB_VER,
                  JOBID,
                  str(md5),
@@ -213,7 +240,21 @@ def print_source_stats(ohdl, data):
         return
     for i in range(SOURCES):
         source = i+1
+        if source not in data['e_val']:
+            continue
         ohdl.write(str(source))
+        for e in EVALS:
+            if e in data['e_val'][source]:
+                ohdl.write("\t%d"%data['e_val'][source][e])
+            else:
+                ohdl.write("\t0")
+        for i in IDENTS:
+            if i in data['ident'][source]:
+                ohdl.write("\t%d"%data['ident'][source][i])
+            else:
+                ohdl.write("\t0")
+        ohdl.write("\t")
+
 
 usage = "usage: %prog [options]\n"
 
@@ -266,10 +307,9 @@ def main(args):
     # we are child or no forking
     else:
         # get optional file info
-        amap = parse_file(opts.coverage, 'coverage')
-        cmap = parse_file(opts.cluster, 'cluster')
-        imap = parse_file(opts.md5_index, 'index')
-    
+        imap = index_map(opts.md5_index)
+        amap = abundance_map(opts.coverage, opts.cluster)
+        
         # Variables used to track which entries to record.  If the fragment ID (read
         #  or cluster ID) has changed, then the frag_keys hash will be emptied.  But,
         #  as long as we're on the same read (the only thing we know the expand file
@@ -301,7 +341,7 @@ def main(args):
                     if md5 not in data:
                         data[md5] = np.zeros(1, dtype=dt)
                     eval_exp = get_exponent(e_val)
-                    abun = get_abundance(frag, amap, cmap)
+                    abun = get_abundance(frag, amap)
                     if abun < 1:
                         continue
                     data[md5][0]['abun'] += abun
@@ -322,7 +362,7 @@ def main(args):
                 if lca not in data:
                     data[lca] = np.zeros(1, dtype=dt)
                     md5s[lca] = set()
-                abun = get_abundance(frag, amap, cmap)
+                abun = get_abundance(frag, amap)
                 if abun < 1:
                     continue
                 e_line_sum = sum(map(lambda x: get_exponent(float(x)), e_val.split(';')))
@@ -358,7 +398,7 @@ def main(args):
                         data[aid] = np.zeros(SOURCES, dtype=dt)
                         md5s[aid] = defaultdict(set)
                     eval_exp = get_exponent(e_val)
-                    abun = get_abundance(frag, amap, cmap)
+                    abun = get_abundance(frag, amap)
                     if abun < 1:
                         continue
                     data[aid][source-1]['source'] = source
@@ -375,7 +415,7 @@ def main(args):
                 if not source:
                     continue
                 eval_exp = get_exponent(e_val)
-                abun = get_abundance(frag, amap, cmap)
+                abun = get_abundance(frag, amap)
                 if abun < 1:
                     continue
                 e_bin = get_e_bin(eval_exp)
