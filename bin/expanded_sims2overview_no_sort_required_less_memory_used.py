@@ -253,7 +253,7 @@ def print_source_stats(ohdl, data):
                 ohdl.write("\t%d"%data['ident'][source][i])
             else:
                 ohdl.write("\t0")
-        ohdl.write("\t")
+        ohdl.write("\n")
 
 
 usage = "usage: %prog [options]\n"
