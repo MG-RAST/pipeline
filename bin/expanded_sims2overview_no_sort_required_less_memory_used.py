@@ -322,6 +322,9 @@ def main(args):
         data = {}
         md5s = {}
         dt = DTYPES[opts.type] if opts.type in DTYPES else DTYPES['other']
+        if opts.type == 'source':
+            data['e_val'] = defaultdict(lambda: defaultdict(int))
+            data['ident'] = defaultdict(lambda: defaultdict(int))
         
         # parse expand file
         ihdl = open(opts.input, 'rU')
