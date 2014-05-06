@@ -38,27 +38,7 @@
                         "host": "http://[% shockurl %]",
                         "node": "-"
                     },
-                    "[% job_id %].075.assembly.coverage.stats": {
-                        "host": "http://[% shockurl %]",
-                        "node": "-"
-                    },
-                    "[% job_id %].075.consensus.stats": {
-                        "host": "http://[% shockurl %]",
-                        "node": "-"
-                    },
-                    "[% job_id %].075.drisee.info": {
-                        "host": "http://[% shockurl %]",
-                        "node": "-"
-                    },
-                    "[% job_id %].075.drisee.stats": {
-                        "host": "http://[% shockurl %]",
-                        "node": "-"
-                    },
-                    "[% job_id %].075.kmer.15.stats": {
-                        "host": "http://[% shockurl %]",
-                        "node": "-"
-                    },
-                    "[% job_id %].075.kmer.6.stats": {
+                    "[% job_id %].075.qc.stats": {
                         "host": "http://[% shockurl %]",
                         "node": "-"
                     }
