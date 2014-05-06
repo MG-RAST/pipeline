@@ -165,12 +165,12 @@ def print_md5_stats(ohdl, data, imap):
         l_mean = stats['lsum'] / stats['abun']
         i_mean = stats['isum'] / stats['abun']
         # get indexes
-        rows, cols = np.where(imap==md5)
-        if (len(rows) > 0) and (len(cols) > 0):
-            first_idx = sorted([r for r, c in zip(rows, cols) if c == 0])[0]
-            seek, length = str(imap[first_idx][1]), str(imap[first_idx][2])
-        else:
-            seek, length = '', ''
+        seek, length = '', ''
+        if imap:
+            rows, cols = np.where(imap==md5)
+            if (len(rows) > 0) and (len(cols) > 0):
+                first_idx = sorted([r for r, c in zip(rows, cols) if c == 0])[0]
+                seek, length = str(imap[first_idx][1]), str(imap[first_idx][2])
         # output
         line = [ DB_VER,
                  JOBID,
