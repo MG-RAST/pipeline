@@ -91,8 +91,11 @@ else {
 
 # get stats
 my $pass_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
-my $fail_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
+my $fail_stats = PipelineAWE::get_seq_stats($removed_seq, 'fasta');
 
+# output attributes
+PipelineAWE::create_attr($passed_seq.'.json', $pass_stats);
+PipelineAWE::create_attr($removed_seq.'.json', $fail_stats);
 
 exit(0);
 

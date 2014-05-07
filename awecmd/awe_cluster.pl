@@ -3,9 +3,9 @@
 #input: fasta
 #outputs:  ${out_prefix}.aa${pid}.faa, ${out_prefix}.aa${pid}.mapping
 #            OR
-#          ${out_prefix}.rna${pid}.fna or ${out_prefix}.rna${pid}.mapping
+#          ${out_prefix}.rna${pid}.fna, ${out_prefix}.rna${pid}.mapping
 #            OR
-#          ${out_prefix}.dna${pid}.fna or ${out_prefix}.dna${pid}.mapping
+#          ${out_prefix}.dna${pid}.fna, ${out_prefix}.dna${pid}.mapping
 
 use strict;
 use warnings;
@@ -67,19 +67,24 @@ my $mem = $memory * 1024;
 # run clustering
 PipelineAWE::run_cmd("$cmd -n $word -d 0 -T 0 -M $mem -c 0.$pid -i $fasta -o $output");
 
-# turn $output.clstr into $out_prefix.".".$code.$pid.".mapping"
+# turn $output.clstr into $output.mapping
 my $clust = [];
 my $parse = "";
+my $s_num = 0;
+my $c_num = 0;
+my $c_seq = 0;
 open(IN, "<".$output.".clstr") || exit __LINE__;
-open(OUT, ">".$out_prefix.".".$code.$pid.".mapping") || exit __LINE__;
+open(OUT, ">".$output.".mapping") || exit __LINE__;
 
 while (my $line = <IN>) {
     chomp $line;
     # process previous cluster
     if ($line =~ /^>Cluster/) {
-        $parse = parse_clust($clust);
+        ($parse, $s_num) = parse_clust($clust);
         if ($parse) {
             print OUT $parse;
+            $c_num += 1;
+            $c_seq += $s_num;
         }
         $clust = [];
     } else {
@@ -87,18 +92,24 @@ while (my $line = <IN>) {
     }
 }
 # process last cluster
-$parse = parse_clust($clust);
+($parse, $s_num) = parse_clust($clust);
 if ($parse) {
     print OUT $parse;
+    $c_num += 1;
+    $c_seq += $s_num;
 }
 close(IN);
 close(OUT);
 unlink($output.".clstr");
 
 # get stats
-my $fast = $aa ? 1 : 0;
-my $out_stats = PipelineAWE::get_seq_stats($output, 'fasta', $fast);
+#my $fast = $aa ? 1 : 0;
+#my $seq_stats = PipelineAWE::get_seq_stats($output, 'fasta', $fast);
+#my $cls_stats = {cluster_count => $c_num, clustered_sequence_count => $c_seq};
 
+# output attributes
+PipelineAWE::create_attr($output.".json", undef, {data_type => "sequence", file_format => "fasta"});
+PipelineAWE::create_attr($output.".mapping.json", undef, {data_type => "cluster", file_format => "text"});
 
 exit(0);
 
@@ -111,7 +122,7 @@ sub parse_clust {
     my ($clust) = @_;
     
     if (@$clust < 2) {
-        return ""; # cluster of 1
+        return ("", 0); # cluster of 1
     }
     my $seed = "";
     my $ids  = [];
@@ -126,14 +137,14 @@ sub parse_clust {
             }
         } else {
             print STDERR "Warning: bad cluster line: $x\n";
-            return "";
+            return ("", 0);
         }
     }
     unless ($seed && (@$ids > 0)) {
         print STDERR "Warning: bad cluster block\n";
-        return "";
+        return ("", 0);
     } else {
-        return $seed."\t".join(",", @$ids)."\t".join(",", @$pers)."\n";
+        return ($seed."\t".join(",", @$ids)."\t".join(",", @$pers)."\n", scalar(@$ids)+1);
     }
 }
 

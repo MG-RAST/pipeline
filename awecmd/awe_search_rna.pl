@@ -58,10 +58,6 @@ unless (-s $rna_nr_path) {
 my $run_dir = getcwd;
 PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
 
-# get stats
-my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta');
-
-
 exit(0);
 
 sub get_usage {

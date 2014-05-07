@@ -10,7 +10,6 @@ use strict;
 use warnings;
 no warnings('once');
 
-use JSON;
 use PipelineAWE;
 use List::Util qw(first max min sum);
 use POSIX qw(strftime floor);
@@ -75,33 +74,39 @@ for my $ov (split ":", $filter_options) {
     }
 }
 
-my $output  = $out_prefix.".qc.stats";
+my $qc_out  = $out_prefix.".qc.stats";
+my $seq_out = $out_prefix.".upload.stats";
 my $d_stats = $out_prefix.".drisee.stats";
 my $d_info  = $out_prefix.".drisee.info";
 my $c_stats = $out_prefix.".consensus.stats";
 my $a_file  = $out_prefix.".assembly.coverage";
+my $a_stat  = {};
 my $qc_stat = {};
 my $run_dir = getcwd;
+my $a_text  = ($assembled == 1) ? "yes" : "no";
+
+# run full sequence stats with bins
+my $seq_stats = PipelineAWE::get_seq_stats($infile, $format, undef, $seq_out);
 
 if ($assembled != 1) {
     # create drisee table
     PipelineAWE::run_cmd("drisee -v -p $proc -t $format -d $run_dir -f $infile $d_stats > $d_info", 1);
-
+    
+    # get summary drisee
+    if (-s $d_stats) {
+        my $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
+        chomp $d_score;
+        $qc_stat->{"drisee_score_raw"} = sprintf("%.3f", $d_score);
+    }
+    
     # create consensus table
     my $max_ln = 600;
-    
     if (exists $value_opts{"max_ln"}) {
-        $max_ln = min ($max_ln, $value_opts{"max_ln"});
+        $max_ln = min($max_ln, $value_opts{"max_ln"});
+    } elsif (exists $seq_stats->{length_max}) {
+        $max_ln = min($max_ln, $seq_stats->{length_max});
     } else {
-        my @new_stats = `seq_length_stats.py -i $infile -t $format -f`;
-        if (@new_stats) {
-            chomp @new_stats;
-            my $max_line   = first { $_ =~ /^length_max/ } @new_stats;
-            my $new_max_ln = (split(/\t/, $max_line))[1];
-            $max_ln = min ($max_ln, $new_max_ln);
-        } else {
-            $max_ln = 100;
-        }
+        $max_ln = 100;
     }
     PipelineAWE::run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
     PipelineAWE::run_cmd("touch $a_file");
@@ -132,7 +137,7 @@ if ($assembled != 1) {
     close ABUN;
     # create assembly abundace stats
     my $percent = sprintf( "%.2f", ( int ( ( ($cov_found_count / $total_reads) * 10000 ) + 0.5 ) ) / 100 );
-    $qc_stat->{'percentage_of_reads_with_coverage_info'} = $percent;
+    $a_stat->{'percentage_of_reads_with_coverage_info'} = $percent;
 }
 
 # create kmer profile
@@ -140,28 +145,28 @@ foreach my $len (@kmers) {
     PipelineAWE::run_cmd("kmer-tool -l $len -p $proc -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir");
 }
 
-# get summary drisee
-if (-s $d_stats) {
-    my $d_score = `head -2 $d_stats | tail -1 | cut -f8`;
-    chomp $d_score;
-    $qc_stat->{"drisee_score_raw"} = sprintf("%.3f", $d_score);
-}
-
 # process stats into JSON struct
+my $upload = {
+    length_histogram => PipelineAWE::file_to_array("$seq_out.lens"),
+    gc_histogram     => PipelineAWE::file_to_array("$seq_out.gcs")
+};
 my $qc = {
-    "drisee"     => get_drisee($d_stats, $qc_stat),
-    "bp_profile" => get_nucleo($c_stats),
-    "kmer"       => {}
+    drisee     => get_drisee($d_stats, $qc_stat),
+    bp_profile => get_nucleo($c_stats),
+    kmer       => {}
 };
 foreach my $len (@kmers) {
     $qc->{"kmer"}->{$len."_mer"} = get_kmer("$out_prefix.kmer.$len.stats", $len);
 }
 
-# output qc stats
-my $json = JSON->new;
-open(OUTF, ">$output") || exit __LINE__;
-print OUTF json->encode($qc);
-close(OUTF)
+# output stats
+PipelineAWE::print_json($seq_out, $upload);
+PipelineAWE::print_json($qc_out, $qc);
+
+# output attributes
+PipelineAWE::create_attr($seq_out.'.json', $seq_stats, {assembled => $a_text, data_type => "statistics", file_format => "json"});
+PipelineAWE::create_attr($qc_out.'.json', $qc_stat, {assembled => $a_text, data_type => "statistics", file_format => "json"});
+PipelineAWE::create_attr($a_file.'.json', $a_stat, {assembled => $a_text, data_type => "coverage", file_format => "text"});
 
 exit(0);
 

@@ -54,6 +54,9 @@ PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memory -d $run_dir $i
 my $pass_stats = PipelineAWE::get_seq_stats($out_prefix.".passed.fna", 'fasta');
 my $fail_stats = PipelineAWE::get_seq_stats($out_prefix.".removed.fna", 'fasta');
 
+# output attributes
+PipelineAWE::create_attr($out_prefix.".passed.fna.json", $pass_stats);
+PipelineAWE::create_attr($out_prefix.".removed.fna.json", $fail_stats);
 
 exit(0);
 

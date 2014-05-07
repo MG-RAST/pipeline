@@ -78,8 +78,17 @@ for my $index_name (@indexes) {
 }
 PipelineAWE::run_cmd("mv $input_file $output");
 
-# get stats
-my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta');
+# get / output stats
+my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta', undef, "$output.stats");
+my $bin_stats  = {
+    length_histogram => PipelineAWE::file_to_array("$output.stats.lens"),
+    gc_histogram     => PipelineAWE::file_to_array("$output.stats.gcs")
+};
+PipelineAWE::print_json("$output.stats", $bin_stats);
+
+# output attributes
+PipelineAWE::create_attr($output.'.json', $pass_stats, {data_type => "sequence", file_format => "fasta", seq_format => "bp"});
+PipelineAWE::create_attr($output.'.stats.json', $pass_stats, {data_type => "statistics", file_format => "json"});
 
 
 exit(0);

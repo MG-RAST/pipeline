@@ -7,6 +7,12 @@ no warnings('once');
 use JSON;
 use Data::Dumper;
 
+my $global_attr = "userattr.json";
+my $json = JSON->new;
+$json = $json->utf8();
+$json->max_size(0);
+$json->allow_nonref;
+
 sub run_cmd {
     my ($cmd, $shell) = @_;
     
@@ -26,35 +32,38 @@ sub run_cmd {
     }
 }
 
-sub create_attr {
-    my ($name, $stats, $other) = @_;
-    
-    my $attr;
-    my $json = JSON->new;
-    $json = $json->utf8();
-    $json->max_size(0);
-    $json->allow_nonref;
-    
-    open(IN, "<userattr.json") or die "Couldn't open file: $!";
-    $attr = $json->decode(join("", <IN>)); 
-    close(IN);
-    
-    if ($stats && ref($stats)) {
-        $attr->{statistics} = $stats;
-    }
-    if ($other && ref($other)) {
-        foreach my $key (keys %$other) {
-            $attr->{$key} = $other->{$key};
-        }
-    }
-    
-    open(OUT, ">$name") or die "Couldn't open file: $!";
-    print OUT $json->encode($attr);
+sub print_json {
+    my ($file, $data) = @_;
+    open(OUT, ">$file") or die "Couldn't open file: $!";
+    print OUT $json->encode($data);
     close(OUT);
 }
 
+sub create_attr {
+    my ($name, $stats, $other) = @_;
+    
+    if (-s $global_attr) {
+        open(IN, "<$global_attr") or die "Couldn't open file: $!";
+        my $all_attr = $json->decode(join("", <IN>)); 
+        close(IN);
+        
+        my %attr = (%{$all_attr->{jobattr}}, %{$all_attr->{taskattr}});
+        if ($stats && ref($stats) && (scalar(keys $%stats) > 0)) {
+            $attr{statistics} = $stats;
+        }
+        if ($other && ref($other)&& (scalar(keys $%other) > 0)) {
+            foreach my $key (keys %$other) {
+                $attr{$key} = $other->{$key};
+            }
+        }
+        print_json($name, \%attr);
+    } else {
+        print STDERR "missing $global_attr\n";
+    }
+}
+
 sub get_seq_stats {
-    my ($file, $type, $fast) = @_;
+    my ($file, $type, $fast, $bins) = @_;
     
     unless ($file && (-s $file)) {
         return {};
@@ -66,6 +75,9 @@ sub get_seq_stats {
     }
     if ($fast) {
         $cmd .= " -f"
+    }
+    if ($bins) {
+        $cmd .= " -l $bins.lens -g $bins.gcs"
     }
     my @out = `$cmd`;
     chomp @out;
@@ -101,5 +113,7 @@ sub file_to_array {
     return $data;
 }
 
+# enable hash-resolving in the JSON->encode function
+sub TO_JSON { return { %{ shift() } }; }
 
 1;

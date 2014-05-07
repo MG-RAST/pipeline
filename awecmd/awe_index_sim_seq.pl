@@ -1,7 +1,7 @@
 #!/usr/bin/env perl 
 
 #input: .sims file(s), .mapping files(s), sequence file
-#outputs: $output and ${output}.index
+#outputs: $output, ${output}.index, ${output}.json
 
 use strict;
 use warnings;
@@ -102,9 +102,16 @@ if ($max < $max_seq) {
 
 # index file
 PipelineAWE::run_cmd("index_sims_file_md5 --verbose --mem_host $memhost --mem_key $memkey --in_file $sim_file.final --out_file $sim_file.index");
+
 # final output
 PipelineAWE::run_cmd("mv $sim_file.final $output");
 PipelineAWE::run_cmd("mv $sim_file.index $output.index");
+
+# get stats / output attributes
+my $ann_read = `cut -f1 $output | sort -u | wc -l`;
+chomp $ann_read;
+my $other = {data_type => "similarity", file_format => "blast m8", sim_type => "filter"};
+PipelineAWE::create_attr($output.'.json', {read_count_annotated => $ann_read}, $other);
 
 exit(0);
 
