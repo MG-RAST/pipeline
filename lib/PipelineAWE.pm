@@ -4,6 +4,8 @@ use strict;
 use warnings;
 no warnings('once');
 
+use PipelineAWE_Conf;
+
 use JSON;
 use Data::Dumper;
 
@@ -111,6 +113,62 @@ sub file_to_array {
     close(FILE);
     
     return $data;
+}
+
+sub get_jobcache_dbh {
+  my $dbh;
+  $dbh = DBI->connect("DBI:mysql:database=".$PipelineAWE_Conf::job_dbname.";host=".$PipelineAWE_Conf::job_dbhost, 
+		      $PipelineAWE_Conf::job_dbuser, "") or die $DBI::errstr;
+  return $dbh;
+}
+
+sub get_jobcache_info { 
+  my $job = shift;
+  my $dbh = get_jobcache_dbh();
+  my $query = $dbh->prepare(qq(select * from Job where job_id=?));
+  $query->execute($job);
+  my $data = $query->fetchrow_hashref;
+  if ($data->{primary_project}) {
+      my $pquery = $dbh->prepare(qq(select * from Project where _id=?));
+      $pquery->execute($data->{primary_project});
+      my $pdata = $pquery->fetchrow_hashref;
+      if ($pdata->{name} && $pdata->{id}) {
+          $data->{project_name} = $pdata->{name};
+          $data->{project_id} = $pdata->{id};
+      }
+  }
+  return $data;
+}
+
+sub get_job_attributes {
+  my ($job, $tags) = @_;
+  return get_job_tag_data($job, $tags, "JobAttributes");
+}
+
+sub get_job_statistics {
+  my ($job, $tags) = @_;
+  return get_job_tag_data($job, $tags, "JobStatistics");
+}
+
+sub get_job_tag_data {
+  my ($job, $tags, $table) = @_;
+
+  my $data    = {};
+  my $job_obj = get_jobcache_info($job);
+  my $dbh     = get_jobcache_dbh();
+
+  unless ($job_obj && $job_obj->{_id}) {
+    return $data;
+  }
+  my $query = "select tag, value from $table where job=" . $job_obj->{_id} . " and _job_db=2";
+  if ($tags && (@$tags > 0)) {
+    $query .= " and tag in (" . join(",", map {$dbh->quote($_)} @$tags) . ")";
+  }
+  my $rows = $dbh->selectall_arrayref($query);
+  if ($rows && (@$rows > 0)) {
+    %$data = map { $_->[0], $_->[1] } @$rows;
+  }
+  return $data;
 }
 
 # enable hash-resolving in the JSON->encode function
