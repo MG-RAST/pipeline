@@ -51,32 +51,39 @@ if ($help){
     exit __LINE__;
 }
 
+# skip it
 if ($run_bowtie == 0) {
     PipelineAWE::run_cmd("mv $fasta $output");
-    exit(0);
 }
-
-# check indexes
-my @indexes = split(/,/, $index);
-for my $i (@indexes) {
-    unless ( defined $index_ids->{$i} ) {
-        print STDERR "ERROR: undefined index name: $i\n";
+# run it
+else {
+    # check indexes
+    my @indexes = split(/,/, $index);
+    if (scalar(@indexes) == 0) {
+        print STDERR "ERROR: missing index\n";
         exit __LINE__
     }
-}
+    for my $i (@indexes) {
+        unless ( defined $index_ids->{$i} ) {
+            print STDERR "ERROR: undefined index name: $i\n";
+            exit __LINE__
+        }
+    }
 
-my $index_dir = ".";
-if ($ENV{'REFDBPATH'}) {
-    $index_dir = "$ENV{'REFDBPATH'}";
-}
+    my $index_dir = ".";
+    if ($ENV{'REFDBPATH'}) {
+        $index_dir = "$ENV{'REFDBPATH'}";
+    }
 
-my $input_file = $fasta;
-for my $index_name (@indexes) {
-    my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
-    PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null", 1);
-    $input_file = $unaligned;
+    my $input_file = $fasta;
+    for my $index_name (@indexes) {
+        my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
+        # 'reorder' option outputs sequences in same order as input file
+        PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null", 1);
+        $input_file = $unaligned;
+    }
+    PipelineAWE::run_cmd("mv $input_file $output");
 }
-PipelineAWE::run_cmd("mv $input_file $output");
 
 # get / output stats
 my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta', undef, "$output.stats");
@@ -90,6 +97,12 @@ PipelineAWE::print_json("$output.stats", $bin_stats);
 PipelineAWE::create_attr($output.'.json', $pass_stats, {data_type => "sequence", file_format => "fasta", seq_format => "bp"});
 PipelineAWE::create_attr($output.'.stats.json', $pass_stats, {data_type => "statistics", file_format => "json"});
 
+# create subset record list
+# note: parent and child files in same order
+if ($run_bowtie != 0) {
+    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $output -s -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("mv $output.index $output");
+}
 
 exit(0);
 

@@ -41,22 +41,35 @@ if ($help){
     exit __LINE__;
 }
 
+my $passed_seq  = $out_prefix.".passed.fna";
+my $removed_seq = $out_prefix.".removed.fna";
+my $run_dir = getcwd;
+
+# skip it
 if ($run_derep == 0) {
-    PipelineAWE::run_cmd("mv $input $out_prefix.passed.fna");
-    PipelineAWE::run_cmd("touch $out_prefix.removed.fna");
-    exit(0);
+    PipelineAWE::run_cmd("mv $input $passed_seq");
+    PipelineAWE::run_cmd("touch $removed_seq");
+} 
+# run it
+else {
+    PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memory -d $run_dir $input $out_prefix");
 }
 
-my $run_dir = getcwd;
-PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memory -d $run_dir $input $out_prefix");
-
 # get stats
-my $pass_stats = PipelineAWE::get_seq_stats($out_prefix.".passed.fna", 'fasta');
-my $fail_stats = PipelineAWE::get_seq_stats($out_prefix.".removed.fna", 'fasta');
+my $pass_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
+my $fail_stats = PipelineAWE::get_seq_stats($removed_seq, 'fasta');
 
 # output attributes
-PipelineAWE::create_attr($out_prefix.".passed.fna.json", $pass_stats);
-PipelineAWE::create_attr($out_prefix.".removed.fna.json", $fail_stats);
+PipelineAWE::create_attr($passed_seq.'.json', $pass_stats);
+PipelineAWE::create_attr($removed_seq.'.json', $fail_stats);
+
+# create subset record list
+# note: parent and child files NOT in same order
+if ($run_derep != 0) {
+    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $passed_seq -c removed_seq -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("mv $passed_seq.index $passed_seq");
+    PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
+}
 
 exit(0);
 

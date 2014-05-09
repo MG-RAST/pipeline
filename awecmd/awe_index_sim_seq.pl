@@ -107,11 +107,14 @@ PipelineAWE::run_cmd("index_sims_file_md5 --verbose --mem_host $memhost --mem_ke
 PipelineAWE::run_cmd("mv $sim_file.final $output");
 PipelineAWE::run_cmd("mv $sim_file.index $output.index");
 
-# get stats / output attributes
+# get stats
 my $ann_read = `cut -f1 $output | sort -u | wc -l`;
 chomp $ann_read;
-my $other = {data_type => "similarity", file_format => "blast m8", sim_type => "filter"};
-PipelineAWE::create_attr($output.'.json', {read_count_annotated => $ann_read}, $other);
+my $sim_stat = {read_count_annotated => $ann_read};
+
+# output attributes
+PipelineAWE::create_attr($output.'.json', $sim_stat, {data_type => "similarity", file_format => "blast m8", sim_type => "filter"});
+PipelineAWE::create_attr($output.'.index.json', undef, {data_type => "index", file_format => "text"});
 
 exit(0);
 

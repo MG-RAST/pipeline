@@ -58,6 +58,17 @@ unless (-s $rna_nr_path) {
 my $run_dir = getcwd;
 PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
 
+# get stats
+my $out_stats = PipelineAWE::get_seq_stats($output, 'fasta');
+
+# output attributes
+PipelineAWE::create_attr($output.'.json', $out_stats);
+
+# create subset record list
+# note: parent and child NOT files in same order
+PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -m 20 -t $run_dir");
+PipelineAWE::run_cmd("mv $output.index $output");
+
 exit(0);
 
 sub get_usage {

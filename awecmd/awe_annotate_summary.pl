@@ -95,8 +95,39 @@ my $ass_opt = ($in_assemb && (-s $in_assemb)) ? "--abundance_file $in_assemb" : 
 PipelineAWE::run_cmd("expanded_sims2overview_no_sort_required $ass_opt --job $job_id --m5nr-version $ver_db --verbose --option $type $idx_opt --cluster $map_file --expanded_sims_in $expand_file --summary_sims_out $output");
 }
 
+if ($type eq 'source') {
+    my $sdata = get_source_stats($output);
+    PipelineAWE::print_json($output.'temp', $sdata);
+    PipelineAWE::run_cmd("mv $output.temp $output");
+}
+
+# output attributes
+PipelineAWE::create_attr($output.'.json', undef, {data_type => $type});
+
 exit(0);
 
 sub get_usage {
     return "USAGE: awe_annotate_summary.pl -in_expand=<one or more input expand files> -in_maps=<one or more input mapping files> -in_index=<md5 index file> -in_assemb=<assembly coverage file> -output=<output summary file> -job=<job identifier> -type=<summary types> [-nr_ver=<nr db version>]\n";
+}
+
+sub get_source_stats {
+    my ($file) = @_;
+    
+    my $data = {};
+    unless ($file && (-s $file)) { return $data; }
+    
+    open(FILE, "<$file") || return $data;
+    while (my $line = <FILE>) {
+        chomp $line;
+        my @parts  = split(/\t/, $line);
+        my $source = shift @parts;
+        if (@parts == 10) {
+            $data->{$source}->{evalue}  = [ @parts[0..4] ];
+            $data->{$source}->{identity} = [ @parts[5..9] ];
+        }
+    }
+    close(FILE);
+    
+    return $data;
+    # source => type => [#, #, #, #, #]
 }

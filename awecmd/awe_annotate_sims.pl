@@ -45,13 +45,17 @@ if ($help){
     exit __LINE__;
 }
 
+my @out_files = ("$out_prefix.sims.filter", "$out_prefix.expand.lca");
 my $cmd = "process_sims_by_source_mem --verbose --mem_host $memhost --mem_key $memkey --in_sim $input";
+
 if ($aa) {
     $out_prefix = $out_prefix.".aa";
     $cmd .= " --out_expand $out_prefix.expand.protein --out_ontology $out_prefix.expand.ontology";
+    push @out_files, ("$out_prefix.expand.protein", "$out_prefix.expand.ontology");
 } elsif ($rna) {
     $out_prefix = $out_prefix.".rna";
     $cmd .= " --out_rna $out_prefix.expand.rna";
+    push @out_files, "$out_prefix.expand.rna";
 } else {
     print STDERR "ERROR: one of the following modes is required: aa, rna\n";
     print STDERR get_usage();
@@ -59,6 +63,16 @@ if ($aa) {
 }
 $cmd .= " --out_filter $out_prefix.sims.filter --out_lca $out_prefix.expand.lca";
 PipelineAWE::run_cmd($cmd);
+
+# output attributes
+foreach my $out (@out_files) {
+    if ($out =~ /filter$/) {
+        PipelineAWE::create_attr($out.'.json', undef, {sim_type => "filter", data_type => "similarity", file_format => "blast m8"});
+    } else {
+        my @parts = split(/\./, $out);
+        PipelineAWE::create_attr($out.'.json', undef, {sim_type => "expand", data_type => $parts[-1], file_format => "text"});
+    }
+}
 
 exit(0);
 

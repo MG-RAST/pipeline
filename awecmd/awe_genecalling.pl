@@ -51,6 +51,9 @@ unless (exists $types{$type}) {
 my $run_dir = getcwd;
 PipelineAWE::run_cmd("parallel_FragGeneScan.py -v -p $proc -s $size -t $types{$type} -d $run_dir $fasta $out_prefix");
 
+# output attributes
+PipelineAWE::create_attr($out_prefix.'.faa.json');
+
 exit(0);
 
 sub get_usage {
