@@ -5,19 +5,16 @@ use warnings;
 no warnings('once');
 
 
-# awe url for submission
+# default variables
 our $awe_url = "";
-
-# OAuth token for shock permissions
 our $shock_pipeline_token = "";
-
-# template to use
 our $template_file = "";
+our $temp_dir = "";
 
 # jobcache db
-our $job_dbhost => "";
-our $job_dbname => "";
-our $job_dbuser => "";
+our $job_dbhost = "";
+our $job_dbname = "";
+our $job_dbuser = "";
 
 # keywords and values for workflow template
 our $template_keywords = {
@@ -42,8 +39,7 @@ our $template_keywords = {
     'rna_pid'       => '97',
     'md5rna_clust'  => "md5nr.clust",
     
-    # shock data urls
-    'index_download_urls' => "",
+    # shock data download urls
     'md5nr1_download_url' => "",
     'md5nr2_download_url' => "",
     'md5rna_clust_download_url' => "",
@@ -60,8 +56,8 @@ our $template_keywords = {
 
 };
 
-# shock nodes for bowtie indexes
-our $bowtie_shock_indexes = {
+# shock urls for bowtie index download
+our $shock_bowtie_indexes = {
     'a_thaliana'     => {
                             'a_thaliana.1.bt2' => '',  
                             'a_thaliana.2.bt2' => '',  

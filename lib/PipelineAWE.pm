@@ -50,10 +50,10 @@ sub create_attr {
         close(IN);
         
         my %attr = (%{$all_attr->{jobattr}}, %{$all_attr->{taskattr}});
-        if ($stats && ref($stats) && (scalar(keys $%stats) > 0)) {
+        if ($stats && ref($stats) && (scalar(keys %$stats) > 0)) {
             $attr{statistics} = $stats;
         }
-        if ($other && ref($other)&& (scalar(keys $%other) > 0)) {
+        if ($other && ref($other)&& (scalar(keys %$other) > 0)) {
             foreach my $key (keys %$other) {
                 $attr{$key} = $other->{$key};
             }

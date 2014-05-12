@@ -154,8 +154,7 @@
                         "attrfile": "[% job_id %].299.screen.passed.fna.stats.json"
                     }
                 },
-                "predata": {
-                    [% index_download_urls %]
+                "predata": {[% index_download_urls %]
                 },
                 "userattr": {
                     "stage_id": "299",
