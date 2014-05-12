@@ -90,10 +90,14 @@ if (@in_maps > 1) {
 }
 
 # summary for type
-my $idx_opt = ($in_index && (-s $in_index)) ? "--md5_index $in_index" : "";
-my $ass_opt = ($in_assemb && (-s $in_assemb)) ? "--abundance_file $in_assemb" : "";
-PipelineAWE::run_cmd("expanded_sims2overview_no_sort_required $ass_opt --job $job_id --m5nr-version $ver_db --verbose --option $type $idx_opt --cluster $map_file --expanded_sims_in $expand_file --summary_sims_out $output");
+my $cmd = "expanded_sims2overview_no_sort_required_less_memory_used.py -i $expand_file -o $output -j $job_id -v $ver_db -t $type --cluster $map_file";
+if ($in_index && (-s $in_index)) {
+    $cmd .= " --md5_index $in_index";
 }
+if ($in_assemb && (-s $in_assemb)) {
+    $cmd .= " --coverage $in_assemb";
+}
+PipelineAWE::run_cmd($cmd);
 
 if ($type eq 'source') {
     my $sdata = get_source_stats($output);
