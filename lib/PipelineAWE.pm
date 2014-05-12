@@ -117,8 +117,10 @@ sub file_to_array {
 
 sub get_jobcache_dbh {
   my $dbh;
-  $dbh = DBI->connect("DBI:mysql:database=".$PipelineAWE_Conf::job_dbname.";host=".$PipelineAWE_Conf::job_dbhost, 
-		      $PipelineAWE_Conf::job_dbuser, "") or die $DBI::errstr;
+  $dbh = DBI->connect(
+      "DBI:mysql:database=".$PipelineAWE_Conf::job_dbname.";host=".$PipelineAWE_Conf::job_dbhost, 
+      $PipelineAWE_Conf::job_dbuser, ""
+      ) || die $DBI::errstr;
   return $dbh;
 }
 
