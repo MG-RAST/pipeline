@@ -363,7 +363,8 @@ while(my $line=<FUNCS>) {
   chomp $line;
   $line_count++;
   my @array = split(/\t/, $line);
-  $array[0] =~ s/\"/\\"/g;
+  $array[0] =~ s/\\/\\\\/g;
+  $array[0] =~ s/"/\\"/g;
   if($line_count == 1) {
     print SOLR "      \"$array[0]\"";
   } else {
@@ -379,7 +380,8 @@ while(my $line=<ORGS>) {
   chomp $line;
   $line_count++;
   my @array = split(/\t/, $line);
-  $array[0] =~ s/\"/\\"/g;
+  $array[0] =~ s/\\/\\\\/g;
+  $array[0] =~ s/"/\\"/g;
   if($line_count == 1) {
     print SOLR "      \"$array[0]\"";
   } else {
@@ -420,6 +422,8 @@ my $response = LWP::UserAgent->new->request($req);
 if($response->{"_msg"} ne 'OK') {
   my $content = $response->{"_content"};
   fail($log, "$stage_name failed on job: $job_num, received error and response: \"$content\" when POSTing file \"$solr_fn\" to \"$post_url\".");
+} else {
+  $log->info("Successfully loaded to solr metagenome search database job: $job_num");  
 }
 
 # email owner on completion
