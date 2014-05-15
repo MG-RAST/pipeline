@@ -12,6 +12,7 @@ my $jobID   = '';
 my $reload  = 0;
 my $dbname  = "";
 my $dbhost  = "";
+my $dbpass  = "";
 my $dbuser  = "";
 my $dbtable_range = 0;
 my %filenames = ( md5s       => "",
@@ -36,6 +37,7 @@ $filenames_string
   --seq-db-version       nr db version  Optional. Default is '$version'
   --dbhost               db user        Required. Server of database
   --dbname               db name        Required. Name of database
+  --dbpass               db password    Required. Password for database
   --dbuser               db user        Required. Owner of database
   --dbtable_range                       Required. Number of jobs per partition
   --verbose                             Optional. Verbose output.
@@ -50,6 +52,7 @@ my %options = ( 'verbose!'         => \$verbose,
                 'job=i'            => \$jobID,
                 'dbhost:s'         => \$dbhost,
                 'dbname:s'         => \$dbname,
+                'dbpass:s'         => \$dbpass,
                 'dbuser:s'         => \$dbuser,
                 'dbtable_range:i'  => \$dbtable_range,
                 'reload!'          => \$reload
@@ -71,11 +74,11 @@ foreach my $file_type (keys %filenames) {
   }
 }
 
-unless ($file_count > 0 && $jobID && $dbhost && $dbname && $dbuser && $dbtable_range) {
+unless ($file_count > 0 && $jobID && $dbhost && $dbname && $dbpass && $dbuser && $dbtable_range) {
   print STDERR $usage . "Missing parmater.\n"; exit 1;
 }
 
-my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, '', {AutoCommit => 0 , RaiseError => 1});
+my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpass, {AutoCommit => 0 , RaiseError => 1});
 unless ($dbh) { print STDERR "Error: ".DBI->errstr."\n"; exit 1; }
 
 # Check if job-version combination already exists.
