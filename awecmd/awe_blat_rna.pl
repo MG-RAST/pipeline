@@ -49,9 +49,6 @@ unless (-s $rna_nr_path) {
 }
 PipelineAWE::run_cmd("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0", 1);
 
-# output attributes
-PipelineAWE::create_attr($output.'.json');
-
 exit(0);
 
 sub get_usage {

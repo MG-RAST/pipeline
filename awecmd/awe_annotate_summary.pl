@@ -105,9 +105,6 @@ if ($type eq 'source') {
     PipelineAWE::run_cmd("mv $output.temp $output");
 }
 
-# output attributes
-PipelineAWE::create_attr($output.'.json', undef, {data_type => $type});
-
 exit(0);
 
 sub get_usage {
