@@ -15,6 +15,13 @@ our $temp_dir = "";
 our $job_dbhost = "";
 our $job_dbname = "";
 our $job_dbuser = "";
+our $job_dbpass = "";
+
+# analysis db
+our $analysis_dbhost = "";
+our $analysis_dbname = "";
+our $analysis_dbuser = "";
+our $analysis_dbpass = "";
 
 # awe lookup db
 our $awe_mgrast_lookup_db    = "";
@@ -28,7 +35,7 @@ our $template_keywords = {
     
     # versions
     'pipeline_version'   => "",
-    'ach_seq_ver'        => "",
+    'ach_sequence_ver'   => "",
     'ach_annotation_ver' => "",
     
     # awe clients
@@ -55,11 +62,13 @@ our $template_keywords = {
     'job_dbhost' => $job_dbhost,
     'job_dbname' => $job_dbname,
     'job_dbuser' => $job_dbuser,
+    'job_dbpass' => $job_dbpass,
     
     # analysis db
-    'analysis_dbhost' => "",
-    'analysis_dbname' => "",
-    'analysis_dbuser' => ""
+    'analysis_dbhost' => $analysis_dbhost,
+    'analysis_dbname' => $analysis_dbname,
+    'analysis_dbuser' => $analysis_dbuser,
+    'analysis_dbpass' => $analysis_dbpass
 
 };
 

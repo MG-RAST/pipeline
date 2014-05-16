@@ -59,7 +59,12 @@ if ($help){
 }
 
 # set obj handles
-my $tt    = Template->new();
+my $dbh = $PipelineAWE::get_jobcache_dbh(
+    $PipelineAWE_Conf::job_dbhost,
+    $PipelineAWE_Conf::job_dbname,
+    $PipelineAWE_Conf::job_dbuser,
+    $PipelineAWE_Conf::job_dbpass );
+my $tpage = Template->new();
 my $agent = LWP::UserAgent->new();
 my $json  = JSON->new;
 $json = $json->utf8();
@@ -79,14 +84,14 @@ if (! $template) {
 }
 
 # get job related info from DB
-my $jobj = PipelineAWE::get_jobcache_info($job_id);
+my $jobj = PipelineAWE::get_jobcache_info($dbh, $job_id);
 unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
-    print STDERR "ERROR: A job identifier does not exist.\n";
+    print STDERR "ERROR: Job $job_id does not exist.\n";
     print STDERR get_usage();
     exit __LINE__;
 }
-my $jstat = PipelineAWE::get_job_statistics($job_id);
-my $jattr = PipelineAWE::get_job_attributes($job_id);
+my $jstat = PipelineAWE::get_job_statistics($dbh, $job_id);
+my $jattr = PipelineAWE::get_job_attributes($dbh, $job_id);
 my $jopts = {};
 foreach my $opt (split(/\&/, $jobj->{options})) {
     my ($k, $v) = split(/=/, $opt);
@@ -152,15 +157,71 @@ $vars->{dereplicate}    = $jopts->{dereplicate} || 1;
 $vars->{bowtie}         = $jopts->{bowtie} || 1;
 $vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
 
+# set node output type for preprocessing
+if ($up_attr->{file_format} eq 'fastq') {
+    $vars->{preprocess_pass} = "";
+    $vars->{preprocess_fail} = "";
+} elsif ($vars->{filter_options} eq 'skip') {
+    $vars->{preprocess_pass} = qq(,
+                    "type": "copy",
+                    "formoptions": {                        
+                        "parent_node": ").$sres->{data}{id}.qq(",
+                        "copy_indexes": "1"
+                    });
+    $vars->{preprocess_fail} = "";
+} else {
+    $vars->{preprocess_pass} = qq(,
+                    "type": "subset",
+                    "formoptions": {                        
+                        "parent_node": ").$sres->{data}{id}.qq(",
+                        "parent_index": "record"
+                    });
+    $vars->{preprocess_fail} = $vars->{preprocess_pass};
+}
+# set node output type for dereplication
+if ($vars->{dereplicate} == 0) {
+    $vars->{dereplicate_pass} = qq(,
+                    "type": "copy",
+                    "formoptions": {                        
+                        "parent_node": "${job_id}.100.preprocess.passed.fna",
+                        "copy_indexes": "1"
+                    });
+    $vars->{dereplicate_fail} = "";
+} else {
+    $vars->{dereplicate_pass} = qq(,
+                    "type": "subset",
+                    "formoptions": {                        
+                        "parent_node": "${job_id}.100.preprocess.passed.fna",
+                        "parent_index": "record"
+                    });
+    $vars->{dereplicate_fail} = $vars->{dereplicate_pass};
+}
+# set node output type for bowtie
+if ($vars->{bowtie} == 0) {
+    $vars->{bowtie_pass} = qq(,
+                    "type": "copy",
+                    "formoptions": {                        
+                        "parent_node": "${job_id}.150.dereplication.passed.fna",
+                        "copy_indexes": "1"
+                    });
+} else {
+    $vars->{bowtie_pass} = qq(,
+                    "type": "subset",
+                    "formoptions": {                        
+                        "parent_node": "${job_id}.150.dereplication.passed.fna",
+                        "parent_index": "record"
+                    });
+}
+
 # build bowtie index list
 $vars->{index_download_urls} = "";
 foreach my $idx (split(/,/, $vars->{screen_indexes})) {
     if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
         while (my ($ifile, $iurl) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
             $vars->{index_download_urls} .= qq(
-                    "$ifile": {
-                        "url": "$iurl"
-                    });
+                "$ifile": {
+                    "url": "$iurl"
+                });
         }
     }
 }
@@ -172,7 +233,7 @@ if ($vars->{index_download_urls} eq "") {
 
 # replace variables
 my $workflow = $PipelineAWE_Conf::temp_dir/$job_num.".awe_workflow.json";
-$tt->process($template, $vars, $workflow) || die $tt->error()."\n";
+$tpage->process($template, $vars, $workflow) || die $tpage->error()."\n";
 
 # submit to AWE
 my $apost = $agent->post(
@@ -195,7 +256,7 @@ my $dbh = DBI->connect(
     $PipelineAWE_Conf::awe_mgrast_lookup_user,
     $PipelineAWE_Conf::awe_mgrast_lookup_pass
     ) || die DBI->errstr."\n";
-my $cmd = "INSERT INTO $tbl (job, awe_id, awe_url, status, submitted, last_update) VALUES ($job_id, '$awe_id', 'http://$awe_url/job/$awe_job', '$state', now(), now())";
+my $cmd = "INSERT INTO $tbl (job, awe_id, awe_url, status, submitted, last_update) VALUES ($job_id, '$awe_job', 'http://$awe_url/job/$awe_id', '$state', now(), now())";
 my $sth = $dbh->prepare($str);
 $sth->execute() || die $sth->errstr."\n";
 
