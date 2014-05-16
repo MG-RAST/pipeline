@@ -19,18 +19,12 @@ my %types = (
 my $tbl_range = 5000;
 my $input   = "";
 my $job_id  = "";
-my $dbhost  = "";
-my $dbname  = "";
-my $dbuser  = "";
 my $type    = "";
 my $ver_db  = 1;
 my $help    = 0;
 my $options = GetOptions (
 		"input=s"    => \$input,
 		"job=s"      => \$job_id,
-		"dbhost=s"   => \$dbhost,
-		"dbname=s"   => \$dbname,
-		"dbuser=s"   => \$dbuser,
 		"type=s"     => \$type,
 		"nr_ver=s"   => \$ver_db,
 		"help!"      => \$help
@@ -51,10 +45,6 @@ if ($help){
     print STDERR "ERROR: A job ID is required.\n";
     print STDERR get_usage();
     exit __LINE__;
-}elsif (! ($dbhost && $dbname && $dbuser)){
-    print STDERR "ERROR: Analysis DB info required.\n";
-    print STDERR get_usage();
-    exit __LINE__;
 }elsif (length($type)==0){
     print STDERR "ERROR: A summary type is required.\n";
     print STDERR get_usage();
@@ -65,7 +55,20 @@ if ($help){
     exit __LINE__;
 }
 
-my $dbopts  = "--dbhost ".$dbhost." --dbname ".$dbname." --dbuser ".$dbuser." --dbtable_range ".$tbl_range;
+# get db variables from enviroment
+my $dbhost = $ENV{'ANALYSIS_DB_HOST'} || undef;
+my $dbname = $ENV{'ANALYSIS_DB_NAME'} || undef;
+my $dbuser = $ENV{'ANALYSIS_DB_USER'} || undef;
+my $dbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
+
+unless (defined($dbhost) && defined($dbname) && defined($dbuser) && defined($dbpass)) {
+    print STDERR "ERROR: missing analysis database ENV variables.\n";
+    print STDERR get_usage();
+    exit __LINE__;
+}
+
+# build / run command
+my $dbopts  = "--dbhost ".$dbhost." --dbname ".$dbname." --dbuser ".$dbuser." --dbpass ".$dbpass." --dbtable_range ".$tbl_range;
 my $fileopt = "--".$types{$type}."_filename ".$input;
 PipelineAWE::run_cmd("load_summary2db --verbose --reload --seq-db-version $ver_db --job $job_id $dbopts $fileopt");
 
