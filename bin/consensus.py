@@ -3,12 +3,25 @@
 import sys, os, array, random, subprocess
 from optparse import OptionParser
 from Bio import SeqIO
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 a = array.array('L')
 c = array.array('L')
 g = array.array('L')
 t = array.array('L')
 n = array.array('L')
+
+def seq_iter(file_hdl, stype):
+    if stype == 'fastq':
+        return FastqGeneralIterator(file_hdl)
+    else:
+        return SeqIO.parse(file_hdl, stype)
+
+def split_rec(rec, stype):
+    if stype == 'fastq':
+        return rec[0].split()[0], rec[1].upper(), rec[2]
+    else:
+        return rec.id, str(rec.seq).upper(), None
 
 def determinetype(infile):
   cmd = ["head", "-n", "1", infile]
@@ -20,13 +33,14 @@ def determinetype(infile):
     return "fasta"
   sys.stderr.write("Cannot determine file type of %s\n"%(infile))
   exit(1)
-def countseqs(infile, type):
-  if type == 'fasta':
+
+def countseqs(infile, stype):
+  if stype == 'fasta':
     cmd = ['grep', '-c', '^>', infile]
-  elif type == 'fastq':
+  elif stype == 'fastq':
     cmd = ['wc', '-l', infile]
   else:
-    sys.stderr.write("%s is invalid %s file\n"%(infile, type))
+    sys.stderr.write("%s is invalid %s file\n"%(infile, stype))
     exit(1)
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   stdout, stderr = proc.communicate()
@@ -34,9 +48,9 @@ def countseqs(infile, type):
     raise IOError("%s\n%s"%(" ".join(cmd), stderr))
   slen = stdout.strip()
   if not slen:
-    sys.stderr.write("%s is invalid %s file\n"%(infile, type))
+    sys.stderr.write("%s is invalid %s file\n"%(infile, stype))
     exit(1)
-  if type == 'fastq':
+  if stype == 'fastq':
     slenNum = int( slen.split()[0] ) / 4
   else:
     slenNum = int(slen)
@@ -50,27 +64,24 @@ def initialize(Nmax):
     t.append(0)
     n.append(0)
 
-def populate(infile, type, Nmax, Sratio):
+def populate(infile, stype, Nmax, Sratio):
   """puts nucleotide data into matrix."""
   seqnum = 0
-  for i, rec in enumerate(SeqIO.parse(infile, type)):
+  for i, rec in enumerate(seq_iter(in_hdl, stype)):
+    head, seq, qual = split_rec(rec, stype)
     if Sratio < random.random():
       continue
     seqnum += 1
-    try:
-      sequence=rec.seq.upper()
-    except IndexError:
-      sequence=""
-    for i in range(0, min(len(sequence), Nmax)):
-      if sequence[i] == "A":
+    for i in range(0, min(len(seq), Nmax)):
+      if seq[i] == "A":
         a[i] += 1
-      elif sequence[i] == "G":
+      elif seq[i] == "G":
         c[i] += 1
-      elif sequence[i] == "C":
+      elif seq[i] == "C":
         g[i] += 1
-      elif sequence[i] == "T":
+      elif seq[i] == "T":
         t[i] += 1
-      elif sequence[i] == "N":
+      elif seq[i] == "N":
         n[i] += 1
   return seqnum
 

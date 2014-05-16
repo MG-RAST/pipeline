@@ -48,7 +48,7 @@ my $proc_dir               = $job_dir."/proc";
 my $stage_dir              = $proc_dir."/".$stage_id.".".$stage_name;
 my $results_dir            = $job_dir."/".$Pipeline_Conf::results_dir;
 my $params                 = "--verbose --seq-db-version ".$annot_db_ver;
-my $dboptions              = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbuser ".$Pipeline_Conf::analysis_user." --dbtable_range ".$Pipeline_Conf::analysis_db_table_range;
+my $dboptions              = "--dbhost ".$Pipeline_Conf::analysis_host." --dbname ".$Pipeline_Conf::analysis_db." --dbpass ".$Pipeline_Conf::analysis_password." --dbuser ".$Pipeline_Conf::analysis_user." --dbtable_range ".$Pipeline_Conf::analysis_db_table_range;
 my $hostname                = `hostname`;
 chomp $hostname;
 

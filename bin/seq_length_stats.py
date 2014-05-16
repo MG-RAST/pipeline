@@ -129,7 +129,7 @@ def main(args):
         sys.stderr.write("[error] invalid fasta file, first character must be '>'\n")
         os._exit(1)
     elif (opts.type == 'fastq') and (first_char != '@'):
-        sys.stderr.write("[error] invalid fasta file, first character must be '>'\n")
+        sys.stderr.write("[error] invalid fastq file, first character must be '@'\n")
         os._exit(1)
 
     # parse sequences
@@ -142,10 +142,16 @@ def main(args):
             lengths[slen] += 1
             
             if not opts.fast:
+                if opts.type == 'fastq':
+                    for q in qual:
+                        ascii_value = ord(q)
+                        if ascii_value < 33 or ascii_value > 126:
+                            sys.stderr.write("[error] quality value with ASCII value: %d in sequence: %s (sequence number %d) is not within ASCII range 33 to 126\n" %(ascii_value, head, seqnum))
+                            os._exit(1)
                 char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
                 for c in seq:
                     if c not in IUPAC:
-                        sys.stderr.write("[error] character '%s' in sequence %d is not a valid IUPAC code\n" %(c, seqnum))
+                        sys.stderr.write("[error] character '%s' in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, head, seqnum))
                         os._exit(1)
                     if c in char:
                         char[c] += 1
@@ -166,7 +172,7 @@ def main(args):
                 prefix_map[ seq[:kmer_len] ] += 1
                 kmer_num += 1
     except ValueError as e:
-        sys.stderr.write("[error] possible file truncation: %s\n" %e)
+        sys.stderr.write("[error] %s\n" %e)
         os._exit(1)
 
     # get stats

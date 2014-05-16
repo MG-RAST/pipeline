@@ -13,6 +13,8 @@ use Mail::Mailer;
 use Getopt::Long;
 use File::Copy;
 use LWP::UserAgent;
+use HTTP::Request::StreamingUpload;
+use DateTime;
 umask 000;
 
 my $stage_name = "done";
@@ -302,48 +304,6 @@ else {
   Pipeline::set_jobcache_info($job_num, 'sequence_type', $ratio_guess);
 }
 
-# create solr document for metagenome search
-my $solr_fn = "999.done.solr.json";
-my $func_fn = "999.done.functions.stats";
-my $org_fn = "999.done.species.stats";
-my $md5_fn = "900.loadDB.sims.filter.seq";
-
-open SOLR, ">$solr_fn" or fail($log, "$stage_name failed on job: $job_num, can not write file $solr_fn");
-print SOLR "[\n{\n   \"function:\" : [\n";
-
-open FUNCS, "$func_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $func_fn");
-while(my $line=<FUNCS>) {
-  chomp $line;
-  my @array = split(/\t/, $line);
-  print SOLR "      \"$array[0]\",\n";
-}
-close FUNCS;
-
-print SOLR "   ],\n   \"organism:\" : [\n";
-
-open ORGS, "$org_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $org_fn");
-while(my $line=<ORGS>) {
-  chomp $line;
-  my @array = split(/\t/, $line);
-  print SOLR "      \"$array[0]\",\n";
-}
-close FUNCS;
-
-print SOLR "   ],\n   \"md5:\" : [\n";
-
-my $last_md5 = "";
-open MD5S, "$md5_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $md5_fn");
-while(my $line=<MD5S>) {
-  chomp $line;
-  my @array = split(/\t/, $line);
-  unless($array[1] eq $last_md5) {
-    print SOLR "      \"$array[1]\",\n";
-  }
-  $last_md5 = $array[1];
-}
-print SOLR "   ]\n}\n]";
-close SOLR;
-
 # gzip files
 system("compress_job -j $job_num") == 0 or fail($log, "compress_job: ".$message);
 
@@ -358,11 +318,117 @@ foreach my $sf (@stats) {
 
 # set job as viewable
 Pipeline::set_jobcache_info($job_num, "viewable", 1);
+my $job_info = Pipeline::get_jobcache_info($job_num);
+$stat_set      = Pipeline::get_job_statistics($job_num);
+$data_set      = Pipeline::get_job_attributes($job_num, ['sequencing_method_guess']);
+my $project_name = Pipeline::get_job_project_name($job_num);
+
+# create solr document for metagenome search
+my $solr_fn = "$results_dir/999.done.solr.json";
+my $func_fn = "$results_dir/$stage_id.$stage_name.functions.stats";
+my $org_fn = "$results_dir/$stage_id.$stage_name.species.stats";
+my $md5_fn = "$results_dir/900.loadDB.sims.filter.seq";
+
+open SOLR, ">$solr_fn" or fail($log, "$stage_name failed on job: $job_num, can not write file $solr_fn");
+print SOLR "[\n{\n";
+print SOLR "   \"job\" : \"$job_num\",\n";
+print SOLR "   \"id\" : \"mgm".$job_info->{metagenome_id}."\",\n";
+print SOLR "   \"id_sort\" : \"mgm".$job_info->{metagenome_id}."\",\n";
+print SOLR "   \"status\" : \"private\",\n";
+print SOLR "   \"status_sort\" : \"private\",\n";
+my $dt = DateTime->now;
+print SOLR "   \"created\" : \"$dt"."Z\",\n";
+print SOLR "   \"name\" : \"".$job_info->{name}."\",\n";
+print SOLR "   \"name_sort\" : \"".$job_info->{name}."\",\n";
+print SOLR "   \"project_id\" : \"".$job_info->{primary_project}."\",\n";
+print SOLR "   \"project_id_sort\" : \"".$job_info->{primary_project}."\",\n";
+print SOLR "   \"project_name\" : \"$project_name\",\n";
+print SOLR "   \"project_name_sort\" : \"$project_name\",\n";
+print SOLR "   \"sequence_type\" : \"".$job_info->{sequence_type}."\",\n";
+print SOLR "   \"seq_method\" : \"".$data_set->{sequencing_method_guess}."\",\n";
+print SOLR "   \"version\" : 1,\n";
+
+foreach my $stat (keys %$stat_set) {
+  if($stat =~ /count/ || $stat =~ /min/ || $stat =~ /max/) {
+    print SOLR "   \"$stat\_l\" : \"".$stat_set->{$stat}."\",\n";
+  } else {
+    print SOLR "   \"$stat\_d\" : \"".$stat_set->{$stat}."\",\n";
+  }
+}
+
+print SOLR "   \"function\" : [\n";
+my $line_count = 0;
+open FUNCS, "$func_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $func_fn");
+while(my $line=<FUNCS>) {
+  chomp $line;
+  $line_count++;
+  my @array = split(/\t/, $line);
+  $array[0] =~ s/\\/\\\\/g;
+  $array[0] =~ s/"/\\"/g;
+  if($line_count == 1) {
+    print SOLR "      \"$array[0]\"";
+  } else {
+    print SOLR ",\n      \"$array[0]\"";
+  }
+}
+close FUNCS;
+
+print SOLR "\n   ],\n   \"organism\" : [\n";
+$line_count = 0;
+open ORGS, "$org_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $org_fn");
+while(my $line=<ORGS>) {
+  chomp $line;
+  $line_count++;
+  my @array = split(/\t/, $line);
+  $array[0] =~ s/\\/\\\\/g;
+  $array[0] =~ s/"/\\"/g;
+  if($line_count == 1) {
+    print SOLR "      \"$array[0]\"";
+  } else {
+    print SOLR ",\n      \"$array[0]\"";
+  }
+}
+close FUNCS;
+
+print SOLR "\n   ],\n   \"md5\" : [\n";
+my $last_md5 = "";
+$line_count = 0;
+open MD5S, "$md5_fn" or fail($log, "$stage_name failed on job: $job_num, can not read file $md5_fn");
+while(my $line=<MD5S>) {
+  chomp $line;
+  $line_count++;
+  my @array = split(/\t/, $line);
+  if($line_count == 1) {
+    print SOLR "      \"$array[1]\"";
+  } elsif($array[1] ne $last_md5) {
+    print SOLR ",\n      \"$array[1]\"";
+  }
+  $last_md5 = $array[1];
+}
+print SOLR "\n   ]\n}\n]";
+close SOLR;
+
+my $post_url = "http://$Pipeline_Conf::job_solr/solr/$Pipeline_Conf::job_collect/update/json?commit=true";
+my $req = HTTP::Request::StreamingUpload->new(
+  POST    => $post_url,
+  path    => $solr_fn,
+  headers => HTTP::Headers->new(
+    'Content-Type'   => 'application/json',
+    'Content-Length' => -s $solr_fn,
+  ),
+);
+
+my $response = LWP::UserAgent->new->request($req);
+if($response->{"_msg"} ne 'OK') {
+  my $content = $response->{"_content"};
+  fail($log, "$stage_name failed on job: $job_num, received error and response: \"$content\" when POSTing file \"$solr_fn\" to \"$post_url\".");
+} else {
+  $log->info("Successfully loaded to solr metagenome search database job: $job_num");  
+}
 
 # email owner on completion
 if ($email) {
   my $mailer   = Mail::Mailer->new();
-  my $job_info = Pipeline::get_jobcache_info($job_num);
   my $owner    = Pipeline::get_job_owner($job_num);
   my $name     = $owner->{firstname} . " " . $owner->{lastname};
   my $body_txt = "Dear $name,\n\nThe annotation job that you submitted for '" . $job_info->{name} . "' has completed.\n\n" .
