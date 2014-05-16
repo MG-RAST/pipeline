@@ -350,7 +350,7 @@
                     "attrfile": "[% job_id %].425.search.rna.fna.json",
                     "type": "subset",
                     "formoptions": {                        
-                        "parent_node": "[% job_id %].100.preprocess.passed.fna",
+                        "parent_name": "[% job_id %].100.preprocess.passed.fna",
                         "parent_index": "record"
                     }
                 }

@@ -183,7 +183,7 @@ if ($vars->{dereplicate} == 0) {
     $vars->{dereplicate_pass} = qq(,
                     "type": "copy",
                     "formoptions": {                        
-                        "parent_node": "${job_id}.100.preprocess.passed.fna",
+                        "parent_name": "${job_id}.100.preprocess.passed.fna",
                         "copy_indexes": "1"
                     });
     $vars->{dereplicate_fail} = "";
@@ -191,7 +191,7 @@ if ($vars->{dereplicate} == 0) {
     $vars->{dereplicate_pass} = qq(,
                     "type": "subset",
                     "formoptions": {                        
-                        "parent_node": "${job_id}.100.preprocess.passed.fna",
+                        "parent_name": "${job_id}.100.preprocess.passed.fna",
                         "parent_index": "record"
                     });
     $vars->{dereplicate_fail} = $vars->{dereplicate_pass};
@@ -201,14 +201,14 @@ if ($vars->{bowtie} == 0) {
     $vars->{bowtie_pass} = qq(,
                     "type": "copy",
                     "formoptions": {                        
-                        "parent_node": "${job_id}.150.dereplication.passed.fna",
+                        "parent_name": "${job_id}.150.dereplication.passed.fna",
                         "copy_indexes": "1"
                     });
 } else {
     $vars->{bowtie_pass} = qq(,
                     "type": "subset",
                     "formoptions": {                        
-                        "parent_node": "${job_id}.150.dereplication.passed.fna",
+                        "parent_name": "${job_id}.150.dereplication.passed.fna",
                         "parent_index": "record"
                     });
 }
