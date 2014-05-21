@@ -42,6 +42,8 @@ our $template_keywords = {
     'clientgroups' => "",
     
     # service urls
+    'solr_url'  => "",
+    'solr_col'  => "",
     'shock_url' => "",
     'mem_host'  => "",
     'mem_key'   => "",

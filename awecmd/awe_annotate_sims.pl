@@ -45,32 +45,52 @@ if ($help){
     exit __LINE__;
 }
 
-my @out_files = ("$out_prefix.sims.filter", "$out_prefix.expand.lca");
-my $cmd = "process_sims_by_source_mem --verbose --mem_host $memhost --mem_key $memkey --in_sim $input";
+my @out_files = ();
+my $cmd  = "process_sims_by_source_mem --verbose --mem_host $memhost --mem_key $memkey --in_sim $input";
+my $type = "";
 
 if ($aa) {
-    $out_prefix = $out_prefix.".aa";
-    $cmd .= " --out_expand $out_prefix.expand.protein --out_ontology $out_prefix.expand.ontology";
-    push @out_files, ("$out_prefix.expand.protein", "$out_prefix.expand.ontology");
+    $type = 'aa';
+    $cmd .= " --out_expand $out_prefix.$type.expand.protein --out_ontology $out_prefix.$type.expand.ontology";
+    push @out_files, ("$out_prefix.$type.expand.protein", "$out_prefix.$type.expand.ontology");
 } elsif ($rna) {
-    $out_prefix = $out_prefix.".rna";
-    $cmd .= " --out_rna $out_prefix.expand.rna";
-    push @out_files, "$out_prefix.expand.rna";
+    $type = 'rna';
+    $cmd .= " --out_rna $out_prefix.$type.expand.rna";
+    push @out_files, "$out_prefix.$type.expand.rna";
 } else {
     print STDERR "ERROR: one of the following modes is required: aa, rna\n";
     print STDERR get_usage();
     exit __LINE__;
 }
-$cmd .= " --out_filter $out_prefix.sims.filter --out_lca $out_prefix.expand.lca";
+$cmd .= " --out_filter $out_prefix.$type.sims.filter --out_lca $out_prefix.$type.expand.lca";
+push @out_files, ("$out_prefix.$type.sims.filter", "$out_prefix.$type.expand.lca");
 PipelineAWE::run_cmd($cmd);
 
 # output attributes
 foreach my $out (@out_files) {
     if ($out =~ /filter$/) {
-        PipelineAWE::create_attr($out.'.json', undef, {sim_type => "filter", data_type => "similarity", file_format => "blast m8"});
+        my $fstat = `cut -f1 $out | uniq | wc -l`;
+        chomp $fstat;
+        PipelineAWE::create_attr(
+            $out.'.json',
+            {'sequence_count_sims_'.$type => $fstat},
+            {sim_type => "filter", data_type => "similarity", file_format => "blast m8"}
+        );
+    } elsif ($out =~ /ontology$/) {
+        my $ostat = `cut -f2 $out | uniq | wc -l`;
+        chomp $ostat;
+        PipelineAWE::create_attr(
+            $out.'.json',
+            {sequence_count_ontology => $ostat},
+            {sim_type => "expand", data_type => 'ontology', file_format => "text"}
+        );
     } else {
         my @parts = split(/\./, $out);
-        PipelineAWE::create_attr($out.'.json', undef, {sim_type => "expand", data_type => $parts[-1], file_format => "text"});
+        PipelineAWE::create_attr(
+            $out.'.json',
+            undef,
+            {sim_type => "expand", data_type => $parts[-1], file_format => "text"}
+        );
     }
 }
 

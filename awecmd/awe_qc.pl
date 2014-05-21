@@ -80,7 +80,6 @@ my $d_stats = $out_prefix.".drisee.stats";
 my $d_info  = $out_prefix.".drisee.info";
 my $c_stats = $out_prefix.".consensus.stats";
 my $a_file  = $out_prefix.".assembly.coverage";
-my $a_stat  = {};
 my $qc_stat = {};
 my $run_dir = getcwd;
 my $a_text  = ($assembled == 1) ? "yes" : "no";
@@ -137,7 +136,7 @@ if ($assembled != 1) {
     close ABUN;
     # create assembly abundace stats
     my $percent = sprintf( "%.2f", ( int ( ( ($cov_found_count / $total_reads) * 10000 ) + 0.5 ) ) / 100 );
-    $a_stat->{'percentage_of_reads_with_coverage_info'} = $percent;
+    $qc_stat->{'percent_reads_with_coverage'} = $percent;
 }
 
 # create kmer profile
@@ -166,7 +165,7 @@ PipelineAWE::print_json($qc_out, $qc);
 # output attributes
 PipelineAWE::create_attr($seq_out.'.json', $seq_stats, {assembled => $a_text, data_type => "statistics", file_format => "json"});
 PipelineAWE::create_attr($qc_out.'.json', $qc_stat, {assembled => $a_text, data_type => "statistics", file_format => "json"});
-PipelineAWE::create_attr($a_file.'.json', $a_stat, {assembled => $a_text, data_type => "coverage", file_format => "text"});
+PipelineAWE::create_attr($a_file.'.json', $qc_stat, {assembled => $a_text, data_type => "coverage", file_format => "text"});
 
 exit(0);
 

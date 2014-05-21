@@ -111,6 +111,12 @@ PipelineAWE::run_cmd("mv $sim_file.index $output.index");
 my $ann_read = `cut -f1 $output | sort -u | wc -l`;
 chomp $ann_read;
 my $sim_stat = {read_count_annotated => $ann_read};
+foreach my $sim (@in_sims) {
+    my $sim_attr = PipelineAWE::read_json($sim.'.json');
+    if ($sim_attr->{statistics} && ref($sim_attr->{statistics})) {
+        map { $sim_stat->{$_} = $sim_attr->{statistics}{$_} } keys %{$sim_attr->{statistics}};
+    }
+}
 
 # output attributes
 PipelineAWE::create_attr($output.'.json', $sim_stat, {data_type => "similarity", file_format => "blast m8", sim_type => "filter"});

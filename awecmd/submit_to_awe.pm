@@ -13,7 +13,7 @@ use strict;
 use warnings;
 no warnings('once');
 
-use PipelineAWE;
+use PipelineJob;
 use PipelineAWE_Conf;
 
 use DBI;
@@ -59,7 +59,7 @@ if ($help){
 }
 
 # set obj handles
-my $jobdb = $PipelineAWE::get_jobcache_dbh(
+my $jobdb = PipelineJob::get_jobcache_dbh(
     $PipelineAWE_Conf::job_dbhost,
     $PipelineAWE_Conf::job_dbname,
     $PipelineAWE_Conf::job_dbuser,
@@ -84,14 +84,14 @@ if (! $template) {
 }
 
 # get job related info from DB
-my $jobj = PipelineAWE::get_jobcache_info($jobdb, $job_id);
+my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
 unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
     print STDERR "ERROR: Job $job_id does not exist.\n";
     print STDERR get_usage();
     exit __LINE__;
 }
-my $jstat = PipelineAWE::get_job_statistics($jobdb, $job_id);
-my $jattr = PipelineAWE::get_job_attributes($jobdb, $job_id);
+my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
+my $jattr = PipelineJob::get_job_attributes($jobdb, $job_id);
 my $jopts = {};
 foreach my $opt (split(/\&/, $jobj->{options})) {
     my ($k, $v) = split(/=/, $opt);
