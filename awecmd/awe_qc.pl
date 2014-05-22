@@ -86,6 +86,7 @@ my $a_text  = ($assembled == 1) ? "yes" : "no";
 
 # run full sequence stats with bins
 my $seq_stats = PipelineAWE::get_seq_stats($infile, $format, undef, $seq_out);
+$seq_stats->{file_size} = -s $infile;
 
 if ($assembled != 1) {
     # create drisee table

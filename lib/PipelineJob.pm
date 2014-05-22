@@ -30,6 +30,12 @@ sub get_jobcache_info {
     return $data;
 }
 
+sub set_jobcache_info {
+    my ($dbh, $job, $col, $val) = @_;
+    my $query = $dbh->prepare(qq(update Job set $col=? where job_id=?));
+    $query->execute($val, $job) or die $dbh->errstr;
+}
+
 sub get_job_attributes {
     my ($dbh, $jobid) = @_;
     return get_job_tag_data($dbh, $jobid, "JobAttributes");

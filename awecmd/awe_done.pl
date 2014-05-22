@@ -92,10 +92,9 @@ unless ( defined($solr_url) && defined($solr_col) ) {
 my $jdbh = PipelineJob::get_jobcache_dbh($jdbhost, $jdbname, $jdbuser, $jdbpass);
 my $adbh = PipelineAnalysis::get_analysis_dbh($adbhost, $adbname, $adbuser, $adbpass);
 
-print "do stuff to finish up job $job\n";
-
 ### update attribute stats
 # get attributes
+print "Computing file statistics and updating attributes\n";
 my $gc_attr = PipelineAWE::read_json($genecall.'.json');
 my $rc_attr = PipelineAWE::read_json($rna_clust.'.json');
 my $ac_attr = PipelineAWE::read_json($aa_clust.'.json');
@@ -116,31 +115,32 @@ PipelineAWE::print_json($aa_map.'.json', $am_attr);
 # cleanup
 unlink($genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
 
-# get additional attributes
-my $raw     = PipelineAWE::read_json($upload.'.json');
-my $qc_attr = PipelineAWE::read_json($qc.'.json');
-my $derep   = PipelineAWE::read_json($derep.'.json');
-my $pre_rna = PipelineAWE::read_json($preproc.'.json');
-my $pre_aa  = PipelineAWE::read_json($post_qc.'.json');
-my $srch    = PipelineAWE::read_json($search.'.json');
-my $sims    = PipelineAWE::read_json($filter.'.json');
-my $annot   = PipelineAWE::read_json($ontol.'.json');
-
 ### JobDB update
 # get JobDB statistics
+print "Retrieving sequence statistics from attributes\n";
 my $job_stats = PipelineJob::get_job_statistics($jdbh, $job_id);
-$job_stats->{alpha_diversity_shannon}  = PipelineAnalysis::get_alpha_diversity($dbh, $job, $ver);
-$job_stats->{read_count_processed_rna} = $srch->{statistics}{sequence_count} || '0';    # pre-cluster
-$job_stats->{read_count_processed_aa}  = $gc_attr->{statistics}{sequence_count} || '0'; # pre-cluster
-$job_stats->{sequence_count_processed_rna} = $rc_attr->{statistics}{sequence_count} || '0';  # post-cluster
-$job_stats->{sequence_count_processed_aa}  = $ac_attr->{statistics}{sequence_count} || '0';  # post-cluster
-$job_stats->{sequence_count_dereplication_removed} = $derep->{statistics}{sequence_count} || '0';  # derep fail
-map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};  # qc stats
-map { $job_stats->{$_} = $sims->{statistics}{$_} } keys %{$sims->{statistics}};        # sims stats
-map { $job_stats->{$_} = $annot->{statistics}{$_} } keys %{$annot->{statistics}};      # annotate stats
-map { $job_stats->{$_} = $raw->{statistics}{$_}.'_raw' } keys %{$raw->{statistics}};   # raw seq stats
-map { $job_stats->{$_} = $pre_rna->{statistics}{$_}.'_preprocessed_rna' } keys %{$pre_rna->{statistics}};  # preprocess seq stats
-map { $job_stats->{$_} = $pre_aa->{statistics}{$_}.'_preprocessed' } keys %{$pre_aa->{statistics}};        # screen seq stats
+# get additional attributes
+my $up_attr = PipelineAWE::read_json($upload.'.json');
+my $qc_attr = PipelineAWE::read_json($qc.'.json');
+my $de_attr = PipelineAWE::read_json($derep.'.json');
+my $pp_attr = PipelineAWE::read_json($preproc.'.json');
+my $pq_attr = PipelineAWE::read_json($post_qc.'.json');
+my $sr_attr = PipelineAWE::read_json($search.'.json');
+my $fl_attr = PipelineAWE::read_json($filter.'.json');
+my $on_attr = PipelineAWE::read_json($ontol.'.json');
+# populate job_stats
+$job_stats->{sequence_count_dereplication_removed} = $de_attr->{statistics}{sequence_count} || '0';  # derep fail
+$job_stats->{alpha_diversity_shannon}  = PipelineAnalysis::get_alpha_diversity($jdbh, $job_id, $ann_ver);
+$job_stats->{read_count_processed_rna} = $sr_attr->{statistics}{sequence_count} || '0';      # pre-cluster / rna search
+$job_stats->{read_count_processed_aa}  = $gc_attr->{statistics}{sequence_count} || '0';      # pre-cluster / genecall
+$job_stats->{sequence_count_processed_rna} = $rc_attr->{statistics}{sequence_count} || '0';  # post-cluster / rna clust
+$job_stats->{sequence_count_processed_aa}  = $ac_attr->{statistics}{sequence_count} || '0';  # post-cluster / aa clust
+map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};        # qc stats
+map { $job_stats->{$_} = $fl_attr->{statistics}{$_} } keys %{$fl_attr->{statistics}};        # sims filter stats
+map { $job_stats->{$_} = $on_attr->{statistics}{$_} } keys %{$on_attr->{statistics}};        # annotate ontology stats
+map { $job_stats->{$_} = $up_attr->{statistics}{$_}.'_raw' } keys %{$up_attr->{statistics}}; # raw seq stats
+map { $job_stats->{$_} = $pp_attr->{statistics}{$_}.'_preprocessed_rna' } keys %{$pp_attr->{statistics}};  # preprocess seq stats
+map { $job_stats->{$_} = $pq_attr->{statistics}{$_}.'_preprocessed' } keys %{$pq_attr->{statistics}};      # screen seq stats
 map { $job_stats->{$_} = $rm_attr->{statistics}{$_}.'_processed_rna' } keys %{$rm_attr->{statistics}};     # rna clust stats
 map { $job_stats->{$_} = $am_attr->{statistics}{$_}.'_processed_aa' } keys %{$am_attr->{statistics}};      # aa clust stats
 # read ratios
@@ -148,16 +148,30 @@ my ($aa_ratio, $rna_ratio) = read_ratios($job_stats);
 $job_stats->{ratio_reads_aa} = $aa_ratio;
 $job_stats->{ratio_reads_rna} = $rna_ratio;
 
-# get JobDB attributes
-my $job_attrs = PipelineJob::get_job_statistics($jdbh, $job_id);
+# get sequence type
+my $job_attrs = PipelineJob::get_job_attributes($jdbh, $job_id);
 my $seq_type  = seq_type($job_attrs, $rna_ratio);
 
+# get versions
+my $m5nr_vers = {
+    m5rna_sims_version => $nr_ver,
+    m5nr_sims_version  => $nr_ver,
+    m5rna_annotation_version => $ann_ver,
+    m5nr_annotation_version  => $ann_ver
+};
+
 # update DB
+print "Updating Job DB with new stats / info\n";
 PipelineJob::set_job_statistics($jdbh, $job_id, $job_stats);
-PipelineJob::set_job_statistics($jdbh, $job_id, {sequence_type => $seq_type});
+PipelineJob::set_job_attributes($jdbh, $job_id, $m5nr_vers);
+PipelineJob::set_jobcache_info($jdbh, $job_id, 'sequence_type', $seq_type);
+if ($up_attr->{statistics}{file_size}) {
+    PipelineJob::set_jobcache_info($jdbh, $job_id, 'file_size_raw', $up_attr->{statistics}{file_size});
+}
 
 ### create metagenome statistics node
 # get stats from inputs
+print "Building / computing metagenome statistics file\n";
 my $u_stats = PipelineAWE::read_json($upload);
 my $q_stats = PipelineAWE::read_json($qc);
 my $p_stats = PipelineAWE::read_json($post_qc);
@@ -189,13 +203,18 @@ my $mgstats = {
     sequence_stats => $job_stats
 };
 # output stats object
+print "Outputing statistics file\n";
 PipelineAWE::print_json($job_id.".statistics.json", $mgstats);
 PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "statistics", file_format => "json"});
 
 # upload of solr data
+print "Outputing and POSTing solr file\n";
 my $done_attr = PipelineAWE::read_json($PipelineAWE::global_attr);
-my $solr_file = solr_dump($job_id, $seq_type, $done_attr, $mgstats, $filter);
+my $solr_file = solr_dump($job_id, $job_attrs, $done_attr, $mgstats, $PipelineAnalysis::md5_abundance);
 solr_post($solr_url, $solr_col, $solr_file);
+
+# done done !!
+PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 
 exit(0);
 
@@ -228,13 +247,12 @@ sub seq_type {
     }
     # use ratio for WGS or MT
     else {
-        my $ratio_guess = ($rna_ratio > 0.25) ? 'MT' : 'WGS';
-        return $ratio_guess;
+        return ($rna_ratio > 0.25) ? 'MT' : 'WGS';
     }
 }
 
 sub solr_dump {
-    my ($job, $seq_type, $mginfo, $mgstats, $sims) = @_;
+    my ($job, $jobattr, $mginfo, $mgstats, $md5s) = @_;
     my $sfile = $job.'.solr.json';
     open(SOLR, ">$sfile") || exit __LINE__;
     # top level data
@@ -251,8 +269,8 @@ sub solr_dump {
     print SOLR "   \"project_id_sort\" : \"".$mginfo->{project_id}."\",\n";
     print SOLR "   \"project_name\" : \"".$mginfo->{project_name}."\",\n";
     print SOLR "   \"project_name_sort\" : \"".$mginfo->{project_name}."\",\n";
-    print SOLR "   \"sequence_type\" : \"".$mginfo->{sequence_type}."\",\n";
-    print SOLR "   \"seq_method\" : \"$seq_type\",\n";
+    print SOLR "   \"sequence_type\" : \"$seq_type\",\n";
+    print SOLR "   \"seq_method\" : \"".($jobattr->{sequencing_method_guess} || "")."\",\n";
     print SOLR "   \"version\" : 1,\n";
     # seq stats
     foreach my $stat (keys %{$mgstats->{sequence_stats}}) {
@@ -267,7 +285,7 @@ sub solr_dump {
     print SOLR "   \"function\" : [\n";
     foreach my $func (@{$mgstats->{function}}) {
         $count++;
-        my $name = $func[0];
+        my $name = $func->[0];
         $name =~ s/\\/\\\\/g;
         $name =~ s/"/\\"/g;
         if ($count == 1) {
@@ -281,7 +299,7 @@ sub solr_dump {
     print SOLR "\n   ],\n   \"organism\" : [\n";
     foreach my $org (@{$mgstats->{taxonomy}{species}}) {
         $count++;
-        my $name = $org[0];
+        my $name = $org->[0];
         $name =~ s/\\/\\\\/g;
         $name =~ s/"/\\"/g;
         if ($count == 1) {
@@ -291,23 +309,17 @@ sub solr_dump {
         }
     }
     # md5s
-    my $last_md5 = "";
     $count = 0;
     print SOLR "\n   ],\n   \"md5\" : [\n";
-    open(MD5S, "<$sims") or exit __LINE__;
-    while (my $line = <MD5S>) {
-        chomp $line;
+    while (my ($md5, $v) = each(%$md5s)) {
         $count++;
-        my @array = split(/\t/, $line);
         if ($count == 1) {
-            print SOLR "      \"$array[1]\"";
-        } elsif ($array[1] ne $last_md5) {
-            print SOLR ",\n      \"$array[1]\"";
+            print SOLR "      \"$md5\"";
+        } else {
+            print SOLR ",\n      \"$md5\"";
         }
-        $last_md5 = $array[1];
     }
     print SOLR "\n   ]\n}\n]";
-    close(MD5S);
     close(SOLR);
     return $sfile;
 }
@@ -320,7 +332,7 @@ sub solr_post {
         path => $solr_file,
         headers => HTTP::Headers->new(
             'Content-Type' => 'application/json',
-            'Content-Length' => -s $solr_fn,
+            'Content-Length' => -s $solr_file,
         )
     );
     my $response = LWP::UserAgent->new->request($req);

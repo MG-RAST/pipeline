@@ -12,6 +12,7 @@
             "name": "[% mg_name %]",
             "created": "[% job_date %]",
             "status": "private",
+            "owner": "[% user %]",
             "sequence_type": "[% seq_type %]",
             "project_id": "[% project_id %]",
             "project_name": "[% project_name %]",
@@ -1099,6 +1100,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "12",
                     "node": "-",
+                    "nofile": true,
                     "attrfile": "[% job_id %].700.annotation.sims.filter.seq.json"
                 },
                 "[% job_id %].700.annotation.source.stats": {

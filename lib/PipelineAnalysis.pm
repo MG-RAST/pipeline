@@ -6,6 +6,7 @@ no warnings('once');
 
 use DBI;
 use Data::Dumper;
+use List::Util qw(max min sum);
 
 our $ontology_md5s = {}; # src => ont => [md5s]
 our $function_md5s = {}; # func => [md5s]
@@ -43,7 +44,7 @@ sub get_ontology_abundances {
     }
     map { $data->{$_->[0]}{$_->[1]} = $_->[2] } grep { $_->[2] && ($_->[2] =~ /\S/) } @$rows;
   
-    my $onts = get_ontology_md5s($job, $v);
+    my $onts = get_ontology_md5s($job, $ver);
     foreach my $s (keys %$onts) {
         foreach my $o (keys %{$onts->{$s}}) {
             if (exists $data->{$s}{$o}) {
@@ -52,7 +53,7 @@ sub get_ontology_abundances {
         }
     }
     
-    my $md5s = get_md5_abundance($job, $v);
+    my $md5s = get_md5_abundance($job, $ver);
     foreach my $s (sort keys %$ont_md5) {
         foreach my $d (sort keys %{$ont_md5->{$s}}) {
             my $num = 0;
