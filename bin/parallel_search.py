@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys, re, shutil
-import subprocess, multiprocessing, logging
+import subprocess, multiprocessing
 from Bio import SeqIO
 from optparse import OptionParser
 
@@ -17,8 +17,10 @@ INFF   = ''
 IDENT  = 0.9
 TMPDIR = None
 
-def run_cmd(cmd):
-    proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+def run_cmd(cmd, output=None):
+    if not output:
+        output = subprocess.PIPE
+    proc = subprocess.Popen( cmd, stdout=output, stderr=subprocess.PIPE )
     stdout, stderr = proc.communicate()
     if proc.returncode != 0:
         raise IOError("%s\n%s"%(" ".join(cmd), stderr))
@@ -59,18 +61,29 @@ def split_fasta(infile, bytes):
 def run_search(fname):
     runtmp = os.path.join(TMPDIR, 'tmp.'+os.path.basename(fname))
     os.mkdir(runtmp)
-    sortf = fname + '.sort'
-    srchf = fname + '.uc'
-    outf  = srchf + '.fa'
-    cmd1  = ['qiime-uclust', '--sort', fname, '--output', sortf, '--tmpdir', runtmp]
-    cmd2  = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
-    cmd3  = ['qiime-uclust', '--input', sortf, '--uc2fasta', srchf, '--output', outf, '--types', 'H', '--origheader', '--tmpdir', runtmp]
+    sortf = fname+'.sort'
+    srchf = fname+'.uc'
+    hitf  = fname+'.uc.hit'
+    outf  = fname+'.hit.fa'
+    # sort by seq length
+    cmd1 = ['seqUtil', '-i', fname, '-o', sortf, '-t', runtmp, '--sortbyseq']
     so1, se1 = run_cmd(cmd1)
+    # search against clusters
+    cmd2 = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
     so2, se2 = run_cmd(cmd2)
-    so3, se3 = run_cmd(cmd3)
-    write_file("".join([so1,se1,so2,se2,so3,se3]), outf+".log", 1)
+    # keep only hits
+    cmd3 = ['grep', '^[#|H]', srchf]
+    hith = open(hitf, 'w')
+    so3, se3 = run_cmd(cmd3, output=hith)
+    hith.close()
+    # transfomr to fasta
+    cmd4 = ['usearch', '--input', sortf, '--uc2fasta', hitf, '--output', outf]
+    so4, se4 = run_cmd(cmd4)
+    # cleanup
+    write_file("".join(filter(lambda x: x, [so1,se1,so2,se2,so3,se3,so4,se4])), outf+".log", 1)
     os.remove(sortf)
     os.remove(srchf)
+    os.remove(hitf)
     shutil.rmtree(runtmp)
     return outf
 
@@ -95,12 +108,10 @@ def main(args):
     
     (opts, args) = parser.parse_args()
     if len(args) != 3:
-        parser.print_help()
-        print "[error] incorrect number of arguments"
+        parser.error("[error] incorrect number of arguments")
         return 1
     if not os.path.isdir(opts.tmpdir):
-        parser.print_help()
-        print "[error] invalid tmpdir"
+        parser.error("[error] invalid tmpdir")
         return 1
 
     (LIBF, INFF, out_f) = args
@@ -117,7 +128,7 @@ def main(args):
     else:
         min_proc = opts.processes
 
-    if opts.verbose: sys.stdout.write("search using %d threades ... "%min_proc)        
+    if opts.verbose: sys.stdout.write("search using %d threades ... "%min_proc)
     pool   = multiprocessing.Pool(processes=min_proc)
     rfiles = pool.map(run_search, sfiles, 1)
     pool.close()
