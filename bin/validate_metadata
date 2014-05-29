@@ -2,6 +2,7 @@
 
 import os, sys, copy
 import urllib2, json
+import string
 import datetime
 import gspread
 import xlrd
@@ -25,6 +26,7 @@ JSON_FILE = None
 INVALID   = []
 valid_email    = Email()
 valid_http_url = HttpUrl()
+valid_name_str = string.ascii_letters+string.digits+'+-_()@; :.'
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -39,6 +41,12 @@ def strip_tags(html):
     s = MLStripper()
     s.feed(html)
     return s.get_data()
+
+def clean_name(text):
+    clean = ''
+    for c in text:
+        clean += c if c in valid_name_str else '_'
+    return clean
 
 def errorMsg(err, exit=0):
     if LOG_FILE:
@@ -86,7 +94,7 @@ def mgrast_api(request):
         errorMsg("no data available: %s"%url, 1)
     return obj
 
-def validate_type(key, val, atype):
+def validate_type(key, val, atype, name=False):
     ### return string of valid value, else None
     if atype == 'text':
         try:
@@ -97,7 +105,7 @@ def validate_type(key, val, atype):
             else:
                 return unicode(floatVal)
         except ValueError:
-            return unicode(strip_tags(val))
+            return unicode(clean_name(strip_tags(val))) if name else unicode(strip_tags(val))
     elif atype == 'int':
         try:
             intVal = int(val)
@@ -334,7 +342,7 @@ def tables_to_mdraw_inc(tables, dupe):
 
     mName = []
     fName = []
-    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
+    mdraw = { 'name': clean_name(pdata[0][0]), 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
     for sampName, sampData in sdata:
         # ep is messy - look for existance of vaild ep term, if no ep sheet make obj from just term
         if 'env_package' not in sampData:
@@ -418,7 +426,7 @@ def tables_to_mdraw(tables, dupe):
 
     mName = []
     fName = []
-    mdraw = { 'name': pdata[0][0], 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
+    mdraw = { 'name': clean_name(pdata[0][0]), 'data': pdata[0][1], 'id': id_from_data(pdata[0][1], MGRASTID), 'sampleNum': 0, 'samples': [] }
     for sampName, sampData in sdata:
         # ep is messy - look for existance of vaild ep term, if no ep sheet make obj from just term
         if 'env_package' not in sampData:
@@ -510,8 +518,8 @@ def find_sample_sub_inc(sname, inData, ep_name, mName, fName):
             if not ep_name:
                 if ('metagenome_name' in data) and ('investigation_type' in data):
                     data['investigation_type'] = typeName
-                    outData.append({'name': data['metagenome_name'], 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
-                    mName.append( data['metagenome_name'] )
+                    outData.append({'name': clean_name(data['metagenome_name']), 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
+                    mName.append( clean_name(data['metagenome_name']) )
                     if ('file_name' in data) and data['file_name']:
                         fName.append( data['file_name'] )
             elif ep_name == typeName:
@@ -529,8 +537,8 @@ def find_sample_sub(sname, inData, ep_name, mName, fName):
             if not ep_name:
                 if ('metagenome_name' in data) and ('investigation_type' in data):
                     data['investigation_type'] = typeName
-                    outData.append({'name': data['metagenome_name'], 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
-                    mName.append( data['metagenome_name'] )
+                    outData.append({'name': clean_name(data['metagenome_name']), 'id': id_from_data(data, MGRASTID), 'type': typeName, 'data': data})
+                    mName.append( clean_name(data['metagenome_name']) )
                     if ('file_name' in data) and data['file_name']:
                         fName.append( data['file_name'] )
             elif ep_name == typeName:
@@ -570,10 +578,11 @@ def validate_data(cat, name, data, template, skip):
             except (ValueError, AttributeError, TypeError):
                 pass
             # hack for different country terms
+            clean = True if key == 'metagenome_name' else False
             term = key
             if (items['type'] == 'select') and key.endswith('country'):
                 term = 'country'
-            validVal = validate_type(term, data[key], items['type'])
+            validVal = validate_type(term, data[key], items['type'], name=clean)
             if validVal is None:
                 bad_type = 'found in %s ontology'%key if items['type'] == 'ontology' else 'type '+items['type']
                 bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
