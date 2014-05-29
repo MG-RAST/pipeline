@@ -88,7 +88,7 @@ sub get_job_suffix {
 
 sub get_jobcache_dbh {
   my $dbh;
-  $dbh = DBI->connect("DBI:mysql:database=".$Pipeline_Conf::jobcache_db.";host=".$Pipeline_Conf::jobcache_host, 
+  $dbh = DBI->connect("DBI:mysql:database=".$Pipeline_Conf::jobcache_db.";host=".$Pipeline_Conf::jobcache_host.";mysql_ssl=1;mysql_ssl_client_key=".$Pipeline_Conf::mysql_client_key.";mysql_ssl_client_cert=".$Pipeline_Conf::mysql_client_cert.";mysql_ssl_ca_file=".$Pipeline_Conf::mysql_ca_file,
 		      $Pipeline_Conf::jobcache_user, 
 		      $Pipeline_Conf::jobcache_password || "") or die $DBI::errstr;
   return $dbh;
@@ -113,7 +113,7 @@ sub get_analysis_dbh {
 sub get_job_owner {
   my $job = shift;
   my $job_obj = get_jobcache_info($job);
-  my $dbh = DBI->connect("DBI:mysql:database=".$Pipeline_Conf::webapp_db.";host=".$Pipeline_Conf::webapp_host, 
+  my $dbh = DBI->connect("DBI:mysql:database=".$Pipeline_Conf::webapp_db.";host=".$Pipeline_Conf::webapp_host.";mysql_ssl=1;mysql_ssl_client_key=".$Pipeline_Conf::mysql_client_key.";mysql_ssl_client_cert=".$Pipeline_Conf::mysql_client_cert.";mysql_ssl_ca_file=".$Pipeline_Conf::mysql_ca_file, 
 			 $Pipeline_Conf::webapp_user, 
 			 $Pipeline_Conf::webapp_password || "") or die $DBI::errstr;
   my $query = $dbh->prepare(qq(select * from User where _id=?));
