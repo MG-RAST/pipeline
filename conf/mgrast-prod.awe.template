@@ -420,7 +420,7 @@
         },
         {
             "cmd": {
-                "name": "awe_blat_rna.sh",
+                "name": "awe_blat_rna.pl",
                 "args": "-input=@[% job_id %].440.cluster.rna97.fna -output=[% job_id %].450.rna.sims",
                 "description": "rna sims blat"
             }, 
