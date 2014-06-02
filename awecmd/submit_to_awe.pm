@@ -30,6 +30,7 @@ my $input     = "";
 my $awe_url   = "";
 my $shock_url = "";
 my $template  = "";
+my $no_start  = 0;
 my $help      = 0;
 
 my $options = GetOptions (
@@ -38,6 +39,7 @@ my $options = GetOptions (
 		"awe_url=s"   => \$awe_url,
 		"shock_url=s" => \$shock_url,
 		"template=s"  => \$template,
+		"no_start!"   => \$no_start,
 		"help!"       => \$help
 );
 
@@ -234,6 +236,12 @@ if ($vars->{index_download_urls} eq "") {
 # replace variables
 my $workflow = $PipelineAWE_Conf::temp_dir/$job_num.".awe_workflow.json";
 $tpage->process($template, $vars, $workflow) || die $tpage->error()."\n";
+
+# test mode
+if ($no_start) {
+    print "workflow at: $workflow\n";
+    exit 0;
+}
 
 # submit to AWE
 my $apost = $agent->post(
