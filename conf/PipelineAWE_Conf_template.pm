@@ -11,7 +11,7 @@ our $shock_pipeline_token = "";
 our $template_file = "";
 our $temp_dir = "";
 
-# jobcache db
+# jobcache db for submission
 our $job_dbhost = "";
 our $job_dbname = "";
 our $job_dbuser = "";
@@ -60,11 +60,11 @@ our $template_keywords = {
     'md5nr2_download_url' => "",
     'md5rna_clust_download_url' => "",
     
-    # jobcache db
+    # jobcache db for pipeline
     'job_dbhost' => $job_dbhost,
     'job_dbname' => $job_dbname,
-    'job_dbuser' => $job_dbuser,
-    'job_dbpass' => $job_dbpass,
+    'job_dbuser' => "",
+    'job_dbpass' => "",
     
     # analysis db
     'analysis_dbhost' => $analysis_dbhost,
