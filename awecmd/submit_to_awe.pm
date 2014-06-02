@@ -216,14 +216,15 @@ if ($vars->{bowtie} == 0) {
 }
 
 # build bowtie index list
+my $bowtie_url = $PipelineAWE_Conf::shock_bowtie_url || $vars->{shock_url};
 $vars->{index_download_urls} = "";
 foreach my $idx (split(/,/, $vars->{screen_indexes})) {
     if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
-        while (my ($ifile, $iurl) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
+        while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
             $vars->{index_download_urls} .= qq(
                 "$ifile": {
-                    "url": "$iurl"
-                });
+                    "url": "http://${bowtie_url}/node/${inode}?download"
+                },);
         }
     }
 }
@@ -232,6 +233,7 @@ if ($vars->{index_download_urls} eq "") {
     print STDERR get_usage();
     exit __LINE__;
 }
+chop $vars->{index_download_urls};
 
 # replace variables
 my $workflow = $PipelineAWE_Conf::temp_dir/$job_num.".awe_workflow.json";
