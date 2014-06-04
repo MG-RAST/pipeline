@@ -67,6 +67,7 @@ def initialize(Nmax):
 def populate(infile, stype, Nmax, Sratio):
   """puts nucleotide data into matrix."""
   seqnum = 0
+  in_hdl = open(infile, 'rU')
   for i, rec in enumerate(seq_iter(in_hdl, stype)):
     head, seq, qual = split_rec(rec, stype)
     if Sratio < random.random():
@@ -83,6 +84,7 @@ def populate(infile, stype, Nmax, Sratio):
         t[i] += 1
       elif seq[i] == "N":
         n[i] += 1
+  in_hdl.close()
   return seqnum
 
 def printtable(outfile, Nmax):
