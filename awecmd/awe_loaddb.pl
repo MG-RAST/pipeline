@@ -81,6 +81,9 @@ my $dbopts  = "--dbhost ".$dbhost." --dbname ".$dbname." --dbuser ".$dbuser." --
 my $fileopt = "--".$types{$type}."_filename ".$input;
 PipelineAWE::run_cmd("load_summary2db --verbose --reload --seq-db-version $ver_db --job $job_id $dbopts $fileopt");
 
+# cleanup
+PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
+
 exit(0);
 
 sub get_usage {
