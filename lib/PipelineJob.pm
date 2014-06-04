@@ -49,7 +49,7 @@ sub get_job_statistics {
 sub get_job_tag_data {
     my ($dbh, $jobid, $table) = @_;
     my $data  = {};
-    my $query = "select tag, value from $table where job=(select _id from Job where job=$jobid) and _job_db=2";
+    my $query = "select tag, value from $table where job=(select _id from Job where job_id=$jobid) and _job_db=2";
     my $rows  = $dbh->selectall_arrayref($query);
     if ($rows && (@$rows > 0)) {
         %$data = map { $_->[0], $_->[1] } @$rows;
@@ -72,7 +72,7 @@ sub set_job_tag_data {
     unless ($data && %$data) {
         return 0;
     }
-    my $query = $dbh->prepare(qq(insert into $table (`tag`,`value`,`job`,`_job_db`) values (?,?,(select _id from Job where job=$jobid),2) on duplicate key update value=?));
+    my $query = $dbh->prepare(qq(insert into $table (`tag`,`value`,`job`,`_job_db`) values (?,?,(select _id from Job where job_id=$jobid),2) on duplicate key update value=?));
     while ( my ($tag, $val) = each(%$data) ) {
         $query->execute($tag, $val, $val) || return 0;
     }
