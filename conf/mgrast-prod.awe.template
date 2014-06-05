@@ -638,9 +638,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "13",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -721,9 +719,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "15",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -804,9 +800,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "17",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -887,9 +881,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "19",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -960,9 +952,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "21",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
