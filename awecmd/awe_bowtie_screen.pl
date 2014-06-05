@@ -100,7 +100,7 @@ PipelineAWE::create_attr($output.'.stats.json', $pass_stats, {data_type => "stat
 # create subset record list
 # note: parent and child files in same order
 if ($run_bowtie != 0) {
-    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $output -s -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -s -m 20");
     PipelineAWE::run_cmd("mv $output.index $output");
 }
 
