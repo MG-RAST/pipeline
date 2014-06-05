@@ -66,7 +66,7 @@ PipelineAWE::create_attr($removed_seq.'.json', $fail_stats);
 # create subset record list
 # note: parent and child files NOT in same order
 if ($run_derep != 0) {
-    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $passed_seq -c removed_seq -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("index_subset_seq.py -p $input -c $passed_seq -c $removed_seq -m 20 -t $run_dir");
     PipelineAWE::run_cmd("mv $passed_seq.index $passed_seq");
     PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
 }

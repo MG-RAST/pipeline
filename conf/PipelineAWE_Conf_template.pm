@@ -11,7 +11,7 @@ our $shock_pipeline_token = "";
 our $template_file = "";
 our $temp_dir = "";
 
-# jobcache db
+# jobcache db for submission
 our $job_dbhost = "";
 our $job_dbname = "";
 our $job_dbuser = "";
@@ -53,18 +53,21 @@ our $template_keywords = {
     'fgs_type'      => '454',
     'aa_pid'        => '90',
     'rna_pid'       => '97',
-    'md5rna_clust'  => "md5nr.clust",
+    'm5rna_clust'   => "md5nr.clust",
     
     # shock data download urls
-    'md5nr1_download_url' => "",
-    'md5nr2_download_url' => "",
-    'md5rna_clust_download_url' => "",
+    'mysql_cert' => "",
+    'postgresql_cert' => "",
+    'm5nr1_download_url' => "",
+    'm5nr2_download_url' => "",
+    'm5rna_download_url' => "",
+    'm5rna_clust_download_url' => "",
     
-    # jobcache db
+    # jobcache db for pipeline
     'job_dbhost' => $job_dbhost,
     'job_dbname' => $job_dbname,
-    'job_dbuser' => $job_dbuser,
-    'job_dbpass' => $job_dbpass,
+    'job_dbuser' => "",
+    'job_dbpass' => "",
     
     # analysis db
     'analysis_dbhost' => $analysis_dbhost,
@@ -75,6 +78,7 @@ our $template_keywords = {
 };
 
 # shock urls for bowtie index download
+our $shock_bowtie_url = "";
 our $shock_bowtie_indexes = {
     'a_thaliana'     => {
                             'a_thaliana.1.bt2' => '',  
@@ -132,4 +136,4 @@ our $shock_bowtie_indexes = {
                             's_scrofa.rev.1.bt2' => '',  
                             's_scrofa.rev.2.bt2' => ''
                         }
-}
+};

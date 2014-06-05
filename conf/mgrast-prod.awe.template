@@ -267,10 +267,10 @@
             },
             "predata": {
                 "md5nr.1":{
-                    "url": "[% md5nr1_download_url %]"
+                    "url": "[% m5nr1_download_url %]"
                 },
                 "md5nr.2":{
-                    "url": "[% md5nr2_download_url %]"
+                    "url": "[% m5nr2_download_url %]"
                 }
             },
             "partinfo": {
@@ -340,7 +340,7 @@
         {
             "cmd": {
                 "name": "awe_search_rna.pl",
-                "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% md5rna_clust %] -size=100 -proc=8",
+                "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% m5rna_clust %] -size=100 -proc=8",
                 "description": "rna detection"
             }, 
             "dependsOn": ["1"],
@@ -364,8 +364,8 @@
                 }
             },
             "predata": {
-                "[% md5rna_clust %]":{
-                    "url": "[% md5rna_clust_download_url %]"
+                "[% m5rna_clust %]":{
+                    "url": "[% m5rna_clust_download_url %]"
                 }
             },
             "userattr": {
@@ -376,7 +376,7 @@
                 "seq_format": "bp"
             },
             "taskid": "8",
-            "totalwork": 1,
+            "totalwork": 1
         },          
         {
             "cmd": {
@@ -420,8 +420,8 @@
         },
         {
             "cmd": {
-                "name": "awe_blat_rna.sh",
-                "args": "-input=@[% job_id %].440.cluster.rna97.fna -output=[% job_id %].450.rna.sims",
+                "name": "awe_blat_rna.pl",
+                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=@m5rna -output=[% job_id %].450.rna.sims",
                 "description": "rna sims blat"
             }, 
             "dependsOn": ["9"],
@@ -440,8 +440,8 @@
                 }
             },
             "predata": {
-                "md5rna":{
-                    "url":"[% md5rna_download_url %]"
+                "m5rna":{
+                    "url":"[% m5rna_download_url %]"
                 }
             },
             "partinfo": {
@@ -621,7 +621,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=md5",
                 "description": "md5 summary load",
                 "environ": {
                     "private": {
@@ -638,6 +638,11 @@
                     "host": "http://[% shock_url %]",
                     "origin": "13",
                     "node": "-"
+                }
+            },
+            "predata": {
+                "postgresql.tar": {
+                    "url":"[% postgresql_cert %]"
                 }
             },
             "taskid": "14",
@@ -699,7 +704,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=function",
                 "description": "function summary load",
                 "environ": {
                     "private": {
@@ -716,6 +721,11 @@
                     "host": "http://[% shock_url %]",
                     "origin": "15",
                     "node": "-"
+                }
+            },
+            "predata": {
+                "postgresql.tar": {
+                    "url":"[% postgresql_cert %]"
                 }
             },
             "taskid": "16",
@@ -777,7 +787,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=organism",
                 "description": "organism summary load",
                 "environ": {
                     "private": {
@@ -794,6 +804,11 @@
                     "host": "http://[% shock_url %]",
                     "origin": "17",
                     "node": "-"
+                }
+            },
+            "predata": {
+                "postgresql.tar": {
+                    "url":"[% postgresql_cert %]"
                 }
             },
             "taskid": "18",
@@ -855,7 +870,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=lca",
                 "description": "lca summary load",
                 "environ": {
                     "private": {
@@ -872,6 +887,11 @@
                     "host": "http://[% shock_url %]",
                     "origin": "19",
                     "node": "-"
+                }
+            },
+            "predata": {
+                "postgresql.tar": {
+                    "url":"[% postgresql_cert %]"
                 }
             },
             "taskid": "20",
@@ -923,7 +943,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=ontology",
                 "description": "ontology summary load",
                 "environ": {
                     "private": {
@@ -940,6 +960,11 @@
                     "host": "http://[% shock_url %]",
                     "origin": "21",
                     "node": "-"
+                }
+            },
+            "predata": {
+                "postgresql.tar": {
+                    "url":"[% postgresql_cert %]"
                 }
             },
             "taskid": "22",

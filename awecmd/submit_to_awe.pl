@@ -22,6 +22,7 @@ use Template;
 use Getopt::Long;
 use File::Basename;
 use LWP::UserAgent;
+use HTTP::Request::Common;
 use Data::Dumper;
 
 # options
@@ -30,6 +31,7 @@ my $input     = "";
 my $awe_url   = "";
 my $shock_url = "";
 my $template  = "";
+my $no_start  = 0;
 my $help      = 0;
 
 my $options = GetOptions (
@@ -38,6 +40,7 @@ my $options = GetOptions (
 		"awe_url=s"   => \$awe_url,
 		"shock_url=s" => \$shock_url,
 		"template=s"  => \$template,
+		"no_start!"   => \$no_start,
 		"help!"       => \$help
 );
 
@@ -108,7 +111,7 @@ my $up_attr = {
     assembled   => $jattr->{assembled} ? 'yes' : 'no',
     data_type   => 'sequence',
     seq_format  => 'bp',
-    file_format => ($jattr->{file_type} && ($jattr->{file_type} == 'fastq')) ? 'fastq' : 'fasta',
+    file_format => ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta',
     stage_id    => '050',
     stage_name  => 'upload',
     type        => 'metagenome',
@@ -129,16 +132,27 @@ foreach my $s (keys %$jstat) {
 # upload input to shock
 $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 my $content = {
-    upload     => $input,
-    attributes => [undef, "$input.json", Content => $json->encode($up_attr)];
+    upload     => [$input],
+    attributes => [undef, "$input.json", Content => $json->encode($up_attr)]
 };
 my $spost = $agent->post(
     'http://'.$vars->{shock_url}.'/node',
-    'Authorization', "OAuth $shock_pipeline_token",
+    'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
     'Content_Type', 'multipart/form-data',
     'Content', $content
 );
 my $sres = $json->decode($spost->content);
+my $node_id = $sres->{data}->{id};
+print "upload shock node: $node_id\n";
+# create record index on input
+my $ireq = POST(
+    'http://'.$vars->{shock_url}.'/node/'.$node_id.'/index/record',
+    'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
+    'Content_Type', 'multipart/form-data'
+);
+$ireq->method('PUT');
+my $iput = $agent->request($ireq);
+my $ires = $json->decode($iput->content);
 
 # populate workflow variables
 $vars->{job_id}         = $job_id;
@@ -150,12 +164,13 @@ $vars->{project_id}     = $up_attr->{project_id} || '';
 $vars->{project_name}   = $up_attr->{project_name} || '';
 $vars->{user}           = 'mgu'.$jobj->{owner} || '';
 $vars->{inputfile}      = basename($input);
-$vars->{shock_node}     = $sres->{data}{id};
+$vars->{shock_node}     = $node_id;
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
 $vars->{assembled}      = $jattr->{assembled} || 0;
 $vars->{dereplicate}    = $jopts->{dereplicate} || 1;
 $vars->{bowtie}         = $jopts->{bowtie} || 1;
-$vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
+#$vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
+$vars->{screen_indexes} = 'h_sapiens'; # hardcoded for testing
 
 # set node output type for preprocessing
 if ($up_attr->{file_format} eq 'fastq') {
@@ -164,16 +179,16 @@ if ($up_attr->{file_format} eq 'fastq') {
 } elsif ($vars->{filter_options} eq 'skip') {
     $vars->{preprocess_pass} = qq(,
                     "type": "copy",
-                    "formoptions": {                        
-                        "parent_node": ").$sres->{data}{id}.qq(",
+                    "formoptions": {
+                        "parent_node": "$node_id",
                         "copy_indexes": "1"
                     });
     $vars->{preprocess_fail} = "";
 } else {
     $vars->{preprocess_pass} = qq(,
                     "type": "subset",
-                    "formoptions": {                        
-                        "parent_node": ").$sres->{data}{id}.qq(",
+                    "formoptions": {
+                        "parent_node": "$node_id",
                         "parent_index": "record"
                     });
     $vars->{preprocess_fail} = $vars->{preprocess_pass};
@@ -214,14 +229,15 @@ if ($vars->{bowtie} == 0) {
 }
 
 # build bowtie index list
+my $bowtie_url = $PipelineAWE_Conf::shock_bowtie_url || $vars->{shock_url};
 $vars->{index_download_urls} = "";
 foreach my $idx (split(/,/, $vars->{screen_indexes})) {
     if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
-        while (my ($ifile, $iurl) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
+        while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
             $vars->{index_download_urls} .= qq(
                 "$ifile": {
-                    "url": "$iurl"
-                });
+                    "url": "http://${bowtie_url}/node/${inode}?download"
+                },);
         }
     }
 }
@@ -230,15 +246,22 @@ if ($vars->{index_download_urls} eq "") {
     print STDERR get_usage();
     exit __LINE__;
 }
+chop $vars->{index_download_urls};
 
 # replace variables
-my $workflow = $PipelineAWE_Conf::temp_dir/$job_num.".awe_workflow.json";
+my $workflow = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
 $tpage->process($template, $vars, $workflow) || die $tpage->error()."\n";
+
+# test mode
+if ($no_start) {
+    print "workflow at: $workflow\n";
+    exit 0;
+}
 
 # submit to AWE
 my $apost = $agent->post(
     'http://'.$awe_url.'/job',
-    'Datatoken', $shock_pipeline_token,
+    'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
     'Content_Type', 'multipart/form-data',
     'Content', [ upload => [$workflow] ]
 );
@@ -252,16 +275,16 @@ my $state   = $ares->{data}{state};
 # add to lookup table
 my $tbl = $PipelineAWE_Conf::awe_mgrast_lookup_table;
 my $dbh = DBI->connect(
-    "DBI:mysql:".$PipelineAWE_Conf::awe_mgrast_lookup_db.";host=".$PipelineAWE_Conf::awe_mgrast_lookup_host,
-    $PipelineAWE_Conf::awe_mgrast_lookup_user,
-    $PipelineAWE_Conf::awe_mgrast_lookup_pass
+        "DBI:mysql:".$PipelineAWE_Conf::awe_mgrast_lookup_db.";host=".$PipelineAWE_Conf::awe_mgrast_lookup_host,
+        $PipelineAWE_Conf::awe_mgrast_lookup_user,
+        $PipelineAWE_Conf::awe_mgrast_lookup_pass
     ) || die DBI->errstr."\n";
 my $cmd = "INSERT INTO $tbl (job, awe_id, awe_url, status, submitted, last_update) VALUES ($job_id, '$awe_job', 'http://$awe_url/job/$awe_id', '$state', now(), now())";
-my $sth = $dbh->prepare($str);
+my $sth = $dbh->prepare($cmd);
 $sth->execute() || die $sth->errstr."\n";
 
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input=<input file> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file>]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input=<input file> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
 
 # enable hash-resolving in the JSON->encode function

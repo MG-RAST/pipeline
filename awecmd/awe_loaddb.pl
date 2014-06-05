@@ -17,14 +17,16 @@ my %types = (
     lca      => "lcas"
 );
 my $tbl_range = 5000;
-my $input   = "";
 my $job_id  = "";
+my $input   = "";
+my $psql    = "";
 my $type    = "";
 my $ver_db  = 1;
 my $help    = 0;
 my $options = GetOptions (
-		"input=s"    => \$input,
 		"job=s"      => \$job_id,
+		"input=s"    => \$input,
+		"psql=s"     => \$psql,
 		"type=s"     => \$type,
 		"nr_ver=s"   => \$ver_db,
 		"help!"      => \$help
@@ -39,6 +41,10 @@ if ($help){
     exit __LINE__;
 }elsif (! -e $input){
     print STDERR "ERROR: The input summary file [$input] does not exist.\n";
+    print STDERR get_usage();
+    exit __LINE__;
+}elsif (! -e $psql){
+    print STDERR "ERROR: The input postgresql file [$psql] does not exist.\n";
     print STDERR get_usage();
     exit __LINE__;
 }elsif (length($job_id)==0){
@@ -67,13 +73,19 @@ unless (defined($dbhost) && defined($dbname) && defined($dbuser) && defined($dbp
     exit __LINE__;
 }
 
+# place postgresql cert in home dir
+PipelineAWE::run_cmd('tar -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
+
 # build / run command
 my $dbopts  = "--dbhost ".$dbhost." --dbname ".$dbname." --dbuser ".$dbuser." --dbpass ".$dbpass." --dbtable_range ".$tbl_range;
 my $fileopt = "--".$types{$type}."_filename ".$input;
 PipelineAWE::run_cmd("load_summary2db --verbose --reload --seq-db-version $ver_db --job $job_id $dbopts $fileopt");
 
+# cleanup
+PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
+
 exit(0);
 
 sub get_usage {
-    return "USAGE: awe_loaddb.pl -input=<input summary file> -job=<job identifier> -type=<summary types> -dbhost=<db host> -dbname=<db name> -dbuser=<db user> [-nr_ver=<nr db version>]\n";
+    return "USAGE: awe_loaddb.pl -job=<job identifier> -input=<input summary file> -psql=<postgresql cert tarball> -type=<summary types> -dbhost=<db host> -dbname=<db name> -dbuser=<db user> [-nr_ver=<nr db version>]\n";
 }
