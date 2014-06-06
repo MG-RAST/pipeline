@@ -73,8 +73,10 @@ my $parse = "";
 my $s_num = 0;
 my $c_num = 0;
 my $c_seq = 0;
+my $mapf  = $out_prefix.".".$code.$pid.".mapping";
+
 open(IN, "<".$output.".clstr") || exit __LINE__;
-open(OUT, ">".$output.".mapping") || exit __LINE__;
+open(OUT, ">".$mapf) || exit __LINE__;
 
 while (my $line = <IN>) {
     chomp $line;
@@ -109,7 +111,7 @@ unlink($output.".clstr");
 
 # output attributes
 PipelineAWE::create_attr($output.".json", undef, {data_type => "sequence", file_format => "fasta"});
-PipelineAWE::create_attr($output.".mapping.json", undef, {data_type => "cluster", file_format => "text"});
+PipelineAWE::create_attr($mapf.".json", undef, {data_type => "cluster", file_format => "text"});
 
 exit(0);
 
