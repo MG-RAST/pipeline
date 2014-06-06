@@ -421,7 +421,7 @@
         {
             "cmd": {
                 "name": "awe_blat_rna.pl",
-                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=@m5rna -output=[% job_id %].450.rna.sims",
+                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims",
                 "description": "rna sims blat"
             }, 
             "dependsOn": ["9"],
