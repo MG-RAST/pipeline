@@ -24,7 +24,7 @@
         {
             "cmd": {
                 "name": "awe_qc.pl",
-                "args": "-input=@[% inputfile %] -out_prefix_qc=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
+                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
                 "description": "qc_stats"
             }, 
             "dependsOn": [],
@@ -63,7 +63,7 @@
         {
             "cmd": {
                 "name": "awe_preprocess.pl",
-                "args": "-input=@[% inputfile %] -out_prefix_qc=[% job_id %].100.preprocess -assembled=[% assembled %] -filter_options=[% filter_options %]",
+                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].100.preprocess -filter_options=[% filter_options %]",
                 "description": "preprocess"
             },
             "dependsOn": [], 
