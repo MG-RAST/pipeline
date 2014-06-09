@@ -355,13 +355,12 @@
                 "[% job_id %].425.search.rna.fna": {
                     "host": "http://[% shock_url %]",
                     "node": "-",
-                    "attrfile": "[% job_id %].425.search.rna.fna.json",
-                    "type": "subset",
-                    "formoptions": {                        
-                        "parent_name": "[% job_id %].100.preprocess.passed.fna",
-                        "parent_index": "record"
-                    }
+                    "attrfile": "userattr.json"
                 }
+            },
+            "partinfo": {
+                 "input": "[% job_id %].100.preprocess.passed.fna",
+                 "output": "[% job_id %].425.search.rna.fna"
             },
             "predata": {
                 "[% m5rna_clust %]":{
@@ -376,7 +375,8 @@
                 "seq_format": "bp"
             },
             "taskid": "8",
-            "totalwork": 1
+            "totalwork": 1,
+            "maxworksize": 800
         },          
         {
             "cmd": {
@@ -1096,7 +1096,6 @@
                     "host": "http://[% shock_url %]",
                     "origin": "8",
                     "node": "-",
-                    "nofile": true,
                     "attrfile": "[% job_id %].425.search.rna.fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
@@ -1150,6 +1149,13 @@
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].mapping.json"
+                },
+                "[% job_id %].425.search.rna.fna": {
+                    "host": "http://[% shock_url %]",
+                    "origin": "8",
+                    "node": "-",
+                    "type": "update",
+                    "attrfile": "[% job_id %].425.search.rna.fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
                     "host": "http://[% shock_url %]",

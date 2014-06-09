@@ -95,25 +95,28 @@ my $adbh = PipelineAnalysis::get_analysis_dbh($adbhost, $adbname, $adbuser, $adb
 ### update attribute stats
 # get attributes
 print "Computing file statistics and updating attributes\n";
+my $sr_attr = PipelineAWE::read_json($search.'.json');
 my $gc_attr = PipelineAWE::read_json($genecall.'.json');
 my $rc_attr = PipelineAWE::read_json($rna_clust.'.json');
 my $ac_attr = PipelineAWE::read_json($aa_clust.'.json');
 my $rm_attr = PipelineAWE::read_json($rna_map.'.json');
 my $am_attr = PipelineAWE::read_json($aa_map.'.json');
 # add statistics
+$sr_attr->{statistics} = PipelineAWE::get_seq_stats($search, 'fasta');
 $gc_attr->{statistics} = PipelineAWE::get_seq_stats($genecall, 'fasta', 1);
 $rc_attr->{statistics} = PipelineAWE::get_seq_stats($rna_clust, 'fasta');
 $ac_attr->{statistics} = PipelineAWE::get_seq_stats($aa_clust, 'fasta', 1);
 $rm_attr->{statistics} = PipelineAWE::get_cluster_stats($rna_map);
 $am_attr->{statistics} = PipelineAWE::get_cluster_stats($aa_map);
 # print attributes
+PipelineAWE::print_json($search.'.json', $sr_attr);
 PipelineAWE::print_json($genecall.'.json', $gc_attr);
 PipelineAWE::print_json($rna_clust.'.json', $rc_attr);
 PipelineAWE::print_json($aa_clust.'.json', $ac_attr);
 PipelineAWE::print_json($rna_map.'.json', $rm_attr);
 PipelineAWE::print_json($aa_map.'.json', $am_attr);
 # cleanup
-unlink($genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
+unlink($search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
 
 ### JobDB update
 # get JobDB statistics
@@ -125,7 +128,6 @@ my $qc_attr = PipelineAWE::read_json($qc.'.json');
 my $de_attr = PipelineAWE::read_json($derep.'.json');
 my $pp_attr = PipelineAWE::read_json($preproc.'.json');
 my $pq_attr = PipelineAWE::read_json($post_qc.'.json');
-my $sr_attr = PipelineAWE::read_json($search.'.json');
 my $fl_attr = PipelineAWE::read_json($filter.'.json');
 my $on_attr = PipelineAWE::read_json($ontol.'.json');
 # populate job_stats
