@@ -252,7 +252,7 @@ sub get_top_hits {
   foreach my $frag (keys %$data) {
     if ($get_lca && exists($frag_lca->{$frag})) {
       my $level = pop @{$frag_lca->{$frag}{lca}};
-      $lca_text .= join("\t", ( join(";", map {$md5_id->{$_}} @{$frag_lca->{$frag}{md5s}}), # md5s
+      $lca_text .= join("\t", ( join(";", map {$md5_id->{$_}} grep {exists $md5_id->{$_}} @{$frag_lca->{$frag}{md5s}}), # md5s
 				                $frag,
 				                join(";", map {$_->[0]} @{$frag_lca->{$frag}{sims}}), # identity
 				                join(";", map {$_->[1]} @{$frag_lca->{$frag}{sims}}), # length
