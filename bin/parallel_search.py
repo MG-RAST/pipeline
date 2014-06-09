@@ -16,6 +16,7 @@ LIBF   = ''
 INFF   = ''
 IDENT  = 0.9
 TMPDIR = None
+cigar_re = re.compile('([0-9]*)([DMI])')
 
 def run_cmd(cmd, output=None):
     if not output:
@@ -63,29 +64,55 @@ def run_search(fname):
     os.mkdir(runtmp)
     sortf = fname+'.sort'
     srchf = fname+'.uc'
-    hitf  = fname+'.uc.hit'
-    outf  = fname+'.hit.fa'
+    outf  = fname+'.uc.fa'
     # sort by seq length
     cmd1 = ['seqUtil', '-i', fname, '-o', sortf, '-t', runtmp, '--sortbyseq']
     so1, se1 = run_cmd(cmd1)
     # search against clusters
     cmd2 = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
     so2, se2 = run_cmd(cmd2)
-    # keep only hits
-    cmd3 = ['grep', '^[#|H]', srchf]
-    hith = open(hitf, 'w')
-    so3, se3 = run_cmd(cmd3, output=hith)
-    hith.close()
-    # transfomr to fasta
-    cmd4 = ['usearch', '--input', sortf, '--uc2fasta', hitf, '--output', outf]
-    so4, se4 = run_cmd(cmd4)
+    # transform hits to fasta with start/stop
+    uc2fasta(sortf, srchf, outf)
     # cleanup
-    write_file("".join(filter(lambda x: x, [so1,se1,so2,se2,so3,se3,so4,se4])), outf+".log", 1)
+    write_file("".join(filter(lambda x: x, [so1,se1,so2,se2])), outf+".log", 1)
     os.remove(sortf)
     os.remove(srchf)
-    os.remove(hitf)
     shutil.rmtree(runtmp)
     return outf
+
+def uc2fasta(infasta, inclust, outfasta):
+    outHdl   = open(outfasta, 'w')
+    fastaHdl = open(infasta, 'rU')
+    clustHdl = open(inclust, 'rU')
+    fastaItr = SeqIO.parse(fastaHdl, 'fasta')
+    curFasta = fastaItr.next()
+    for line in clustHdl:
+        if not line.startswith('H'):
+            continue
+        parts = line.split("\t")
+        (strand, qstart, cigar, qname) = (parts[4], int(parts[5]), parts[7], parts[8])
+        qname_fields = qname.split(" ")
+        qname = qname_fields[0]
+        qstop = qstart + cigar_length(cigar)
+        while qname != curFasta.id:
+            try:
+                curFasta = fastaItr.next()
+            except StopIteration:
+                break
+            if not curFasta:
+                break
+        outHdl.write(">%s_%d_%d_%s\n%s\n"%(qname, qstart, qstop, strand, str(curFasta.seq)))
+    clustHdl.close()
+    fastaHdl.close()
+    outHdl.close()
+
+def cigar_length(text):
+    length = 0
+    for n, c in cigar_re.findall(text):
+        if c == 'I':
+            continue
+        length += int(n) if n else 1
+    return length
 
 def merge_files(files, outfile, logfile):
     if logfile:
