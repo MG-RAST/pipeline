@@ -71,9 +71,12 @@ my $adbhost = $ENV{'ANALYSIS_DB_HOST'} || undef;
 my $adbname = $ENV{'ANALYSIS_DB_NAME'} || undef;
 my $adbuser = $ENV{'ANALYSIS_DB_USER'} || undef;
 my $adbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
-
-unless ( defined($jdbhost) && defined($jdbname) && defined($jdbuser) && defined($jdbpass) &&
-         defined($adbhost) && defined($adbname) && defined($adbuser) && defined($adbpass) ) {
+unless ( defined($jdbhost) && defined($jdbname) && defined($jdbuser) && defined($jdbpass) ) {
+    print STDERR "ERROR: missing job info database ENV variables.\n";
+    print STDERR get_usage();
+    exit __LINE__;
+}
+unless ( defined($adbhost) && defined($adbname) && defined($adbuser) && defined($adbpass) ) {
     print STDERR "ERROR: missing analysis database ENV variables.\n";
     print STDERR get_usage();
     exit __LINE__;
