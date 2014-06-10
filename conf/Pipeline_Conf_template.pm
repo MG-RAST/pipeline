@@ -23,6 +23,11 @@ our $global_log_dir = $global_dir."/logs";
 our $memcache_host = "";
 our $memcache_key  = "_ach";
 
+# mysql certificate files
+our $mysql_client_key = "";
+our $mysql_client_cert = "";
+our $mysql_ca_file = "";
+
 # jobcache db
 our $jobcache_db   = "";
 our $jobcache_host = "";
