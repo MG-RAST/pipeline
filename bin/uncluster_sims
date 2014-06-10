@@ -54,7 +54,7 @@ if ($cluster && (-s $cluster)) {
         my $seed = $tabs[0];
         my %ids  = map { $_, 1 } split(/,/, $tabs[2]);
         if (exists $cmap->{$seed}) {
-            map { $ids->{$_} = 1 } @{$cmap->{$seed}};
+            map { $ids{$_} = 1 } @{$cmap->{$seed}};
         }
         if (exists $ids{$seed}) {
             delete $ids{$seed};
