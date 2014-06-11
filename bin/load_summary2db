@@ -10,9 +10,8 @@ my $verbose = 0;
 my $version = 7;
 my $jobID   = '';
 my $reload  = 0;
-my $dbname  = "";
 my $dbhost  = "";
-my $dbpass  = "";
+my $dbname  = "";
 my $dbuser  = "";
 my $dbpass  = "";
 my $dbtable_range = 0;
@@ -36,9 +35,8 @@ $filenames_string
 
   --job                  job id         Required.
   --seq-db-version       nr db version  Optional. Default is '$version'
-  --dbhost               db user        Required. Server of database
+  --dbhost               db host        Required. Server of database
   --dbname               db name        Required. Name of database
-  --dbpass               db password    Required. Password for database
   --dbuser               db user        Required. Owner of database
   --dbpass               db password    Required. Password of database
   --dbtable_range                       Required. Number of jobs per partition
@@ -54,7 +52,6 @@ my %options = ( 'verbose!'         => \$verbose,
                 'job=i'            => \$jobID,
                 'dbhost:s'         => \$dbhost,
                 'dbname:s'         => \$dbname,
-                'dbpass:s'         => \$dbpass,
                 'dbuser:s'         => \$dbuser,
                 'dbpass:s'         => \$dbpass,
                 'dbtable_range:i'  => \$dbtable_range,
@@ -78,7 +75,7 @@ foreach my $file_type (keys %filenames) {
 }
 
 unless (($file_count > 0) && $jobID && $dbhost && $dbname && $dbuser && $dbpass && $dbtable_range) {
-  print STDERR $usage . "Missing parmater.\n"; exit 1;
+  print STDERR $usage . "Missing parameter.\n"; exit 1;
 }
 
 my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpass, {AutoCommit => 0 , RaiseError => 1});
