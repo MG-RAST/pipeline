@@ -120,6 +120,9 @@ if ($has_job && (! $reload)) {
   # Update row in job_info to loaded = true
   print "Updating job_info to loaded = true where job=$jobID and version=$version...\n" if ($verbose);
   $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version");
+  # Update row in job_info with current timestamp
+  print "Updating job_info to updated_on = now() where job=$jobID and version=$version...\n" if ($verbose);
+  $dbh->do("UPDATE job_info SET updated_on = now() WHERE job=$jobID AND version=$version");
 } else {
   # Routine will create the appropriate child job_* tables if any of them are missing.
   &create_child_tables_if_missing($dbh, $jobID);
