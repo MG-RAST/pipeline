@@ -59,7 +59,7 @@ if ($help){
 }elsif (length($job_id)==0){
     print STDERR "ERROR: A job ID is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # get db variables from enviroment
@@ -74,12 +74,12 @@ my $adbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
 unless ( defined($jdbhost) && defined($jdbname) && defined($jdbuser) && defined($jdbpass) ) {
     print STDERR "ERROR: missing job info database ENV variables.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 unless ( defined($adbhost) && defined($adbname) && defined($adbuser) && defined($adbpass) ) {
     print STDERR "ERROR: missing analysis database ENV variables.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # get solr variables
@@ -88,7 +88,7 @@ my $solr_col = $ENV{'SOLR_COLLECTION'} || undef;
 unless ( defined($solr_url) && defined($solr_col) ) {
     print STDERR "ERROR: missing solr server ENV variable.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # get db handles
@@ -221,7 +221,7 @@ solr_post($solr_url, $solr_col, $solr_file);
 # done done !!
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_done.pl -job=<job identifier>\n";
@@ -259,7 +259,7 @@ sub seq_type {
 sub solr_dump {
     my ($job, $jobattr, $mginfo, $mgstats, $md5s) = @_;
     my $sfile = $job.'.solr.json';
-    open(SOLR, ">$sfile") || exit __LINE__;
+    open(SOLR, ">$sfile") || exit 1;
     # top level data
     print SOLR "[\n{\n";
     print SOLR "   \"job\" : \"$job\",\n";

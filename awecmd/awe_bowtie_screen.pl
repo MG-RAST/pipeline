@@ -40,15 +40,15 @@ if ($help){
 }elsif (length($fasta)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($output)==0){
     print STDERR "ERROR: An output file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $fasta){
     print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # skip it
@@ -61,12 +61,12 @@ else {
     my @indexes = split(/,/, $index);
     if (scalar(@indexes) == 0) {
         print STDERR "ERROR: missing index\n";
-        exit __LINE__
+        exit 1;
     }
     for my $i (@indexes) {
         unless ( defined $index_ids->{$i} ) {
             print STDERR "ERROR: undefined index name: $i\n";
-            exit __LINE__
+            exit 1;
         }
     }
 
@@ -104,7 +104,7 @@ if ($run_bowtie != 0) {
     PipelineAWE::run_cmd("mv $output.index $output");
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_bowtie_screen.pl -input=<input fasta> -output=<output fasta> -index=<bowtie indexes separated by ,> [-proc=<number of threads, default: 8>]\n";

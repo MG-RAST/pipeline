@@ -34,11 +34,11 @@ if ($help){
 }elsif (length($input)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $input){
     print STDERR "ERROR: The input sequence file [$input] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my $passed_seq  = $out_prefix.".passed.fna";
@@ -71,7 +71,7 @@ if ($run_derep != 0) {
     PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n".

@@ -30,15 +30,15 @@ if ($help){
 }elsif (length($input_file)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $input_file){
     print STDERR "ERROR: The input sequence file [$input_file] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif ($input_file !~ /\.(fna|fasta|fq|fastq)$/i) {
     print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my $passed_seq  = $out_prefix.".passed.fna";
@@ -104,7 +104,7 @@ if (($format eq 'fasta') && ($filter_options ne 'skip')) {
     PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n".

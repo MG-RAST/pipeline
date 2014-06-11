@@ -43,15 +43,15 @@ if ($help){
 }elsif (length($infile)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $infile){
     print STDERR "ERROR: The input sequence file [$infile] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif ($infile !~ /\.(fna|fasta|fq|fastq)$/i) {
     print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my @kmers = split(/,/, $kmers);
@@ -61,7 +61,7 @@ foreach (@kmers) {
 }
 if ((@kmers == 0) || $bad_kmer) {
     print STDERR "ERROR: invalid kmeer list: $kmers.\n";
-    exit(1);
+    exit 1;
 }
 
 my $format = ($infile =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
@@ -117,8 +117,8 @@ if ($assembled != 1) {
     # create assembly abundance file
     my $cov_found_count = 0;
     my $total_reads = 0;
-    open ABUN, ">$a_file" || exit __LINE__;
-    open SEQS, $infile || exit __LINE__;
+    open ABUN, ">$a_file" || exit 1;
+    open SEQS, $infile || exit 1;
     while (my $line = <SEQS>) {
         chomp $line;
         if ($line =~ /^>(\S+\_\[cov=(\S+)\]\S*).*$/) {
@@ -168,7 +168,7 @@ PipelineAWE::create_attr($seq_out.'.json', $seq_stats, {assembled => $a_text, da
 PipelineAWE::create_attr($qc_out.'.json', $qc_stat, {assembled => $a_text, data_type => "statistics", file_format => "json"});
 PipelineAWE::create_attr($a_file.'.json', $qc_stat, {assembled => $a_text, data_type => "coverage", file_format => "text"});
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-proc=<number of threads, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\noutputs: \${out_prefix}.drisee.stats, \${out_prefix}.drisee.info, \${out_prefix}.consensus.stats, \${out_prefix}.kmer.\$len.stats, \${out_prefix}.assembly.coverage, \${out_prefix}.assembly.coverage.stats\n";
