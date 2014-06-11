@@ -27,7 +27,7 @@ sub run_cmd {
     }
     if ($status != 0) {
         print STDERR "ERROR: ".$parts[0]." returns value $status\n";
-        exit $status;
+        exit $status >> 8;
     }
 }
 

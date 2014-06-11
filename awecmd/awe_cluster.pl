@@ -41,19 +41,19 @@ if ($help){
 }elsif (length($fasta)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $fasta){
     print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif ((! $pid) || ($pid < 40)){
     print STDERR "ERROR: The percent identity must be greater than 50\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif ((! $aa) && (! $rna) && (! $dna)){
     print STDERR "ERROR: one of the following modes is required: aa, rna, dna\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my ($cmd, $word, $code, $output);
@@ -75,8 +75,8 @@ my $c_num = 0;
 my $c_seq = 0;
 my $mapf  = $out_prefix.".".$code.$pid.".mapping";
 
-open(IN, "<".$output.".clstr") || exit __LINE__;
-open(OUT, ">".$mapf) || exit __LINE__;
+open(IN, "<".$output.".clstr") || exit 1;
+open(OUT, ">".$mapf) || exit 1;
 
 while (my $line = <IN>) {
     chomp $line;
@@ -113,7 +113,7 @@ unlink($output.".clstr");
 PipelineAWE::create_attr($output.".json", undef, {data_type => "sequence", file_format => "fasta"});
 PipelineAWE::create_attr($mapf.".json", undef, {data_type => "cluster", file_format => "text"});
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_cluster.pl -input=<input fasta> <-aa|-rna|-dna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -memory=<memory usage in GB, default is 16>]\n";

@@ -39,19 +39,19 @@ if ($help){
 }elsif (scalar(@in_sims)==0){
     print STDERR "ERROR: At least one input similarity file is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (scalar(@in_maps)==0){
     print STDERR "ERROR: At least one input mapping file is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($in_seq)==0){
     print STDERR "ERROR: An input sequence file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($output)==0){
     print STDERR "ERROR: An output file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # temp files
@@ -122,7 +122,7 @@ foreach my $sim (@in_sims) {
 PipelineAWE::create_attr($output.'.json', $sim_stat, {data_type => "similarity", file_format => "blast m8", sim_type => "filter"});
 PipelineAWE::create_attr($output.'.index.json', undef, {data_type => "index", file_format => "text"});
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seq=<input fasta> -output=<output file> [-memory=<memory usage in GB, default is 16> -mem_host=<memcache host> -mem_key=<memcache key>]\noutputs: \${output} and \${output}.index\n";
