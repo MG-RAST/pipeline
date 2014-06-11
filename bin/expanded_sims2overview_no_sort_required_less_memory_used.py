@@ -69,13 +69,15 @@ def index_map(fname):
         raise IOError(err)
     length = int(result.strip().split()[0])
     # make array
-    dt = np.dtype([ ('md5', np.str_, 32), ('seek', np.uint64), ('length', np.uint32) ])
+    dt = np.dtype([ ('md5', np.uint32), ('seek', np.uint64), ('length', np.uint32) ])
     ia = np.zeros(length, dtype=dt)
     # populate array
     with open(fname, 'rU') as fhdl:
         for i, line in enumerate(fhdl):
             tabs = line.strip().split('\t')
-            ia[i][0] = tabs[0]
+            if len(tabs) != 3:
+                continue
+            ia[i][0] = int(tabs[0])
             ia[i][1] = int(tabs[1])
             ia[i][2] = int(tabs[2])
     return ia
@@ -91,9 +93,9 @@ def abundance_map(afile, cfile):
         with open(cfile, 'rU') as fhdl:
             for line in fhdl:
                 tabs = line.strip().split('\t')
-                ids = tabs[2].split(',') # old way
-                ids.append(tabs[1])      # old way
-                #ids = tabs[1].split(',') # new way
+                #ids = tabs[2].split(',') # old way
+                #ids.append(tabs[1])      # old way
+                ids = tabs[1].split(',') # new way
                 for i in ids:
                     if i in data:
                         data[tabs[0]] += data[i]
@@ -167,10 +169,10 @@ def print_md5_stats(ohdl, data, imap):
         # get indexes
         seek, length = '', ''
         if imap is not None:
-            rows, cols = np.where(imap==md5)
-            if (len(rows) > 0) and (len(cols) > 0):
-                first_idx = sorted([r for r, c in zip(rows, cols) if c == 0])[0]
-                seek, length = str(imap[first_idx][1]), str(imap[first_idx][2])
+            match = np.where(imap['md5']==md5)
+            if len(match[0]) > 0:
+                row = match[0][0]
+                seek, length = str(imap[row][1]), str(imap[row][2])
         # output
         line = [ DB_VER,
                  JOBID,
