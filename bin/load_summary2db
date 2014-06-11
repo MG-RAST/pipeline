@@ -103,8 +103,10 @@ if ($has_job && (! $reload)) {
 
   # Delete entries from job_* tables with this job and version
   foreach my $file_type (sort keys %filenames) {
-    $dbh->do("DELETE FROM job_$file_type\_$range WHERE job=$jobID AND version=$version");
-    print "Deleting from job_$file_type\_$range where job=$jobID and version=$version\n" if ($verbose);
+    if($filenames{$file_type} ne "") {
+      print "Deleting from job_$file_type\_$range where job=$jobID and version=$version\n" if ($verbose);
+      $dbh->do("DELETE FROM job_$file_type\_$range WHERE job=$jobID AND version=$version");
+    }
   }
   
   # Load files into job_* tables
