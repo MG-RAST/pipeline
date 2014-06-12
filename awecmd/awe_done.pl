@@ -15,6 +15,8 @@ umask 000;
 
 # options
 my $job_id    = "";
+my $psql      = "";
+my $mysql     = "";
 my $nr_ver    = "";
 my $ann_ver   = "";
 my $upload    = "";
@@ -34,6 +36,8 @@ my $filter    = "";
 my $help      = 0;
 my $options   = GetOptions (
 		"job=s"       => \$job_id,
+		"psql=s"      => \$psql,
+		"mysql=s"     => \$mysql,
 		"nr_ver=s"    => \$nr_ver,
 		"ann_ver=s"   => \$ann_ver,
 		"upload=s"    => \$upload,
@@ -58,6 +62,14 @@ if ($help){
     exit 0;
 }elsif (length($job_id)==0){
     print STDERR "ERROR: A job ID is required.\n";
+    print STDERR get_usage();
+    exit 1;
+}elsif (! -e $psql){
+    print STDERR "ERROR: The input postgresql file [$psql] does not exist.\n";
+    print STDERR get_usage();
+    exit 1;
+}elsif (! -e $mysql){
+    print STDERR "ERROR: The input mysql file [$mysql] does not exist.\n";
     print STDERR get_usage();
     exit 1;
 }
@@ -91,8 +103,13 @@ unless ( defined($solr_url) && defined($solr_col) ) {
     exit 1;
 }
 
+# place certs in home dir
+PipelineAWE::run_cmd('tar -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
+PipelineAWE::run_cmd('tar -xf '.$mysql.' -C '.$ENV{'HOME'}, 1);
+my $mspath = $ENV{'HOME'}.'/.mysql/';
+
 # get db handles
-my $jdbh = PipelineJob::get_jobcache_dbh($jdbhost, $jdbname, $jdbuser, $jdbpass);
+my $jdbh = PipelineJob::get_jobcache_dbh($jdbhost, $jdbname, $jdbuser, $jdbpass, $mspath.'client-key.pem', $mspath.'client-cert.pem', $mspath.'ca-cert.pem');
 my $adbh = PipelineAnalysis::get_analysis_dbh($adbhost, $adbname, $adbuser, $adbpass);
 
 ### update attribute stats

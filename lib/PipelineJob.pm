@@ -8,8 +8,12 @@ use DBI;
 use Data::Dumper;
 
 sub get_jobcache_dbh {
-    my ($dbhost, $dbname, $dbuser, $dbpass) = @_;
-    my $dbh = DBI->connect("DBI:mysql:database=".$dbname.";host=".$dbhost, $dbuser, $dbpass) || die $DBI::errstr;
+    my ($host, $name, $user, $pass, $key, $cert, $ca) = @_;
+    my $conn_str = "DBI:mysql:database=".$name.";host=".$host;
+    if ($key && $cert && $ca) {
+        $conn_str .= ";mysql_ssl=1;mysql_ssl_client_key=".$key.";mysql_ssl_client_cert=".$cert.";mysql_ssl_ca_file=".$ca;
+    }
+    my $dbh = DBI->connect($conn_str, $user, $pass) || die $DBI::errstr;
     return $dbh;
 }
 
