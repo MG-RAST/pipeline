@@ -44,31 +44,31 @@ if ($help){
 }elsif (scalar(@in_expand)==0){
     print STDERR "ERROR: At least one input expand file is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (scalar(@in_maps)==0){
     print STDERR "ERROR: At least one input mapping file is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($job_id)==0){
     print STDERR "ERROR: A job ID is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($type)==0){
     print STDERR "ERROR: A summary type is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! exists($types{$type})){
     print STDERR "ERROR: type $type is invalid.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (($type eq 'md5') && (length($in_index)==0)){
     print STDERR "ERROR: -in_index is required with type 'md5'.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($output)==0){
     print STDERR "ERROR: An output file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # temp files
@@ -105,7 +105,7 @@ if ($type eq 'source') {
     PipelineAWE::run_cmd("mv $output.temp $output");
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_annotate_summary.pl -in_expand=<one or more input expand files> -in_maps=<one or more input mapping files> -in_index=<md5 index file> -in_assemb=<assembly coverage file> -output=<output summary file> -job=<job identifier> -type=<summary types> [-nr_ver=<nr db version>]\n";

@@ -34,11 +34,11 @@ if ($help){
 }elsif (length($input)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $input){
     print STDERR "ERROR: The input sequence file [$input] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my $passed_seq  = $out_prefix.".passed.fna";
@@ -66,12 +66,12 @@ PipelineAWE::create_attr($removed_seq.'.json', $fail_stats);
 # create subset record list
 # note: parent and child files NOT in same order
 if ($run_derep != 0) {
-    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $passed_seq -c removed_seq -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("index_subset_seq.py -p $input -c $passed_seq -c $removed_seq -m 20 -t $run_dir");
     PipelineAWE::run_cmd("mv $passed_seq.index $passed_seq");
     PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n".

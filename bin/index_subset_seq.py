@@ -51,7 +51,7 @@ def sorted_ids(ifile, num=False):
 
 def sort_file(fname, num=False):
     sortfile = open(fname+'.tmp', 'w')
-    cmd = ["sort", "-T", TMP_DIR, "-S", str(MAX_MEM)+'M', fname]
+    cmd = ["sort", "-T", TMP_DIR, "-S", str(MAX_MEM)+'M', "-k", "1,1", "-t", "\t", fname]
     if num:
         cmd.append('-n')
     p1 = sub.Popen(cmd, stdout=sortfile)
@@ -82,26 +82,26 @@ def main(args):
         parser.error("Missing temp dir")
     
     # set variables
-    MAX_MEM  = opts.memory*1024
-    TMP_DIR  = opts.temp
-    parent   = opts.parent
-    children = opts.children
-    
-    # sort if needed - produces id list file
-    if not opts.sorted:
-        parent = sorted_ids(opts.parent, num=True)
-        children = map(sorted_ids, opts.children)
+    MAX_MEM = opts.memory*1024
+    TMP_DIR = opts.temp
+    parent  = opts.parent if opts.sorted else sorted_ids(opts.parent, num=True)
     
     # open filehandles
     phdl = get_iter(parent, opts.sorted)
     to_index = []
-    for c in children:
+    for c in opts.children:
+        fname = c if opts.sorted else sorted_ids(c)
         cinfo = {
-            'file': c,
-            'in': get_iter(c, opts.sorted),
-            'out': open(c+'.index', 'w')
+            'ifile': fname,
+            'ofile': c+'.index',
+            'ihdl': get_iter(fname, opts.sorted),
+            'ohdl': open(c+'.index', 'w'),
+            'curr': None
         }
-        cinfo['curr'] = cinfo['in'].next()
+        try:
+            cinfo['curr'] = cinfo['ihdl'].next()
+        except StopIteration:
+            break
         to_index.append(cinfo)
     
     # process files
@@ -113,18 +113,26 @@ def main(args):
         else:
             key, num = rec.strip().split('\t')
         for x in to_index:
+            if not x['ihdl']:
+                continue
             x_key = x['curr'].id if opts.sorted else x['curr'].strip()
             if x_key == key:
-                x['out'].write(str(num)+'\n')
-                x['curr'] = x['in'].next()
+                x['ohdl'].write(str(num)+'\n')
+                try:
+                    x['curr'] = x['ihdl'].next()
+                except StopIteration:
+                    x['ihdl'].close()
+                    x['ihdl'] = None
     phdl.close()
         
     # move and cleanup
     for x in to_index:
-        x['in'].close()
-        x['out'].close()
+        if x['ihdl']:
+            x['ihdl'].close()
+        if x['ohdl']:
+            x['ohdl'].close()
         if not opts.sorted:
-            sort_file(x['file']+'.index', num=True)
+            sort_file(x['ofile'], num=True)
     
     return 0
 

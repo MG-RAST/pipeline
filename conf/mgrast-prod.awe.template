@@ -24,7 +24,7 @@
         {
             "cmd": {
                 "name": "awe_qc.pl",
-                "args": "-input=@[% inputfile %] -out_prefix_qc=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
+                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
                 "description": "qc_stats"
             }, 
             "dependsOn": [],
@@ -63,7 +63,7 @@
         {
             "cmd": {
                 "name": "awe_preprocess.pl",
-                "args": "-input=@[% inputfile %] -out_prefix_qc=[% job_id %].100.preprocess -assembled=[% assembled %] -filter_options=[% filter_options %]",
+                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].100.preprocess -filter_options=[% filter_options %]",
                 "description": "preprocess"
             },
             "dependsOn": [], 
@@ -355,13 +355,12 @@
                 "[% job_id %].425.search.rna.fna": {
                     "host": "http://[% shock_url %]",
                     "node": "-",
-                    "attrfile": "[% job_id %].425.search.rna.fna.json",
-                    "type": "subset",
-                    "formoptions": {                        
-                        "parent_name": "[% job_id %].100.preprocess.passed.fna",
-                        "parent_index": "record"
-                    }
+                    "attrfile": "userattr.json"
                 }
+            },
+            "partinfo": {
+                 "input": "[% job_id %].100.preprocess.passed.fna",
+                 "output": "[% job_id %].425.search.rna.fna"
             },
             "predata": {
                 "[% m5rna_clust %]":{
@@ -377,6 +376,7 @@
             },
             "taskid": "8",
             "totalwork": 1,
+            "maxworksize": 800
         },          
         {
             "cmd": {
@@ -421,7 +421,7 @@
         {
             "cmd": {
                 "name": "awe_blat_rna.pl",
-                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=@m5rna -output=[% job_id %].450.rna.sims",
+                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims",
                 "description": "rna sims blat"
             }, 
             "dependsOn": ["9"],
@@ -638,9 +638,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "13",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -721,9 +719,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "15",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -804,9 +800,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "17",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -887,9 +881,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "19",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -960,9 +952,7 @@
                     "host": "http://[% shock_url %]",
                     "origin": "21",
                     "node": "-"
-                }
-            },
-            "predata": {
+                },
                 "postgresql.tar": {
                     "url":"[% postgresql_cert %]"
                 }
@@ -1026,7 +1016,7 @@
         {
             "cmd": {
                 "name": "awe_done.pl",
-                "args": "-job=[% job_id %] -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna.stats -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
+                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna.stats -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
                 "description": "done stage",
                 "environ": {
                     "private": {
@@ -1045,6 +1035,12 @@
             },
             "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "14", "16", "18", "20", "22", "23"],
             "inputs": {
+                "postgresql.tar": {
+                    "url":"[% postgresql_cert %]"
+                },
+                "mysql.tar": {
+                    "url":"[% mysql_cert %]"
+                },
                 "[% job_id %].075.qc.stats": {
                     "host": "http://[% shock_url %]",
                     "origin": "0",
@@ -1106,7 +1102,6 @@
                     "host": "http://[% shock_url %]",
                     "origin": "8",
                     "node": "-",
-                    "nofile": true,
                     "attrfile": "[% job_id %].425.search.rna.fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
@@ -1160,6 +1155,13 @@
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].mapping.json"
+                },
+                "[% job_id %].425.search.rna.fna": {
+                    "host": "http://[% shock_url %]",
+                    "origin": "8",
+                    "node": "-",
+                    "type": "update",
+                    "attrfile": "[% job_id %].425.search.rna.fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
                     "host": "http://[% shock_url %]",

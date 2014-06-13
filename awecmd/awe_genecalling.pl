@@ -34,24 +34,24 @@ if ($help){
 }elsif (length($fasta)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $fasta){
     print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my %types = (sanger => 'sanger_10', 454 => '454_30', illumina => 'illumina_10', complete => "complete");
 unless (exists $types{$type}) {
     print STDERR "ERROR: The input type [$type] is not supported.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my $run_dir = getcwd;
 PipelineAWE::run_cmd("parallel_FragGeneScan.py -v -p $proc -s $size -t $types{$type} -d $run_dir $fasta $out_prefix");
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_genecalling.pl -input=<input fasta> [-out_prefix=<output prefix> -type=<454 | sanger | illumina | complete> -proc=<number of threads, default: 8> -size=<size, default: 100>]\noutputs: \${out_prefix}.faa, \${out_prefix}.fna\n";

@@ -10,9 +10,8 @@ my $verbose = 0;
 my $version = 7;
 my $jobID   = '';
 my $reload  = 0;
-my $dbname  = "";
 my $dbhost  = "";
-my $dbpass  = "";
+my $dbname  = "";
 my $dbuser  = "";
 my $dbpass  = "";
 my $dbtable_range = 0;
@@ -36,9 +35,8 @@ $filenames_string
 
   --job                  job id         Required.
   --seq-db-version       nr db version  Optional. Default is '$version'
-  --dbhost               db user        Required. Server of database
+  --dbhost               db host        Required. Server of database
   --dbname               db name        Required. Name of database
-  --dbpass               db password    Required. Password for database
   --dbuser               db user        Required. Owner of database
   --dbpass               db password    Required. Password of database
   --dbtable_range                       Required. Number of jobs per partition
@@ -54,7 +52,6 @@ my %options = ( 'verbose!'         => \$verbose,
                 'job=i'            => \$jobID,
                 'dbhost:s'         => \$dbhost,
                 'dbname:s'         => \$dbname,
-                'dbpass:s'         => \$dbpass,
                 'dbuser:s'         => \$dbuser,
                 'dbpass:s'         => \$dbpass,
                 'dbtable_range:i'  => \$dbtable_range,
@@ -78,7 +75,7 @@ foreach my $file_type (keys %filenames) {
 }
 
 unless (($file_count > 0) && $jobID && $dbhost && $dbname && $dbuser && $dbpass && $dbtable_range) {
-  print STDERR $usage . "Missing parmater.\n"; exit 1;
+  print STDERR $usage . "Missing parameter.\n"; exit 1;
 }
 
 my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpass, {AutoCommit => 0 , RaiseError => 1});
@@ -106,8 +103,10 @@ if ($has_job && (! $reload)) {
 
   # Delete entries from job_* tables with this job and version
   foreach my $file_type (sort keys %filenames) {
-    $dbh->do("DELETE FROM job_$file_type\_$range WHERE job=$jobID AND version=$version");
-    print "Deleting from job_$file_type\_$range where job=$jobID and version=$version\n" if ($verbose);
+    if($filenames{$file_type} ne "") {
+      print "Deleting from job_$file_type\_$range where job=$jobID and version=$version\n" if ($verbose);
+      $dbh->do("DELETE FROM job_$file_type\_$range WHERE job=$jobID AND version=$version");
+    }
   }
   
   # Load files into job_* tables
@@ -120,6 +119,9 @@ if ($has_job && (! $reload)) {
   # Update row in job_info to loaded = true
   print "Updating job_info to loaded = true where job=$jobID and version=$version...\n" if ($verbose);
   $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version");
+  # Update row in job_info with current timestamp
+  print "Updating job_info to updated_on = now() where job=$jobID and version=$version...\n" if ($verbose);
+  $dbh->do("UPDATE job_info SET updated_on = now() WHERE job=$jobID AND version=$version");
 } else {
   # Routine will create the appropriate child job_* tables if any of them are missing.
   &create_child_tables_if_missing($dbh, $jobID);

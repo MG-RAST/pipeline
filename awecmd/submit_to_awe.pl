@@ -50,15 +50,15 @@ if ($help){
 }elsif (length($job_id)==0){
     print STDERR "ERROR: A job identifier is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($input)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $input){
     print STDERR "ERROR: The input file [$input] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # set obj handles
@@ -91,7 +91,7 @@ my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
 unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
     print STDERR "ERROR: Job $job_id does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
 my $jattr = PipelineJob::get_job_attributes($jobdb, $job_id);
@@ -244,7 +244,7 @@ foreach my $idx (split(/,/, $vars->{screen_indexes})) {
 if ($vars->{index_download_urls} eq "") {
     print STDERR "ERROR: No valid bowtie indexes found in ".$vars->{screen_indexes}."\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 chop $vars->{index_download_urls};
 

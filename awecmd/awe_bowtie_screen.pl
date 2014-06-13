@@ -40,15 +40,15 @@ if ($help){
 }elsif (length($fasta)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($output)==0){
     print STDERR "ERROR: An output file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $fasta){
     print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # skip it
@@ -61,12 +61,12 @@ else {
     my @indexes = split(/,/, $index);
     if (scalar(@indexes) == 0) {
         print STDERR "ERROR: missing index\n";
-        exit __LINE__
+        exit 1;
     }
     for my $i (@indexes) {
         unless ( defined $index_ids->{$i} ) {
             print STDERR "ERROR: undefined index name: $i\n";
-            exit __LINE__
+            exit 1;
         }
     }
 
@@ -100,11 +100,11 @@ PipelineAWE::create_attr($output.'.stats.json', $pass_stats, {data_type => "stat
 # create subset record list
 # note: parent and child files in same order
 if ($run_bowtie != 0) {
-    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $output -s -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -s -m 20");
     PipelineAWE::run_cmd("mv $output.index $output");
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_bowtie_screen.pl -input=<input fasta> -output=<output fasta> -index=<bowtie indexes separated by ,> [-proc=<number of threads, default: 8>]\n";

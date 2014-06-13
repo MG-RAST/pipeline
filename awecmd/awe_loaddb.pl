@@ -38,27 +38,27 @@ if ($help){
 }elsif (length($input)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $input){
     print STDERR "ERROR: The input summary file [$input] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $psql){
     print STDERR "ERROR: The input postgresql file [$psql] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($job_id)==0){
     print STDERR "ERROR: A job ID is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (length($type)==0){
     print STDERR "ERROR: A summary type is required.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! exists($types{$type})){
     print STDERR "ERROR: type $type is invalid.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # get db variables from enviroment
@@ -70,7 +70,7 @@ my $dbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
 unless (defined($dbhost) && defined($dbname) && defined($dbuser) && defined($dbpass)) {
     print STDERR "ERROR: missing analysis database ENV variables.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 # place postgresql cert in home dir
@@ -84,7 +84,7 @@ PipelineAWE::run_cmd("load_summary2db --verbose --reload --seq-db-version $ver_d
 # cleanup
 PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_loaddb.pl -job=<job identifier> -input=<input summary file> -psql=<postgresql cert tarball> -type=<summary types> -dbhost=<db host> -dbname=<db name> -dbuser=<db user> [-nr_ver=<nr db version>]\n";

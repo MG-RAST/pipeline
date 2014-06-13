@@ -38,11 +38,11 @@ if ($help){
 }elsif (length($input)==0){
     print STDERR "ERROR: An input file was not specified.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }elsif (! -e $input){
     print STDERR "ERROR: The input similarity file [$input] does not exist.\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 
 my @out_files = ();
@@ -60,7 +60,7 @@ if ($aa) {
 } else {
     print STDERR "ERROR: one of the following modes is required: aa, rna\n";
     print STDERR get_usage();
-    exit __LINE__;
+    exit 1;
 }
 $cmd .= " --out_filter $out_prefix.$type.sims.filter --out_lca $out_prefix.$type.expand.lca";
 push @out_files, ("$out_prefix.$type.sims.filter", "$out_prefix.$type.expand.lca");
@@ -94,7 +94,7 @@ foreach my $out (@out_files) {
     }
 }
 
-exit(0);
+exit 0;
 
 sub get_usage {
     return "USAGE: awe_annotate_sims.pl -input=<input sims> <-aa|-rna> [-out_prefix=<output prefix> -mem_host=<memcache host> -mem_key=<memcache key>]\n".
