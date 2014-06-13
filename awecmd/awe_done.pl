@@ -238,6 +238,10 @@ solr_post($solr_url, $solr_col, $solr_file);
 # done done !!
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 
+# cleanup
+PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
+PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.mysql');
+
 exit 0;
 
 sub get_usage {
