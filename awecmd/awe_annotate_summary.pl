@@ -101,7 +101,7 @@ PipelineAWE::run_cmd($cmd);
 
 if ($type eq 'source') {
     my $sdata = get_source_stats($output);
-    PipelineAWE::print_json($output.'temp', $sdata);
+    PipelineAWE::print_json($output.'.temp', $sdata);
     PipelineAWE::run_cmd("mv $output.temp $output");
 }
 
