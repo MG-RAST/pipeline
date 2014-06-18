@@ -44,6 +44,7 @@ def strip_tags(html):
 
 def clean_name(text):
     clean = ''
+    text  = str(text)
     for c in text:
         clean += c if c in valid_name_str else '_'
     return clean
@@ -643,6 +644,7 @@ def main(args):
     CV_PARAM = mgrast_api('cv')
     
     # object from source (xlsx file or google link): create hierarchy / test connections
+    mdraw = None
     if opts.format == 'xlsx':
         try:
             mdraw = xlsx_to_mdraw(md_source, opts.dupe, opts.inc)
@@ -650,7 +652,7 @@ def main(args):
             try:
                 mdraw = xls_to_mdraw(md_source, opts.dupe, opts.inc)
             except:
-                errorMsg('Invald file format: '+md_source)
+                errorMsg('Invald file format: '+md_source, 1)
     elif opts.format == 'xls':
         try:
             mdraw = xls_to_mdraw(md_source, opts.dupe, opts.inc)
@@ -658,11 +660,9 @@ def main(args):
             try:
                 mdraw = xlsx_to_mdraw(md_source, opts.dupe, opts.inc)
             except:
-                errorMsg('Invald file format: '+md_source)
+                errorMsg('Invald file format: '+md_source, 1)
     elif opts.format == 'google':
         mdraw = google_to_mdraw(md_source, opts.dupe, opts.inc, opts.login, opts.password)
-    else:
-        mdraw = None
     #pprint.pprint(mdraw)
 
     # validate required and type
@@ -684,6 +684,8 @@ def main(args):
         sys.stdout.write(message)
     if JSON_FILE:
         write_json(JSON_FILE, mdvalid)
+    
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
