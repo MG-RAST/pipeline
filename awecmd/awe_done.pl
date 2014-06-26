@@ -152,7 +152,7 @@ my $fl_attr = PipelineAWE::read_json($filter.'.json');
 my $on_attr = PipelineAWE::read_json($ontol.'.json');
 # populate job_stats
 $job_stats->{sequence_count_dereplication_removed} = $de_attr->{statistics}{sequence_count} || '0';  # derep fail
-$job_stats->{alpha_diversity_shannon}  = PipelineAnalysis::get_alpha_diversity($jdbh, $job_id, $ann_ver);
+$job_stats->{alpha_diversity_shannon}  = PipelineAnalysis::get_alpha_diversity($adbh, $job_id, $ann_ver);
 $job_stats->{read_count_processed_rna} = $sr_attr->{statistics}{sequence_count} || '0';      # pre-cluster / rna search
 $job_stats->{read_count_processed_aa}  = $gc_attr->{statistics}{sequence_count} || '0';      # pre-cluster / genecall
 $job_stats->{sequence_count_processed_rna} = $rc_attr->{statistics}{sequence_count} || '0';  # post-cluster / rna clust
