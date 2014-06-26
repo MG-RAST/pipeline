@@ -231,7 +231,7 @@ PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "
 
 # upload of solr data
 print "Outputing and POSTing solr file\n";
-my $done_attr = PipelineAWE::read_json($PipelineAWE::global_attr);
+my $done_attr = PipelineAWE::get_userattr();
 my $solr_file = solr_dump($job_id, $job_attrs, $done_attr, $mgstats, $PipelineAnalysis::md5_abundance);
 solr_post($solr_url, $solr_col, $solr_file);
 
@@ -284,8 +284,8 @@ sub solr_dump {
     # top level data
     print SOLR "[\n{\n";
     print SOLR "   \"job\" : \"$job\",\n";
-    print SOLR "   \"id\" : \"".$mginfo->{metagenome_id}."\",\n";
-    print SOLR "   \"id_sort\" : \"".$mginfo->{metagenome_id}."\",\n";
+    print SOLR "   \"id\" : \"".$mginfo->{id}."\",\n";
+    print SOLR "   \"id_sort\" : \"".$mginfo->{id}."\",\n";
     print SOLR "   \"status\" : \"".$mginfo->{status}."\",\n";
     print SOLR "   \"status_sort\" : \"".$mginfo->{status}."\",\n";
     print SOLR "   \"created\" : \"".$mginfo->{created}."\",\n";

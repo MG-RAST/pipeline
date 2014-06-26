@@ -67,6 +67,14 @@ sub read_json {
     return $data;
 }
 
+sub get_userattr {
+    if (-s $global_attr) {
+        return read_json($global_attr);
+    } else {
+        return {};
+    }
+}
+
 sub create_attr {
     my ($name, $stats, $other) = @_;
     if (-s $global_attr) {
