@@ -219,8 +219,8 @@ my $mgstats = {
     qc => $q_stats,
     source => \%s_data,
     taxonomy => $taxa,
-    function => PipelineAnalysis::get_ontology_abundances($adbh, $job_id, $ann_ver),
-    ontology => PipelineAnalysis::get_function_abundances($adbh, $job_id, $ann_ver),
+    function => PipelineAnalysis::get_function_abundances($adbh, $job_id, $ann_ver),
+    ontology => PipelineAnalysis::get_ontology_abundances($adbh, $job_id, $ann_ver),
     rarefaction => PipelineAnalysis::get_rarefaction_xy($adbh, $job_id, $job_stats->{sequence_count_raw}, $ann_ver),
     sequence_stats => $job_stats
 };

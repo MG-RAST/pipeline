@@ -846,7 +846,6 @@
                 "[% job_id %].700.annotation.lca.summary": {
                     "host": "http://[% shock_url %]",
                     "node": "-",
-                    "delete": true,
                     "attrfile": "userattr.json"
                 }
             },
