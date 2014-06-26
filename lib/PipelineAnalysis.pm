@@ -44,7 +44,7 @@ sub get_ontology_abundances {
     }
     map { $data->{$_->[0]}{$_->[1]} = $_->[2] } grep { $_->[2] && ($_->[2] =~ /\S/) } @$rows;
   
-    my $onts = get_ontology_md5s($job, $ver);
+    my $onts = get_ontology_md5s($dbh, $job, $ver);
     foreach my $s (keys %$onts) {
         foreach my $o (keys %{$onts->{$s}}) {
             if (exists $data->{$s}{$o}) {
@@ -53,7 +53,7 @@ sub get_ontology_abundances {
         }
     }
     
-    my $md5s = get_md5_abundance($job, $ver);
+    my $md5s = get_md5_abundance($dbh, $job, $ver);
     foreach my $s (sort keys %$ont_md5) {
         foreach my $d (sort keys %{$ont_md5->{$s}}) {
             my $num = 0;
@@ -140,7 +140,7 @@ sub get_taxa_abundances {
     return $tax_num;
 }
 
-sub get_ontology_md5s {     
+sub get_ontology_md5s {
     my ($dbh, $job, $ver) = @_;
     unless (scalar(keys %$ontology_md5s) > 0) {
         my $sql = "SELECT distinct s.name, j.id, j.md5s FROM job_ontologies j, sources s WHERE j.version=$ver AND j.job=$job AND j.source=s._id";
