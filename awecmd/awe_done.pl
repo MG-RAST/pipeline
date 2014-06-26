@@ -7,9 +7,9 @@ no warnings('once');
 use PipelineAWE;
 use PipelineJob;
 use PipelineAnalysis;
+use StreamingUpload;
 
 use LWP::UserAgent;
-use HTTP::Request::StreamingUpload;
 use Getopt::Long;
 umask 000;
 
@@ -353,7 +353,7 @@ sub solr_dump {
 sub solr_post {
     my ($solr_url, $solr_col, $solr_file) = @_;
     my $post_url = "http://$solr_url/solr/$solr_col/update/json?commit=true";
-    my $req = HTTP::Request::StreamingUpload->new(
+    my $req = StreamingUpload->new(
         POST => $post_url,
         path => $solr_file,
         headers => HTTP::Headers->new(
