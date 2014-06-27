@@ -1015,7 +1015,7 @@
         {
             "cmd": {
                 "name": "awe_done.pl",
-                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna.stats -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
+                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -api_url=[% mgrast_api %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna.stats -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
                 "description": "done stage",
                 "environ": {
                     "private": {
@@ -1028,7 +1028,8 @@
                         "JOB_DB_USER": "[% job_dbuser %]",
                         "JOB_DB_PASS": "[% job_dbpass %]",
                         "SOLR_SERVER": "[% solr_url %]",
-                        "SOLR_COLLECTION": "[% solr_col %]"
+                        "SOLR_COLLECTION": "[% solr_col %]",
+                        "MGRAST_WEBKEY": "[% api_key %]"
                     }
                 }
             },
