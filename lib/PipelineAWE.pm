@@ -6,8 +6,10 @@ no warnings('once');
 
 use JSON;
 use Data::Dumper;
+use LWP::UserAgent;
 
 my $global_attr = "userattr.json";
+my $agent = LWP::UserAgent->new();
 my $json = JSON->new;
 $json = $json->utf8();
 $json->max_size(0);
@@ -45,6 +47,35 @@ sub file_to_array {
     }
     close(FILE);
     return $data;
+}
+
+sub obj_from_url {
+    my ($url, $key) =@_;
+    my $content = undef;
+    eval {
+        my $get = undef;
+        if ($key) {
+            $get = $agent->get($url, 'AUTH' => $key);
+        } else {
+            $get = $agent->get($url);
+        }
+        $content = $json->decode( $get->content );
+    };
+    if ($@ || (! ref($content))) {
+        print STDERR "Unable to connect to $url\n";
+        exit 1;
+    } elsif ($content->{'ERROR'}) {
+        print STDERR "From $url: ".$content->{'ERROR'}."\n";
+        exit 1;
+    } else {
+        return $content;
+    }
+}
+
+sub get_metadata {
+    my ($mgid, $base_url, $key) = @_;
+    my $get_url = 'http://'.$base_url.'/metadata/export/'.$mgid;
+    return obj_from_url($get_url, $key);
 }
 
 ######### JSON Functions ##########
