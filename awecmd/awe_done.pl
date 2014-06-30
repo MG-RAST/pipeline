@@ -9,6 +9,7 @@ use PipelineJob;
 use PipelineAnalysis;
 use StreamingUpload;
 
+use Scalar::Util qw(looks_like_number);
 use URI::Escape;
 use LWP::UserAgent;
 use Getopt::Long;
@@ -312,11 +313,13 @@ sub solr_dump {
         md5                => [ keys %{$PipelineAnalysis::md5_abundance} ]
     };
     # seq stats
-    foreach my $stat (keys %{$mgstats->{sequence_stats}}) {
-        if ($stat =~ /count/ || $stat =~ /min/ || $stat =~ /max/) {
-            $solr_data->{$stat.'_l'} = $mgstats->{sequence_stats}{$stat} * 1;
-        } else {
-            $solr_data->{$stat.'_d'} = $mgstats->{sequence_stats}{$stat} * 1.0;
+    while (my ($key, $val) = each(%{$mgstats->{sequence_stats}})) {
+        if (looks_like_number($val)) {
+            if ($key =~ /count/ || $key =~ /min/ || $key =~ /max/) {
+                $solr_data->{$key.'_l'} = $val * 1;
+            } else {
+                $solr_data->{$key.'_d'} = $val * 1.0;
+            }
         }
     }
     # mixs metadata
