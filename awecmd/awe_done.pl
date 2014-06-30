@@ -341,9 +341,6 @@ sub solr_dump {
             }
         };
     }
-    if (scalar(@$md_all) > 0) {
-        $solr_data->{metadata} = join(", ", @$md_all);
-    }
     # print
     my $solr_file = $job.'.solr.json';
     PipelineAWE::print_json($solr_file, $solr_data);
