@@ -8,9 +8,9 @@ use JSON;
 use Data::Dumper;
 use LWP::UserAgent;
 
-my $global_attr = "userattr.json";
-my $agent = LWP::UserAgent->new();
-my $json = JSON->new;
+our $global_attr = "userattr.json";
+our $agent = LWP::UserAgent->new();
+our $json = JSON->new;
 $json = $json->utf8();
 $json->max_size(0);
 $json->allow_nonref;
