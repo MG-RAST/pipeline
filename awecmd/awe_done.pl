@@ -325,22 +325,21 @@ sub solr_dump {
     # mixs metadata
     if ($metadata && exists($metadata->{mixs})) {
         while (my ($key, $val) = each(%{$metadata->{mixs}})) {
-            $solr_data->{$key} = $val;
-            $solr_data->{$key.'_sort'} = $val;
+            if ($val) {
+                $solr_data->{$key} = $val;
+                $solr_data->{$key.'_sort'} = $val;
+            }
         }
     }
     # full metadata
     my $md_all = [];
     foreach my $cat (('project', 'sample', 'env_package', 'library')) {
         eval {
-            if ($metadata && exists($metadata->{$cat})) {
+            if ($metadata && exists($metadata->{$cat}) && $metadata->{$cat}{id} && $metadata->{$cat}{name} && $metadata->{$cat}{data}) {
                 $solr_data->{$cat.'_id'} = $metadata->{$cat}{id};
                 $solr_data->{$cat.'_id_sort'} = $metadata->{$cat}{id};
                 $solr_data->{$cat.'_name'} = $metadata->{$cat}{name};
-                if ($metadata->{$cat}{data}) {
-                    $solr_data->{$cat} = join(", ", @{$metadata->{$cat}{data}});
-                    push @$md_all, @{$metadata->{$cat}{data}};
-                }
+                $solr_data->{$cat} = join(", ", @{$metadata->{$cat}{data}});
             }
         };
     }
