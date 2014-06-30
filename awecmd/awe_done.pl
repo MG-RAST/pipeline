@@ -166,11 +166,11 @@ $job_stats->{sequence_count_processed_aa}  = $ac_attr->{statistics}{sequence_cou
 map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};        # qc stats
 map { $job_stats->{$_} = $fl_attr->{statistics}{$_} } keys %{$fl_attr->{statistics}};        # sims filter stats
 map { $job_stats->{$_} = $on_attr->{statistics}{$_} } keys %{$on_attr->{statistics}};        # annotate ontology stats
-map { $job_stats->{$_} = $up_attr->{statistics}{$_}.'_raw' } keys %{$up_attr->{statistics}}; # raw seq stats
-map { $job_stats->{$_} = $pp_attr->{statistics}{$_}.'_preprocessed_rna' } keys %{$pp_attr->{statistics}};  # preprocess seq stats
-map { $job_stats->{$_} = $pq_attr->{statistics}{$_}.'_preprocessed' } keys %{$pq_attr->{statistics}};      # screen seq stats
-map { $job_stats->{$_} = $rm_attr->{statistics}{$_}.'_processed_rna' } keys %{$rm_attr->{statistics}};     # rna clust stats
-map { $job_stats->{$_} = $am_attr->{statistics}{$_}.'_processed_aa' } keys %{$am_attr->{statistics}};      # aa clust stats
+map { $job_stats->{$_.'_raw'} = $up_attr->{statistics}{$_} } keys %{$up_attr->{statistics}}; # raw seq stats
+map { $job_stats->{$_.'_preprocessed_rna'} = $pp_attr->{statistics}{$_} } keys %{$pp_attr->{statistics}};  # preprocess seq stats
+map { $job_stats->{$_.'_preprocessed'}     = $pq_attr->{statistics}{$_} } keys %{$pq_attr->{statistics}};  # screen seq stats
+map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %{$rm_attr->{statistics}};  # rna clust stats
+map { $job_stats->{$_.'_processed_aa'}     = $am_attr->{statistics}{$_} } keys %{$am_attr->{statistics}};  # aa clust stats
 # read ratios
 my ($aa_ratio, $rna_ratio) = read_ratios($job_stats);
 $job_stats->{ratio_reads_aa} = $aa_ratio;
@@ -240,7 +240,7 @@ print "Outputing and POSTing solr file\n";
 my $done_attr = PipelineAWE::get_userattr();
 my $metadata  = PipelineAWE::get_metadata($done_attr->{id}, $api_url, $api_key);
 my $solr_file = solr_dump($job_id, $seq_type, $job_attrs, $done_attr, $mgstats, $metadata);
-solr_post($solr_url, $solr_col, $solr_file);
+solr_post($solr_url, $solr_col, $solr_file, $done_attr->{id});
 
 # done done !!
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
