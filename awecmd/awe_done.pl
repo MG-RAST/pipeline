@@ -11,7 +11,6 @@ use StreamingUpload;
 
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
-use LWP::UserAgent;
 use Getopt::Long;
 umask 000;
 
@@ -241,7 +240,7 @@ print "Outputing and POSTing solr file\n";
 my $done_attr = PipelineAWE::get_userattr();
 my $metadata  = PipelineAWE::get_metadata($done_attr->{id}, $api_url, $api_key);
 my $solr_file = solr_dump($job_id, $seq_type, $job_attrs, $done_attr, $mgstats, $metadata);
-solr_post($solr_url, $solr_col, $solr_file, $done_attr->{id});
+solr_post($solr_url, $solr_col, $solr_file);
 
 # done done !!
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
@@ -289,10 +288,11 @@ sub solr_dump {
     my ($job, $seq_type, $jobattr, $mginfo, $mgstats, $metadata) = @_;
     
     # top level data
+    my $mgid = $mginfo->{id};
     my $solr_data = {
         job                => int($job),
-        id                 => $mginfo->{id},
-        id_sort            => $mginfo->{id},
+        id                 => $mgid,
+        id_sort            => $mgid,
         status             => $mginfo->{status},
         status_sort        => $mginfo->{status},
         created            => $mginfo->{created},
@@ -332,7 +332,6 @@ sub solr_dump {
         }
     }
     # full metadata
-    my $md_all = [];
     foreach my $cat (('project', 'sample', 'env_package', 'library')) {
         eval {
             if ($metadata && exists($metadata->{$cat}) && $metadata->{$cat}{id} && $metadata->{$cat}{name} && $metadata->{$cat}{data}) {
@@ -343,23 +342,26 @@ sub solr_dump {
             }
         };
     }
+    
     # print
+    my $solr_str  = $PipelineAWE::json->encode($solr_data);
     my $solr_file = $job.'.solr.json';
-    PipelineAWE::print_json($solr_file, $solr_data);
+    open(SOLR, ">$solr_file") or die "Couldn't open file: $!";
+    print SOLR qq({
+    "delete": { "id": "$mgid" },
+    "commit": { "expungeDeletes": "true" },
+    "add": {
+        "doc": $solr_str
+    }
+});
+    close(SOLR);
     return $solr_file;
 }
 
 sub solr_post {
-    my ($solr_url, $solr_col, $solr_file, $mgid) = @_;
+    my ($solr_url, $solr_col, $solr_file) = @_;
     
-    my $agent = LWP::UserAgent->new();
-    
-    # delete if exists
-    my $delete_cmd = "<delete><id>".$mgid."</id></delete>";
-    my $delete_url = "http://$solr_url/solr/$solr_col/update/stream.body=".uri_escape($delete_cmd);
-    $agent->get($delete_url);
-    
-    # post new data
+    # post commands and data
     my $post_url = "http://$solr_url/solr/$solr_col/update/json?commit=true";
     my $req = StreamingUpload->new(
         POST => $post_url,
@@ -369,7 +371,7 @@ sub solr_post {
             'Content-Length' => -s $solr_file,
         )
     );
-    my $response = $agent->request($req);
+    my $response = $PipelineAWE::agent->request($req);
     if ($response->{"_msg"} ne 'OK') {
         my $content = $response->{"_content"};
         print STDERR "solr POST failed: ".$content."\n";
