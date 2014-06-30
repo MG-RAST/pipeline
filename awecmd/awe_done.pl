@@ -9,6 +9,7 @@ use PipelineJob;
 use PipelineAnalysis;
 use StreamingUpload;
 
+use URI::Escape;
 use LWP::UserAgent;
 use Getopt::Long;
 umask 000;
@@ -19,6 +20,7 @@ my $psql      = "";
 my $mysql     = "";
 my $nr_ver    = "";
 my $ann_ver   = "";
+my $api_url   = "";
 my $upload    = "";
 my $qc        = "";
 my $preproc   = "";
@@ -40,6 +42,7 @@ my $options   = GetOptions (
 		"mysql=s"     => \$mysql,
 		"nr_ver=s"    => \$nr_ver,
 		"ann_ver=s"   => \$ann_ver,
+		"api_url=s"   => \$api_url,
 		"upload=s"    => \$upload,
 		"qc=s"        => \$qc,
 		"preproc=s"   => \$preproc,
@@ -102,6 +105,9 @@ unless ( defined($solr_url) && defined($solr_col) ) {
     print STDERR get_usage();
     exit 1;
 }
+
+# get api variable
+my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 
 # place certs in home dir
 PipelineAWE::run_cmd('tar -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
@@ -232,7 +238,8 @@ PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "
 # upload of solr data
 print "Outputing and POSTing solr file\n";
 my $done_attr = PipelineAWE::get_userattr();
-my $solr_file = solr_dump($job_id, $job_attrs, $done_attr, $mgstats, $PipelineAnalysis::md5_abundance);
+my $metadata  = PipelineAWE::get_metadata($done_attr->{id}, $api_url, $api_key);
+my $solr_file = solr_dump($job_id, $seq_type, $job_attrs, $done_attr, $mgstats, $metadata);
 solr_post($solr_url, $solr_col, $solr_file);
 
 # done done !!
@@ -278,80 +285,82 @@ sub seq_type {
 }
 
 sub solr_dump {
-    my ($job, $jobattr, $mginfo, $mgstats, $md5s) = @_;
-    my $sfile = $job.'.solr.json';
-    open(SOLR, ">$sfile") || exit 1;
+    my ($job, $seq_type, $jobattr, $mginfo, $mgstats, $metadata) = @_;
+    
     # top level data
-    print SOLR "[\n{\n";
-    print SOLR "   \"job\" : \"$job\",\n";
-    print SOLR "   \"id\" : \"".$mginfo->{id}."\",\n";
-    print SOLR "   \"id_sort\" : \"".$mginfo->{id}."\",\n";
-    print SOLR "   \"status\" : \"".$mginfo->{status}."\",\n";
-    print SOLR "   \"status_sort\" : \"".$mginfo->{status}."\",\n";
-    print SOLR "   \"created\" : \"".$mginfo->{created}."\",\n";
-    print SOLR "   \"name\" : \"".$mginfo->{name}."\",\n";
-    print SOLR "   \"name_sort\" : \"".$mginfo->{name}."\",\n";
-    print SOLR "   \"project_id\" : \"".$mginfo->{project_id}."\",\n";
-    print SOLR "   \"project_id_sort\" : \"".$mginfo->{project_id}."\",\n";
-    print SOLR "   \"project_name\" : \"".$mginfo->{project_name}."\",\n";
-    print SOLR "   \"project_name_sort\" : \"".$mginfo->{project_name}."\",\n";
-    print SOLR "   \"sequence_type\" : \"$seq_type\",\n";
-    print SOLR "   \"seq_method\" : \"".($jobattr->{sequencing_method_guess} || "")."\",\n";
-    print SOLR "   \"version\" : 1,\n";
+    my $solr_data = {
+        job                => int($job),
+        id                 => $mginfo->{id},
+        id_sort            => $mginfo->{id},
+        status             => $mginfo->{status},
+        status_sort        => $mginfo->{status},
+        created            => $mginfo->{created},
+        created_sort       => $mginfo->{created},
+        name               => $mginfo->{name},
+        name_sort          => $mginfo->{name},
+        project_id         => $mginfo->{project_id},
+        project_id_sort    => $mginfo->{project_id},
+        project_name       => $mginfo->{project_name},
+        project_name_sort  => $mginfo->{project_name},
+        sequence_type      => $seq_type,
+        sequence_type_sort => $seq_type,
+        seq_method         => $jobattr->{sequencing_method_guess},
+        seq_method_sort    => $jobattr->{sequencing_method_guess},
+        version            => 1,
+        function           => [ map {$_->[0]} @{$mgstats->{function}} ],
+        organism           => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ],
+        md5                => [ keys %{$PipelineAnalysis::md5_abundance} ]
+    };
     # seq stats
     foreach my $stat (keys %{$mgstats->{sequence_stats}}) {
         if ($stat =~ /count/ || $stat =~ /min/ || $stat =~ /max/) {
-            print SOLR "   \"$stat\_l\" : \"".$mgstats->{sequence_stats}{$stat}."\",\n";
+            $solr_data->{$stat.'_l'} = $mgstats->{sequence_stats}{$stat} * 1;
         } else {
-            print SOLR "   \"$stat\_d\" : \"".$mgstats->{sequence_stats}{$stat}."\",\n";
+            $solr_data->{$stat.'_d'} = $mgstats->{sequence_stats}{$stat} * 1.0;
         }
     }
-    # functions
-    my $count = 0;
-    print SOLR "   \"function\" : [\n";
-    foreach my $func (@{$mgstats->{function}}) {
-        $count++;
-        my $name = $func->[0];
-        $name =~ s/\\/\\\\/g;
-        $name =~ s/"/\\"/g;
-        if ($count == 1) {
-            print SOLR "      \"$name\"";
-        } else {
-            print SOLR ",\n      \"$name\"";
+    # mixs metadata
+    if ($metadata && exists($metadata->{mixs})) {
+        while (my ($key, $val) = each(%{$metadata->{mixs}})) {
+            $solr_data->{$key} = $val;
+            $solr_data->{$key.'_sort'} = $val;
         }
     }
-    # organisms
-    $count = 0;
-    print SOLR "\n   ],\n   \"organism\" : [\n";
-    foreach my $org (@{$mgstats->{taxonomy}{species}}) {
-        $count++;
-        my $name = $org->[0];
-        $name =~ s/\\/\\\\/g;
-        $name =~ s/"/\\"/g;
-        if ($count == 1) {
-            print SOLR "      \"$name\"";
-        } else {
-            print SOLR ",\n      \"$name\"";
-        }
+    # full metadata
+    my $md_all = [];
+    foreach my $cat (('project', 'sample', 'env_package', 'library')) {
+        eval {
+            if ($metadata && exists($metadata->{$cat})) {
+                $solr_data->{$cat.'_id'} = $metadata->{$cat}{id};
+                $solr_data->{$cat.'_id_sort'} = $metadata->{$cat}{id};
+                $solr_data->{$cat.'_name'} = $metadata->{$cat}{name};
+                if ($metadata->{$cat}{data}) {
+                    $solr_data->{$cat} = join(", ", @{$metadata->{$cat}{data}});
+                    push @$md_all, @{$metadata->{$cat}{data}};
+                }
+            }
+        };
     }
-    # md5s
-    $count = 0;
-    print SOLR "\n   ],\n   \"md5\" : [\n";
-    while (my ($md5, $v) = each(%$md5s)) {
-        $count++;
-        if ($count == 1) {
-            print SOLR "      \"$md5\"";
-        } else {
-            print SOLR ",\n      \"$md5\"";
-        }
+    if (scalar(@$md_all) > 0) {
+        $solr_data->{metadata} = join(", ", @$md_all);
     }
-    print SOLR "\n   ]\n}\n]";
-    close(SOLR);
-    return $sfile;
+    # print
+    my $solr_file = $job.'.solr.json';
+    PipelineAWE::print_json($solr_file, $solr_data);
+    return $solr_file;
 }
 
 sub solr_post {
-    my ($solr_url, $solr_col, $solr_file) = @_;
+    my ($solr_url, $solr_col, $solr_file, $mgid) = @_;
+    
+    my $agent = LWP::UserAgent->new();
+    
+    # delete if exists
+    my $delete_cmd = "<delete><id>".$mgid."</id></delete>";
+    my $delete_url = "http://$solr_url/solr/$solr_col/update/stream.body=".uri_escape($delete_cmd);
+    $agent->get($delete_url);
+    
+    # post new data
     my $post_url = "http://$solr_url/solr/$solr_col/update/json?commit=true";
     my $req = StreamingUpload->new(
         POST => $post_url,
@@ -361,7 +370,7 @@ sub solr_post {
             'Content-Length' => -s $solr_file,
         )
     );
-    my $response = LWP::UserAgent->new->request($req);
+    my $response = $agent->request($req);
     if ($response->{"_msg"} ne 'OK') {
         my $content = $response->{"_content"};
         print STDERR "solr POST failed: ".$content."\n";
