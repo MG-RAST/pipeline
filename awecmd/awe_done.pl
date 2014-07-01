@@ -295,8 +295,8 @@ sub solr_dump {
         id_sort            => $mgid,
         status             => $mginfo->{status},
         status_sort        => $mginfo->{status},
-        created            => $mginfo->{created},
-        created_sort       => $mginfo->{created},
+        created            => solr_time_format($mginfo->{created}),
+        created_sort       => solr_time_format($mginfo->{created}),
         name               => $mginfo->{name},
         name_sort          => $mginfo->{name},
         project_id         => $mginfo->{project_id},
@@ -377,4 +377,14 @@ sub solr_post {
         print STDERR "solr POST failed: ".$content."\n";
         exit 1;
     }
+}
+
+sub solr_time_format {
+    my ($dt) = @_;
+    if ($dt =~ /^(\d{4}\-\d\d\-\d\d)[ T](\d\d\:\d\d\:\d\d)/) {
+        $dt = $1.'T'.$2.'Z';
+    } elsif ($dt =~ /^(\d{4}\-\d\d\-\d\d)/) {
+        $dt = $1.'T00:00:00Z'
+    }
+    return $dt;
 }
