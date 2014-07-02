@@ -23,13 +23,6 @@ our $analysis_dbname = "";
 our $analysis_dbuser = "";
 our $analysis_dbpass = "";
 
-# awe lookup db
-our $awe_mgrast_lookup_db    = "";
-our $awe_mgrast_lookup_host  = "";
-our $awe_mgrast_lookup_user  = "";
-our $awe_mgrast_lookup_pass  = "";
-our $awe_mgrast_lookup_table = "";
-
 # keywords and values for workflow template
 our $template_keywords = {
     
@@ -40,6 +33,10 @@ our $template_keywords = {
     
     # awe clients
     'clientgroups' => "",
+    
+    # mgrast api
+    'mgrast_api' => "",
+    'api_key'    => "",
     
     # service urls
     'solr_url'  => "",
