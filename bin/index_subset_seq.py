@@ -86,10 +86,21 @@ def main(args):
     TMP_DIR = opts.temp
     parent  = opts.parent if opts.sorted else sorted_ids(opts.parent, num=True)
     
+    # skip empty children files
+    valid_children = []
+    for c in opts.children:
+        if os.path.getsize(c) == 0:
+            open(c+'.index', 'w').close()
+        else:
+            valid_children.append(c)
+    if len(valid_children) == 0:
+        sys.stderr.write("[error] children sequence file(s) empty\n")
+        sys.exit(1)
+    
     # open filehandles
     phdl = get_iter(parent, opts.sorted)
     to_index = []
-    for c in opts.children:
+    for c in valid_children:
         fname = c if opts.sorted else sorted_ids(c)
         cinfo = {
             'ifile': fname,
