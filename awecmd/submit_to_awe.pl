@@ -5,7 +5,7 @@
 # Use case: submit a job with a local input file and a pipeline template,
 #           input file is local and will be uploaded to shock automatially.
 # Operations:
-#      1. upload input file to shock
+#      1. upload input file to shock OR copy input shock node
 #      2. create job script based on job template and available info
 #      3. submit the job json script to awe
 
@@ -16,47 +16,47 @@ no warnings('once');
 use PipelineJob;
 use PipelineAWE_Conf;
 
-use DBI;
 use JSON;
 use Template;
 use Getopt::Long;
-use File::Basename;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use Data::Dumper;
 
 # options
-my $job_id    = "";
-my $input     = "";
-my $awe_url   = "";
-my $shock_url = "";
-my $template  = "";
-my $no_start  = 0;
-my $help      = 0;
+my $job_id     = "";
+my $input_file = "";
+my $input_node = "";
+my $awe_url    = "";
+my $shock_url  = "";
+my $template   = "";
+my $no_start   = 0;
+my $help       = 0;
 
 my $options = GetOptions (
-        "job_id=s"    => \$job_id,
-        "input=s"     => \$input,
-		"awe_url=s"   => \$awe_url,
-		"shock_url=s" => \$shock_url,
-		"template=s"  => \$template,
-		"no_start!"   => \$no_start,
-		"help!"       => \$help
+        "job_id=s"     => \$job_id,
+        "input_file=s" => \$input_file,
+        "input_node=s" => \$input_node,
+		"awe_url=s"    => \$awe_url,
+		"shock_url=s"  => \$shock_url,
+		"template=s"   => \$template,
+		"no_start!"    => \$no_start,
+		"help!"        => \$help
 );
 
-if ($help){
+if ($help) {
     print get_usage();
     exit 0;
-}elsif (length($job_id)==0){
+} elsif (! $job_id) {
     print STDERR "ERROR: A job identifier is required.\n";
     print STDERR get_usage();
     exit 1;
-}elsif (length($input)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
+} elsif (! ($input_file || $input_node)) {
+    print STDERR "ERROR: An input file or node was not specified.\n";
     print STDERR get_usage();
     exit 1;
-}elsif (! -e $input){
-    print STDERR "ERROR: The input file [$input] does not exist.\n";
+} elsif ($input_file && (! -e $input_file)) {
+    print STDERR "ERROR: The input file [$input_file] does not exist.\n";
     print STDERR get_usage();
     exit 1;
 }
@@ -129,12 +129,23 @@ foreach my $s (keys %$jstat) {
     }
 }
 
-# upload input to shock
+my $content = {};
 $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
-my $content = {
-    upload     => [$input],
-    attributes => [undef, "$input.json", Content => $json->encode($up_attr)]
-};
+
+if ($input_file) {
+    # upload input to shock
+    $content = {
+        upload     => [$input_file],
+        attributes => [undef, "$input_file.json", Content => $json->encode($up_attr)]
+    };
+} elsif ($input_node) {
+    # copy input node
+    $content = {
+        copy_data => $input_node,
+        attributes => [undef, "attr.json", Content => $json->encode($up_attr)]
+    };
+}
+# POST to shock
 my $spost = $agent->post(
     'http://'.$vars->{shock_url}.'/node',
     'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
@@ -142,8 +153,14 @@ my $spost = $agent->post(
     'Content', $content
 );
 my $sres = $json->decode($spost->content);
+if ($sres->{error}) {
+    print STDERR "Shock error: ".$sres->{error}[0]."\n";
+    exit 1;
+}
 my $node_id = $sres->{data}->{id};
+my $file_name = $sres->{data}->{file}->{name};
 print "upload shock node: $node_id\n";
+
 # create record index on input
 my $ireq = POST(
     'http://'.$vars->{shock_url}.'/node/'.$node_id.'/index/record',
@@ -153,6 +170,10 @@ my $ireq = POST(
 $ireq->method('PUT');
 my $iput = $agent->request($ireq);
 my $ires = $json->decode($iput->content);
+if ($ires->{error}) {
+    print STDERR "Shock error: ".$ires->{error}[0]."\n";
+    exit 1;
+}
 
 # populate workflow variables
 $vars->{job_id}         = $job_id;
@@ -163,7 +184,7 @@ $vars->{seq_type}       = $up_attr->{sequence_type};
 $vars->{project_id}     = $up_attr->{project_id} || '';
 $vars->{project_name}   = $up_attr->{project_name} || '';
 $vars->{user}           = 'mgu'.$jobj->{owner} || '';
-$vars->{inputfile}      = basename($input);
+$vars->{inputfile}      = $file_name;
 $vars->{shock_node}     = $node_id;
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
 $vars->{assembled}      = $jattr->{assembled} || 0;
@@ -271,20 +292,10 @@ my $ares = $json->decode($apost->content);
 my $awe_id  = $ares->{data}{id};
 my $awe_job = $ares->{data}{jid};
 my $state   = $ares->{data}{state};
-
-# add to lookup table
-my $tbl = $PipelineAWE_Conf::awe_mgrast_lookup_table;
-my $dbh = DBI->connect(
-        "DBI:mysql:".$PipelineAWE_Conf::awe_mgrast_lookup_db.";host=".$PipelineAWE_Conf::awe_mgrast_lookup_host,
-        $PipelineAWE_Conf::awe_mgrast_lookup_user,
-        $PipelineAWE_Conf::awe_mgrast_lookup_pass
-    ) || die DBI->errstr."\n";
-my $cmd = "INSERT INTO $tbl (job, awe_id, awe_url, status, submitted, last_update) VALUES ($job_id, '$awe_job', 'http://$awe_url/job/$awe_id', '$state', now(), now())";
-my $sth = $dbh->prepare($cmd);
-$sth->execute() || die $sth->errstr."\n";
+print "awe job (".$ares->{data}{jid}.") ".$ares->{data}{id}."\n";
 
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input=<input file> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
 
 # enable hash-resolving in the JSON->encode function
