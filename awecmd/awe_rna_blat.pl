@@ -49,7 +49,7 @@ print "rna_nr_path=".$rna_nr_path."\n";
 
 my $run_dir = getcwd();
 
-system("blat -out=blast8 -t=dna -q=dna -fastMap $rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0 > $run_dir/blat.out 2>&1") == 0 or exit __LINE__;
+system("blat -out=blast8 -t=dna -q=dna $rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0") == 0 or exit __LINE__;
 
 exit(0);
 
