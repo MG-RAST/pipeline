@@ -69,7 +69,8 @@ my $jobdb = PipelineJob::get_jobcache_dbh(
     $PipelineAWE_Conf::job_dbpass );
 my $tpage = Template->new();
 my $agent = LWP::UserAgent->new();
-my $json  = JSON->new;
+$agent->timeout(3600);
+my $json = JSON->new;
 $json = $json->utf8();
 $json->max_size(0);
 $json->allow_nonref;
@@ -152,7 +153,14 @@ my $spost = $agent->post(
     'Content_Type', 'multipart/form-data',
     'Content', $content
 );
-my $sres = $json->decode($spost->content);
+my $sres = undef;
+eval {
+    $sres = $json->decode($spost->content);
+};
+if ($@) {
+    print STDERR "Return from shock is not JSON:\n".$spost->content."\n";
+    exit 1;
+}
 if ($sres->{error}) {
     print STDERR "Shock error: ".$sres->{error}[0]."\n";
     exit 1;
@@ -169,7 +177,14 @@ my $ireq = POST(
 );
 $ireq->method('PUT');
 my $iput = $agent->request($ireq);
-my $ires = $json->decode($iput->content);
+my $ires = undef;
+eval {
+    $ires = $json->decode($iput->content);
+};
+if ($@) {
+    print STDERR "Return from shock is not JSON:\n".$iput->content."\n";
+    exit 1;
+}
 if ($ires->{error}) {
     print STDERR "Shock error: ".$ires->{error}[0]."\n";
     exit 1;
@@ -286,7 +301,14 @@ my $apost = $agent->post(
     'Content_Type', 'multipart/form-data',
     'Content', [ upload => [$workflow] ]
 );
-my $ares = $json->decode($apost->content);
+my $ares = undef;
+eval {
+    $ares = $json->decode($apost->content);
+};
+if ($@) {
+    print STDERR "Return from shock is not JSON:\n".$apost->content."\n";
+    exit 1;
+}
 
 # get info
 my $awe_id  = $ares->{data}{id};
