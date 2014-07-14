@@ -210,7 +210,8 @@ $vars->{screen_indexes} = 'h_sapiens'; # hardcoded for testing
 
 # set node output type for preprocessing
 if ($up_attr->{file_format} eq 'fastq') {
-    $vars->{preprocess_pass} = "";
+    $vars->{preprocess_pass} = qq(,
+                    "shockindex": "record");
     $vars->{preprocess_fail} = "";
 } elsif ($vars->{filter_options} eq 'skip') {
     $vars->{preprocess_pass} = qq(,
