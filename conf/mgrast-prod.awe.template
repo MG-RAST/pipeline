@@ -24,7 +24,7 @@
         {
             "cmd": {
                 "name": "awe_qc.pl",
-                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=6",
+                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
                 "description": "qc_stats"
             },
             "dependsOn": [],
@@ -134,7 +134,7 @@
         {
             "cmd": {
                 "name": "awe_bowtie_screen.pl",
-                "args": "-input=@[% job_id %].150.dereplication.passed.fna -output=[% job_id %].299.screen.passed.fna -index=[% screen_indexes %] -bowtie=[% bowtie %] -proc=6",
+                "args": "-input=@[% job_id %].150.dereplication.passed.fna -output=[% job_id %].299.screen.passed.fna -index=[% screen_indexes %] -bowtie=[% bowtie %] -proc=8",
                 "description": "screen"
             }, 
             "dependsOn": ["2"], 
@@ -170,7 +170,7 @@
         {
             "cmd": {
                 "name": "awe_genecalling.pl",
-                "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=6",
+                "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=8",
                 "description": "genecalling"
             },
             "dependsOn": ["3"],
@@ -202,7 +202,7 @@
             },
             "taskid": "4",
             "totalwork": 1,
-            "maxworksize": 600
+            "maxworksize": 800
         },
         {   
             "cmd": {
@@ -340,7 +340,7 @@
         {
             "cmd": {
                 "name": "awe_search_rna.pl",
-                "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% m5rna_clust %] -size=100 -proc=6",
+                "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% m5rna_clust %] -size=100 -proc=8",
                 "description": "rna detection"
             }, 
             "dependsOn": ["1"],
@@ -376,7 +376,7 @@
             },
             "taskid": "8",
             "totalwork": 1,
-            "maxworksize": 600
+            "maxworksize": 800
         },          
         {
             "cmd": {
@@ -421,7 +421,7 @@
         {
             "cmd": {
                 "name": "awe_blat_rna.pl",
-                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims",
+                "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims -assembled=[% assembled %]",
                 "description": "rna sims blat"
             }, 
             "dependsOn": ["9"],
