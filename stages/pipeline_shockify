@@ -57,6 +57,7 @@ mkdir($run_dir) or fail($log, "Could not mkdir: $run_dir, $!");
 $log->info("Running on host $hostname, using dir $run_dir");
 
 # load files and info to shock
+$log->info("Loading files to shock");
 my $load = system("job2shock.py -d -t $temp_dir -j $job_num > $temp_dir/$job_num.load.out 2> $temp_dir/$job_num.load.err");
 if ($load != 0) {
     my $err = `cat $temp_dir/$job_num.load.err`;
@@ -64,6 +65,7 @@ if ($load != 0) {
 }
 
 # create subset indexes
+$log->info("Calculating subset indexes");
 my $index = system("job_seq_index.py -m 10 -t $temp_dir -j $job_num > $temp_dir/$job_num.index.out 2> $temp_dir/$job_num.index.err");
 if ($index != 0) {
     my $err = `cat $temp_dir/$job_num.index.err`;
@@ -71,6 +73,7 @@ if ($index != 0) {
 }
 
 # load subsets to shock
+$log->info("Loading subset indexes to shock");
 my $subset = system("job2shock_subset.py -d -t $temp_dir -j $job_num > $temp_dir/$job_num.subset.out 2> $temp_dir/$job_num.subset.err");
 if ($subset != 0) {
     my $err = `cat $temp_dir/$job_num.subset.err`;
