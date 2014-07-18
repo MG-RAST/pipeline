@@ -40,10 +40,21 @@ my $job_dir  = $Pipeline_Conf::global_job_dir."/".$job_num;
 my $proc_dir = $job_dir."/proc";
 my $run_dir  = $proc_dir."/".$stage_id.".".$stage_name;
 my $temp_dir = $Pipeline_Conf::local_workspace;
+my $hostname = `hostname`;
+chomp $hostname;
 
 # update jobcache stage status
 $log->info("Starting $stage_name on job: $job_num");
 Pipeline::update_stage_info($job_num, $stage_name, "running");
+
+# create directories
+if (-d $run_dir) {
+  my $t = time;
+  $log->info("found $run_dir, moving to $run_dir.$t");
+  move($run_dir, $run_dir.".".$t) or fail($log, "$!");
+}
+mkdir($run_dir) or fail($log, "Could not mkdir: $run_dir, $!");
+$log->info("Running on host $hostname, using dir $run_dir");
 
 # load files and info to shock
 my $load = system("job2shock.py -d -t $temp_dir -j $job_num > $temp_dir/$job_num.load.out 2> $temp_dir/$job_num.load.err");
