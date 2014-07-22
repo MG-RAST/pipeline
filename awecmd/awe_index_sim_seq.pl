@@ -15,17 +15,16 @@ umask 000;
 # options
 my @in_sims = ();
 my @in_maps = ();
-my $in_seq  = "";
+my @in_seqs = ();
 my $output  = "";
 my $memory  = 16;
 my $memhost = "localhost:11211";
 my $memkey  = '_ach';
-my $max_seq = 500000;
 my $help    = 0;
 my $options = GetOptions (
 		"in_sims=s"  => \@in_sims,
 		"in_maps=s"  => \@in_maps,
-		"in_seq=s"   => \$in_seq,
+		"in_seqs=s"  => \@in_seqs,
 		"output=s"   => \$output,
 		"memory=i"   => \$memory,
 		"mem_host=s" => \$memhost,
@@ -44,7 +43,7 @@ if ($help){
     print STDERR "ERROR: At least one input mapping file is required.\n";
     print STDERR get_usage();
     exit 1;
-}elsif (length($in_seq)==0){
+}elsif (scalar(@in_seqs)==0){
     print STDERR "ERROR: An input sequence file was not specified.\n";
     print STDERR get_usage();
     exit 1;
@@ -72,33 +71,26 @@ if (@in_maps > 1) {
 } else {
     PipelineAWE::run_cmd("mv ".$in_maps[0]." ".$map_file);
 }
-
-# get max seq size
-my $format = ($in_seq =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
-my @out = `seq_length_stats.py -f -t $format -i $in_seq | cut -f2`;
-chomp @out;
-my $max = $out[5];
+if (@in_seqs > 1) {
+    PipelineAWE::run_cmd("cat ".join(" ", @in_seqs)." > ".$seq_file, 1);
+    PipelineAWE::run_cmd("rm ".join(" ", @in_seqs));
+} else {
+    PipelineAWE::run_cmd("mv ".$in_seqs[0]." ".$seq_file);
+}
 
 my $mem = $memory * 1024;
 my $run_dir = getcwd;
 
 PipelineAWE::run_cmd("uncluster_sims -v -c $map_file -i $sim_file -o $sim_file.unclust");
 PipelineAWE::run_cmd("rm $sim_file $map_file");
-if ($max < $max_seq) {
-    my $seq_opt = ($format eq 'fastq') ? '--fastq' : '';
-    PipelineAWE::run_cmd("seqUtil -t $run_dir -i $in_seq -o $seq_file.tab --sortbyid2tab $seq_opt");
-    PipelineAWE::run_cmd("rm $in_seq");
-    PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 1,1 -o $sim_file.sort $sim_file.unclust");
-    PipelineAWE::run_cmd("rm $sim_file.unclust");
-    PipelineAWE::run_cmd("add_seq2sims -v -i $sim_file.sort -o $sim_file.seq -s $seq_file.tab");
-    PipelineAWE::run_cmd("rm $sim_file.sort $seq_file.tab");
-    PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.final $sim_file.seq");
-    PipelineAWE::run_cmd("rm $sim_file.seq");
-} else {
-    print "Skipping adding of sequences to index sims file, max sequence length is $max bps\n";
-    PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.final $sim_file.unclust");
-    PipelineAWE::run_cmd("rm $sim_file.unclust");
-}
+PipelineAWE::run_cmd("seqUtil -t $run_dir -i $seq_file -o $seq_file.tab --sortbyid2tab");
+PipelineAWE::run_cmd("rm $seq_file");
+PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 1,1 -o $sim_file.sort $sim_file.unclust");
+PipelineAWE::run_cmd("rm $sim_file.unclust");
+PipelineAWE::run_cmd("add_seq2sims -v -i $sim_file.sort -o $sim_file.seq -s $seq_file.tab");
+PipelineAWE::run_cmd("rm $sim_file.sort $seq_file.tab");
+PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.final $sim_file.seq");
+PipelineAWE::run_cmd("rm $sim_file.seq");
 
 # index file
 PipelineAWE::run_cmd("index_sims_file_md5 --verbose --mem_host $memhost --mem_key $memkey --in_file $sim_file.final --out_file $sim_file.index");
@@ -125,5 +117,5 @@ PipelineAWE::create_attr($output.'.index.json', undef, {data_type => "index", fi
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seq=<input fasta> -output=<output file> [-memory=<memory usage in GB, default is 16> -mem_host=<memcache host> -mem_key=<memcache key>]\noutputs: \${output} and \${output}.index\n";
+    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16> -mem_host=<memcache host> -mem_key=<memcache key>]\noutputs: \${output} and \${output}.index\n";
 }

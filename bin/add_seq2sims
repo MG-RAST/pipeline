@@ -58,10 +58,7 @@ while (my $siml = <SIM>) {
         $s_num += 1;
         my $query = $1;
         my $rest  = $2;
-        my $orig  = $query;
         unless ($query) { next; }
-        
-        $query =~ s/_\d+_\d+_[+-]$//;
         if ($prev ne $query) {
             while ($id ne $query) {
                 $seql = <SEQ>;
@@ -70,9 +67,9 @@ while (my $siml = <SIM>) {
                 ($id, $seq) = split(/\t/, $seql);
             }
             $q_num += 1;
-            print OUT "$orig\t$rest\t$seq\n";
+            print OUT "$query\t$rest\t$seq\n";
         } else {
-            print OUT "$orig\t$rest\t$seq\n";
+            print OUT "$query\t$rest\t$seq\n";
         }
         $prev = $query;
     }
