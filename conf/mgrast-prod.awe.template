@@ -186,6 +186,12 @@
                     "host": "http://[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"
+                },
+                "[% job_id %].350.genecalling.coding.fna": {
+                    "host": "http://[% shock_url %]",
+                    "node": "-",
+                    "delete": true,
+                    "attrfile": "userattr.json"
                 }
             },
             "partinfo": {
@@ -505,14 +511,14 @@
         {
             "cmd": {
                 "name": "awe_index_sim_seq.pl",
-                "args": "-in_seq=@[% job_id %].100.preprocess.passed.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -mem_host=[% mem_host %] -memory=20", 
+                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -mem_host=[% mem_host %] -memory=20", 
                 "description": "index sim seq"
             }, 
-            "dependsOn": ["1", "5", "7", "9", "11"],
+            "dependsOn": ["4", "5", "7", "8", "9", "11"],
             "inputs": {
-                "[% job_id %].100.preprocess.passed.fna": {
+                "[% job_id %].350.genecalling.coding.fna": {
                     "host": "http://[% shock_url %]",
-                    "origin": "1",
+                    "origin": "4",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
@@ -525,6 +531,11 @@
                     "origin": "7",
                     "node": "-",
                     "attrfile": "[% job_id %].650.aa.sims.filter.json"
+                },
+                "[% job_id %].425.search.rna.fna": {
+                    "host": "http://[% shock_url %]",
+                    "origin": "8",
+                    "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
                     "host": "http://[% shock_url %]",
