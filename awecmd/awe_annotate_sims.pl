@@ -64,7 +64,16 @@ if ($aa) {
 }
 $cmd .= " --out_filter $out_prefix.$type.sims.filter --out_lca $out_prefix.$type.expand.lca";
 push @out_files, ("$out_prefix.$type.sims.filter", "$out_prefix.$type.expand.lca");
-PipelineAWE::run_cmd($cmd);
+
+# run it
+if (-s $input) {
+    PipelineAWE::run_cmd($cmd);
+} else {
+    # empty input file
+    foreach my $out (@out_files) {
+        PipelineAWE::run_cmd("touch $out");
+    }
+}
 
 # output attributes
 foreach my $out (@out_files) {
