@@ -97,7 +97,20 @@ if ($in_index && (-s $in_index)) {
 if ($in_assemb && (-s $in_assemb)) {
     $cmd .= " --coverage $in_assemb";
 }
-PipelineAWE::run_cmd($cmd);
+
+# run it
+if (-s $expand_file) {
+    PipelineAWE::run_cmd($cmd);
+} else {
+    # empty input file
+    PipelineAWE::run_cmd("touch $output");
+}
+
+# throw error if empty md5s
+if (($type eq 'md5') && (! -s $output)) {
+   print STDERR "ERROR: input files ".join(", ", @in_expand)." produced empty output $output\n";
+   exit 1;
+}
 
 if ($type eq 'source') {
     my $sdata = get_source_stats($output);
