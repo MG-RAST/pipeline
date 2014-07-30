@@ -70,12 +70,17 @@ else {
         }
     }
 
+    # get index dir
     my $index_dir = ".";
     if ($ENV{'REFDBPATH'}) {
         $index_dir = "$ENV{'REFDBPATH'}";
     }
 
-    my $input_file = $fasta;
+    # truncate input to 1000 bp
+    my $input_file = $fasta.'.trunc';
+    PipelineAWE::run_cmd("seqUtil --truncate 1000 -i $fasta -o $input_file");
+
+    # run bowtie2
     for my $index_name (@indexes) {
         my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
         # 'reorder' option outputs sequences in same order as input file

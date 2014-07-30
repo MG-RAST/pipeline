@@ -36,7 +36,9 @@ def create_prefix_file(in_file, out_file, prefix_len, memory, fformat):
     try:
         for rec in seq_iter(input_hdl, fformat):
             head, seq, qual = split_rec(rec, fformat)
-            if len(seq) <= prefix_len:
+            if len(seq) == 0:
+                continue
+            elif len(seq) <= prefix_len:
                 md5 = hashlib.md5( seq ).hexdigest()
             else:
                 md5 = hashlib.md5( seq[:prefix_len] ).hexdigest()
