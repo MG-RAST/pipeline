@@ -11,7 +11,7 @@
             "job_id": "[% job_id %]",
             "name": "[% mg_name %]",
             "created": "[% job_date %]",
-            "status": "private",
+            "status": "test",
             "owner": "[% user %]",
             "sequence_type": "[% seq_type %]",
             "project_id": "[% project_id %]",
@@ -24,7 +24,7 @@
         {
             "cmd": {
                 "name": "awe_qc.pl",
-                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].075 -assembled=[% assembled %] -filter_options=[% filter_options %] -proc=8",
+                "args": "-input @[% inputfile %] -out_prefix [% job_id %].075 -assembled [% assembled %] -filter_options [% filter_options %] -proc 8",
                 "description": "qc_stats"
             },
             "dependsOn": [],
@@ -63,7 +63,7 @@
         {
             "cmd": {
                 "name": "awe_preprocess.pl",
-                "args": "-input=@[% inputfile %] -out_prefix=[% job_id %].100.preprocess -filter_options=[% filter_options %]",
+                "args": "-input @[% inputfile %] -out_prefix [% job_id %].100.preprocess -filter_options [% filter_options %]",
                 "description": "preprocess"
             },
             "dependsOn": [], 

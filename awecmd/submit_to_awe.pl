@@ -98,8 +98,12 @@ my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
 my $jattr = PipelineJob::get_job_attributes($jobdb, $job_id);
 my $jopts = {};
 foreach my $opt (split(/\&/, $jobj->{options})) {
-    my ($k, $v) = split(/=/, $opt);
-    $jopts->{$k} = $v;
+    if ($opt =~ /^filter_options=(.*)/) {
+        $jopts->{filter_options} = $1 || 'skip';
+    } else {
+        my ($k, $v) = split(/=/, $opt);
+        $jopts->{$k} = $v;
+    }
 }
 
 # build upload attributes
