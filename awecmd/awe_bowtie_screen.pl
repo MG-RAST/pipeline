@@ -70,12 +70,17 @@ else {
         }
     }
 
+    # get index dir
     my $index_dir = ".";
     if ($ENV{'REFDBPATH'}) {
         $index_dir = "$ENV{'REFDBPATH'}";
     }
 
-    my $input_file = $fasta;
+    # truncate input to 1000 bp
+    my $input_file = $fasta.'.trunc';
+    PipelineAWE::run_cmd("seqUtil --truncate 1000 -i $fasta -o $input_file");
+
+    # run bowtie2
     for my $index_name (@indexes) {
         my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
         # 'reorder' option outputs sequences in same order as input file
@@ -84,18 +89,6 @@ else {
     }
     PipelineAWE::run_cmd("mv $input_file $output");
 }
-
-# get / output stats
-my $pass_stats = PipelineAWE::get_seq_stats($output, 'fasta', undef, "$output.stats");
-my $bin_stats  = {
-    length_histogram => PipelineAWE::file_to_array("$output.stats.lens"),
-    gc_histogram     => PipelineAWE::file_to_array("$output.stats.gcs")
-};
-PipelineAWE::print_json("$output.stats", $bin_stats);
-
-# output attributes
-PipelineAWE::create_attr($output.'.json', $pass_stats, {data_type => "sequence", file_format => "fasta", seq_format => "bp"});
-PipelineAWE::create_attr($output.'.stats.json', $pass_stats, {data_type => "statistics", file_format => "json"});
 
 # create subset record list
 # note: parent and child files in same order
