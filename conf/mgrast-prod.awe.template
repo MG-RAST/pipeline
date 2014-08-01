@@ -88,7 +88,6 @@
             "userattr": {
                 "stage_id": "100",
                 "stage_name": "preprocess",
-                "data_type": "sequence",
                 "file_format": "fasta",
                 "seq_format": "bp"
             },
@@ -124,7 +123,6 @@
             "userattr": {
                 "stage_id": "150",
                 "stage_name": "dereplication",
-                "data_type": "sequence",
                 "file_format": "fasta",
                 "seq_format": "bp"
             },
@@ -372,7 +370,7 @@
             },
             "userattr": {
                 "stage_id": "425",
-                "stage_name": "search.rna",
+                "stage_name": "rna.filter",
                 "data_type": "sequence",
                 "file_format": "fasta",
                 "seq_format": "bp"
