@@ -88,7 +88,6 @@
             "userattr": {
                 "stage_id": "100",
                 "stage_name": "preprocess",
-                "data_type": "sequence",
                 "file_format": "fasta",
                 "seq_format": "bp"
             },
@@ -124,7 +123,6 @@
             "userattr": {
                 "stage_id": "150",
                 "stage_name": "dereplication",
-                "data_type": "sequence",
                 "file_format": "fasta",
                 "seq_format": "bp"
             },
@@ -149,20 +147,17 @@
                 "[% job_id %].299.screen.passed.fna": {
                     "host": "http://[% shock_url %]",
                     "node": "-",
-                    "attrfile": "[% job_id %].299.screen.passed.fna.json"[% bowtie_pass %]
-                },
-                "[% job_id %].299.screen.passed.fna.stats": {
-                    "host": "http://[% shock_url %]",
-                    "node": "-",
-                    "delete": true,
-                    "attrfile": "[% job_id %].299.screen.passed.fna.stats.json"
+                    "attrfile": "userattr.json"[% bowtie_pass %]
                 }
             },
             "predata": {[% index_download_urls %]
             },
             "userattr": {
                 "stage_id": "299",
-                "stage_name": "screen"
+                "stage_name": "screen",
+                "data_type": "sequence",
+                "file_format": "fasta",
+                "seq_format": "bp"
             },
             "taskid": "3", 
             "totalwork": 1
@@ -248,7 +243,7 @@
             },
             "taskid": "5",
             "totalwork": 1,
-            "maxworksize": 2000
+            "maxworksize": 1200
         },
         {
             "cmd": {
@@ -375,7 +370,7 @@
             },
             "userattr": {
                 "stage_id": "425",
-                "stage_name": "search.rna",
+                "stage_name": "rna.filter",
                 "data_type": "sequence",
                 "file_format": "fasta",
                 "seq_format": "bp"
@@ -422,7 +417,7 @@
             },
             "taskid": "9",
             "totalwork": 1,
-            "maxworksize": 2000
+            "maxworksize": 1200
         },
         {
             "cmd": {
@@ -1026,7 +1021,7 @@
         {
             "cmd": {
                 "name": "awe_done.pl",
-                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -api_url=[% mgrast_api %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna.stats -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
+                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -api_url=[% mgrast_api %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
                 "description": "done stage",
                 "environ": {
                     "private": {
@@ -1078,11 +1073,11 @@
                     "nofile": true,
                     "attrfile": "[% job_id %].150.dereplication.removed.fna.json"
                 },
-                "[% job_id %].299.screen.passed.fna.stats": {
+                "[% job_id %].299.screen.passed.fna": {
                     "host": "http://[% shock_url %]",
                     "origin": "3",
                     "node": "-",
-                    "attrfile": "[% job_id %].299.screen.passed.fna.stats.json"
+                    "attrfile": "[% job_id %].299.screen.passed.fna.json"
                 },
                 "[% job_id %].350.genecalling.coding.faa": {
                     "host": "http://[% shock_url %]",
@@ -1145,6 +1140,13 @@
                     "host": "http://[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].statistics.json.attr"
+                },
+                "[% job_id %].299.screen.passed.fna": {
+                    "host": "http://[% shock_url %]",
+                    "origin": "3",
+                    "node": "-",
+                    "type": "update",
+                    "attrfile": "[% job_id %].299.screen.passed.fna.json"
                 },
                 "[% job_id %].350.genecalling.coding.faa": {
                     "host": "http://[% shock_url %]",

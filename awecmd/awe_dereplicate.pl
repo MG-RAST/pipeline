@@ -60,8 +60,8 @@ my $pass_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
 my $fail_stats = PipelineAWE::get_seq_stats($removed_seq, 'fasta');
 
 # output attributes
-PipelineAWE::create_attr($passed_seq.'.json', $pass_stats);
-PipelineAWE::create_attr($removed_seq.'.json', $fail_stats);
+PipelineAWE::create_attr($passed_seq.'.json', $pass_stats, {data_type => "passed"});
+PipelineAWE::create_attr($removed_seq.'.json', $fail_stats, {data_type => "removed"});
 
 # create subset record list
 # note: parent and child files NOT in same order
