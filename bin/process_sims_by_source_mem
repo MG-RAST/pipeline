@@ -5,7 +5,7 @@ use warnings;
 
 use Data::Dumper;
 use Getopt::Long;
-use Cache::Memcached;
+use MongoDB;
 
 my $verbose   = 0;
 my $in_file   = '';
@@ -17,8 +17,11 @@ my $lca_file  = '';
 my $get_rna   = 0;
 my $get_lca   = 0;
 my $frag_num  = 5000;
-my $memhost   = "";
-my $memkey    = '_ach';
+my $achhost   = "";
+my $achname   = "";
+my $achuser   = "";
+my $achpass   = "";
+my $achver    = "1";
 my $usage     = qq($0
 Input:  m8 format blast / blat file - sorted by query | top hit
 Output: top hit for each query per source (protein or rna formats)
@@ -44,8 +47,11 @@ LCA:      md5|query list, fragment|subject, identity list, length list, evalue l
   --out_rna      file name      Name of output expanded rna sim file (rna mode only).
   --out_lca      file name      Name of output expanded LCA file (protein and rna mode).
   --frag_num     int            Optional. Number of fragment chunks to load in memory at once before processing. Default is '$frag_num'
-  --mem_host     memcache host  Required. Server of memcache
-  --mem_key      key extension  Optional. Extension to md5sum to use as memcache key. Default is '$memkey'
+  --ach_host     mongodb host   Required. Mongo server with ach data
+  --ach_name     mongodb name   Required. Name of mongo db with ach data
+  --ach_user     mongodb user   Required. Owner of mongo db with ach data
+  --ach_pass     mongodb pwd    Required. Password of mongo db with ach data
+  --ach_ver      ach version    Required. Version of ach data in mongodb
   --verbose                     Optional. Verbose output.
 
 );
@@ -58,8 +64,11 @@ if ( ! GetOptions( "verbose!"       => \$verbose,
 		           "out_rna:s"      => \$rna_file,
 		           "out_lca:s"      => \$lca_file,
 		           "frag_num:i"     => \$frag_num,
-		           'mem_host:s'     => \$memhost,
-		           'mem_key:s'      => \$memkey
+		           "ach_host=s"     => \$achhost,
+                   "ach_name=s"     => \$achname,
+                   "ach_user=s"     => \$achuser,
+                   "ach_pass=s"     => \$achpass,
+   		           "ach_ver=s"      => \$achver
                  ) )
   { print STDERR $usage; exit 1; }
 
@@ -81,8 +90,25 @@ if ($lca_file) {
   $get_lca = 1;
 }
 
-my $mch = new Cache::Memcached {'servers' => [$memhost], 'debug' => 0, 'compress_threshold' => 10_000};
-unless ($mch) { print STDERR "Error: Unable to connect to memcache\n"; exit 1; }
+# connect to ACH mongo db
+my $ach = undef;
+eval {
+    my ($mhost, $mport) = split(/:/, $achhost);
+    my $mconn = MongoDB::Connection->new(
+        host => $mhost,
+        port => $mport,
+        username => $achuser,
+        password => $achpass,
+        db_name => $achname
+    );
+    $mconn->query_timeout(-1);
+    my $mdb = $mconn->get_database($achname);
+    $ach = $mdb->get_collection('v'.$achver);
+};
+if ($@ || (! $ach)) {
+   print STDERR "Error getting ACH mongodb connection:\n".$@."\n";
+   exit 1;
+}
 
 my $data  = {};
 my $count = 0;
@@ -90,11 +116,10 @@ my $frags = 0;
 my $curr  = '';
 my ($filt_fh, $exp_fh, $ont_fh, $rna_fh, $lca_fh, $filt_t, $exp_t, $ont_t, $rna_t, $lca_t);
 
-print "Loading memcache source data for mapping ... " if ($verbose);
-sleep( int(rand(60))+10 );
-my $src_map = $mch->get('source'.$memkey);
+print "Loading ach source data for mapping ... " if ($verbose);
+my $src_map = $ach->find_one({'key' => 'source'})->{data};
 unless ($src_map && ref($src_map)) {
-  print STDERR "Error: Unable to get source data from memcache\n"; exit 1;
+  print STDERR "Error: Unable to get source data from mongo\n"; exit 1;
 }
 print "Done\n" if ($verbose);
 
@@ -124,7 +149,7 @@ while (my $line = <INFILE>) {
   if ($curr ne $frag) {
     if ($frags >= $frag_num) {
       #print STDERR "." if ($verbose);
-      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $mch, $get_rna, $get_lca);
+      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $ach, $get_rna, $get_lca);
       print $filt_fh $filt_t if ($filt_t);
       print $exp_fh $exp_t   if ($exp_t);
       print $ont_fh $ont_t   if ($ont_t);
@@ -147,7 +172,7 @@ while (my $line = <INFILE>) {
 close(INFILE);
 
 if (scalar(keys %$data) > 0) {
-  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $mch, $get_rna, $get_lca);
+  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $ach, $get_rna, $get_lca);
   print $filt_fh $filt_t if ($filt_t);
   print $exp_fh $exp_t   if ($exp_t);
   print $ont_fh $ont_t   if ($ont_t);
@@ -170,7 +195,7 @@ print "Done - $count fragments parsed\n" if ($verbose);
 exit 0;
 
 sub get_top_hits {
-  my ($src_map, $data, $mch, $get_rna, $get_lca) = @_;
+  my ($src_map, $data, $ach, $get_rna, $get_lca) = @_;
   
   my $filter_text   = '';
   my $protein_text  = '';
@@ -202,7 +227,7 @@ sub get_top_hits {
   # get data for md5s from memcache
   # ach: md5 => source => function => [organism | ontology_id]
   # lca: md5 => [lca]
-  my ($md5_ach, $md5_lca, $md5_id) = &get_md5_data($mch, [keys %$total_md5s], $get_lca);
+  my ($md5_ach, $md5_lca, $md5_id) = &get_md5_data($ach, [keys %$total_md5s], $get_lca);
 
   # get sources per frag: frag => {source}
   foreach my $frag (keys %$data) {
@@ -305,89 +330,27 @@ sub get_top_hits {
 }
 
 sub get_md5_data {
-  my ($mch, $md5s, $get_lca) = @_;
-  
-  my $ach   = {};
-  my $lca   = {};
-  my $md5_id = {};
-  my %keys  = map { $_ . $memkey, $_ } @$md5s;
-  my %cache = ();
-  my $step  = 5000;
-  my $total = scalar(@$md5s);
-  my $max   = 3;
-
-  for (my $i = 0; $i < $total; $i += $step) {    
-    if (($i + $step) >= $total) {
-      my @set = map { $_ . $memkey } @$md5s[$i..($total-1)];
-      my $tmp = $mch->get_multi(@set);
-      my $try = 1;
-      while ( ($try <= $max) && ((! $tmp) || (! ref ($tmp))) ) {
-      #while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
-	    #if (! $tmp) {
-	    print STDERR "Warning (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
-	    #} else {
-	    #  print STDERR "Warning (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
-	    #  @cache{ keys %$tmp } = values %$tmp;
-	    #  @set = grep {! exists $tmp->{$_}} @set;
-	    #  print STDERR "Missing keys: ".join(",", @set)."\n";
-	    #}
-	    $tmp = $mch->get_multi(@set);
-	    $try += 1;
-      }
-      unless ($tmp && ref($tmp)) {
-      #unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
-	    #if (! $tmp) {
-	    print STDERR "Error (last step $i..$total): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
-	    #} else {
-	    #  print STDERR "Error (last step $i..$total): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
-	    #  print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
-	    #}
-      }
-      @cache{ keys %$tmp } = values %$tmp;
-      last;
+    my ($ach, $md5s, $get_lca) = @_;
+    
+    my $ann   = {};
+    my $lca   = {};
+    my $md5id = {};
+    my $curs  = $ach->find({ 'key' => { '$in' => $md5s } });
+    my %data  = map { $_->{key}, $_->{data} } $curs->all;
+    
+    foreach my $m (keys %data) {
+        if (exists($data{$m}{lca}) && $get_lca) {
+            $lca->{$m} = $data{$m}{lca};
+        }
+        if (exists $data{$m}{id}) {
+            $md5id->{$m} = $data{$m}{id};
+        }
+        if (exists $data{$m}{ann}) {
+            $ann->{$m} = $data{$m}{ann};
+        }
     }
-    my @set = map { $_ . $memkey } @$md5s[$i..($i+$step-1)];
-    my $tmp = $mch->get_multi(@set);
-    my $try = 1;
-    while ( ($try <= $max) && ((! $tmp) || (! ref ($tmp))) ) {
-    #while ( ($try <= $max) && ((! $tmp) || (scalar(keys %$tmp) != scalar(@set))) ) {
-      #if (! $tmp) {
-	    print STDERR "Warning (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, trying again\n";
-      #} else {
-	    #print STDERR "Warning (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, trying again\n";
-	    #@cache{ keys %$tmp } = values %$tmp;
-	    #@set = grep {! exists $tmp->{$_}} @set;
-	    #print STDERR "Missing keys: ".join(",", @set)."\n";
-      #}
-      $tmp = $mch->get_multi(@set);
-      $try += 1;
-    }
-    unless ($tmp && ref($tmp)) {
-    #unless ($tmp && (scalar(keys %$tmp) == scalar(@set))) {
-      #if (! $tmp) {
-	    print STDERR "Error (step $i..".($i+$step)."): Unable to call get_multi from memcache on ".scalar(@set)." keys, tried 3 times\n"; exit 1;
-      #} else {
-	    #print STDERR "Error (step $i..".($i+$step)."): Get_multi returned only ".scalar(keys %$tmp)." of ".scalar(@set)." keys from memcache, tried 3 times\n";
-	    #print STDERR "Missing keys: ".join(",", grep {! exists $tmp->{$_}} @set)."\n";
-      #}
-    }
-    @cache{ keys %$tmp } = values %$tmp;
-  }
-  
-  foreach my $k (keys %keys) {
-    next unless (exists $cache{$k});
-    if (exists($cache{$k}{lca}) && $get_lca) {
-      $lca->{$keys{$k}} = $cache{$k}{lca};
-    }
-    if (exists $cache{$k}{id}) {
-      $md5_id->{$keys{$k}} = $cache{$k}{id};
-    }
-    if (exists $cache{$k}{ann}) {
-      $ach->{$keys{$k}} = $cache{$k}{ann};
-    }
-  }
-
-  return ($ach, $lca, $md5_id);
+    
+    return ($ann, $lca, $md5id);
 }
 
 sub get_min_md5s_by_source {

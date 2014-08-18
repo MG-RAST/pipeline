@@ -24,6 +24,12 @@ our $analysis_dbname = "";
 our $analysis_dbuser = "";
 our $analysis_dbpass = "";
 
+# ach mongo db
+our $ach_mongo_host = "";
+our $ach_mongo_name = "";
+our $ach_mongo_user = "";
+our $ach_mongo_pass = "";
+
 # keywords and values for workflow template
 our $template_keywords = {
     
@@ -43,8 +49,6 @@ our $template_keywords = {
     'solr_url'  => "",
     'solr_col'  => "",
     'shock_url' => "",
-    'mem_host'  => "",
-    'mem_key'   => "",
     
     # default options
     'prefix_length' => '50',

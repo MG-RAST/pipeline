@@ -293,8 +293,16 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -mem_host=[% mem_host %]", 
-                "description": "aa sims annotation"
+                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %]",
+                "description": "aa sims annotation",
+                "environ": {
+                    "private": {
+                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
+                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
+                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
+                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
+                    }
+                }
             }, 
             "dependsOn": ["6"],  
             "inputs": {
@@ -464,8 +472,16 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -mem_host=[% mem_host %]", 
-                "description": "rna sims annotation"
+                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %]",
+                "description": "rna sims annotation",
+                "environ": {
+                    "private": {
+                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
+                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
+                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
+                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
+                    }
+                }
             }, 
             "dependsOn": ["10"],
             "inputs": {
@@ -507,8 +523,16 @@
         {
             "cmd": {
                 "name": "awe_index_sim_seq.pl",
-                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -mem_host=[% mem_host %] -memory=20", 
-                "description": "index sim seq"
+                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=[% ach_annotation_ver %] -memory=20",
+                "description": "index sim seq",
+                "environ": {
+                    "private": {
+                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
+                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
+                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
+                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
+                    }
+                }
             }, 
             "dependsOn": ["4", "5", "7", "8", "9", "11"],
             "inputs": {

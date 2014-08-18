@@ -18,8 +18,7 @@ my @in_maps = ();
 my @in_seqs = ();
 my $output  = "";
 my $memory  = 16;
-my $memhost = "localhost:11211";
-my $memkey  = '_ach';
+my $achver  = "1";
 my $help    = 0;
 my $options = GetOptions (
 		"in_sims=s"  => \@in_sims,
@@ -27,8 +26,7 @@ my $options = GetOptions (
 		"in_seqs=s"  => \@in_seqs,
 		"output=s"   => \$output,
 		"memory=i"   => \$memory,
-		"mem_host=s" => \$memhost,
-        "mem_key=s"  => \$memkey,
+		"ach_ver=s"  => \$achver,
 		"help!"      => \$help
 );
 
@@ -52,6 +50,18 @@ if ($help){
     print STDERR get_usage();
     exit 1;
 }
+
+# get db variables from enviroment
+my $achhost = $ENV{'ACH_MONGO_HOST'} || undef;
+my $achname = $ENV{'ACH_MONGO_NAME'} || undef;
+my $achuser = $ENV{'ACH_MONGO_USER'} || undef;
+my $achpass = $ENV{'ACH_MONGO_PASS'} || undef;
+unless ( defined($achhost) && defined($achname) && defined($achuser) && defined($achpass) ) {
+    print STDERR "ERROR: missing ACH mongodb ENV variables.\n";
+    print STDERR get_usage();
+    exit 1;
+}
+my $achopts = "--ach_host ".$achhost." --ach_name ".$achname." --ach_user ".$achuser." --ach_pass ".$achpass." --ach_ver ".$achver;
 
 # temp files
 my $sim_file = "sims.filter.".time();
@@ -93,7 +103,7 @@ PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.fina
 PipelineAWE::run_cmd("rm $sim_file.seq");
 
 # index file
-PipelineAWE::run_cmd("index_sims_file_md5 --verbose --mem_host $memhost --mem_key $memkey --in_file $sim_file.final --out_file $sim_file.index");
+PipelineAWE::run_cmd("index_sims_file_md5 --verbose $achopts --in_file $sim_file.final --out_file $sim_file.index");
 
 # final output
 PipelineAWE::run_cmd("mv $sim_file.final $output");
@@ -117,5 +127,5 @@ PipelineAWE::create_attr($output.'.index.json', undef, {data_type => "index", fi
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16> -mem_host=<memcache host> -mem_key=<memcache key>]\noutputs: \${output} and \${output}.index\n";
+    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16> -ach_host=<ach mongodb host> -ach_ver=<ach db ver>]\noutputs: \${output} and \${output}.index\n";
 }
