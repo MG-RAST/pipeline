@@ -7,6 +7,7 @@ no warnings('once');
 
 # default variables
 our $awe_url = "";
+our $awe_pipeline_token = "";
 our $shock_pipeline_token = "";
 our $template_file = "";
 our $temp_dir = "";
