@@ -17,7 +17,7 @@ my $runcmd   = "seq_length_stats.py";
 
 # options
 my $input_file = "";
-my $output_file = "output.stats.txt";
+my $output_file = "";
 my $help = "";
 my $options = GetOptions ("input=s"   => \$input_file,
 			  "output=s"  => \$output_file,
@@ -41,6 +41,10 @@ if ($help) {
     exit __LINE__;
 }
 
+if (len($output_file) == 0) {
+    $output_file = "$input_file.stats.txt";
+}
+
 if ( $input_file =~ /\.(fna|fasta)$/i ) {
     print "$runcmd -i $input_file -o $output_file -t fasta";
     run_cmd("$runcmd -i $input_file -o $output_file -t fasta");
@@ -57,7 +61,7 @@ exit(0);
 
 sub print_usage{
     print "USAGE: awe_seq_length_stats.pl -input=<input fasta or fastq> [-output=<output filename>]\n";
-    print "outputs: output.stats.txt\n"; 
+    print "outputs: <input>.stats.txt\n"; 
 }
 
 sub run_cmd{
