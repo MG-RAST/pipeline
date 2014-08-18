@@ -70,7 +70,8 @@
             "inputs": {
                "[% inputfile %]": {
                     "host": "http://[% shock_url %]",
-                    "node": "[% shock_node %]"
+                    "node": "[% shock_node %]",
+                    "shockindex": "record"
                 }
             },
             "outputs": {

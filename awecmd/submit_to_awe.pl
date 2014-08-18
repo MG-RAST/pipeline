@@ -173,27 +173,6 @@ my $node_id = $sres->{data}->{id};
 my $file_name = $sres->{data}->{file}->{name};
 print "upload shock node: $node_id\n";
 
-# create record index on input
-my $ireq = POST(
-    'http://'.$vars->{shock_url}.'/node/'.$node_id.'/index/record',
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
-    'Content_Type', 'multipart/form-data'
-);
-$ireq->method('PUT');
-my $iput = $agent->request($ireq);
-my $ires = undef;
-eval {
-    $ires = $json->decode($iput->content);
-};
-if ($@) {
-    print STDERR "Return from shock is not JSON:\n".$iput->content."\n";
-    exit 1;
-}
-if ($ires->{error}) {
-    print STDERR "Shock error: ".$ires->{error}[0]."\n";
-    exit 1;
-}
-
 # populate workflow variables
 $vars->{job_id}         = $job_id;
 $vars->{mg_id}          = $up_attr->{id};
@@ -209,8 +188,7 @@ $vars->{filter_options} = $jopts->{filter_options} || 'skip';
 $vars->{assembled}      = $jattr->{assembled} || 0;
 $vars->{dereplicate}    = $jopts->{dereplicate} || 1;
 $vars->{bowtie}         = $jopts->{bowtie} || 1;
-#$vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
-$vars->{screen_indexes} = 'h_sapiens'; # hardcoded for testing
+$vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
 
 # set node output type for preprocessing
 if ($up_attr->{file_format} eq 'fastq') {
@@ -303,6 +281,7 @@ if ($no_start) {
 my $apost = $agent->post(
     'http://'.$awe_url.'/job',
     'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
+    'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token,
     'Content_Type', 'multipart/form-data',
     'Content', [ upload => [$workflow] ]
 );
