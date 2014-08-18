@@ -49,15 +49,12 @@ if ($help) {
     exit 0;
 } elsif (! $job_id) {
     print STDERR "ERROR: A job identifier is required.\n";
-    print STDERR get_usage();
     exit 1;
 } elsif (! ($input_file || $input_node)) {
     print STDERR "ERROR: An input file or node was not specified.\n";
-    print STDERR get_usage();
     exit 1;
 } elsif ($input_file && (! -e $input_file)) {
     print STDERR "ERROR: The input file [$input_file] does not exist.\n";
-    print STDERR get_usage();
     exit 1;
 }
 
@@ -91,7 +88,6 @@ if (! $template) {
 my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
 unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
     print STDERR "ERROR: Job $job_id does not exist.\n";
-    print STDERR get_usage();
     exit 1;
 }
 my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
@@ -162,16 +158,16 @@ eval {
     $sres = $json->decode($spost->content);
 };
 if ($@) {
-    print STDERR "Return from shock is not JSON:\n".$spost->content."\n";
+    print STDERR "ERROR: Return from shock is not JSON:\n".$spost->content."\n";
     exit 1;
 }
 if ($sres->{error}) {
-    print STDERR "Shock error: ".$sres->{error}[0]."\n";
+    print STDERR "ERROR: (shock) ".$sres->{error}[0]."\n";
     exit 1;
 }
 my $node_id = $sres->{data}->{id};
 my $file_name = $sres->{data}->{file}->{name};
-print "upload shock node: $node_id\n";
+print "upload shock node\t$node_id\n";
 
 # populate workflow variables
 $vars->{job_id}         = $job_id;
@@ -262,7 +258,6 @@ foreach my $idx (split(/,/, $vars->{screen_indexes})) {
 }
 if ($vars->{index_download_urls} eq "") {
     print STDERR "ERROR: No valid bowtie indexes found in ".$vars->{screen_indexes}."\n";
-    print STDERR get_usage();
     exit 1;
 }
 chop $vars->{index_download_urls};
@@ -273,7 +268,7 @@ $tpage->process($template, $vars, $workflow) || die $tpage->error()."\n";
 
 # test mode
 if ($no_start) {
-    print "workflow at: $workflow\n";
+    print "workflow\t$workflow\n";
     exit 0;
 }
 
@@ -290,7 +285,7 @@ eval {
     $ares = $json->decode($apost->content);
 };
 if ($@) {
-    print STDERR "Return from shock is not JSON:\n".$apost->content."\n";
+    print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
     exit 1;
 }
 
@@ -298,7 +293,7 @@ if ($@) {
 my $awe_id  = $ares->{data}{id};
 my $awe_job = $ares->{data}{jid};
 my $state   = $ares->{data}{state};
-print "awe job (".$ares->{data}{jid}.") ".$ares->{data}{id}."\n";
+print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
 sub get_usage {
     return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
