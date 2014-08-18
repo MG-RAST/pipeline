@@ -100,7 +100,7 @@ my $awe_job_url = "http://".$awe_url."/job/".$awe_job_id;
 $log->info("Retrieving job status for job #$job_num from AWE via url: $awe_job_url");
 
 my $ua = LWP::UserAgent->new();
-my $get = $ua->get($awe_job_url);
+my $get = $ua->get($awe_job_url, Authorization => "OAuth $pipeline_token");
 unless ($get->is_success) {
     $log->error("$stage_name failed on job: $job_num, could not retrieve AWE job via url: $awe_job_url");
     exit(1);
