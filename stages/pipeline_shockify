@@ -19,10 +19,12 @@ my $version  = $Pipeline_Conf::pipeline_version.".".$revision;
 
 # options
 my $job_num = "";
+my $public  = "";
 my $ver     = "";
 my $help    = "";
 my $options = GetOptions(
     "job=i"   => \$job_num,
+        "public"  => \$public,
 	"version" => \$ver,
 	"help"    => \$help
 );
@@ -31,7 +33,7 @@ if ($ver) {
   print STDOUT "pipeline_$stage_name - $version\n";
   exit(0);
 } elsif ($help || (! $job_num)) {
-  print STDERR "Usage: pipeline_$stage_name -j <job number>\n";
+  print STDERR "Usage: pipeline_$stage_name -j <job number> [-p]\n";
   exit(1);
 } 
 
@@ -56,9 +58,11 @@ if (-d $run_dir) {
 mkdir($run_dir) or fail($log, "Could not mkdir: $run_dir, $!");
 $log->info("Running on host $hostname, using dir $run_dir");
 
+my $pflag = $public ? " -p" : "";
+
 # load files and info to shock
 $log->info("Loading files to shock");
-my $load = system("job2shock.py -d -t $temp_dir -j $job_num > $temp_dir/$job_num.load.out 2> $temp_dir/$job_num.load.err");
+my $load = system("job2shock.py -d".$pflag." -t $temp_dir -j $job_num > $temp_dir/$job_num.load.out 2> $temp_dir/$job_num.load.err");
 if ($load != 0) {
     my $err = `cat $temp_dir/$job_num.load.err`;
     fail($log, $err);
@@ -74,7 +78,7 @@ if ($index != 0) {
 
 # load subsets to shock
 $log->info("Loading subset indexes to shock");
-my $subset = system("job2shock_subset.py -d -t $temp_dir -j $job_num > $temp_dir/$job_num.subset.out 2> $temp_dir/$job_num.subset.err");
+my $subset = system("job2shock_subset.py -d".$pflag." -t $temp_dir -j $job_num > $temp_dir/$job_num.subset.out 2> $temp_dir/$job_num.subset.err");
 if ($subset != 0) {
     my $err = `cat $temp_dir/$job_num.subset.err`;
     fail($log, $err);
