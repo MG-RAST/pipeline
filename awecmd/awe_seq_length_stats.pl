@@ -50,7 +50,7 @@ if ($help) {
 
 # Validate other input and output file paths.
 my $data;
-if (len($input_json_file) != 0) {
+if (length($input_json_file) != 0) {
     unless (-e $input_json_file) {
         print STDERR "ERROR: The input_json file [$input_json_file] does not exist.\n";
         print_usage();
