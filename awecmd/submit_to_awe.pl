@@ -244,7 +244,7 @@ if ($vars->{bowtie} == 0) {
 }
 
 # check if index exists
-my $has_index = 0
+my $has_index = 0;
 foreach my $idx (split(/,/, $vars->{screen_indexes})) {
     if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
         $has_index = 1;
