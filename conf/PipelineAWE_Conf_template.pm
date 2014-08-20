@@ -75,7 +75,13 @@ our $template_keywords = {
     'analysis_dbhost' => $analysis_dbhost,
     'analysis_dbname' => $analysis_dbname,
     'analysis_dbuser' => $analysis_dbuser,
-    'analysis_dbpass' => $analysis_dbpass
+    'analysis_dbpass' => $analysis_dbpass,
+    
+    # ach mongo db
+    'ach_mongo_host' => $ach_mongo_host,
+    'ach_mongo_name' => $ach_mongo_name,
+    'ach_mongo_user' => $ach_mongo_user,
+    'ach_mongo_pass' => $ach_mongo_pass
 
 };
 
