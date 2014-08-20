@@ -64,7 +64,7 @@ my $jobdb = PipelineJob::get_jobcache_dbh(
     $PipelineAWE_Conf::job_dbname,
     $PipelineAWE_Conf::job_dbuser,
     $PipelineAWE_Conf::job_dbpass );
-my $tpage = Template->new();
+my $tpage = Template->new(ABSOLUTE => 1);
 my $agent = LWP::UserAgent->new();
 $agent->timeout(3600);
 my $json = JSON->new;
