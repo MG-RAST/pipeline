@@ -148,7 +148,7 @@ if ($input_file) {
 }
 # POST to shock
 my $spost = $agent->post(
-    'http://'.$vars->{shock_url}.'/node',
+    $vars->{shock_url}.'/node',
     'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
     'Content_Type', 'multipart/form-data',
     'Content', $content
@@ -251,7 +251,7 @@ foreach my $idx (split(/,/, $vars->{screen_indexes})) {
         while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
             $vars->{index_download_urls} .= qq(
                 "$ifile": {
-                    "url": "http://${bowtie_url}/node/${inode}?download"
+                    "url": "${bowtie_url}/node/${inode}?download"
                 },);
         }
     }
@@ -274,7 +274,7 @@ if ($no_start) {
 
 # submit to AWE
 my $apost = $agent->post(
-    'http://'.$awe_url.'/job',
+    $awe_url.'/job',
     'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
     'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token,
     'Content_Type', 'multipart/form-data',

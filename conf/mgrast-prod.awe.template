@@ -30,24 +30,24 @@
             "dependsOn": [],
             "inputs": {
                "[% inputfile %]": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "[% shock_node %]"
                 }
             }, 
             "outputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].075.assembly.coverage.json"
                 },
                 "[% job_id %].075.qc.stats": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].075.qc.stats.json"
                 },
                 "[% job_id %].075.upload.stats": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].075.upload.stats.json"
@@ -69,19 +69,19 @@
             "dependsOn": [], 
             "inputs": {
                "[% inputfile %]": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "[% shock_node %]",
                     "shockindex": "record"
                 }
             },
             "outputs": {
                 "[% job_id %].100.preprocess.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].100.preprocess.passed.fna.json"[% preprocess_pass %]
                 },
                 "[% job_id %].100.preprocess.removed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].100.preprocess.removed.fna.json"[% preprocess_fail %]
                 }
@@ -104,19 +104,19 @@
             "dependsOn": ["1"],
             "inputs": {
                "[% job_id %].100.preprocess.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "origin": "1"
                 }
             },
             "outputs": {
                 "[% job_id %].150.dereplication.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].150.dereplication.passed.fna.json"[% dereplicate_pass %]
                 },
                 "[% job_id %].150.dereplication.removed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].150.dereplication.removed.fna.json"[% dereplicate_fail %]
                 }
@@ -139,14 +139,14 @@
             "dependsOn": ["2"], 
             "inputs": {
                "[% job_id %].150.dereplication.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "origin": "2"
                 }
             },
             "outputs": {
                 "[% job_id %].299.screen.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"[% bowtie_pass %]
                 }
@@ -172,19 +172,19 @@
             "dependsOn": ["3"],
             "inputs": {
                "[% job_id %].299.screen.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "origin": "3"
                 }
             },
             "outputs": {
                 "[% job_id %].350.genecalling.coding.faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"
                 },
                 "[% job_id %].350.genecalling.coding.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "userattr.json"
@@ -215,19 +215,19 @@
             "dependsOn": ["4"],
             "inputs": {
                 "[% job_id %].350.genecalling.coding.faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "origin": "4"
                 }
             },
             "outputs": {
                 "[% job_id %].550.cluster.aa[% aa_pid %].faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].faa.json"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].mapping.json"
                 }
@@ -255,14 +255,14 @@
             "dependsOn": ["5"],  
             "inputs": {
                 "[% job_id %].550.cluster.aa[% aa_pid %].faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 }
             }, 
             "outputs": {
                 "[% job_id %].650.superblat.sims": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"
                 }
@@ -307,32 +307,32 @@
             "dependsOn": ["6"],  
             "inputs": {
                 "[% job_id %].650.superblat.sims": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "6",
                     "node": "-"
                 }
             }, 
             "outputs": {
                 "[% job_id %].650.aa.sims.filter": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].650.aa.sims.filter.json"
                 },
                 "[% job_id %].650.aa.expand.protein": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].650.aa.expand.protein.json"
                 },
                 "[% job_id %].650.aa.expand.lca": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].650.aa.expand.lca.json"
                 },
                 "[% job_id %].650.aa.expand.ontology": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].650.aa.expand.ontology.json"
@@ -356,14 +356,14 @@
             "dependsOn": ["1"],
             "inputs": {
                "[% job_id %].100.preprocess.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "origin": "1"
                 }
             },
             "outputs": {
                 "[% job_id %].425.search.rna.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"
                 }
@@ -397,19 +397,19 @@
             "dependsOn": ["8"],
             "inputs": {
                 "[% job_id %].425.search.rna.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "8",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].440.cluster.rna[% rna_pid %].fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].440.cluster.rna[% rna_pid %].mapping.json"
                 }
@@ -437,14 +437,14 @@
             "dependsOn": ["9"],
             "inputs": {
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].450.rna.sims": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"
                 }
@@ -486,26 +486,26 @@
             "dependsOn": ["10"],
             "inputs": {
                 "[% job_id %].450.rna.sims": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "10",
                     "node": "-"
                 }
             }, 
             "outputs": {
                 "[% job_id %].450.rna.sims.filter": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].450.rna.sims.filter.json"
                 },
                 "[% job_id %].450.rna.expand.rna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].450.rna.expand.rna.json"
                 },
                 "[% job_id %].450.rna.expand.lca": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].450.rna.expand.lca.json"
@@ -537,33 +537,33 @@
             "dependsOn": ["4", "5", "7", "8", "9", "11"],
             "inputs": {
                 "[% job_id %].350.genecalling.coding.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "4",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.sims.filter": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-",
                     "attrfile": "[% job_id %].650.aa.sims.filter.json"
                 },
                 "[% job_id %].425.search.rna.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "8",
                     "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 },
                 "[% job_id %].450.rna.sims.filter": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "11",
                     "node": "-",
                     "attrfile": "[% job_id %].450.rna.sims.filter.json"
@@ -571,12 +571,12 @@
             },
             "outputs": {
                 "[% job_id %].700.annotation.sims.filter.seq": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].700.annotation.sims.filter.seq.json"
                 },
                 "[% job_id %].700.annotation.sims.filter.seq.index": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].700.annotation.sims.filter.seq.index.json"
@@ -600,39 +600,39 @@
             "dependsOn": ["0", "5", "7", "9", "11", "12"],
             "inputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.expand.protein": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 },
                 "[% job_id %].450.rna.expand.rna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "11",
                     "node": "-"
                 },
                 "[% job_id %].700.annotation.sims.filter.seq.index": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "12",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].700.annotation.md5.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "userattr.json"
@@ -666,7 +666,7 @@
             "dependsOn": ["13"],
             "inputs": {
                 "[% job_id %].700.annotation.md5.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "13",
                     "node": "-"
                 },
@@ -686,34 +686,34 @@
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.expand.protein": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 },
                 "[% job_id %].450.rna.expand.rna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "11",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].700.annotation.function.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "userattr.json"
@@ -747,7 +747,7 @@
             "dependsOn": ["15"],
             "inputs": {
                 "[% job_id %].700.annotation.function.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "15",
                     "node": "-"
                 },
@@ -767,34 +767,34 @@
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.expand.protein": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 },
                 "[% job_id %].450.rna.expand.rna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "11",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].700.annotation.organism.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "userattr.json"
@@ -828,7 +828,7 @@
             "dependsOn": ["17"],
             "inputs": {
                 "[% job_id %].700.annotation.organism.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "17",
                     "node": "-"
                 },
@@ -848,34 +848,34 @@
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.expand.lca": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 },
                 "[% job_id %].450.rna.expand.lca": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "11",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].700.annotation.lca.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "userattr.json"
                 }
@@ -908,7 +908,7 @@
             "dependsOn": ["19"],
             "inputs": {
                 "[% job_id %].700.annotation.lca.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "19",
                     "node": "-"
                 },
@@ -928,24 +928,24 @@
             "dependsOn": ["0", "5", "7"],
             "inputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.expand.ontology": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].700.annotation.ontology.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "userattr.json"
@@ -979,7 +979,7 @@
             "dependsOn": ["21"],
             "inputs": {
                 "[% job_id %].700.annotation.ontology.summary": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "21",
                     "node": "-"
                 },
@@ -999,34 +999,34 @@
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
                 "[% job_id %].075.assembly.coverage": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-"
                 },
                 "[% job_id %].650.aa.expand.protein": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-"
                 },
                 "[% job_id %].450.rna.expand.rna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "11",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].700.annotation.source.stats": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "delete": true,
                     "attrfile": "userattr.json"
@@ -1073,143 +1073,143 @@
                     "url":"[% mysql_cert %]"
                 },
                 "[% job_id %].075.qc.stats": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-",
                     "attrfile": "[% job_id %].075.qc.stats.json"
                 },
                 "[% job_id %].075.upload.stats": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "0",
                     "node": "-",
                     "attrfile": "[% job_id %].075.upload.stats.json"
                 },
                 "[% job_id %].100.preprocess.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "1",
                     "node": "-",
                     "nofile": true,
                     "attrfile": "[% job_id %].100.preprocess.passed.fna.json"
                 },
                 "[% job_id %].150.dereplication.removed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "2",
                     "node": "-",
                     "nofile": true,
                     "attrfile": "[% job_id %].150.dereplication.removed.fna.json"
                 },
                 "[% job_id %].299.screen.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "3",
                     "node": "-",
                     "attrfile": "[% job_id %].299.screen.passed.fna.json"
                 },
                 "[% job_id %].350.genecalling.coding.faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "4",
                     "node": "-",
                     "attrfile": "[% job_id %].350.genecalling.coding.faa.json"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].faa.json"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].mapping.json"
                 },
                 "[% job_id %].650.aa.expand.ontology": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "7",
                     "node": "-",
                     "nofile": true,
                     "attrfile": "[% job_id %].650.aa.expand.ontology.json"
                 },
                 "[% job_id %].425.search.rna.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "8",
                     "node": "-",
                     "attrfile": "[% job_id %].425.search.rna.fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-",
                     "attrfile": "[% job_id %].440.cluster.rna[% rna_pid %].fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-",
                     "attrfile": "[% job_id %].440.cluster.rna[% rna_pid %].mapping.json"
                 },
                 "[% job_id %].700.annotation.sims.filter.seq": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "12",
                     "node": "-",
                     "nofile": true,
                     "attrfile": "[% job_id %].700.annotation.sims.filter.seq.json"
                 },
                 "[% job_id %].700.annotation.source.stats": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "23",
                     "node": "-"
                 }
             },
             "outputs": {
                 "[% job_id %].statistics.json" : {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].statistics.json.attr"
                 },
                 "[% job_id %].299.screen.passed.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "3",
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].299.screen.passed.fna.json"
                 },
                 "[% job_id %].350.genecalling.coding.faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "4",
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].350.genecalling.coding.faa.json"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].faa": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].faa.json"
                 },
                 "[% job_id %].550.cluster.aa[% aa_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "5",
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].550.cluster.aa[% aa_pid %].mapping.json"
                 },
                 "[% job_id %].425.search.rna.fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "8",
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].425.search.rna.fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-",
                     "type": "update",
                     "attrfile": "[% job_id %].440.cluster.rna[% rna_pid %].fna.json"
                 },
                 "[% job_id %].440.cluster.rna[% rna_pid %].mapping": {
-                    "host": "http://[% shock_url %]",
+                    "host": "[% shock_url %]",
                     "origin": "9",
                     "node": "-",
                     "type": "update",
