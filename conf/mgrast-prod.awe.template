@@ -1,6 +1,6 @@
 {
     "info": {
-        "pipeline": "mgrast-prod",
+        "pipeline": "mgrast-prod-test",
         "name": "[% job_id %]",
         "project": "[% project_name %]",
         "user": "[% user %]",
