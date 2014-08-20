@@ -74,7 +74,7 @@ sub obj_from_url {
 
 sub get_metadata {
     my ($mgid, $base_url, $key) = @_;
-    my $get_url = 'http://'.$base_url.'/metadata/export/'.$mgid;
+    my $get_url = $base_url.'/metadata/export/'.$mgid;
     return obj_from_url($get_url, $key);
 }
 

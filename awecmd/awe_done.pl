@@ -364,7 +364,7 @@ sub solr_post {
     my ($solr_url, $solr_col, $solr_file) = @_;
     
     # post commands and data
-    my $post_url = "http://$solr_url/solr/$solr_col/update/json?commit=true";
+    my $post_url = "$solr_url/solr/$solr_col/update/json?commit=true";
     my $req = StreamingUpload->new(
         POST => $post_url,
         path => $solr_file,
