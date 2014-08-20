@@ -243,6 +243,17 @@ if ($vars->{bowtie} == 0) {
                     });
 }
 
+# check if index exists
+my $has_index = 0
+foreach my $idx (split(/,/, $vars->{screen_indexes})) {
+    if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
+        $has_index = 1;
+    }
+}
+if (! $has_index) {
+    # just use default
+    $vars->{screen_indexes} = 'h_sapiens';
+}
 # build bowtie index list
 my $bowtie_url = $PipelineAWE_Conf::shock_bowtie_url || $vars->{shock_url};
 $vars->{index_download_urls} = "";
