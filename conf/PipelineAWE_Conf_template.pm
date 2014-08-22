@@ -57,9 +57,11 @@ our $template_keywords = {
     'rna_pid'       => '97',
     'm5rna_clust'   => "md5nr.clust",
     
-    # shock data download urls
+    # client certificates in shock
     'mysql_cert' => "",
     'postgresql_cert' => "",
+    
+    # shock data download urls
     'm5nr1_download_url' => "",
     'm5nr2_download_url' => "",
     'm5rna_download_url' => "",

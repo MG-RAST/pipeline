@@ -451,7 +451,7 @@
             },
             "predata": {
                 "m5rna":{
-                    "url":"[% m5rna_download_url %]"
+                    "url": "[% m5rna_download_url %]"
                 }
             },
             "partinfo": {
@@ -671,7 +671,8 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "url":"[% postgresql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% postgresql_cert %]"
                 }
             },
             "taskid": "14",
@@ -752,7 +753,8 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "url":"[% postgresql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% postgresql_cert %]"
                 }
             },
             "taskid": "16",
@@ -833,7 +835,8 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "url":"[% postgresql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% postgresql_cert %]"
                 }
             },
             "taskid": "18",
@@ -913,7 +916,8 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "url":"[% postgresql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% postgresql_cert %]"
                 }
             },
             "taskid": "20",
@@ -984,7 +988,8 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "url":"[% postgresql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% postgresql_cert %]"
                 }
             },
             "taskid": "22",
@@ -1067,10 +1072,12 @@
             "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "14", "16", "18", "20", "22", "23"],
             "inputs": {
                 "postgresql.tar": {
-                    "url":"[% postgresql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% postgresql_cert %]"
                 },
                 "mysql.tar": {
-                    "url":"[% mysql_cert %]"
+                    "host": "[% shock_url %]",
+                    "node": "[% mysql_cert %]"
                 },
                 "[% job_id %].075.qc.stats": {
                     "host": "[% shock_url %]",
