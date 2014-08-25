@@ -671,7 +671,7 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% postgresql_cert %]"
                 }
             },
@@ -753,7 +753,7 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% postgresql_cert %]"
                 }
             },
@@ -835,7 +835,7 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% postgresql_cert %]"
                 }
             },
@@ -916,7 +916,7 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% postgresql_cert %]"
                 }
             },
@@ -988,7 +988,7 @@
                     "node": "-"
                 },
                 "postgresql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% postgresql_cert %]"
                 }
             },
@@ -1072,11 +1072,11 @@
             "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "14", "16", "18", "20", "22", "23"],
             "inputs": {
                 "postgresql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% postgresql_cert %]"
                 },
                 "mysql.tar": {
-                    "host": "[% shock_url %]",
+                    "host": "[% cert_shock_url %]",
                     "node": "[% mysql_cert %]"
                 },
                 "[% job_id %].075.qc.stats": {
