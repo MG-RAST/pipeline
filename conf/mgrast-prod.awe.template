@@ -244,7 +244,7 @@
             },
             "taskid": "5",
             "totalwork": 1,
-            "maxworksize": 1200
+            "maxworksize": 1000
         },
         {
             "cmd": {
@@ -426,7 +426,7 @@
             },
             "taskid": "9",
             "totalwork": 1,
-            "maxworksize": 1200
+            "maxworksize": 1000
         },
         {
             "cmd": {
