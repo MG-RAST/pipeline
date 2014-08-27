@@ -171,6 +171,9 @@ if (-s $d_info) {
         my ($key, $val) = split('\t', $line);
         $key =~ s/\s+/_/g;
         $key = lc($key);
+        unless ($key =~ /^drisee/i) {
+            $key = 'drisee_'.$key
+        }
         $qc_stat->{$key} = $val;
     }
 }
