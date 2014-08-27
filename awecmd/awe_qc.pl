@@ -163,6 +163,18 @@ foreach my $len (@kmers) {
 PipelineAWE::print_json($seq_out, $upload);
 PipelineAWE::print_json($qc_out, $qc);
 
+# get drisee info
+if (-s $d_info) {
+    my @bin_stats = `tail -4 $d_info`;
+    chomp @bin_stats;
+    foreach my $line (@bin_stats) {
+        my ($key, $val) = split('\t', $line);
+        $key =~ s/\s+/_/g;
+        $key = lc($key);
+        $qc_stat->{$key} = $val;
+    }
+}
+
 # output attributes
 PipelineAWE::create_attr($seq_out.'.json', $seq_stats, {assembled => $a_text, data_type => "statistics", file_format => "json"});
 PipelineAWE::create_attr($qc_out.'.json', $qc_stat, {assembled => $a_text, data_type => "statistics", file_format => "json"});
