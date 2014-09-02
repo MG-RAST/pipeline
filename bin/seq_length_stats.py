@@ -149,10 +149,15 @@ def main(args):
                             sys.stderr.write("[error] quality value with ASCII value: %d in sequence: %s (sequence number %d) is not within ASCII range 33 to 126\n" %(ascii_value, head, seqnum))
                             os._exit(1)
                 char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
-                for c in seq:
+                for i, c in enumerate(seq):
                     if c not in IUPAC:
-                        sys.stderr.write("[error] character '%s' in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, head, seqnum))
-                        os._exit(1)
+                        try:
+                            ord(c)
+                            sys.stderr.write("[error] character '%s' (position %d) in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, i, head, seqnum))
+                            os._exit(1)
+                        except:
+                            sys.stderr.write("[error] non-ASCII character at position %d in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(i, head, seqnum))
+                            os._exit(1)
                     if c in char:
                         char[c] += 1
                 atgc  = char['A'] + char['T'] + char['G'] + char['C']
