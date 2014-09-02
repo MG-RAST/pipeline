@@ -25,16 +25,19 @@ m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s
 
 );
 
-if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
-if ( ! GetOptions( "verbose!"   => \$verbose,
-		   "in_sim=s"   => \$in_sim,
-		   "seq_file=s" => \$seq_file,
-		   "out_sim=s"  => \$out_sim
-		 ) )
-  { print print STDERR $usage; exit 1; }
-
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) {
+    print STDERR $usage; exit 1;
+}
+if ( ! GetOptions(
+        "verbose!"   => \$verbose,
+        "in_sim=s"   => \$in_sim,
+        "seq_file=s" => \$seq_file,
+        "out_sim=s"  => \$out_sim
+    ) ) {
+    print STDERR $usage; exit 1;
+}
 unless ($in_sim && $seq_file && $out_sim && (-s $in_sim) && (-s $seq_file)) {
-  print STDERR $usage . "Missing file input.\n"; exit 1;
+    print STDERR $usage . "Missing file input.\n"; exit 1;
 }
 
 print STDOUT "Reading file $in_sim ... " if ($verbose);
@@ -50,30 +53,26 @@ chomp $seql;
 my ($id, $seq) = split(/\t/, $seql);
 
 while (my $siml = <SIM>) {
-  chomp $siml;
-  if ($siml =~ /^(.+?)\t(.+)$/) {
-    $s_num += 1;
-    my $query = $1;
-    my $rest  = $2;
-    unless ($query) { next; }
-
-    $query =~ s/_\d+_\d+_[+-]$//;
-    if ($prev eq "") { $prev = $query; }
-    if ($prev ne $query) {
-      while ($id ne $query) {
-	$seql = <SEQ>;
-	unless (defined($seql)) { last; }
-	chomp $seql;
-	($id, $seq) = split(/\t/, $seql);
-      }
-      $q_num += 1;
-      print OUT "$id\t$rest\t$seq\n";
+    chomp $siml;
+    if ($siml =~ /^(.+?)\t(.+)$/) {
+        $s_num += 1;
+        my $query = $1;
+        my $rest  = $2;
+        unless ($query) { next; }
+        if ($prev ne $query) {
+            while ($id ne $query) {
+                $seql = <SEQ>;
+                unless (defined($seql)) { last; }
+                chomp $seql;
+                ($id, $seq) = split(/\t/, $seql);
+            }
+            $q_num += 1;
+            print OUT "$query\t$rest\t$seq\n";
+        } else {
+            print OUT "$query\t$rest\t$seq\n";
+        }
+        $prev = $query;
     }
-    else {
-      print OUT "$id\t$rest\t$seq\n";
-    }
-    $prev = $query;
-  }
 }
 close OUT;
 close SEQ;

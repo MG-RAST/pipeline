@@ -67,7 +67,7 @@ def merge_fgs_files(files, out_name):
     out_files = map( lambda x: "%s.out"%x, files )
 
     os.system( "cat %s > %s.faa"%( " ".join(faa_files), out_name ) )
-    os.system( "cat %s > %s.ffn"%( " ".join(ffn_files), out_name ) )
+    os.system( "cat %s > %s.fna"%( " ".join(ffn_files), out_name ) )
     os.system( "cat %s > %s.out"%( " ".join(out_files), out_name ) )
 
     for f in faa_files: os.remove(f)
