@@ -11,7 +11,7 @@
             "job_id": "[% job_id %]",
             "name": "[% mg_name %]",
             "created": "[% job_date %]",
-            "status": "test",
+            "status": "private",
             "owner": "[% user %]",
             "sequence_type": "[% seq_type %]",
             "project_id": "[% project_id %]",
