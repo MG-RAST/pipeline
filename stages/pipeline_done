@@ -338,6 +338,7 @@ print SOLR "   \"status\" : \"private\",\n";
 print SOLR "   \"status_sort\" : \"private\",\n";
 my $dt = DateTime->now;
 print SOLR "   \"created\" : \"$dt"."Z\",\n";
+print SOLR "   \"created_sort\" : \"$dt"."Z\",\n";
 print SOLR "   \"name\" : \"".$job_info->{name}."\",\n";
 print SOLR "   \"name_sort\" : \"".$job_info->{name}."\",\n";
 print SOLR "   \"project_id\" : \"".$job_info->{primary_project}."\",\n";
@@ -345,7 +346,9 @@ print SOLR "   \"project_id_sort\" : \"".$job_info->{primary_project}."\",\n";
 print SOLR "   \"project_name\" : \"$project_name\",\n";
 print SOLR "   \"project_name_sort\" : \"$project_name\",\n";
 print SOLR "   \"sequence_type\" : \"".$job_info->{sequence_type}."\",\n";
+print SOLR "   \"sequence_type_sort\" : \"".$job_info->{sequence_type}."\",\n";
 print SOLR "   \"seq_method\" : \"".$data_set->{sequencing_method_guess}."\",\n";
+print SOLR "   \"seq_method_sort\" : \"".$data_set->{sequencing_method_guess}."\",\n";
 print SOLR "   \"version\" : 1,\n";
 
 foreach my $stat (keys %$stat_set) {

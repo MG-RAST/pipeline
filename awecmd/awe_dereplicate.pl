@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 
 #input: fasta
 #outputs: ${out_prefix}.passed.fna, ${out_prefix}.passed.fna
@@ -7,76 +7,73 @@ use strict;
 use warnings;
 no warnings('once');
 
-
+use PipelineAWE;
 use Getopt::Long;
-use File::Copy;
-use File::Basename;
-use POSIX qw(strftime);
+use Cwd;
 umask 000;
 
-my $runcmd   = "dereplication";
-
 # options
-my $job_num    = "";
-my $fasta_file = "";
-my $out_prefix = "derep";
-my $out_file = "";
+my $input = "";
+my $out_prefix  = "derep";
 my $prefix_size = 50;
-my $memsize = "1G";
+my $memory    = 16;
 my $run_derep = 1;
-my $options = GetOptions ("input=s"     => \$fasta_file,
-			  "out_prefix=s"    => \$out_prefix,
-			  "prefix_length=i" => \$prefix_size,
-			  "mem_size=s" => \$memsize,
-			  "dereplicate=i" => \$run_derep,
-			  "output=s"    => \$out_file, #depreciated
-			 );
+my $help    = 0;
+my $options = GetOptions (
+        "input=s"         => \$input,
+		"out_prefix=s"    => \$out_prefix,
+		"prefix_length=i" => \$prefix_size,
+		"memory=i"        => \$memory,
+		"dereplicate=i"   => \$run_derep,
+		"help!"           => \$help
+);
 
-
-#my $log = Pipeline::logger($job_num);
-
-if (length($fasta_file)==0){
-    print "ERROR: An input file was not specified.\n";
-    print_usage();
-    exit __LINE__;  #use line number as exit code
-}elsif (! -e $fasta_file){
-    print "ERROR: The input genome file [$fasta_file] does not exist.\n";
-    print_usage();
-    exit __LINE__;   
+if ($help){
+    print get_usage();
+    exit 0;
+}elsif (length($input)==0){
+    print STDERR "ERROR: An input file was not specified.\n";
+    print STDERR get_usage();
+    exit 1;
+}elsif (! -e $input){
+    print STDERR "ERROR: The input sequence file [$input] does not exist.\n";
+    print STDERR get_usage();
+    exit 1;
 }
 
-#output file names:
-my $passed_seq = $out_prefix.".passed.fna";
+my $passed_seq  = $out_prefix.".passed.fna";
 my $removed_seq = $out_prefix.".removed.fna";
+my $run_dir = getcwd;
 
-if (length($out_file)>0) { #for compatibility with old pipeline templates (-output is deprecated)
-    $passed_seq = $out_file;
+# skip it
+if ($run_derep == 0) {
+    PipelineAWE::run_cmd("mv $input $passed_seq");
+    PipelineAWE::run_cmd("touch $removed_seq");
+} 
+# run it
+else {
+    PipelineAWE::run_cmd("dereplication.py -l $prefix_size -m $memory -d $run_dir $input $out_prefix");
 }
 
-if ($run_derep==0) {
-  system("cp $fasta_file $passed_seq > cp.out 2>&1") == 0 or exit __LINE__;
-  system("touch $removed_seq");
-  exit (0);
+# get stats
+my $pass_stats = PipelineAWE::get_seq_stats($passed_seq, 'fasta');
+my $fail_stats = PipelineAWE::get_seq_stats($removed_seq, 'fasta');
+
+# output attributes
+PipelineAWE::create_attr($passed_seq.'.json', $pass_stats, {data_type => "passed"});
+PipelineAWE::create_attr($removed_seq.'.json', $fail_stats, {data_type => "removed"});
+
+# create subset record list
+# note: parent and child files NOT in same order
+if ($run_derep != 0) {
+    PipelineAWE::run_cmd("index_subset_seq.py -p $input -c $passed_seq -c $removed_seq -m 20 -t $run_dir");
+    PipelineAWE::run_cmd("mv $passed_seq.index $passed_seq");
+    PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
 }
 
-my ($file,$dir,$ext) = fileparse($fasta_file, qr/\.[^.]*/);
+exit 0;
 
-my $results_dir = ".";
-
-my $command = "$runcmd -file $fasta_file -destination $results_dir -prefix_length $prefix_size -memory $memsize -tempdir $results_dir";
-print $command."\n";
-system($command);
-if ($? != 0) {print "ERROR: $runcmd returns value $?\n"; exit $?}
-
-# rename output to specified name
-system("mv $fasta_file.derep.fasta $passed_seq");
-system("mv $fasta_file.removed.fasta $removed_seq");
-if ($? != 0) {print "ERROR: failed copy output $?\n"; exit $?}
-
-exit(0);
-
-sub print_usage{
-    print "USAGE: awe_dereplicate.pl -input=<input_fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n";
-    print "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n"; 
+sub get_usage {
+    return "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n".
+           "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n";
 }
-

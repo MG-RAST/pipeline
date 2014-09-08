@@ -10,6 +10,7 @@ parser.add_option('-i', '--input', dest="input", help="input file: must be fasta
 parser.add_option('-o', '--output', dest="out", help="output file")
 group = OptionGroup(parser, "Command Options")
 group.add_option('--fastq', dest="fastq", action="store_true", default=False, help="input file is fastq: for fasta2tab|sortbyid2tab|uniquefasta")
+group.add_option('--truncate', dest="truncate", default=None, help="truncate reads to inputed length in bps")
 group.add_option('--bowtie_truncate', dest="bowtie_truncate", action="store_true", default=False, help="truncate reads to 1024 bp for bowtie")
 group.add_option('--fastq2uniquefasta', dest="fastq2uniquefasta", action="store_true", default=False, help="convert fastq to fasta file and replace ids with compact unique strings")
 group.add_option('--uniquefasta', dest="uniquefasta", action="store_true", default=False, help="replace ids with compact unique strings")
@@ -31,8 +32,7 @@ parser.add_option_group(group)
 
 if not ( options.input or options.out ):
     parser.print_help()
-    print ""
-    print "[error] missing input and/or output files"
+    sys.stderr.write("[error] missing input and/or output files\n")
     sys.exit(1);
 
 def fasta2tab(input, output, is_fastq=False, add_len=False):
@@ -59,13 +59,18 @@ def tab2fasta(input, output, has_len=False):
 def fastq2fasta(input, output):
     SeqIO.convert(input, "fastq", output, "fasta")
 
-def bowtie_truncate(input, output):
+def truncate(input, output, bps):
+    try:
+        trunc_len = int(bps)
+    except:
+        sys.stderr.write("[error] invalid truncate length: %s\n"%bps)
+        sys.exit(1)
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
     for record in SeqIO.parse(input_handle, "fasta") :
         seq = ""
-        if len(record.seq) > 1024:
-            seq = record.seq[0:1023]
+        if len(record.seq) > trunc_len:
+            seq = record.seq[0:trunc_len-1]
         else:
             seq = record.seq
         output_handle.write(">%s\n%s\n" % (record.id, seq))
@@ -120,7 +125,7 @@ def remove_seqs(fasta_input, list, output, check):
                 output_handle.write(">%s\n%s\n" % (r.id, r.seq))
                 continue
             elif cmp(r.id, current) > 0 and current != "":
-                print "[error] out of order sequence found: %s, %s. please verify fasta and list are sorted" %(r.id.lower(), current.lower()) 
+                sys.stderr.write("[error] out of order sequence found: %s, %s. please verify fasta and list are sorted\n"%(r.id.lower(), current.lower()))
                 sys.exit(1)
         else:
             if r.id == current:
@@ -146,7 +151,7 @@ def subset_seqs(fasta_input, list, output, check):
                 current = list_handle.readline()[:-1]
                 continue
             elif cmp(r.id.lower(), current.lower()) > 0 and current != "":
-                print "[error] out of order sequence found. please verify fasta and list are sorted" 
+                sys.stderr.write("[error] out of order sequence found. please verify fasta and list are sorted\n")
                 sys.exit(1)
         else:
             if r.id == current:
@@ -208,8 +213,10 @@ if __name__ == '__main__':
         tab2fasta(options.input, options.out)
     elif options.fastq2fasta:
         fastq2fasta(options.input, options.out)
+    elif options.truncate:
+        truncate(options.input, options.out, options.truncate)
     elif options.bowtie_truncate:
-        bowtie_truncate(options.input, options.out)
+        truncate(options.input, options.out, '1024')
     elif options.stdfasta:
         fastastd(options.input, options.out)
     elif options.seqstats:
@@ -230,6 +237,6 @@ if __name__ == '__main__':
         subset_seqs(options.input, options.list, options.out, options.check)
     else:
         parser.print_help()
-        print "[error] must give valid command"
+        sys.stderr.write("[error] must give valid command\n")
         sys.exit(1);
     sys.exit(0)

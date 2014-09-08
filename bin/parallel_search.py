@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys, re, shutil
-import subprocess, multiprocessing, logging
+import subprocess, multiprocessing
 from Bio import SeqIO
 from optparse import OptionParser
 
@@ -16,9 +16,12 @@ LIBF   = ''
 INFF   = ''
 IDENT  = 0.9
 TMPDIR = None
+cigar_re = re.compile('([0-9]*)([DMI])')
 
-def run_cmd(cmd):
-    proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+def run_cmd(cmd, output=None):
+    if not output:
+        output = subprocess.PIPE
+    proc = subprocess.Popen( cmd, stdout=output, stderr=subprocess.PIPE )
     stdout, stderr = proc.communicate()
     if proc.returncode != 0:
         raise IOError("%s\n%s"%(" ".join(cmd), stderr))
@@ -59,20 +62,63 @@ def split_fasta(infile, bytes):
 def run_search(fname):
     runtmp = os.path.join(TMPDIR, 'tmp.'+os.path.basename(fname))
     os.mkdir(runtmp)
-    sortf = fname + '.sort'
-    srchf = fname + '.uc'
-    outf  = srchf + '.fa'
-    cmd1  = ['qiime-uclust', '--sort', fname, '--output', sortf, '--tmpdir', runtmp]
-    cmd2  = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
-    cmd3  = ['qiime-uclust', '--input', sortf, '--uc2fasta', srchf, '--output', outf, '--types', 'H', '--origheader', '--tmpdir', runtmp]
+    sortf = fname+'.sort'
+    srchf = fname+'.uc'
+    outf  = fname+'.uc.fa'
+    # sort by seq length
+    cmd1 = ['seqUtil', '-i', fname, '-o', sortf, '-t', runtmp, '--sortbyseq']
     so1, se1 = run_cmd(cmd1)
+    # search against clusters
+    cmd2 = ['usearch', '--query', sortf, '--db', LIBF, '--uc', srchf, '--id', str(IDENT), '--rev']
     so2, se2 = run_cmd(cmd2)
-    so3, se3 = run_cmd(cmd3)
-    write_file("".join([so1,se1,so2,se2,so3,se3]), outf+".log", 1)
+    # transform hits to fasta with start/stop
+    uc2fasta(sortf, srchf, outf)
+    # cleanup
+    write_file("".join(filter(lambda x: x, [so1,se1,so2,se2])), outf+".log", 1)
     os.remove(sortf)
     os.remove(srchf)
     shutil.rmtree(runtmp)
     return outf
+
+def uc2fasta(infasta, inclust, outfasta):
+    outHdl   = open(outfasta, 'w')
+    fastaHdl = open(infasta, 'rU')
+    clustHdl = open(inclust, 'rU')
+    fastaItr = SeqIO.parse(fastaHdl, 'fasta')
+    curFasta = fastaItr.next()
+    for line in clustHdl:
+        if not line.startswith('H'):
+            # skip non-hits
+            continue
+        parts = line.split("\t")
+        (strand, qstart, cigar, qname) = (parts[4], int(parts[5]), parts[7], parts[8])
+        if qstart < 1:
+            # skip invalid
+            continue
+        qname_fields = qname.split(" ")
+        qname = qname_fields[0]
+        qlen  = cigar_length(cigar)
+        qstop = qstart + qlen
+        while qname != curFasta.id:
+            try:
+                curFasta = fastaItr.next()
+            except StopIteration:
+                break
+            if not curFasta:
+                break
+        seq_match = str(curFasta.seq)[qstart-1:qlen]
+        outHdl.write(">%s_%d_%d_%s\n%s\n"%(qname, qstart, qstop, strand, seq_match))
+    clustHdl.close()
+    fastaHdl.close()
+    outHdl.close()
+
+def cigar_length(text):
+    length = 0
+    for n, c in cigar_re.findall(text):
+        if c == 'I':
+            continue
+        length += int(n) if n else 1
+    return length
 
 def merge_files(files, outfile, logfile):
     if logfile:
@@ -95,12 +141,10 @@ def main(args):
     
     (opts, args) = parser.parse_args()
     if len(args) != 3:
-        parser.print_help()
-        print "[error] incorrect number of arguments"
+        parser.error("[error] incorrect number of arguments")
         return 1
     if not os.path.isdir(opts.tmpdir):
-        parser.print_help()
-        print "[error] invalid tmpdir"
+        parser.error("[error] invalid tmpdir")
         return 1
 
     (LIBF, INFF, out_f) = args
@@ -117,7 +161,7 @@ def main(args):
     else:
         min_proc = opts.processes
 
-    if opts.verbose: sys.stdout.write("search using %d threades ... "%min_proc)        
+    if opts.verbose: sys.stdout.write("search using %d threades ... "%min_proc)
     pool   = multiprocessing.Pool(processes=min_proc)
     rfiles = pool.map(run_search, sfiles, 1)
     pool.close()
