@@ -26,7 +26,13 @@
             "cmd": {
                 "name": "awe_qc.pl",
                 "args": "-input @[% inputfile %] -out_prefix [% job_id %].075 -assembled [% assembled %] -filter_options [% filter_options %] -proc 8",
-                "description": "qc_stats"
+                "description": "qc_stats",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": [],
             "inputs": {
@@ -63,7 +69,13 @@
             "cmd": {
                 "name": "awe_preprocess.pl",
                 "args": "-input @[% inputfile %] -out_prefix [% job_id %].100.preprocess -filter_options [% filter_options %]",
-                "description": "preprocess"
+                "description": "preprocess",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": [], 
             "inputs": {
@@ -98,7 +110,13 @@
             "cmd": {
                 "name": "awe_dereplicate.pl",
                 "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length %] -dereplicate=[% dereplicate %] -memory=20",
-                "description": "dereplication"
+                "description": "dereplication",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["1"],
             "inputs": {
@@ -133,7 +151,13 @@
             "cmd": {
                 "name": "awe_bowtie_screen.pl",
                 "args": "-input=@[% job_id %].150.dereplication.passed.fna -output=[% job_id %].299.screen.passed.fna -index=[% screen_indexes %] -bowtie=[% bowtie %] -proc=8",
-                "description": "screen"
+                "description": "screen",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             }, 
             "dependsOn": ["2"], 
             "inputs": {
@@ -166,7 +190,13 @@
             "cmd": {
                 "name": "awe_genecalling.pl",
                 "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=8",
-                "description": "genecalling"
+                "description": "genecalling",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["3"],
             "inputs": {
@@ -208,7 +238,13 @@
             "cmd": {
                 "name": "awe_cluster.pl",
                 "args": "-input=@[% job_id %].350.genecalling.coding.faa -out_prefix=[% job_id %].550.cluster -aa -pid=[% aa_pid %] -memory=20",
-                "description": "aa clustering"
+                "description": "aa clustering",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["4"],
             "inputs": {
@@ -248,7 +284,13 @@
             "cmd": {
                 "name": "awe_blat_prot.py",
                 "args": "--input=@[% job_id %].550.cluster.aa[% aa_pid %].faa --output=[% job_id %].650.superblat.sims",
-                "description": "aa sims blat"
+                "description": "aa sims blat",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             }, 
             "dependsOn": ["5"],  
             "inputs": {
@@ -299,8 +341,12 @@
                         "ACH_MONGO_NAME": "[% ach_mongo_name %]",
                         "ACH_MONGO_USER": "[% ach_mongo_user %]",
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    }
-                }
+                    },
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+                },
+		"Dockerimage": "mgrast/pipeline:20140905"
             }, 
             "dependsOn": ["6"],  
             "inputs": {
@@ -349,7 +395,13 @@
             "cmd": {
                 "name": "awe_search_rna.pl",
                 "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% m5rna_clust %] -size=100 -proc=8",
-                "description": "rna detection"
+                "description": "rna detection",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             }, 
             "dependsOn": ["1"],
             "inputs": {
@@ -390,7 +442,13 @@
             "cmd": {
                 "name": "awe_cluster.pl",
                 "args": "-input=@[% job_id %].425.search.rna.fna -out_prefix=[% job_id %].440.cluster -rna -pid=[% rna_pid %] -memory=20", 
-                "description": "rna clustering"
+                "description": "rna clustering",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             }, 
             "dependsOn": ["8"],
             "inputs": {
@@ -430,7 +488,13 @@
             "cmd": {
                 "name": "awe_blat_rna.pl",
                 "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims -assembled=[% assembled %]",
-                "description": "rna sims blat"
+                "description": "rna sims blat",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             }, 
             "dependsOn": ["9"],
             "inputs": {
@@ -478,8 +542,12 @@
                         "ACH_MONGO_NAME": "[% ach_mongo_name %]",
                         "ACH_MONGO_USER": "[% ach_mongo_user %]",
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    }
-                }
+                    },
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+                },
+		"Dockerimage": "mgrast/pipeline:20140905"
             }, 
             "dependsOn": ["10"],
             "inputs": {
@@ -529,8 +597,12 @@
                         "ACH_MONGO_NAME": "[% ach_mongo_name %]",
                         "ACH_MONGO_USER": "[% ach_mongo_user %]",
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    }
-                }
+                    },
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+                },
+		"Dockerimage": "mgrast/pipeline:20140905"
             }, 
             "dependsOn": ["4", "5", "7", "8", "9", "11"],
             "inputs": {
@@ -593,7 +665,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
-                "description": "md5 annotation summary"
+                "description": "md5 annotation summary",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["0", "5", "7", "9", "11", "12"],
             "inputs": {
@@ -650,7 +728,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
-                "description": "function annotation summary"
+                "description": "function annotation summary",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -702,7 +786,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
-                "description": "organism annotation summary"
+                "description": "organism annotation summary",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -754,7 +844,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
-                "description": "lca annotation summary"
+                "description": "lca annotation summary",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -806,7 +902,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
-                "description": "ontology annotation summary"
+                "description": "ontology annotation summary",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["0", "5", "7"],
             "inputs": {
@@ -848,7 +950,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.source.stats -nr_ver=[% ach_annotation_ver %] -type=source",
-                "description": "source annotation summary"
+                "description": "source annotation summary",
+		"Dockerimage": "mgrast/pipeline:20140905",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/kb/deployment/user-env.sh"
+			}
+		}
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
