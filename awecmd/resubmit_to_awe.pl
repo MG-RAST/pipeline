@@ -74,7 +74,7 @@ if ($gres->{error}) {
 my $input_node = '';
 foreach my $n (@{$gres->{data}}) {
     push @nids, $n->{id};
-    if (exists($n->{attributes}{stage_name}) && ($n->{attributes}{stage_name} = 'upload')) {
+    if (exists($n->{attributes}{stage_name}) && ($n->{attributes}{stage_name} == 'upload')) {
         $input_node = $n->{id};
     }
 }
