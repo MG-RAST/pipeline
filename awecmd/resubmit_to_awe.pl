@@ -14,11 +14,15 @@ use Data::Dumper;
 
 # options
 my $job_id    = "";
+my $awe_id    = "";
+my $awe_url   = "";
 my $shock_url = "";
 my $help      = 0;
 
 my $options = GetOptions (
         "job_id=s"    => \$job_id,
+        "awe_id=s"    => \$awe_id,
+		"awe_url=s"   => \$awe_url,
 		"shock_url=s" => \$shock_url,
 		"help!"       => \$help
 );
@@ -42,6 +46,9 @@ $json->allow_nonref;
 my $vars = $PipelineAWE_Conf::template_keywords;
 if ($shock_url) {
     $vars->{shock_url} = $shock_url;
+}
+if (! $awe_url) {
+    $awe_url = $PipelineAWE_Conf::awe_url;
 }
 
 # get job shock nodes
@@ -67,12 +74,31 @@ if ($gres->{error}) {
 my $input_node = '';
 foreach my $n (@{$gres->{data}}) {
     push @nids, $n->{id};
-    if (exists($n->{atributes}{stage_name}) && ($n->{atributes}{stage_name} = 'upload')) {
+    if (exists($n->{attributes}{stage_name}) && ($n->{attributes}{stage_name} = 'upload')) {
         $input_node = $n->{id};
     }
 }
 unless ($input_node) {
     print STDERR "ERROR: missing upload shock node\n";
+    exit 1;
+}
+
+# delete old awe job
+print "deleting awe job\t".$awe_id."\n";
+my $ares = undef;
+my $adel = $agent->delete(
+    $awe_url.'/job/'.$awe_id,
+    'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token
+);
+eval {
+    $ares = $json->decode($adel->content);
+};
+if ($@) {
+    print STDERR "ERROR: Return from AWE is not JSON:\n".$adel->content."\n";
+    exit 1;
+}
+if ($ares->{error}) {
+    print STDERR "ERROR: (AWE) ".$ares->{error}[0]."\n";
     exit 1;
 }
 
