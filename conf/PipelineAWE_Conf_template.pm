@@ -4,6 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+our $BASE = "";
 
 # default variables
 our $awe_url = "";
