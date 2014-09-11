@@ -105,7 +105,7 @@ if ($awe_id) {
 }
 
 # submit job
-my $status = system(('submit_to_awe.pl', '--job_id', $job_id, '--input_node', $input_node));
+my $status = system($PipelineAWE_Conf::BASE."/awecmd/submit_to_awe.pl --job_id $job_id --input_node $input_node");
 if ($status != 0) {
     print STDERR "ERROR: submit_to_awe.pl returns value $status\n";
     exit $status >> 8;
