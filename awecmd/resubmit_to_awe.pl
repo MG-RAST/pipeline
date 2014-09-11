@@ -84,22 +84,24 @@ unless ($input_node) {
 }
 
 # delete old awe job
-print "deleting awe job\t".$awe_id."\n";
-my $ares = undef;
-my $adel = $agent->delete(
-    $awe_url.'/job/'.$awe_id,
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token
-);
-eval {
-    $ares = $json->decode($adel->content);
-};
-if ($@) {
-    print STDERR "ERROR: Return from AWE is not JSON:\n".$adel->content."\n";
-    exit 1;
-}
-if ($ares->{error}) {
-    print STDERR "ERROR: (AWE) ".$ares->{error}[0]."\n";
-    exit 1;
+if ($awe_id) {
+    print "deleting awe job\t".$awe_id."\n";
+    my $ares = undef;
+    my $adel = $agent->delete(
+        $awe_url.'/job/'.$awe_id,
+        'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token
+    );
+    eval {
+        $ares = $json->decode($adel->content);
+    };
+    if ($@) {
+        print STDERR "ERROR: Return from AWE is not JSON:\n".$adel->content."\n";
+        exit 1;
+    }
+    if ($ares->{error}) {
+        print STDERR "ERROR: (AWE) ".$ares->{error}[0]."\n";
+        exit 1;
+    }
 }
 
 # submit job
