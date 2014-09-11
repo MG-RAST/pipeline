@@ -49,11 +49,11 @@ unless (-s $rna_nr_path) {
     print STDERR get_usage();
     exit 1;
 }
-my $options = "";
+my $opts = "";
 if ($assembled == 0) {
-    $options = "-fastMap ";
+    $opts = "-fastMap ";
 }
-PipelineAWE::run_cmd("blat -out=blast8 -t=dna -q=dna $options$rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0", 1);
+PipelineAWE::run_cmd("blat -out=blast8 -t=dna -q=dna $opts$rna_nr_path $fasta stdout | bleachsims -s - -o $output -r 0", 1);
 
 exit 0;
 
