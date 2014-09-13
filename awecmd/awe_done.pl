@@ -156,7 +156,6 @@ my $up_attr = PipelineAWE::read_json($upload.'.json');
 my $qc_attr = PipelineAWE::read_json($qc.'.json');
 my $de_attr = PipelineAWE::read_json($derep.'.json');
 my $pp_attr = PipelineAWE::read_json($preproc.'.json');
-my $pq_attr = PipelineAWE::read_json($post_qc.'.json');
 my $fl_attr = PipelineAWE::read_json($filter.'.json');
 my $on_attr = PipelineAWE::read_json($ontol.'.json');
 # populate job_stats
