@@ -30,7 +30,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -73,7 +73,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -114,7 +114,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -156,7 +156,7 @@
 		"Dockerimage": "mgrast/bowtie:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -195,7 +195,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -243,7 +243,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -289,7 +289,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -344,7 +344,7 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
                 },
 		"Dockerimage": "mgrast/pipeline:20140905"
@@ -400,7 +400,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -447,7 +447,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -493,7 +493,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -545,7 +545,7 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
                 },
 		"Dockerimage": "mgrast/pipeline:20140905"
@@ -600,7 +600,7 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
                 },
 		"Dockerimage": "mgrast/pipeline:20140905"
@@ -670,7 +670,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -733,7 +733,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -791,7 +791,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -849,7 +849,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -907,7 +907,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -955,7 +955,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
