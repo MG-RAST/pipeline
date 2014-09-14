@@ -27,10 +27,10 @@
                 "name": "awe_qc.pl",
                 "args": "-input @[% inputfile %] -out_prefix [% job_id %].075 -assembled [% assembled %] -filter_options [% filter_options %] -proc 8",
                 "description": "qc_stats",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/qc:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -192,10 +192,10 @@
                 "name": "awe_genecalling.pl",
                 "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=8",
                 "description": "genecalling",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/genecall:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -240,10 +240,10 @@
                 "name": "awe_cluster.pl",
                 "args": "-input=@[% job_id %].350.genecalling.coding.faa -out_prefix=[% job_id %].550.cluster -aa -pid=[% aa_pid %] -memory=20",
                 "description": "aa clustering",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/cluster:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -286,10 +286,10 @@
                 "name": "awe_blat_prot.py",
                 "args": "--input=@[% job_id %].550.cluster.aa[% aa_pid %].faa --output=[% job_id %].650.superblat.sims",
                 "description": "aa sims blat",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/superblat:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -397,10 +397,10 @@
                 "name": "awe_search_rna.pl",
                 "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% m5rna_clust %] -size=100 -proc=8",
                 "description": "rna detection",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/rna_search:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -444,10 +444,10 @@
                 "name": "awe_cluster.pl",
                 "args": "-input=@[% job_id %].425.search.rna.fna -out_prefix=[% job_id %].440.cluster -rna -pid=[% rna_pid %] -memory=20", 
                 "description": "rna clustering",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/cluster:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
@@ -490,10 +490,10 @@
                 "name": "awe_blat_rna.pl",
                 "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims -assembled=[% assembled %]",
                 "description": "rna sims blat",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/blat:20140913",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             }, 
