@@ -192,10 +192,10 @@
                 "name": "awe_genecalling.pl",
                 "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=8",
                 "description": "genecalling",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/genecall:20140914",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
