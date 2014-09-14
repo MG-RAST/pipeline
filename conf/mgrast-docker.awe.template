@@ -70,10 +70,10 @@
                 "name": "awe_preprocess.pl",
                 "args": "-input @[% inputfile %] -out_prefix [% job_id %].100.preprocess -filter_options [% filter_options %]",
                 "description": "preprocess",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -111,10 +111,10 @@
                 "name": "awe_dereplicate.pl",
                 "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length %] -dereplicate=[% dereplicate %] -memory=20",
                 "description": "dereplication",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -344,10 +344,10 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
                 },
-		"Dockerimage": "mgrast/pipeline:20140905"
+		"Dockerimage": "mgrast/base:20140911"
             }, 
             "dependsOn": ["6"],  
             "inputs": {
@@ -545,10 +545,10 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
                 },
-		"Dockerimage": "mgrast/pipeline:20140905"
+		"Dockerimage": "mgrast/base:20140911"
             }, 
             "dependsOn": ["10"],
             "inputs": {
@@ -600,10 +600,10 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
                 },
-		"Dockerimage": "mgrast/pipeline:20140905"
+		"Dockerimage": "mgrast/base:20140911"
             }, 
             "dependsOn": ["4", "5", "7", "8", "9", "11"],
             "inputs": {
@@ -667,10 +667,10 @@
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
                 "description": "md5 annotation summary",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -730,10 +730,10 @@
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
                 "description": "function annotation summary",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -788,10 +788,10 @@
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
                 "description": "organism annotation summary",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -846,10 +846,10 @@
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
                 "description": "lca annotation summary",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -904,10 +904,10 @@
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
                 "description": "ontology annotation summary",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
@@ -952,10 +952,10 @@
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.source.stats -nr_ver=[% ach_annotation_ver %] -type=source",
                 "description": "source annotation summary",
-		"Dockerimage": "mgrast/pipeline:20140905",
+		"Dockerimage": "mgrast/base:20140911",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/kb/deployment/user-env.sh"
+				"BASH_ENV" : "/root/mgrast_env.sh"
 			}
 		}
             },
