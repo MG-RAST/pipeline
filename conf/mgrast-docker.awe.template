@@ -30,7 +30,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -73,7 +73,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -114,7 +114,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -195,7 +195,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -243,7 +243,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -289,7 +289,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             }, 
@@ -344,7 +344,7 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
                 },
 		"Dockerimage": "mgrast/pipeline:20140905"
@@ -400,7 +400,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             }, 
@@ -447,7 +447,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             }, 
@@ -493,7 +493,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             }, 
@@ -545,7 +545,7 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
                 },
 		"Dockerimage": "mgrast/pipeline:20140905"
@@ -600,7 +600,7 @@
                         "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
                     },
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
                 },
 		"Dockerimage": "mgrast/pipeline:20140905"
@@ -670,7 +670,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -733,7 +733,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -791,7 +791,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -849,7 +849,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -907,7 +907,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
@@ -955,7 +955,7 @@
 		"Dockerimage": "mgrast/pipeline:20140905",
 		"environ" : {
 			"public" : {
-				"BASH_ENV" : "/root/mgrast_env.sh"
+				"BASH_ENV" : "mgrast/pipeline:20140905"
 			}
 		}
             },
