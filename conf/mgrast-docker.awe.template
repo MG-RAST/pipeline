@@ -438,47 +438,7 @@
             "taskid": "8",
             "totalwork": 1,
             "maxworksize": 800
-        },
-	{	
-            "cmd": {
-                "name": "pick_closed_reference_otus.py",
-                "args": "-i @[% job_id %].425.search.rna.fna -o ucr -p @otu_picking_params_97.txt -r /home/qiime/qiime_software/gg_otus-13_8-release/rep_set/97_otus.fasta",
-                "description": "QIIME pick_closed_reference_otus",
-		"Dockerimage": "qiime:1.8.0-amd64u",
-		"environ" : {
-			"public" : {
-				"BASH_ENV" : "/home/qiime/qiime_software/activate.sh"
-			}
-		}
-            }, 
-            "dependsOn": ["8"],
-            "inputs": {
-                "[% job_id %].425.search.rna.fna": {
-                    "host": "[% shock_url %]",
-                    "origin": "8",
-                    "node": "-"
-                },
-		"otu_picking_params_97.txt": {
-			"host" : "http://shock.metagenomics.anl.gov:80",
-			"node" : "97118250-45d1-4e5a-a094-d02c5229377f"
-		}
-            },
-            "outputs": {
-                "otu_table.biom": {
-                    "host": "[% shock_url %]",
-                    "node": "-",
-                    "directory" : "ucr",
-			"attrfile": "userattr.json"
-                }
-		},
-	"userattr": {
-                "stage_id": "9999",
-                "stage_name": "qiime.pick_closed_reference_otus",
-                "data_type": "taxonomy",
-                "file_format": "biom"
-            },
-            "taskid": "50"
-        },          
+        },        
         {
             "cmd": {
                 "name": "awe_cluster.pl",
@@ -1044,6 +1004,46 @@
             },
             "taskid": "18",
             "totalwork": 1
-        }
+        },
+	{	
+            "cmd": {
+                "name": "pick_closed_reference_otus.py",
+                "args": "-i @[% job_id %].425.search.rna.fna -o ucr -p @otu_picking_params_97.txt -r /home/qiime/qiime_software/gg_otus-13_8-release/rep_set/97_otus.fasta",
+                "description": "QIIME pick_closed_reference_otus",
+		"Dockerimage": "qiime:1.8.0-amd64u",
+		"environ" : {
+			"public" : {
+				"BASH_ENV" : "/home/qiime/qiime_software/activate.sh"
+			}
+		}
+            }, 
+            "dependsOn": ["8"],
+            "inputs": {
+                "[% job_id %].425.search.rna.fna": {
+                    "host": "[% shock_url %]",
+                    "origin": "8",
+                    "node": "-"
+                },
+		"otu_picking_params_97.txt": {
+			"host" : "http://shock.metagenomics.anl.gov:80",
+			"node" : "97118250-45d1-4e5a-a094-d02c5229377f"
+		}
+            },
+            "outputs": {
+                "otu_table.biom": {
+                    "host": "[% shock_url %]",
+                    "node": "-",
+                    "directory" : "ucr",
+			"attrfile": "userattr.json"
+                }
+		},
+	"userattr": {
+                "stage_id": "9999",
+                "stage_name": "qiime.pick_closed_reference_otus",
+                "data_type": "taxonomy",
+                "file_format": "biom"
+            },
+            "taskid": "50"
+        }  
     ]
 }
