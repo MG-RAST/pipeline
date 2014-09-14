@@ -1017,11 +1017,11 @@
 			}
 		}
             }, 
-            "dependsOn": ["8"],
+            "dependsOn": ["9"],
             "inputs": {
-                "[% job_id %].425.search.rna.fna": {
+                "[% job_id %].440.cluster.rna[% rna_pid %].fna": {
                     "host": "[% shock_url %]",
-                    "origin": "8",
+                    "origin": "9",
                     "node": "-"
                 },
 		"otu_picking_params_97.txt": {
