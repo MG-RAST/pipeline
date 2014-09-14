@@ -304,6 +304,11 @@ if ($@) {
     exit 1;
 }
 
+unless (defined $ares->{data}) {
+	print "no data field found: ".Dumper($ares)."\n";
+	exit(1);
+}
+
 # get info
 my $awe_id  = $ares->{data}{id};
 my $awe_job = $ares->{data}{jid};
