@@ -1008,7 +1008,7 @@
 	{	
             "cmd": {
                 "name": "pick_closed_reference_otus.py",
-                "args": "-i @[% job_id %].425.search.rna.fna -o ucr -p @otu_picking_params_97.txt -r /home/qiime/qiime_software/gg_otus-13_8-release/rep_set/97_otus.fasta",
+                "args": "-i @[% job_id %].440.cluster.rna[% rna_pid %].fna -o ucr -p @otu_picking_params_97.txt -r /home/qiime/qiime_software/gg_otus-13_8-release/rep_set/97_otus.fasta",
                 "description": "QIIME pick_closed_reference_otus",
 		"Dockerimage": "qiime:1.8.0-amd64u",
 		"environ" : {
