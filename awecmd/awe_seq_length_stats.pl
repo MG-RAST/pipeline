@@ -22,13 +22,15 @@ my $input_file = "";
 my $input_json_file = "";
 my $output_file = "";
 my $output_json_file = "";
+my $type = "fasta";
 my $help = "";
 my $options = GetOptions ("input=s"   => \$input_file,
                           "input_json=s" => \$input_json_file,
                           "output=s" => \$output_file,
-			  "output_json=s"  => \$output_json_file,
-			  "help!" => \$help
-			 );
+                          "output_json=s"  => \$output_json_file,
+                          "type=s" => \$type,
+                          "help!" => \$help
+                         );
 
 # Validate input file path.
 if ($help) {
@@ -42,8 +44,10 @@ if ($help) {
     print STDERR "ERROR: The input sequence file [$input_file] does not exist.\n";
     print_usage();
     exit __LINE__;
-} elsif ($input_file !~ /\.(fna|fasta|fq|fastq)$/i) {
-    print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
+}
+
+if ($type ne 'fasta' && $type ne 'fastq') {
+    print STDERR "ERROR: The file type must be fasta or fastq format (default is fasta).\n";
     print_usage();
     exit __LINE__;
 }
@@ -81,16 +85,12 @@ if (-e $output_json_file) {
 }
 
 # Run sequence stats analysis
-if ( $input_file =~ /\.(fna|fasta)$/i ) {
-    print "$runcmd -i $input_file -o $output_file -t fasta";
-    run_cmd("$runcmd -i $input_file -o $output_file -t fasta");
-} elsif ( $input_file =~ /\.(fq|fastq)$/i ) {
+if ( $type eq 'fastq' ) {
     print "$runcmd -i $input_file -o $output_file -t fastq";
     run_cmd("$runcmd -i $input_file -o $output_file -t fastq");
 } else {
-    print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
-    print_usage();
-    exit __LINE__;
+    print "$runcmd -i $input_file -o $output_file -t fasta";
+    run_cmd("$runcmd -i $input_file -o $output_file -t fasta");
 }
 
 # Create/replace stats_info section
@@ -112,7 +112,7 @@ close OUT;
 exit(0);
 
 sub print_usage {
-    print "USAGE: awe_seq_length_stats.pl -input=<input fasta or fastq> [-input_json=<attr_filename>, -output=<stats_text_file>, -output_json=<attr_filename>]\n";
+    print "USAGE: awe_seq_length_stats.pl -input=<input fasta or fastq> [-input_json=<attr_filename>, -output=<stats_text_file>, -output_json=<attr_filename>, -type=<fasta or fastq (default is fasta)>]\n";
 }
 
 sub run_cmd {

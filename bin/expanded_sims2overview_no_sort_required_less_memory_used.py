@@ -416,6 +416,21 @@ def main(args):
                     data[aid][source-1]['isos'] += abun * ident * ident
                     md5s[aid][source].add(md5)
                     frag_keys.add(akey)                
+                    if opts.type == 'organism':
+                        merge = 19
+                        if is_protein == 1:
+                            merge = 20
+                        akey = (aid, merge)
+			data[aid][merge-1]['source'] = merge
+			data[aid][merge-1]['abun'] += abun
+			data[aid][merge-1]['esum'] += abun * eval_exp
+			data[aid][merge-1]['esos'] += abun * eval_exp * eval_exp
+			data[aid][merge-1]['lsum'] += abun * length
+			data[aid][merge-1]['lsos'] += abun * length * length
+			data[aid][merge-1]['isum'] += abun * ident
+			data[aid][merge-1]['isos'] += abun * ident * ident
+			md5s[aid][merge].add(md5)
+			frag_keys.add(akey)                
             elif opts.type == 'source':
                 if not source:
                     continue
