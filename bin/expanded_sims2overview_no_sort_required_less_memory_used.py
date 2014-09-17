@@ -216,7 +216,7 @@ def print_type_stats(ohdl, data, md5s):
     if len(data) == 0:
         return
     for aid in sorted(data):
-        for i in range(SOURCES):
+        for i in range(len(data[aid])):
             stats = data[aid][i]
             if stats['source'] == 0:
                 continue
@@ -240,7 +240,7 @@ def print_type_stats(ohdl, data, md5s):
 def print_source_stats(ohdl, data):
     if len(data) == 0:
         return
-    for i in range(SOURCES):
+    for i in range(SOURCES+2):
         source = i+1
         if source not in data['e_val']:
             continue
@@ -333,7 +333,9 @@ def main(args):
         for line in ihdl:
             parts = line.strip().split('\t')
             (md5, frag, ident, length, e_val, fid, oid) = parts[:7]
-            is_protein = False if (len(parts) > 8) and (parts[8] == 1) else True
+            is_protein = True
+            if (len(parts) > 8) and (parts[8] == "1"):
+                is_protein = False
             if not (frag and md5):
                 continue
             if opts.type != 'lca':
@@ -400,7 +402,10 @@ def main(args):
                     frag_keys.clear()
                 if akey not in frag_keys:
                     if aid not in data:
-                        data[aid] = np.zeros(SOURCES, dtype=dt)
+                        if opts.type == 'organism':
+                            data[aid] = np.zeros(SOURCES+2, dtype=dt)
+                        else:
+                            data[aid] = np.zeros(SOURCES, dtype=dt)
                         md5s[aid] = defaultdict(set)
                     eval_exp = get_exponent(e_val)
                     abun = get_abundance(frag, amap)
@@ -418,7 +423,7 @@ def main(args):
                     frag_keys.add(akey)                
                     if opts.type == 'organism':
                         merge = 19
-                        if is_protein == 1:
+                        if is_protein:
                             merge = 20
                         akey = (aid, merge)
 			data[aid][merge-1]['source'] = merge
