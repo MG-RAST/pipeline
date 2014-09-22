@@ -1,4 +1,4 @@
-FROM mgrast/base:20140912
+FROM mgrast/base:latest
 RUN apt-get install -y curl subversion && apt-get autoremove -y ; apt-get clean all
 RUN pip install sphinx
 ## cdbfasta
