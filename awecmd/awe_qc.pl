@@ -164,6 +164,12 @@ PipelineAWE::print_json($seq_out, $upload);
 PipelineAWE::print_json($qc_out, $qc);
 
 # get drisee info
+my $drisee_summary_stats = {
+    drisee_input_seqs => 1,
+    drisee_processed_bins => 1,
+    drisee_processed_seqs => 1,
+    drisee_score => 1
+};
 if (-s $d_info) {
     my @bin_stats = `tail -4 $d_info`;
     chomp @bin_stats;
@@ -174,7 +180,9 @@ if (-s $d_info) {
         unless ($key =~ /^drisee/i) {
             $key = 'drisee_'.$key
         }
-        $qc_stat->{$key} = $val;
+        if (exists $drisee_summary_stats->{$key}) {
+            $qc_stat->{$key} = $val;
+        }
     }
 }
 
