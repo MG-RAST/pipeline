@@ -8,4 +8,4 @@ RUN apt-get install -y vim ssh git build-essential python-dev python-pip libpq-d
 RUN for i in install biopython psycopg2 gspread openpyxl numpy; do pip install $i; done
 RUN cd /root ; mkdir bin ; git clone https://github.com/MG-RAST/pipeline
 
-ADD ./mgrast_env.sh /root
+ADD ./mgrast_env.sh /root/
