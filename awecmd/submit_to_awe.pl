@@ -59,11 +59,15 @@ if ($help) {
 }
 
 # set obj handles
+my $mspath = $ENV{'HOME'}.'/.mysql/';
 my $jobdb = PipelineJob::get_jobcache_dbh(
     $PipelineAWE_Conf::job_dbhost,
     $PipelineAWE_Conf::job_dbname,
     $PipelineAWE_Conf::job_dbuser,
-    $PipelineAWE_Conf::job_dbpass );
+    $PipelineAWE_Conf::job_dbpass,
+	$mspath.'client-key.pem',
+	$mspath.'client-cert.pem',
+	$mspath.'ca-cert.pem' );
 my $tpage = Template->new(ABSOLUTE => 1);
 my $agent = LWP::UserAgent->new();
 $agent->timeout(3600);
@@ -298,6 +302,11 @@ eval {
 if ($@) {
     print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
     exit 1;
+}
+
+unless (defined $ares->{data}) {
+	print "no data field found: ".Dumper($ares)."\n";
+	exit(1);
 }
 
 # get info
