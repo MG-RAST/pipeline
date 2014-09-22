@@ -7,7 +7,7 @@ MGRASTVERSION=`date +"%Y%m%d"`
 cd pipeline/dockerfiles/
 docker build --tag mgrast/base:${MGRASTVERSION} mgrast_base
 
-# third-party images require "latest", thus make sure that you base image is called "latest"
+# third-party images require "latest", thus make sure that your base image is called "latest"
 docker rmi mgrast/base:latest
 docker tag mgrast/base:${MGRASTVERSION} mgrast/base:latest
 
