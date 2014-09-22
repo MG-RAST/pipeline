@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
 	libunicode-escape-perl \
 	liblist-allutils-perl \
 	libposix-strptime-perl
-RUN for i in install biopython psycopg2 gspread openpyxl numpy; do pip install $i; done
+RUN pip install biopython psycopg2 gspread openpyxl numpy
 RUN cd /root \
 	; mkdir bin \
 	; git clone https://github.com/MG-RAST/pipeline
