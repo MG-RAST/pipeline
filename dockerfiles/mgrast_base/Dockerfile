@@ -34,5 +34,12 @@ RUN apt-get update && apt-get install -y \
 	liblist-allutils-perl \
 	libposix-strptime-perl
 RUN for i in install biopython psycopg2 gspread openpyxl numpy; do pip install $i; done
-RUN cd /root ; mkdir bin ; git clone https://github.com/MG-RAST/pipeline
+RUN cd /root \
+	; mkdir bin \
+	; git clone https://github.com/MG-RAST/pipeline
 ADD ./mgrast_env.sh /root/
+
+#
+# If you you need a specific commit:
+#
+#RUN cd /root/pipeline/ && git reset --hard [ENTER HERE THE COMMIT HASH YOU WANT] 
