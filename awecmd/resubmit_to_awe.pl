@@ -55,7 +55,7 @@ if (! $awe_url) {
 my @nids = ();
 my $gres = undef;
 my $nget = $agent->get(
-    $vars->{shock_url}.'/node?query&type=metagenome&job_id='.$job_id,
+    $vars->{shock_url}.'/node?query&type=metagenome&limit=0&job_id='.$job_id,
     'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token
 );
 eval {
