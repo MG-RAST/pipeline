@@ -31,6 +31,7 @@ my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
 my $no_start   = 0;
+my $use_ssh    = 0;
 my $help       = 0;
 
 my $options = GetOptions (
@@ -41,6 +42,7 @@ my $options = GetOptions (
 		"shock_url=s"  => \$shock_url,
 		"template=s"   => \$template,
 		"no_start!"    => \$no_start,
+		"use_ssh!"     => \$use_ssh,
 		"help!"        => \$help
 );
 
@@ -59,11 +61,30 @@ if ($help) {
 }
 
 # set obj handles
-my $jobdb = PipelineJob::get_jobcache_dbh(
-    $PipelineAWE_Conf::job_dbhost,
-    $PipelineAWE_Conf::job_dbname,
-    $PipelineAWE_Conf::job_dbuser,
-    $PipelineAWE_Conf::job_dbpass );
+my $mspath = $ENV{'HOME'}.'/.mysql/';
+
+my $jobdb=undef;
+
+if ($use_ssh) {
+
+	$jobdb = PipelineJob::get_jobcache_dbh(
+    	$PipelineAWE_Conf::job_dbhost,
+		$PipelineAWE_Conf::job_dbname,
+    	$PipelineAWE_Conf::job_dbuser,
+    	$PipelineAWE_Conf::job_dbpass,
+		$mspath.'client-key.pem',
+		$mspath.'client-cert.pem',
+		$mspath.'ca-cert.pem' );
+	
+} else {
+	
+    $jobdb = PipelineJob::get_jobcache_dbh(
+		$PipelineAWE_Conf::job_dbhost,
+		$PipelineAWE_Conf::job_dbname,
+		$PipelineAWE_Conf::job_dbuser,
+		$PipelineAWE_Conf::job_dbpass);
+}
+
 my $tpage = Template->new(ABSOLUTE => 1);
 my $agent = LWP::UserAgent->new();
 $agent->timeout(3600);
@@ -298,6 +319,11 @@ eval {
 if ($@) {
     print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
     exit 1;
+}
+
+unless (defined $ares->{data}) {
+	print "no data field found: ".Dumper($ares)."\n";
+	exit(1);
 }
 
 # get info
