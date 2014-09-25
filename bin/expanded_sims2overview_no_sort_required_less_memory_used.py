@@ -88,7 +88,14 @@ def abundance_map(afile, cfile):
         with open(afile, 'rU') as fhdl:
             for line in fhdl:
                 tabs = line.strip().split('\t')
-                data[tabs[0]] = int(tabs[1])
+                # string may be an int or float / need to cast as int
+                try:
+                    data[tabs[0]] = int(tabs[1])
+                except ValueError:
+                    try:
+                        data[tabs[0]] = int(float(tabs[1]))
+                    except ValueError:
+                        data[tabs[0]] = 0
     if cfile and os.path.isfile(cfile):
         with open(cfile, 'rU') as fhdl:
             for line in fhdl:
