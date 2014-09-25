@@ -6,6 +6,7 @@
         "user": "[% user %]",
         "xref": "[% xref %]",
         "clientgroups": "[% clientgroups %]",
+        "priority": "[% priority %]",
         "userattr": {
             "id": "[% mg_id %]",
             "job_id": "[% job_id %]",

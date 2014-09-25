@@ -207,6 +207,28 @@ $vars->{dereplicate}    = $jopts->{dereplicate} || 1;
 $vars->{bowtie}         = $jopts->{bowtie} || 1;
 $vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
 
+# set priority
+my $priority_map = {
+    never       => 1,
+    date        => 5,
+    6months     => 10,
+    3months     => 15,
+    immediately => 20
+};
+if ($jattr->{priority} && exists($priority_map->{$jattr->{priority}})) {
+    $vars->{priority} = $priority_map->{$jattr->{priority}};
+}
+# higher priority if smaller data
+if (int($up_attr->{statistics}{bp_count}) < 100000000) {
+    $vars->{priority} = 30;
+}
+if (int($up_attr->{statistics}{bp_count}) < 50000000) {
+    $vars->{priority} = 40;
+}
+if (int($up_attr->{statistics}{bp_count}) < 10000000) {
+    $vars->{priority} = 50;
+}
+
 # set node output type for preprocessing
 if ($up_attr->{file_format} eq 'fastq') {
     $vars->{preprocess_pass} = qq(,

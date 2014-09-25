@@ -41,6 +41,7 @@ our $template_keywords = {
     
     # awe clients
     'clientgroups' => "",
+    'priority'     => 1,
     
     # mgrast api
     'mgrast_api' => "",
