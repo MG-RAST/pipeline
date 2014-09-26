@@ -61,12 +61,10 @@ if ($help) {
 }
 
 # set obj handles
-my $mspath = $ENV{'HOME'}.'/.mysql/';
-
 my $jobdb=undef;
 
 if ($use_ssh) {
-
+    my $mspath = $ENV{'HOME'}.'/.mysql/';
 	$jobdb = PipelineJob::get_jobcache_dbh(
     	$PipelineAWE_Conf::job_dbhost,
 		$PipelineAWE_Conf::job_dbname,
@@ -74,15 +72,15 @@ if ($use_ssh) {
     	$PipelineAWE_Conf::job_dbpass,
 		$mspath.'client-key.pem',
 		$mspath.'client-cert.pem',
-		$mspath.'ca-cert.pem' );
-	
+		$mspath.'ca-cert.pem'
+	);
 } else {
-	
     $jobdb = PipelineJob::get_jobcache_dbh(
 		$PipelineAWE_Conf::job_dbhost,
 		$PipelineAWE_Conf::job_dbname,
 		$PipelineAWE_Conf::job_dbuser,
-		$PipelineAWE_Conf::job_dbpass);
+		$PipelineAWE_Conf::job_dbpass
+	);
 }
 
 my $tpage = Template->new(ABSOLUTE => 1);
@@ -342,10 +340,9 @@ if ($@) {
     print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
     exit 1;
 }
-
-unless (defined $ares->{data}) {
-	print "no data field found: ".Dumper($ares)."\n";
-	exit(1);
+if ($ares->{error}) {
+    print STDERR "ERROR: (AWE) ".$ares->{error}[0]."\n";
+    exit 1;
 }
 
 # get info
