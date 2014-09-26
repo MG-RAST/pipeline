@@ -209,11 +209,11 @@ $vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
 
 # set priority
 my $priority_map = {
-    never       => 1,
-    date        => 5,
-    6months     => 10,
-    3months     => 15,
-    immediately => 20
+    "never"       => 1,
+    "date"        => 5,
+    "6months"     => 10,
+    "3months"     => 15,
+    "immediately" => 20
 };
 if ($jattr->{priority} && exists($priority_map->{$jattr->{priority}})) {
     $vars->{priority} = $priority_map->{$jattr->{priority}};
