@@ -42,4 +42,4 @@ ADD ./mgrast_env.sh /root/
 #
 # If you you need a specific commit:
 #
-#RUN cd /root/pipeline/ && git reset --hard [ENTER HERE THE COMMIT HASH YOU WANT] 
+#RUN cd /root/pipeline/ && git pull && git reset --hard [ENTER HERE THE COMMIT HASH YOU WANT]
