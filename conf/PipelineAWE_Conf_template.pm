@@ -141,6 +141,14 @@ our $shock_bowtie_indexes = {
                             'm_musculus.rev.1.bt2' => '',  
                             'm_musculus.rev.2.bt2' => ''
                         },
+    'r_norvegicus'   => {
+                            'r_norvegicus.1.bt2' => '',
+                            'r_norvegicus.2.bt2' => '',
+                            'r_norvegicus.3.bt2' => '',
+                            'r_norvegicus.4.bt2' => '',
+                            'r_norvegicus.rev.1.bt2' => '',
+                            'r_norvegicus.rev.2.bt2' => ''
+                        },
     's_scrofa'       => {
                             's_scrofa.1.bt2' => '',  
                             's_scrofa.2.bt2' => '',  
