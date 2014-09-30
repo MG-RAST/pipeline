@@ -15,6 +15,7 @@
             "status": "private",
             "owner": "[% user %]",
             "sequence_type": "[% seq_type %]",
+            "bp_count": "[% bp_count %]",
             "project_id": "[% project_id %]",
             "project_name": "[% project_name %]",
             "type": "metagenome",
