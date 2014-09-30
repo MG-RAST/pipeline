@@ -52,7 +52,7 @@ if ($cluster && (-s $cluster)) {
         chomp $line;
         my @tabs = split(/\t/, $line);
         my $seed = $tabs[0];
-        my %ids  = map { $_, 1 } split(/,/, $tabs[2]);
+        my %ids  = map { $_, 1 } split(/,/, $tabs[1]);
         if (exists $cmap->{$seed}) {
             map { $ids{$_} = 1 } @{$cmap->{$seed}};
         }
