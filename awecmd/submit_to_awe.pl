@@ -30,8 +30,10 @@ my $input_node = "";
 my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
+my $clientgroups = undef;
 my $no_start   = 0;
 my $use_ssh    = 0;
+my $use_docker = 0;
 my $help       = 0;
 
 my $options = GetOptions (
@@ -43,6 +45,8 @@ my $options = GetOptions (
 		"template=s"   => \$template,
 		"no_start!"    => \$no_start,
 		"use_ssh!"     => \$use_ssh,
+		"use_docker!"  => \$use_docker, # enables docker specific workflow entries, dockerimage and environ
+		"clientgroups=s" => \$clientgroups,
 		"help!"        => \$help
 );
 
@@ -206,6 +210,17 @@ $vars->{assembled}      = $jattr->{assembled} || 0;
 $vars->{dereplicate}    = $jopts->{dereplicate} || 1;
 $vars->{bowtie}         = $jopts->{bowtie} || 1;
 $vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
+
+
+if (defined $clientgroups) {
+	$vars->{'clientgroups'} = $clientgroups;
+}
+
+if ($use_docker) {
+	$vars->{'docker_switch'} = '';
+} else {
+	$vars->{'docker_switch'} = '_'; # disables these entries
+}
 
 # set node output type for preprocessing
 if ($up_attr->{file_format} eq 'fastq') {
