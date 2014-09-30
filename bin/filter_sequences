@@ -21,6 +21,7 @@ my $max_ln       = '';
 my $max_ambig    = '';
 my $per_ambig    = '';
 
+my $dynamic_trim = '';
 my $min_qual     = '';
 my $max_lqb      = '';
 
@@ -37,6 +38,7 @@ GetOptions (
 	     'max_ambig:i'  => \$max_ambig,
 	     'per_ambig:i'  => \$per_ambig,
 
+         'dynamic_trim' => \$dynamic_trim,
 	     'min_qual:i'   => \$min_qual,
 	     'max_lqb:i'    => \$max_lqb,
 

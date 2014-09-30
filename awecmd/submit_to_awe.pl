@@ -65,12 +65,10 @@ if ($help) {
 }
 
 # set obj handles
-my $mspath = $ENV{'HOME'}.'/.mysql/';
-
 my $jobdb=undef;
 
 if ($use_ssh) {
-
+    my $mspath = $ENV{'HOME'}.'/.mysql/';
 	$jobdb = PipelineJob::get_jobcache_dbh(
     	$PipelineAWE_Conf::job_dbhost,
 		$PipelineAWE_Conf::job_dbname,
@@ -78,15 +76,15 @@ if ($use_ssh) {
     	$PipelineAWE_Conf::job_dbpass,
 		$mspath.'client-key.pem',
 		$mspath.'client-cert.pem',
-		$mspath.'ca-cert.pem' );
-	
+		$mspath.'ca-cert.pem'
+	);
 } else {
-	
     $jobdb = PipelineJob::get_jobcache_dbh(
 		$PipelineAWE_Conf::job_dbhost,
 		$PipelineAWE_Conf::job_dbname,
 		$PipelineAWE_Conf::job_dbuser,
-		$PipelineAWE_Conf::job_dbpass);
+		$PipelineAWE_Conf::job_dbpass
+	);
 }
 
 my $tpage = Template->new(ABSOLUTE => 1);
@@ -200,6 +198,7 @@ $vars->{mg_id}          = $up_attr->{id};
 $vars->{mg_name}        = $up_attr->{name};
 $vars->{job_date}       = $up_attr->{created};
 $vars->{seq_type}       = $up_attr->{sequence_type};
+$vars->{bp_count}       = $up_attr->{statistics}{bp_count};
 $vars->{project_id}     = $up_attr->{project_id} || '';
 $vars->{project_name}   = $up_attr->{project_name} || '';
 $vars->{user}           = 'mgu'.$jobj->{owner} || '';
@@ -212,6 +211,7 @@ $vars->{bowtie}         = $jopts->{bowtie} || 1;
 $vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
 
 
+
 if (defined $clientgroups) {
 	$vars->{'clientgroups'} = $clientgroups;
 }
@@ -220,6 +220,28 @@ if ($use_docker) {
 	$vars->{'docker_switch'} = '';
 } else {
 	$vars->{'docker_switch'} = '_'; # disables these entries
+}
+
+# set priority
+my $priority_map = {
+    "never"       => 1,
+    "date"        => 5,
+    "6months"     => 10,
+    "3months"     => 15,
+    "immediately" => 20
+};
+if ($jattr->{priority} && exists($priority_map->{$jattr->{priority}})) {
+    $vars->{priority} = $priority_map->{$jattr->{priority}};
+}
+# higher priority if smaller data
+if (int($up_attr->{statistics}{bp_count}) < 100000000) {
+    $vars->{priority} = 30;
+}
+if (int($up_attr->{statistics}{bp_count}) < 50000000) {
+    $vars->{priority} = 40;
+}
+if (int($up_attr->{statistics}{bp_count}) < 10000000) {
+    $vars->{priority} = 50;
 }
 
 # set node output type for preprocessing
@@ -335,10 +357,9 @@ if ($@) {
     print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
     exit 1;
 }
-
-unless (defined $ares->{data}) {
-	print "no data field found: ".Dumper($ares)."\n";
-	exit(1);
+if ($ares->{error}) {
+    print STDERR "ERROR: (AWE) ".$ares->{error}[0]."\n";
+    exit 1;
 }
 
 # get info

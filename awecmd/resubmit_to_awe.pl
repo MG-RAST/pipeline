@@ -4,6 +4,7 @@ use strict;
 use warnings;
 no warnings('once');
 
+use PipelineJob;
 use PipelineAWE_Conf;
 
 use JSON;
@@ -35,6 +36,12 @@ if ($help) {
     exit 1;
 }
 
+# set obj handles
+my $jobdb = PipelineJob::get_jobcache_dbh(
+    $PipelineAWE_Conf::job_dbhost,
+    $PipelineAWE_Conf::job_dbname,
+    $PipelineAWE_Conf::job_dbuser,
+    $PipelineAWE_Conf::job_dbpass );
 my $agent = LWP::UserAgent->new();
 $agent->timeout(3600);
 my $json = JSON->new;
@@ -55,7 +62,7 @@ if (! $awe_url) {
 my @nids = ();
 my $gres = undef;
 my $nget = $agent->get(
-    $vars->{shock_url}.'/node?query&type=metagenome&job_id='.$job_id,
+    $vars->{shock_url}.'/node?query&type=metagenome&limit=0&job_id='.$job_id,
     'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token
 );
 eval {
@@ -104,6 +111,9 @@ if ($awe_id) {
     }
 }
 
+# set job as not viewable
+PipelineJob::set_jobcache_info($jobdb, $job_id, 'viewable', 0);
+
 # submit job
 my $status = system($PipelineAWE_Conf::BASE."/awecmd/submit_to_awe.pl --job_id $job_id --input_node $input_node");
 if ($status != 0) {
@@ -133,7 +143,7 @@ foreach my $n (@nids) {
 }
 
 sub get_usage {
-    return "USAGE: resubmit_to_awe.pl -job_id=<job identifier> [-shock_url=<shock url>]\n";
+    return "USAGE: resubmit_to_awe.pl -job_id=<job identifier> [-awe_id=<awe job id> -awe_url=<awe url> -shock_url=<shock url>]\n";
 }
 
 # enable hash-resolving in the JSON->encode function
