@@ -117,7 +117,7 @@ def main(args):
         os.rename(tmp_prefix+'.join', opts.output)
         os.remove(tmp_prefix+'.u1')
         os.remove(tmp_prefix+'.u2')
-        return 0;
+        return 0
 
     if opts.verbose: sys.stdout.write("Merging joined and un-joined files ... ")
     out_hdl = open(opts.output, 'w')
@@ -146,7 +146,8 @@ def main(args):
     os.remove(tmp_prefix+'.u2')
     os.remove(tmp_prefix+'.join')
     if opts.verbose: sys.stdout.write("Done\n")
-    return 0;
+    
+    return 0
 
 
 if __name__ == "__main__":
