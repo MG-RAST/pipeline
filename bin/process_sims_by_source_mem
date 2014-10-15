@@ -101,7 +101,6 @@ eval {
         password => $achpass,
         db_name => $achname,
         query_timeout => -1,
-        timeout => -1,
         auto_reconnect => 1,
         auto_connect => 1
     );
