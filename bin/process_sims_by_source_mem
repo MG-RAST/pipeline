@@ -99,9 +99,12 @@ eval {
         port => $mport,
         username => $achuser,
         password => $achpass,
-        db_name => $achname
+        db_name => $achname,
+        query_timeout => -1,
+        timeout => -1,
+        auto_reconnect => 1,
+        auto_connect => 1
     );
-    $mconn->query_timeout(-1);
     my $mdb = $mconn->get_database($achname);
     $ach = $mdb->get_collection('v'.$achver);
 };
