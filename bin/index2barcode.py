@@ -18,13 +18,13 @@ def main(args):
     parser.add_option("-r", "--revcomp", dest="revcomp", action="store_true", default=False, help="Print reverse complement of index sequences for barcodes [default is same].")
 
     (opts, args) = parser.parse_args()
-    if not (opts.input and os.path.isfile(opts.input) and opts.output:
+    if not (opts.input and os.path.isfile(opts.input) and opts.output):
         parser.error("Missing input and/or output")
 
     # parse index file - build map
     barcodes  = {}
     input_hdl = open(opts.input, 'rU')
-    for rec in FastqGeneralIterator(input_hdl)
+    for rec in FastqGeneralIterator(input_hdl):
         seq = rec[1].upper()
         barcodes[seq] = 1
     input_hdl.close()
