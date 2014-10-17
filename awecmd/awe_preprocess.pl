@@ -112,6 +112,6 @@ if (($format eq 'fasta') && ($filter_options ne 'skip')) {
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n".
+    return "USAGE: awe_preprocess.pl -input=<input fasta or fastq> -format=<sequence format> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n".
            "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n";
 }
