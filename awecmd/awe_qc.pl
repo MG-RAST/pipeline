@@ -19,6 +19,7 @@ umask 000;
 
 # options
 my $infile = "";
+my $format = "";
 my $name   = "raw";
 my $proc   = 8;
 my $kmers  = '15,6';
@@ -28,6 +29,7 @@ my $filter_options = "";
 my $help = 0;
 my $options = GetOptions (
 		"input=s"  => \$infile,
+		"format=s" => \$format,
 		"name=s"   => \$name,
 		"proc=i"   => \$proc,
 		"kmers=s"  => \$kmers,
@@ -63,8 +65,9 @@ if ((@kmers == 0) || $bad_kmer) {
     print STDERR "ERROR: invalid kmeer list: $kmers.\n";
     exit 1;
 }
-
-my $format = ($infile =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+unless ($format && ($format =~ /^fasta|fastq$/)) {
+    $format = ($infile =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+}
 
 my %value_opts = ();
 for my $ov (split ":", $filter_options) {

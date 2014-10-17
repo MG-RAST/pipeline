@@ -193,6 +193,7 @@ $vars->{job_id}         = $job_id;
 $vars->{mg_id}          = $up_attr->{id};
 $vars->{mg_name}        = $up_attr->{name};
 $vars->{job_date}       = $up_attr->{created};
+$vars->{file_format}    = $up_attr->{file_format};
 $vars->{seq_type}       = $up_attr->{sequence_type};
 $vars->{bp_count}       = $up_attr->{statistics}{bp_count};
 $vars->{project_id}     = $up_attr->{project_id} || '';
