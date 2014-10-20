@@ -90,7 +90,7 @@ else {
         }
     }
     # run cmd
-    PipelineAWE::run_cmd("filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
+    PipelineAWE::run_cmd("filter_sequences -i $input_file -format $format -o $passed_seq -r $removed_seq $cmd_options");
 }
 
 # get stats

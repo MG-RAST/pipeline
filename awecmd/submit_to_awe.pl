@@ -339,7 +339,7 @@ eval {
     $ares = $json->decode($apost->content);
 };
 if ($@) {
-    print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
+    print STDERR "ERROR: Return from AWE is not JSON:\n".$apost->content."\n";
     exit 1;
 }
 if ($ares->{error}) {
