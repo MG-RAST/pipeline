@@ -92,9 +92,6 @@ def uc2fasta(infasta, inclust, outfasta):
             continue
         parts = line.split("\t")
         (strand, qstart, cigar, qname) = (parts[4], int(parts[5]), parts[7], parts[8])
-        if qstart < 1:
-            # skip invalid
-            continue
         qname_fields = qname.split(" ")
         qname = qname_fields[0]
         qlen  = cigar_length(cigar)
@@ -106,7 +103,7 @@ def uc2fasta(infasta, inclust, outfasta):
                 break
             if not curFasta:
                 break
-        seq_match = str(curFasta.seq)[qstart-1:qlen]
+        seq_match = str(curFasta.seq)[qstart:qlen]
         outHdl.write(">%s_%d_%d_%s\n%s\n"%(qname, qstart, qstop, strand, seq_match))
     clustHdl.close()
     fastaHdl.close()
