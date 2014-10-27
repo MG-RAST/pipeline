@@ -3,9 +3,10 @@
 use strict;
 use warnings;
 
+use JSON;
+use BerkeleyDB;
 use Data::Dumper;
 use Getopt::Long;
-use MongoDB;
 
 my $verbose   = 0;
 my $in_file   = '';
@@ -16,7 +17,7 @@ my $rna_file  = '';
 my $lca_file  = '';
 my $get_rna   = 0;
 my $get_lca   = 0;
-my $frag_num  = 1000;
+my $frag_num  = 5000;
 my $achhost   = "";
 my $achname   = "";
 my $achuser   = "";
@@ -90,27 +91,12 @@ if ($lca_file) {
   $get_lca = 1;
 }
 
-# connect to ACH mongo db
-my $ach = undef;
-eval {
-    my ($mhost, $mport) = split(/:/, $achhost);
-    my $mconn = MongoDB::Connection->new(
-        host => $mhost,
-        port => $mport,
-        username => $achuser,
-        password => $achpass,
-        db_name => $achname,
-        query_timeout => -1,
-        auto_reconnect => 1,
-        auto_connect => 1
-    );
-    my $mdb = $mconn->get_database($achname);
-    $ach = $mdb->get_collection('v'.$achver);
-};
-if ($@ || (! $ach)) {
-   print STDERR "Error getting ACH mongodb connection:\n".$@."\n";
-   exit 1;
-}
+my %m5nr;
+my $filename = "/mnt/awe/data/predata/m5nr_v1.bdb";
+tie %m5nr, "BerkeleyDB::Hash",
+        -Filename => $filename,
+        -Flags    => DB_RDONLY
+or die "Cannot open file $filename: $! $BerkeleyDB::Error\n";
 
 my $data  = {};
 my $count = 0;
@@ -119,9 +105,10 @@ my $curr  = '';
 my ($filt_fh, $exp_fh, $ont_fh, $rna_fh, $lca_fh, $filt_t, $exp_t, $ont_t, $rna_t, $lca_t);
 
 print "Loading ach source data for mapping ... " if ($verbose);
-my $src_map = $ach->find_one({'key' => 'source'})->{data};
+my $json = JSON->new->allow_nonref;
+my $src_map = $json->decode($m5nr{'source'});
 unless ($src_map && ref($src_map)) {
-  print STDERR "Error: Unable to get source data from mongo\n"; exit 1;
+  print STDERR "Error: Unable to get source data from berkeley db\n"; exit 1;
 }
 print "Done\n" if ($verbose);
 
@@ -151,7 +138,7 @@ while (my $line = <INFILE>) {
   if ($curr ne $frag) {
     if ($frags >= $frag_num) {
       #print STDERR "." if ($verbose);
-      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $ach, $get_rna, $get_lca);
+      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $get_rna, $get_lca);
       print $filt_fh $filt_t if ($filt_t);
       print $exp_fh $exp_t   if ($exp_t);
       print $ont_fh $ont_t   if ($ont_t);
@@ -174,7 +161,7 @@ while (my $line = <INFILE>) {
 close(INFILE);
 
 if (scalar(keys %$data) > 0) {
-  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $ach, $get_rna, $get_lca);
+  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $get_rna, $get_lca);
   print $filt_fh $filt_t if ($filt_t);
   print $exp_fh $exp_t   if ($exp_t);
   print $ont_fh $ont_t   if ($ont_t);
@@ -197,7 +184,7 @@ print "Done - $count fragments parsed\n" if ($verbose);
 exit 0;
 
 sub get_top_hits {
-  my ($src_map, $data, $ach, $get_rna, $get_lca) = @_;
+  my ($src_map, $data, $get_rna, $get_lca) = @_;
   
   my $filter_text   = '';
   my $protein_text  = '';
@@ -229,7 +216,7 @@ sub get_top_hits {
   # get data for md5s from memcache
   # ach: md5 => source => function => [organism | ontology_id]
   # lca: md5 => [lca]
-  my ($md5_ach, $md5_lca, $md5_id) = &get_md5_data($ach, [keys %$total_md5s], $get_lca);
+  my ($md5_ach, $md5_lca, $md5_id) = &get_md5_data([keys %$total_md5s], $get_lca);
 
   # get sources per frag: frag => {source}
   foreach my $frag (keys %$data) {
@@ -255,7 +242,7 @@ sub get_top_hits {
       if (scalar(keys %md5s_lca) > 0) {
 	    my @lca = &get_lca([keys %md5s_lca], $md5_lca);
 	    if (@lca == 9) {
-	      $frag_lca->{$frag} = {md5s => [keys %md5s_lca], sims => [values %md5s_lca], lca => \@lca};
+	      $frag_lca->{$frag} = {md5s => [sort keys %md5s_lca], sims => [sort values %md5s_lca], lca => \@lca};
 	    }
       }
     }
@@ -276,7 +263,7 @@ sub get_top_hits {
   }
 
   # output expanded info
-  foreach my $frag (keys %$data) {
+  foreach my $frag (sort keys %$data) {
     if ($get_lca && exists($frag_lca->{$frag})) {
       my $level = pop @{$frag_lca->{$frag}{lca}};
       $lca_text .= join("\t", ( join(";", map {$md5_id->{$_}} grep {exists $md5_id->{$_}} @{$frag_lca->{$frag}{md5s}}), # md5s
@@ -289,8 +276,8 @@ sub get_top_hits {
 			           )) . "\n";
     }
     next unless (exists $data_min_md5->{$frag});
-    foreach my $score ( keys %{$data_min_md5->{$frag}} ) {
-      foreach my $md5 ( keys %{$data_min_md5->{$frag}{$score}} ) {
+    foreach my $score ( sort keys %{$data_min_md5->{$frag}} ) {
+      foreach my $md5 ( sort keys %{$data_min_md5->{$frag}{$score}} ) {
         next unless (exists $md5_id->{$md5});
         
   	    # sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
@@ -301,7 +288,7 @@ sub get_top_hits {
 
 	    # md5_ach: md5 => source => function => { 'organism' => [], 'ontology' => [] }
 	    # src_map: id => [ name, type ]
-        foreach my $src ( keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
+        foreach my $src ( sort keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
 	      next unless (exists($md5_ach->{$md5}{$src}) && exists($src_map->{$src}));
 	      my ($sname, $stype) = @{$src_map->{$src}};
 
@@ -332,14 +319,17 @@ sub get_top_hits {
 }
 
 sub get_md5_data {
-    my ($ach, $md5s, $get_lca) = @_;
-    
+    my ($md5s, $get_lca) = @_;
+
     my $ann   = {};
     my $lca   = {};
     my $md5id = {};
-    my $curs  = $ach->find({ 'key' => { '$in' => $md5s } });
-    my %data  = map { $_->{key}, $_->{data} } $curs->all;
-    
+    my %data = ();
+    foreach my $md5 (@{$md5s}) {
+        if(exists $m5nr{$md5}) {
+            $data{$md5} = $json->decode($m5nr{$md5});
+        }
+    }
     foreach my $m (keys %data) {
         if (exists($data{$m}{lca}) && $get_lca) {
             $lca->{$m} = $data{$m}{lca};
@@ -351,7 +341,6 @@ sub get_md5_data {
             $ann->{$m} = $data{$m}{ann};
         }
     }
-    
     return ($ann, $lca, $md5id);
 }
 
@@ -373,7 +362,7 @@ sub get_min_md5s_by_source {
   my %cur_md5s = ();
   my %cur_srcs = ();
 
-  foreach my $md5 (sort {scalar(keys %{$sub_md5s{$b}}) <=> scalar(keys %{$sub_md5s{$a}})} keys %sub_md5s) {
+  foreach my $md5 (sort {scalar(keys %{$sub_md5s{$b}}) <=> scalar(keys %{$sub_md5s{$a}}) || $a cmp $b} keys %sub_md5s) {
     foreach my $src (keys %{$sub_md5s{$md5}}) {
       if (! exists $cur_srcs{$src}) {
 	    $cur_md5s{$md5}{$src} = 1;
