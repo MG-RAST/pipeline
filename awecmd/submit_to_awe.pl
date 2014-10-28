@@ -202,10 +202,10 @@ $vars->{user}           = 'mgu'.$jobj->{owner} || '';
 $vars->{inputfile}      = $file_name;
 $vars->{shock_node}     = $node_id;
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
-$vars->{assembled}      = $jattr->{assembled} || 0;
-$vars->{dereplicate}    = $jopts->{dereplicate} || 1;
-$vars->{bowtie}         = $jopts->{bowtie} || 1;
-$vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
+$vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
+$vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
+$vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
+$vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
 
 # set priority
 my $priority_map = {
