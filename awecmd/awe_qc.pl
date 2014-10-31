@@ -19,6 +19,7 @@ umask 000;
 
 # options
 my $infile = "";
+my $format = "";
 my $name   = "raw";
 my $proc   = 8;
 my $kmers  = '15,6';
@@ -28,6 +29,7 @@ my $filter_options = "";
 my $help = 0;
 my $options = GetOptions (
 		"input=s"  => \$infile,
+		"format=s" => \$format,
 		"name=s"   => \$name,
 		"proc=i"   => \$proc,
 		"kmers=s"  => \$kmers,
@@ -63,8 +65,9 @@ if ((@kmers == 0) || $bad_kmer) {
     print STDERR "ERROR: invalid kmeer list: $kmers.\n";
     exit 1;
 }
-
-my $format = ($infile =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+unless ($format && ($format =~ /^fasta|fastq$/)) {
+    $format = ($infile =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+}
 
 my %value_opts = ();
 for my $ov (split ":", $filter_options) {
@@ -194,7 +197,7 @@ PipelineAWE::create_attr($a_file.'.json', $qc_stat, {assembled => $a_text, data_
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_qc.pl -input=<input file> -out_prefix=<output prefix> [-proc=<number of threads, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\noutputs: \${out_prefix}.drisee.stats, \${out_prefix}.drisee.info, \${out_prefix}.consensus.stats, \${out_prefix}.kmer.\$len.stats, \${out_prefix}.assembly.coverage, \${out_prefix}.assembly.coverage.stats\n";
+    return "USAGE: awe_qc.pl -input=<input file> -format=<sequence format> -out_prefix=<output prefix> [-proc=<number of threads, default 8>, -kmers=<kmer list, default 6,15>, -assembled=<0 or 1, default 0>]\noutputs: \${out_prefix}.drisee.stats, \${out_prefix}.drisee.info, \${out_prefix}.consensus.stats, \${out_prefix}.kmer.\$len.stats, \${out_prefix}.assembly.coverage, \${out_prefix}.assembly.coverage.stats\n";
 }
 
 sub get_drisee {

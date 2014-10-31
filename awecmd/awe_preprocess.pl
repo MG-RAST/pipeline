@@ -14,11 +14,13 @@ umask 000;
 
 # options
 my $input_file = "";
+my $format     = "";
 my $out_prefix = "prep";
 my $filter_options = "";
 my $help = 0;
 my $options = GetOptions (
         "input=s" => \$input_file,
+        "format=s" => \$format,
 		"out_prefix=s" => \$out_prefix,
 		"filter_options=s" => \$filter_options,
 		"help!" => \$help
@@ -41,9 +43,12 @@ if ($help){
     exit 1;
 }
 
+unless ($format && ($format =~ /^fasta|fastq$/)) {
+    $format = ($input_file =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+}
+
 my $passed_seq  = $out_prefix.".passed.fna";
 my $removed_seq = $out_prefix.".removed.fna";
-my $format  = ($input_file =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
 my $run_dir = getcwd;
 
 # get filter options
@@ -85,7 +90,7 @@ else {
         }
     }
     # run cmd
-    PipelineAWE::run_cmd("filter_sequences -i $input_file -o $passed_seq -r $removed_seq $cmd_options");
+    PipelineAWE::run_cmd("filter_sequences -i $input_file -format $format -o $passed_seq -r $removed_seq $cmd_options");
 }
 
 # get stats
@@ -107,6 +112,6 @@ if (($format eq 'fasta') && ($filter_options ne 'skip')) {
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_preprocess.pl -input=<input fasta or fastq> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n".
+    return "USAGE: awe_preprocess.pl -input=<input fasta or fastq> -format=<sequence format> [-out_prefix=<output prefix> -filter_options=<string_filter_options>]\n".
            "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n";
 }

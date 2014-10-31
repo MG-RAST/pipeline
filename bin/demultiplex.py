@@ -56,7 +56,7 @@ def main(args):
     usage  = "usage: %prog [options] -b <barcode list> -i <input sequence file> -o <output dir>"+__doc__
     parser = OptionParser(usage)
     parser.add_option("-i", "--input", dest="input", default=None, help="Input sequence file.")
-    parser.add_option("-o", "--output", dest="output", default=None, help="Output dir, filenames will be 'barcode.type' or 'name.type'")
+    parser.add_option("-o", "--output", dest="output", default=".", help="Output dir (default cwd), filenames will be 'barcode.type' or 'name.type'")
     parser.add_option("-f", "--format", dest="format", default='fasta', help="File format: fasta, fastq [default 'fasta']")
     parser.add_option("-b", "--barcode", dest="barcode", default=None, help="File with list of barcodes or list of barcode name pairs")
     parser.add_option("-p", "--prefix", dest="prefix", default="", help="Optional sequence to prepend to barcodes")
@@ -101,6 +101,7 @@ def main(args):
     if opts.verbose:
         print "%d sequences split amoung %d barcodes. %d sequences without barcodes"%(sum(bar_count.values()), len(bar_count.keys()), miss_count)
 
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

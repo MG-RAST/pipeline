@@ -110,8 +110,8 @@ unless ( defined($solr_url) && defined($solr_col) ) {
 my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 
 # place certs in home dir
-PipelineAWE::run_cmd('tar -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
-PipelineAWE::run_cmd('tar -xf '.$mysql.' -C '.$ENV{'HOME'}, 1);
+PipelineAWE::run_cmd('tar --no-same-owner --no-same-permissions -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
+PipelineAWE::run_cmd('tar --no-same-owner --no-same-permissions -xf '.$mysql.' -C '.$ENV{'HOME'}, 1);
 my $mspath = $ENV{'HOME'}.'/.mysql/';
 
 # get db handles
@@ -247,8 +247,8 @@ solr_post($solr_url, $solr_col, $solr_file);
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 
 # cleanup
-PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
-PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.mysql');
+#PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
+#PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.mysql');
 
 exit 0;
 

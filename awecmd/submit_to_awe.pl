@@ -197,6 +197,7 @@ $vars->{job_id}         = $job_id;
 $vars->{mg_id}          = $up_attr->{id};
 $vars->{mg_name}        = $up_attr->{name};
 $vars->{job_date}       = $up_attr->{created};
+$vars->{file_format}    = $up_attr->{file_format};
 $vars->{seq_type}       = $up_attr->{sequence_type};
 $vars->{bp_count}       = $up_attr->{statistics}{bp_count};
 $vars->{project_id}     = $up_attr->{project_id} || '';
@@ -205,10 +206,10 @@ $vars->{user}           = 'mgu'.$jobj->{owner} || '';
 $vars->{inputfile}      = $file_name;
 $vars->{shock_node}     = $node_id;
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
-$vars->{assembled}      = $jattr->{assembled} || 0;
-$vars->{dereplicate}    = $jopts->{dereplicate} || 1;
-$vars->{bowtie}         = $jopts->{bowtie} || 1;
-$vars->{screen_indexes} = $jopts->{screen_indexes} || 'h_sapiens';
+$vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
+$vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
+$vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
+$vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
 
 
 
@@ -354,7 +355,7 @@ eval {
     $ares = $json->decode($apost->content);
 };
 if ($@) {
-    print STDERR "ERROR: Return from shock is not JSON:\n".$apost->content."\n";
+    print STDERR "ERROR: Return from AWE is not JSON:\n".$apost->content."\n";
     exit 1;
 }
 if ($ares->{error}) {

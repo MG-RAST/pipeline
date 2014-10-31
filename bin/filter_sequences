@@ -10,9 +10,10 @@ use File::Basename;
 
 # read in parameters
 my $infile       = '';
+my $format       = '';
 
-my $fasta_infile = '';
-my $fastq_infile = '';
+my $fasta_infile = 0;
+my $fastq_infile = 0;
 
 my $filter_ln    = '';
 my $filter_ambig = '';
@@ -29,7 +30,8 @@ my $fasta_out    = '';
 my $fasta_reject = '';
 
 GetOptions ( 
-	     'i=s'          => \$infile ,
+	     'i=s'          => \$infile,
+	     'format=s'     => \$format,
 
 	     'filter_ln'    => \$filter_ln,
 	     'filter_ambig' => \$filter_ambig,
@@ -70,13 +72,19 @@ my $usage = "
 
 ";
 
-# identify file type from extension
 &check_filenames($usage, $infile, $fasta_out, $fasta_reject);
-if ( $infile =~ /\.fn?a$|\.fasta$/i) { 
-  $fasta_infile = 1;
-}
-elsif ( $infile =~ /\.fastq$|\.fq$/i) {
-  $fastq_infile = 1;
+# identify file type
+if ( $format eq 'fasta' ) {
+    $fasta_infile = 1;
+} elsif ( $format eq 'fastq' ) {
+    $fastq_infile = 1;
+} else {
+    if ( $infile =~ /\.fn?a$|\.fasta$/i) { 
+        $fasta_infile = 1;
+    }
+    elsif ( $infile =~ /\.fastq$|\.fq$/i) {
+        $fastq_infile = 1;
+    }
 }
 
 # check that input arguments are OK
