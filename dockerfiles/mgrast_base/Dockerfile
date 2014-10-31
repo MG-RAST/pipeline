@@ -32,7 +32,8 @@ RUN apt-get update && apt-get install -y \
 	liburi-encode-perl \
 	libunicode-escape-perl \
 	liblist-allutils-perl \
-	libposix-strptime-perl
+	libposix-strptime-perl \
+	libberkeleydb-perl
 RUN pip install biopython psycopg2 gspread openpyxl numpy
 RUN cd /root \
 	; mkdir bin \
