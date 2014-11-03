@@ -30,9 +30,14 @@ my $input_node = "";
 my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
+my $clientgroups = undef;
 my $no_start   = 0;
 my $use_ssh    = 0;
+my $use_docker = 0;
 my $help       = 0;
+my $pipeline   = "";
+my $type       = "";
+my $production = 0; # indicates that this is production
 
 my $options = GetOptions (
         "job_id=s"     => \$job_id,
@@ -43,6 +48,11 @@ my $options = GetOptions (
 		"template=s"   => \$template,
 		"no_start!"    => \$no_start,
 		"use_ssh!"     => \$use_ssh,
+		"use_docker!"  => \$use_docker, # enables docker specific workflow entries, dockerimage and environ
+		"clientgroups=s" => \$clientgroups,
+		"pipeline=s"      => \$pipeline,
+		"type=s"       => \$type,
+		"production!"     => \$production,
 		"help!"        => \$help
 );
 
@@ -206,6 +216,35 @@ $vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
 $vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
 $vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
 $vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
+
+if ($production) {
+	unless (defined $pipeline) {
+		$vars->{'pipeline'} = "mgrast-prod";
+	}
+
+	unless (defined $type) {
+		$vars->{'type'} = "metagenome";
+	}
+}
+
+unless (defined $pipeline) {
+	die "template variable \"pipeline\" not defined";
+}
+
+unless (defined $type) {
+	die "template variable \"type\" not defined";
+}
+
+
+if (defined $clientgroups) {
+	$vars->{'clientgroups'} = $clientgroups;
+}
+
+if ($use_docker) {
+	$vars->{'docker_switch'} = '';
+} else {
+	$vars->{'docker_switch'} = '_'; # disables these entries
+}
 
 # set priority
 my $priority_map = {
