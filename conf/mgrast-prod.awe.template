@@ -1,6 +1,6 @@
 {
     "info": {
-        "pipeline": "mgrast-prod",
+        "pipeline": "[% pipeline %]",
         "name": "[% job_id %]",
         "project": "[% project_name %]",
         "user": "[% user %]",
@@ -18,7 +18,7 @@
             "bp_count": "[% bp_count %]",
             "project_id": "[% project_id %]",
             "project_name": "[% project_name %]",
-            "type": "metagenome",
+            "type": "[% type %]",
             "pipeline_version": "[% pipeline_version %]"
         }
     },
