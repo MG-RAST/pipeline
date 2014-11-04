@@ -15,14 +15,10 @@ my $exp_file  = '';
 my $ont_file  = '';
 my $rna_file  = '';
 my $lca_file  = '';
+my $ann_file  = '';
 my $get_rna   = 0;
 my $get_lca   = 0;
 my $frag_num  = 5000;
-my $achhost   = "";
-my $achname   = "";
-my $achuser   = "";
-my $achpass   = "";
-my $achver    = "1";
 my $usage     = qq($0
 Input:  m8 format blast / blat file - sorted by query | top hit
 Output: top hit for each query per source (protein or rna formats)
@@ -47,12 +43,8 @@ LCA:      md5|query list, fragment|subject, identity list, length list, evalue l
   --out_ontology file name      Name of output expanded ontology sim file (protein mode only).
   --out_rna      file name      Name of output expanded rna sim file (rna mode only).
   --out_lca      file name      Name of output expanded LCA file (protein and rna mode).
+  --ann_file     file name      Name of berkley DB formatted m5nr annotations.
   --frag_num     int            Optional. Number of fragment chunks to load in memory at once before processing. Default is '$frag_num'
-  --ach_host     mongodb host   Required. Mongo server with ach data
-  --ach_name     mongodb name   Required. Name of mongo db with ach data
-  --ach_user     mongodb user   Required. Owner of mongo db with ach data
-  --ach_pass     mongodb pwd    Required. Password of mongo db with ach data
-  --ach_ver      ach version    Required. Version of ach data in mongodb
   --verbose                     Optional. Verbose output.
 
 );
@@ -64,12 +56,8 @@ if ( ! GetOptions( "verbose!"       => \$verbose,
 		           "out_ontology:s" => \$ont_file,
 		           "out_rna:s"      => \$rna_file,
 		           "out_lca:s"      => \$lca_file,
-		           "frag_num:i"     => \$frag_num,
-		           "ach_host=s"     => \$achhost,
-                   "ach_name=s"     => \$achname,
-                   "ach_user=s"     => \$achuser,
-                   "ach_pass=s"     => \$achpass,
-   		           "ach_ver=s"      => \$achver
+		           "ann_file:s"     => \$ann_file,
+		           "frag_num:i"     => \$frag_num
                  ) )
   { print STDERR $usage; exit 1; }
 
@@ -92,9 +80,8 @@ if ($lca_file) {
 }
 
 my %m5nr;
-my $filename = "/mnt/awe/data/predata/m5nr_v1.bdb";
 tie %m5nr, "BerkeleyDB::Hash",
-        -Filename => $filename,
+        -Filename => $ann_file,
         -Flags    => DB_RDONLY
 or die "Cannot open file $filename: $! $BerkeleyDB::Error\n";
 
