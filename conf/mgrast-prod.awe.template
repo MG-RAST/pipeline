@@ -1145,7 +1145,7 @@
             "inputs": {
                 "[% job_id %].700.annotation.ontology.summary": {
                     "host": "[% shock_url %]",
-                    "origin": "21",
+                    "origin": "17",
                     "node": "-"
                 },
                 "postgresql.tar": {
@@ -1177,7 +1177,7 @@
                     }
                 }
             },
-            "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "19", "20", "21", "22", "23", "18"],
+            "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "18", "19", "20", "21", "22", "23"],
             "inputs": {
                 "postgresql.tar": {
                     "host": "[% cert_shock_url %]",
