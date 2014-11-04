@@ -340,12 +340,6 @@
                 "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %]",
                 "description": "aa sims annotation",
                 "environ": {
-                    "private": {
-                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
-                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
-                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
-                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    },
                     "[% docker_switch %]public" : {
                         "BASH_ENV" : "/root/mgrast_env.sh" 	 	
                     } 
@@ -384,6 +378,11 @@
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].650.aa.expand.ontology.json"
+                }
+            },
+            "predata": {
+                "m5nr_v1.bdb":{
+                    "url": "[% m5nr_annotation_url %]"
                 }
             },
             "userattr": {
@@ -541,12 +540,6 @@
                 "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %]",
                 "description": "rna sims annotation",
                 "environ": {
-                    "private": {
-                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
-                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
-                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
-                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    },
                     "[% docker_switch %]public" : {
                         "BASH_ENV" : "/root/mgrast_env.sh"
                     }
@@ -579,6 +572,11 @@
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].450.rna.expand.lca.json"
+                }
+            },
+            "predata": {
+                "m5nr_v1.bdb":{
+                    "url": "[% m5nr_annotation_url %]"
                 }
             },
             "userattr": {

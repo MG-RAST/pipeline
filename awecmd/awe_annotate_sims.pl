@@ -16,18 +16,20 @@ umask 000;
 
 # options
 my $out_prefix = "annotate_sims";
-my $input   = "";
-my $achver  = "1";
-my $aa      = 0;
-my $rna     = 0;
-my $help    = 0;
-my $options = GetOptions (
+my $input      = "";
+my $achver     = "1";
+my $ann_file   = "/mnt/awe/data/predata/m5nr_v1.bdb";
+my $aa         = 0;
+my $rna        = 0;
+my $help       = 0;
+my $options    = GetOptions (
         "out_prefix=s" => \$out_prefix,
-		"input=s"    => \$input,
-		"ach_ver=s"  => \$achver,
-        "aa!"        => \$aa,
-        "rna!"       => \$rna,
-		"help!"      => \$help
+		"input=s"      => \$input,
+		"ach_ver=s"    => \$achver,
+		"ann_file=s"   => \$ann_file,
+        "aa!"          => \$aa,
+        "rna!"         => \$rna,
+		"help!"        => \$help
 );
 
 if ($help){
@@ -43,20 +45,8 @@ if ($help){
     exit 1;
 }
 
-# get db variables from enviroment
-my $achhost = $ENV{'ACH_MONGO_HOST'} || undef;
-my $achname = $ENV{'ACH_MONGO_NAME'} || undef;
-my $achuser = $ENV{'ACH_MONGO_USER'} || undef;
-my $achpass = $ENV{'ACH_MONGO_PASS'} || undef;
-unless ( defined($achhost) && defined($achname) && defined($achuser) && defined($achpass) ) {
-    print STDERR "ERROR: missing ACH mongodb ENV variables.\n";
-    print STDERR get_usage();
-    exit 1;
-}
-my $achopts = "--ach_host ".$achhost." --ach_name ".$achname." --ach_user ".$achuser." --ach_pass ".$achpass." --ach_ver ".$achver;
-
 my @out_files = ();
-my $cmd  = "process_sims_by_source_mem --verbose $achopts --in_sim $input";
+my $cmd  = "process_sims_by_source_mem --verbose --in_sim $input --ann_file $ann_file";
 my $type = "";
 
 if ($aa) {
@@ -116,7 +106,7 @@ foreach my $out (@out_files) {
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_annotate_sims.pl -input=<input sims> <-aa|-rna> [-out_prefix=<output prefix> -ach_host=<ach mongodb host> -ach_ver=<ach db ver>]\n".
+    return "USAGE: awe_annotate_sims.pl -input=<input sims> <-aa|-rna> -ann_file <m5nr annotations, .bdb> [-out_prefix=<output prefix> -ach_host=<ach mongodb host> -ach_ver=<ach db ver>]\n".
            "outputs: \${out_prefix}.aa.sims.filter, \${out_prefix}.aa.expand.protein, \${out_prefix}.aa.expand.lca, \${out_prefix}.aa.expand.ontology\n".
            "           OR\n".
            "         \${out_prefix}.rna.sims.filter, \${out_prefix}.rna.expand.rna, \${out_prefix}.rna.expand.lca\n";
