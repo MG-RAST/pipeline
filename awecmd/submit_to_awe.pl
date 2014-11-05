@@ -376,6 +376,10 @@ my $workflow_str = "";
 $tpage->process(\$template_str, $vars, \$workflow_str) || die $tpage->error()."\n";
 
 
+#write to file for debugging puposes (first time)
+my $workflow_file = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
+write_file($workflow_file, $workflow_str);
+
 # transform workflow json string into hash
 my $workflow_hash = undef;
 eval {
@@ -406,8 +410,7 @@ $workflow_str = $json->encode($workflow_hash);
 
 
 
-#write to file for debugging puposes
-my $workflow_file = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
+#write to file for debugging puposes (second time)
 write_file($workflow_file, $workflow_str);
 
 
