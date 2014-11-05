@@ -13,3 +13,4 @@ docker tag mgrast/base:${MGRASTVERSION} mgrast/base:latest
 
 cd third-party
 for i in * ; do docker build --no-cache --tag mgrast/${i}:${MGRASTVERSION} ${i} ; done
+
