@@ -222,19 +222,23 @@ $vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_ind
 
 if ($production) {
 	unless (defined $pipeline && $pipeline ne "") {
-		$vars->{'pipeline'} = "mgrast-prod";
+		$pipeline = "mgrast-prod"; # production default
 	}
 
 	unless (defined $type && $type ne "") {
-		$vars->{'type'} = "metagenome";
+		$type = "metagenome"; # production default
 	}
 }
-
-unless (defined $pipeline && $pipeline ne "") {
+ 
+if (defined $pipeline && $pipeline ne "") {
+	$vars->{'pipeline'} = $pipeline;
+} else {
 	die "template variable \"pipeline\" not defined";
 }
 
-unless (defined $type && $type ne "") {
+if (defined $type && $type ne "") {
+	$vars->{'type'} = $type;
+} else {
 	die "template variable \"type\" not defined";
 }
 
