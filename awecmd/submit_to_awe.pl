@@ -395,7 +395,35 @@ if ($@) {
 
 #modifications on workflow hash
 unless ($production) {
-	#remove last steps
+	#remove last 6 steps (1x awe_done.pl and 5 x awe_loaddb.pl)
+	
+	my @task_array = @{$workflow_hash->{'tasks'}};
+
+	
+	my $taskcount = @task_array;
+	
+	if ($taskcount < 10) {
+		die;
+	}
+	
+	my $removedtask = pop(@task_array);
+	
+	unless ($removedtask->{'cmd'}->{'name'} eq 'awe_done.pl') {
+		die;
+	}
+	
+	for (my $i = 0 ; $i < 6 ; $i++) {
+		
+		$removedtask = pop(@task_array);
+		
+		unless ($removedtask->{'cmd'}->{'name'} eq 'awe_loaddb.pl') {
+			die;
+		}
+	}
+	
+	
+	$workflow_hash->{'tasks'} = \@task_array;
+	
 	
 }
 
