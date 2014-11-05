@@ -218,11 +218,11 @@ $vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
 $vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
 
 if ($production) {
-	unless (defined $pipeline) {
+	unless (defined $pipeline && $pipeline ne "") {
 		$vars->{'pipeline'} = "mgrast-prod";
 	}
 
-	unless (defined $type) {
+	unless (defined $type && $type ne "") {
 		$vars->{'type'} = "metagenome";
 	}
 }
