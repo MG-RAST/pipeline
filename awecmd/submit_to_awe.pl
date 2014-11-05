@@ -382,8 +382,9 @@ eval {
 	$workflow_hash = $json->decode($workflow_str);
 };
 if ($@) {
+	my $e = $@;
 	print "workflow_str:\n $workflow_str\n";
-	print STDERR "ERROR: workflow is not valid json\n";
+	print STDERR "ERROR: workflow is not valid json ($e)\n";
 	exit 1;
 }
 
