@@ -400,11 +400,6 @@ unless ($production) {
 }
 
 
-print Dumper($workflow_hash);
-exit(0);
-
-
-
 #transform workflow hash into json string
 $workflow_str = $json->encode($workflow_hash);
 
