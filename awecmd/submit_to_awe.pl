@@ -417,7 +417,8 @@ unless ($production) {
 		$removedtask = pop(@task_array);
 		
 		unless ($removedtask->{'cmd'}->{'name'} eq 'awe_loaddb.pl') {
-			die;
+			my $found_name  = $removedtask->{'cmd'}->{'name'} || "undef";
+			die "expected awe_loaddb.pl but found ".$found_name;
 		}
 	}
 	
