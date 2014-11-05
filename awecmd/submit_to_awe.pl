@@ -412,7 +412,7 @@ unless ($production) {
 		die;
 	}
 	
-	for (my $i = 0 ; $i < 6 ; $i++) {
+	for (my $i = 0 ; $i < 5 ; $i++) {
 		
 		$removedtask = pop(@task_array);
 		
