@@ -252,7 +252,7 @@ if (defined $clientgroups) {
 	$vars->{'clientgroups'} = $clientgroups;
 }
 
-$vars->{'docker_image_version'} => '20141105';
+$vars->{'docker_image_version'} = '20141105';
 if ($use_docker) {
 	$vars->{'docker_switch'} = '';
 } else {
@@ -382,6 +382,7 @@ eval {
 	$workflow_hash = $json->decode($workflow_str);
 };
 if ($@) {
+	print "workflow_str:\n $workflow_str\n";
 	print STDERR "ERROR: workflow is not valid json\n";
 	exit 1;
 }
