@@ -176,6 +176,7 @@ if ($input_file) {
     };
 }
 # POST to shock
+print "upload input to Shock... ";
 my $spost = $agent->post(
     $vars->{shock_url}.'/node',
     'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
@@ -194,6 +195,8 @@ if ($sres->{error}) {
     print STDERR "ERROR: (shock) ".$sres->{error}[0]."\n";
     exit 1;
 }
+print " ...done.\n";
+
 my $node_id = $sres->{data}->{id};
 my $file_name = $sres->{data}->{file}->{name};
 print "upload shock node\t$node_id\n";
