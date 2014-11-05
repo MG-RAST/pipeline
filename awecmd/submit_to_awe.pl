@@ -23,6 +23,8 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use Data::Dumper;
 
+use File::Slurp;
+
 # options
 my $job_id     = "";
 my $input_file = "";
@@ -112,6 +114,9 @@ if (! $awe_url) {
 if (! $template) {
     $template = $PipelineAWE_Conf::template_file;
 }
+
+my $template_str = read_file($template) ;
+
 
 # get job related info from DB
 my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
@@ -247,6 +252,7 @@ if (defined $clientgroups) {
 	$vars->{'clientgroups'} = $clientgroups;
 }
 
+$vars->{'docker_image_version'} => '20141105';
 if ($use_docker) {
 	$vars->{'docker_switch'} = '';
 } else {
@@ -362,13 +368,52 @@ if ($vars->{index_download_urls} eq "") {
 }
 chop $vars->{index_download_urls};
 
-# replace variables
-my $workflow = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
-$tpage->process($template, $vars, $workflow) || die $tpage->error()."\n";
+
+
+my $workflow_str = "";
+
+# replace variables (reads from $template_str and writes to $workflow_str)
+$tpage->process(\$template_str, $vars, \$workflow_str) || die $tpage->error()."\n";
+
+
+# transform workflow json string into hash
+my $workflow_hash = undef;
+eval {
+	$workflow_hash = $json->decode($workflow_str);
+};
+if ($@) {
+	print STDERR "ERROR: workflow is not valid json\n";
+	exit 1;
+}
+
+
+#modifications on workflow hash
+unless ($production) {
+	#remove last steps
+	
+}
+
+
+print Dumper($workflow_hash);
+exit(0);
+
+
+
+#transform workflow hash into json string
+$workflow_str = $json->encode($workflow_hash);
+
+
+
+#write to file for debugging puposes
+my $workflow_file = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
+write_file($workflow_file, $workflow_str);
+
+
+
 
 # test mode
 if ($no_start) {
-    print "workflow\t$workflow\n";
+    print "workflow\t".$workflow_file."\n";
     exit 0;
 }
 
@@ -378,8 +423,11 @@ my $apost = $agent->post(
     'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
     'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token,
     'Content_Type', 'multipart/form-data',
-    'Content', [ upload => [$workflow] ]
+    #'Content', [ upload => [$workflow_file] ]
+	'Content', [ upload => [undef, "n/a", Content => $workflow_str] ]
 );
+
+
 my $ares = undef;
 eval {
     $ares = $json->decode($apost->content);
