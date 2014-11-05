@@ -227,11 +227,11 @@ if ($production) {
 	}
 }
 
-unless (defined $pipeline) {
+unless (defined $pipeline && $pipeline ne "") {
 	die "template variable \"pipeline\" not defined";
 }
 
-unless (defined $type) {
+unless (defined $type && $type ne "") {
 	die "template variable \"type\" not defined";
 }
 
