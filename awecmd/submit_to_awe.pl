@@ -252,7 +252,7 @@ if (defined $clientgroups) {
 	$vars->{'clientgroups'} = $clientgroups;
 }
 
-$vars->{'docker_image_version'} = '20141105';
+$vars->{'docker_image_version'} = '20141106';
 if ($use_docker) {
 	$vars->{'docker_switch'} = '';
 } else {
