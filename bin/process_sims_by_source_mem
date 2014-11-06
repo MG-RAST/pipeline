@@ -83,7 +83,7 @@ my %m5nr;
 tie %m5nr, "BerkeleyDB::Hash",
         -Filename => $ann_file,
         -Flags    => DB_RDONLY
-or die "Cannot open file $filename: $! $BerkeleyDB::Error\n";
+or die "Cannot open file $ann_file: $! $BerkeleyDB::Error\n";
 
 my $data  = {};
 my $count = 0;
