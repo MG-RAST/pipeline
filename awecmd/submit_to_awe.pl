@@ -23,6 +23,8 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use Data::Dumper;
 
+use File::Slurp;
+
 # options
 my $job_id     = "";
 my $input_file = "";
@@ -113,6 +115,9 @@ if (! $template) {
     $template = $PipelineAWE_Conf::template_file;
 }
 
+my $template_str = read_file($template) ;
+
+
 # get job related info from DB
 my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
 unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
@@ -176,6 +181,7 @@ if ($input_file) {
     };
 }
 # POST to shock
+print "upload input to Shock... ";
 my $spost = $agent->post(
     $vars->{shock_url}.'/node',
     'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
@@ -194,6 +200,8 @@ if ($sres->{error}) {
     print STDERR "ERROR: (shock) ".$sres->{error}[0]."\n";
     exit 1;
 }
+print " ...done.\n";
+
 my $node_id = $sres->{data}->{id};
 my $file_name = $sres->{data}->{file}->{name};
 print "upload shock node\t$node_id\n";
@@ -218,20 +226,24 @@ $vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
 $vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
 
 if ($production) {
-	unless (defined $pipeline) {
-		$vars->{'pipeline'} = "mgrast-prod";
+	unless (defined $pipeline && $pipeline ne "") {
+		$pipeline = "mgrast-prod"; # production default
 	}
 
-	unless (defined $type) {
-		$vars->{'type'} = "metagenome";
+	unless (defined $type && $type ne "") {
+		$type = "metagenome"; # production default
 	}
 }
-
-unless (defined $pipeline) {
+ 
+if (defined $pipeline && $pipeline ne "") {
+	$vars->{'pipeline'} = $pipeline;
+} else {
 	die "template variable \"pipeline\" not defined";
 }
 
-unless (defined $type) {
+if (defined $type && $type ne "") {
+	$vars->{'type'} = $type;
+} else {
 	die "template variable \"type\" not defined";
 }
 
@@ -240,6 +252,7 @@ if (defined $clientgroups) {
 	$vars->{'clientgroups'} = $clientgroups;
 }
 
+$vars->{'docker_image_version'} = '20141105';
 if ($use_docker) {
 	$vars->{'docker_switch'} = '';
 } else {
@@ -355,13 +368,81 @@ if ($vars->{index_download_urls} eq "") {
 }
 chop $vars->{index_download_urls};
 
-# replace variables
-my $workflow = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
-$tpage->process($template, $vars, $workflow) || die $tpage->error()."\n";
+
+
+my $workflow_str = "";
+
+# replace variables (reads from $template_str and writes to $workflow_str)
+$tpage->process(\$template_str, $vars, \$workflow_str) || die $tpage->error()."\n";
+
+
+#write to file for debugging puposes (first time)
+my $workflow_file = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
+write_file($workflow_file, $workflow_str);
+
+# transform workflow json string into hash
+my $workflow_hash = undef;
+eval {
+	$workflow_hash = $json->decode($workflow_str);
+};
+if ($@) {
+	my $e = $@;
+	print "workflow_str:\n $workflow_str\n";
+	print STDERR "ERROR: workflow is not valid json ($e)\n";
+	exit 1;
+}
+
+
+#modifications on workflow hash
+unless ($production) {
+	#remove last 6 steps (1x awe_done.pl and 5 x awe_loaddb.pl)
+	
+	my @task_array = @{$workflow_hash->{'tasks'}};
+
+	
+	my $taskcount = @task_array;
+	
+	if ($taskcount < 10) {
+		die;
+	}
+	
+	my $removedtask = pop(@task_array);
+	
+	unless ($removedtask->{'cmd'}->{'name'} eq 'awe_done.pl') {
+		die;
+	}
+	
+	for (my $i = 0 ; $i < 5 ; $i++) {
+		
+		$removedtask = pop(@task_array);
+		
+		unless ($removedtask->{'cmd'}->{'name'} eq 'awe_loaddb.pl') {
+			my $found_name  = $removedtask->{'cmd'}->{'name'} || "undef";
+			die "expected awe_loaddb.pl but found ".$found_name;
+		}
+	}
+	
+	
+	$workflow_hash->{'tasks'} = \@task_array;
+	
+	
+}
+
+
+#transform workflow hash into json string
+$workflow_str = $json->encode($workflow_hash);
+
+
+
+#write to file for debugging puposes (second time)
+write_file($workflow_file, $workflow_str);
+
+
+
 
 # test mode
 if ($no_start) {
-    print "workflow\t$workflow\n";
+    print "workflow\t".$workflow_file."\n";
     exit 0;
 }
 
@@ -371,8 +452,11 @@ my $apost = $agent->post(
     'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
     'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token,
     'Content_Type', 'multipart/form-data',
-    'Content', [ upload => [$workflow] ]
+    #'Content', [ upload => [$workflow_file] ]
+	'Content', [ upload => [undef, "n/a", Content => $workflow_str] ]
 );
+
+
 my $ares = undef;
 eval {
     $ares = $json->decode($apost->content);
