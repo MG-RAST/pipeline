@@ -22,6 +22,13 @@ my $ann_file   = "/mnt/awe/data/predata/m5nr_v1.bdb";
 my $aa         = 0;
 my $rna        = 0;
 my $help       = 0;
+
+
+if (-e "m5nr_v1.bdb") {
+	$ann_file = "m5nr_v1.bdb"; # this and path above are temporary hacks
+}
+
+
 my $options    = GetOptions (
         "out_prefix=s" => \$out_prefix,
 		"input=s"      => \$input,
