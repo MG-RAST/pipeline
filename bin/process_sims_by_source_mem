@@ -56,7 +56,7 @@ if ( ! GetOptions( "verbose!"       => \$verbose,
 		           "out_ontology:s" => \$ont_file,
 		           "out_rna:s"      => \$rna_file,
 		           "out_lca:s"      => \$lca_file,
-		           "ann_file:s"     => \$ann_file,
+		           "ann_file=s"     => \$ann_file,
 		           "frag_num:i"     => \$frag_num
                  ) )
   { print STDERR $usage; exit 1; }
@@ -79,6 +79,7 @@ if ($lca_file) {
   $get_lca = 1;
 }
 
+# get m5nr BerkelyDB handle
 my %m5nr;
 tie %m5nr, "BerkeleyDB::Hash",
         -Filename => $ann_file,
@@ -313,7 +314,7 @@ sub get_md5_data {
     my $md5id = {};
     my %data = ();
     foreach my $md5 (@{$md5s}) {
-        if(exists $m5nr{$md5}) {
+        if (exists $m5nr{$md5}) {
             $data{$md5} = $json->decode($m5nr{$md5});
         }
     }

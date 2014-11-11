@@ -337,7 +337,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %]",
+                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %] -ann_file=m5nr_v1.bdb",
                 "description": "aa sims annotation",
                 "environ": {
                     "[% docker_switch %]public" : {
@@ -537,7 +537,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %]",
+                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %] -ann_file=m5nr_v1.bdb",
                 "description": "rna sims annotation",
                 "environ": {
                     "[% docker_switch %]public" : {
@@ -591,15 +591,9 @@
         {
             "cmd": {
                 "name": "awe_index_sim_seq.pl",
-                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=[% ach_annotation_ver %] -memory=10",
+                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=[% ach_annotation_ver %] -memory=10 -ann_file=m5nr_v1.bdb",
                 "description": "index sim seq",
                 "environ": {
-                    "private": {
-                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
-                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
-                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
-                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    },
                     "[% docker_switch %]public" : {
                         "BASH_ENV" : "/root/mgrast_env.sh"
                     }
@@ -652,6 +646,11 @@
                     "node": "-",
                     "delete": true,
                     "attrfile": "[% job_id %].700.annotation.sims.filter.seq.index.json"
+                }
+            },
+            "predata": {
+                "m5nr_v1.bdb":{
+                    "url": "[% m5nr_annotation_url %]"
                 }
             },
             "userattr": {
