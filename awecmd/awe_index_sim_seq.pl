@@ -13,17 +13,19 @@ use Cwd;
 umask 000;
 
 # options
-my @in_sims = ();
-my @in_maps = ();
-my @in_seqs = ();
-my $output  = "";
-my $memory  = 16;
-my $achver  = "1";
-my $help    = 0;
-my $options = GetOptions (
+my @in_sims  = ();
+my @in_maps  = ();
+my @in_seqs  = ();
+my $output   = "";
+my $memory   = 16;
+my $achver   = "1";
+my $ann_file = "/mnt/awe/data/predata/m5nr_v1.bdb";
+my $help     = 0;
+my $options  = GetOptions (
 		"in_sims=s"  => \@in_sims,
 		"in_maps=s"  => \@in_maps,
 		"in_seqs=s"  => \@in_seqs,
+		"ann_file=s" => \$ann_file,
 		"output=s"   => \$output,
 		"memory=i"   => \$memory,
 		"ach_ver=s"  => \$achver,
@@ -50,18 +52,6 @@ if ($help){
     print STDERR get_usage();
     exit 1;
 }
-
-# get db variables from enviroment
-my $achhost = $ENV{'ACH_MONGO_HOST'} || undef;
-my $achname = $ENV{'ACH_MONGO_NAME'} || undef;
-my $achuser = $ENV{'ACH_MONGO_USER'} || undef;
-my $achpass = $ENV{'ACH_MONGO_PASS'} || undef;
-unless ( defined($achhost) && defined($achname) && defined($achuser) && defined($achpass) ) {
-    print STDERR "ERROR: missing ACH mongodb ENV variables.\n";
-    print STDERR get_usage();
-    exit 1;
-}
-my $achopts = "--ach_host ".$achhost." --ach_name ".$achname." --ach_user ".$achuser." --ach_pass ".$achpass." --ach_ver ".$achver;
 
 # temp files
 my $sim_file = "sims.filter.".time();
@@ -103,7 +93,7 @@ PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.fina
 PipelineAWE::run_cmd("rm $sim_file.seq");
 
 # index file
-PipelineAWE::run_cmd("index_sims_file_md5 --verbose $achopts --in_file $sim_file.final --out_file $sim_file.index");
+PipelineAWE::run_cmd("index_sims_file_md5 --verbose --ann_file $ann_file --in_file $sim_file.final --out_file $sim_file.index");
 
 # final output
 PipelineAWE::run_cmd("mv $sim_file.final $output");
