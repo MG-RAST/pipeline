@@ -40,6 +40,7 @@ unless ($in_file && (-s $in_file) && $out_file) {
 }
 
 # get m5nr BerkelyDB handle
+my $json = JSON->new->allow_nonref;
 my %m5nr;
 tie %m5nr, "BerkeleyDB::Hash",
         -Filename => $ann_file,
@@ -98,8 +99,8 @@ sub process_seeks {
         my ($md5, $start, $size) = @$set;
         if (exists $m5nr{$md5}) {
            my $data = $json->decode($m5nr{$md5});
-           if (exists $data{id}) {
-               $out .= join("\t", ($data{id}, $start, $size))."\n";
+           if (exists $data->{id}) {
+               $out .= join("\t", ($data->{id}, $start, $size))."\n";
            }
         }
     }
