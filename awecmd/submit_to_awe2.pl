@@ -313,8 +313,9 @@ my $workflow = new AWE::Workflow(
 
 
 
-
+### qc ###
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/qc.json
+
 my $task_qc = $workflow->newTask(	'app:MG-RAST/qc.qc.default',
 									shock_resource($vars->{shock_url}, $node_id, $file_name),
 									string_resource($up_attr->{file_format}),
@@ -323,13 +324,81 @@ my $task_qc = $workflow->newTask(	'app:MG-RAST/qc.qc.default',
 									string_resource($vars->{filter_options})
 );
 
-$task_qc->userattr("stage_id" => "075", "stage_name" => "qc");
+$task_qc->userattr(	"stage_id" 		=> "075",
+					"stage_name" 	=> "qc"
+);
+
+
+### preprocess (optional, fastq or fasta) ###
+#https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/base.json
+
+my $task_preprocess = undef;
+if ($vars->{filter_options} ne 'skip') {
+	
+	if ($up_attr->{file_format} eq "fastq")  {
+
+		$task_preprocess = $workflow->newTask(	'app:MG-RAST/base.preprocess.fastq',
+												shock_resource($vars->{shock_url}, $node_id, $file_name),
+												string_resource($job_id),
+												string_resource($vars->{filter_options}
+		);
+
+	} else {
+		$task_preprocess = $workflow->newTask(	'app:MG-RAST/base.preprocess.fasta',
+												shock_resource($vars->{shock_url}, $node_id, $file_name),
+												string_resource($job_id),
+												string_resource($vars->{filter_options}
+		);
+	}
+
+	$task_preprocess->userattr(
+		"stage_id"		=> "100",
+		"stage_name"	=> "preprocess",
+		"file_format"	=> "fasta",
+		"seq_format"	=> "bp"
+	);
+
+}
+
+### dereplicate ###
+my $dereplicate_input = undef;
+if (defined $task_preprocess) {
+	$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
+} else {
+	$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+}
+my $task_dereplicate = $workflow->newTask(	'app:MG-RAST/base.dereplicate.default',
+											$dereplicate_input,
+											string_resource($job_id),
+											string_resource($vars->{prefix_length}),
+											string_resource($vars->{dereplicate})
+);
+
+$task_dereplicate->userattr(
+	"stage_id"		=> "150",
+	"stage_name"	=> "dereplication",
+	"file_format"	=> "fasta",
+	"seq_format"	=> "bp"
+);
 
 
 
+### bowtie_screen ###
 
+my $task_bowtie_screen = $workflow->newTask(	'app:MG-RAST/bowtie.bowtie.default'
+												task_resource($task_dereplicate->taskid(), 'passed'),
+												string_resource($job_id),
+												string_resource($vars->{screen_indexes}),
+												string_resource($vars->{bowtie})
+);
 
-
+$task_bowtie_screen->userattr(
+	"stage_id"		=> "299",
+	"stage_name"	=> "screen",
+	"data_type"		=> "sequence",
+	"file_format"	=> "fasta",
+	"seq_format"	=> "bp"
+);
 
 
 
