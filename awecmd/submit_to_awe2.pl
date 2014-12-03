@@ -385,7 +385,7 @@ $task_dereplicate->userattr(
 
 ### bowtie_screen ###
 
-my $task_bowtie_screen = $workflow->newTask(	'app:MG-RAST/bowtie.bowtie.default'
+my $task_bowtie_screen = $workflow->newTask(	'app:MG-RAST/bowtie.bowtie.default',
 												task_resource($task_dereplicate->taskid(), 'passed'),
 												string_resource($job_id),
 												string_resource($vars->{screen_indexes}),
