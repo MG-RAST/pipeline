@@ -340,14 +340,14 @@ if ($vars->{filter_options} ne 'skip') {
 		$task_preprocess = $workflow->newTask(	'app:MG-RAST/base.preprocess.fastq',
 												shock_resource($vars->{shock_url}, $node_id, $file_name),
 												string_resource($job_id),
-												string_resource($vars->{filter_options}
+												string_resource($vars->{filter_options})
 		);
 
 	} else {
 		$task_preprocess = $workflow->newTask(	'app:MG-RAST/base.preprocess.fasta',
 												shock_resource($vars->{shock_url}, $node_id, $file_name),
 												string_resource($job_id),
-												string_resource($vars->{filter_options}
+												string_resource($vars->{filter_options})
 		);
 	}
 
