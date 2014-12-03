@@ -312,15 +312,15 @@ my $workflow = new AWE::Workflow(
 );
 
 
-my $workflow_inputnode = shock_resource($vars->{shock_url}, $node_id, $file_name);
+
 
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/qc.json
 my $task_qc = $workflow->newTask(	'app:MG-RAST/qc.qc.default',
-									$workflow_inputnode,
-									$up_attr->{file_format},
-									$job_id,
-									$vars->{assembled},
-									$vars->{filter_options}
+									shock_resource($vars->{shock_url}, $node_id, $file_name),
+									string_resource($up_attr->{file_format}),
+									string_resource($job_id),
+									string_resource($vars->{assembled}),
+									string_resource($vars->{filter_options})
 );
 
 $task_qc->userattr("stage_id" => "075", "stage_name" => "qc");
