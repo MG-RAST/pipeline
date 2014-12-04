@@ -82,13 +82,14 @@ else {
     PipelineAWE::run_cmd("seqUtil --truncateuniqueid 1000 -i $fasta -o $input_file");
 
     # run bowtie2
+    my $tmp_input_var = $input_file;
     for my $index_name (@indexes) {
         my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
         # 'reorder' option outputs sequences in same order as input file
-        PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null", 1);
-        $input_file = $unaligned;
+        PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $tmp_input_var > /dev/null", 1);
+        $tmp_input_var = $unaligned;
     }
-    PipelineAWE::run_cmd("mv $input_file $output");
+    PipelineAWE::run_cmd("mv $tmp_input_var $output");
 
     # create subset record list
     # note: parent and child files in same order
