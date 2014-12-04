@@ -78,6 +78,37 @@ if ($help) {
 }
 
 
+#########################################################
+
+
+sub submit_workflow {
+	my ($self, $workflow, $aweserverurl, $aweserverurl, $shocktoken) = @_;
+	my $debug = 0;
+	############################################
+	# connect to AWE server and check the clients
+	my $awe = new AWE::Client($aweserverurl, $shocktoken, $shocktoken, $debug); # second token is for AWE
+	unless (defined $awe) {
+		die;
+	}
+	$awe->checkClientGroup($self->clientgroup)==0 || die "no clients in clientgroup found, ".$self->clientgroup." (AWE server: ".$self->aweserverurl.")";
+	print "submit job to AWE server...\n";
+	my $json = JSON->new;
+	my $submission_result = $awe->submit_job('json_data' => $json->encode($workflow->getHash()));
+	unless (defined $submission_result) {
+		die "error: submission_result is not defined";
+	}
+	unless (defined $submission_result->{'data'}) {
+		print STDERR Dumper($submission_result);
+		exit(1);
+	}
+	my $job_id = $submission_result->{'data'}->{'id'} || die "no job_id found";
+	print "result from AWE server:\n".$json->pretty->encode( $submission_result )."\n";
+	return $job_id;
+}
+
+
+#########################################################
+
 if ($production) {
 	
 	$pipeline = "mgrast-prod"; # production default
@@ -329,6 +360,15 @@ $task_qc->userattr(	"stage_id" 		=> "075",
 );
 
 
+
+
+my $job_id = $cap->submit_workflow($workflow_document, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
+
+exit(0);
+
+
+
+
 ### preprocess (optional, fastq or fasta) ###
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/base.json
 
@@ -416,7 +456,7 @@ $task_bowtie_screen->userattr(
 
 
 #my $json = JSON->new;
-print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
+print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() , $awe_url, $shocktoken)."\n";
 
 
 
