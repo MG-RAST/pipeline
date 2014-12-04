@@ -25,15 +25,9 @@ our $analysis_dbname = "";
 our $analysis_dbuser = "";
 our $analysis_dbpass = "";
 
-# ach mongo db
-our $ach_mongo_host = "";
-our $ach_mongo_name = "";
-our $ach_mongo_user = "";
-our $ach_mongo_pass = "";
-
 # keywords and values for workflow template
 our $template_keywords = {
-    
+
     # versions
     'pipeline_version'   => "",
     'ach_sequence_ver'   => "",
@@ -65,9 +59,10 @@ our $template_keywords = {
     'postgresql_cert' => "",
     
     # shock data download urls
-    'm5nr1_download_url' => "",
-    'm5nr2_download_url' => "",
-    'm5rna_download_url' => "",
+    'm5nr_annotation_url' => "",
+    'm5nr1_download_url'  => "",
+    'm5nr2_download_url'  => "",
+    'm5rna_download_url'  => "",
     'm5rna_clust_download_url' => "",
     
     # jobcache db for pipeline
@@ -80,13 +75,7 @@ our $template_keywords = {
     'analysis_dbhost' => $analysis_dbhost,
     'analysis_dbname' => $analysis_dbname,
     'analysis_dbuser' => $analysis_dbuser,
-    'analysis_dbpass' => $analysis_dbpass,
-    
-    # ach mongo db
-    'ach_mongo_host' => $ach_mongo_host,
-    'ach_mongo_name' => $ach_mongo_name,
-    'ach_mongo_user' => $ach_mongo_user,
-    'ach_mongo_pass' => $ach_mongo_pass
+    'analysis_dbpass' => $analysis_dbpass
 
 };
 
