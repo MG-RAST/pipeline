@@ -456,7 +456,7 @@ $task_bowtie_screen->userattr(
 
 
 #my $json = JSON->new;
-print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() , $awe_url, $shocktoken)."\n";
+print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() , $awe_url, $PipelineAWE_Conf::shock_pipeline_token)."\n";
 
 
 
