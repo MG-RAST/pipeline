@@ -90,7 +90,7 @@ sub submit_workflow {
 	unless (defined $awe) {
 		die;
 	}
-	$awe->checkClientGroup($self->clientgroup)==0 || die "no clients in clientgroup found, ".$self->clientgroup." (AWE server: ".$self->aweserverurl.")";
+	#$awe->checkClientGroup($self->clientgroup)==0 || die "no clients in clientgroup found, ".$self->clientgroup." (AWE server: ".$self->aweserverurl.")";
 	print "submit job to AWE server...\n";
 	my $json = JSON->new;
 	my $submission_result = $awe->submit_job('json_data' => $json->encode($workflow->getHash()));
