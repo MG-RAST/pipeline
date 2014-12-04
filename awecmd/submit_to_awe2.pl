@@ -82,7 +82,7 @@ if ($help) {
 
 
 sub submit_workflow {
-	my ($self, $workflow, $aweserverurl, $shocktoken, $awetoken) = @_;
+	my ($workflow, $aweserverurl, $shocktoken, $awetoken) = @_;
 	my $debug = 0;
 	############################################
 	# connect to AWE server and check the clients
