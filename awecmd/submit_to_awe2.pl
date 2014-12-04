@@ -360,7 +360,7 @@ $task_qc->userattr(	"stage_id" 		=> "075",
 );
 
 
-print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() , $awe_url, $PipelineAWE_Conf::shock_pipeline_token)."\n";
+print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
 
 exit(0);
 
