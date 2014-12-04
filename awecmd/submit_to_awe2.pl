@@ -82,11 +82,11 @@ if ($help) {
 
 
 sub submit_workflow {
-	my ($self, $workflow, $aweserverurl, $aweserverurl, $shocktoken) = @_;
+	my ($self, $workflow, $aweserverurl, $shocktoken, $awetoken) = @_;
 	my $debug = 0;
 	############################################
 	# connect to AWE server and check the clients
-	my $awe = new AWE::Client($aweserverurl, $shocktoken, $shocktoken, $debug); # second token is for AWE
+	my $awe = new AWE::Client($aweserverurl, $shocktoken, $awetoken, $debug); # second token is for AWE
 	unless (defined $awe) {
 		die;
 	}
