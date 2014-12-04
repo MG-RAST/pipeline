@@ -362,7 +362,7 @@ $task_qc->userattr(	"stage_id" 		=> "075",
 
 
 
-my $job_id = $cap->submit_workflow($workflow_document, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
+my $this_job_id = submit_workflow($workflow, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
 
 exit(0);
 
