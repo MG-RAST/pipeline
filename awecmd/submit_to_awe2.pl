@@ -361,32 +361,44 @@ if ($vars->{filter_options} ne 'skip') {
 }
 
 ### dereplicate ###
-my $dereplicate_input = undef;
-if (defined $task_preprocess) {
-	$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
-} else {
-	$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+my $task_dereplicate = undef;
+if ($vars->{dereplicate} != 0) {
+	my $dereplicate_input = undef;
+	if (defined $task_preprocess) {
+		$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
+	} else {
+		$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+	}
+	$task_dereplicate = $workflow->newTask(	'app:MG-RAST/base.dereplicate.default',
+												$dereplicate_input,
+												string_resource($job_id),
+												string_resource($vars->{prefix_length}),
+												string_resource($vars->{dereplicate})
+	);
+
+	$task_dereplicate->userattr(
+		"stage_id"		=> "150",
+		"stage_name"	=> "dereplication",
+		"file_format"	=> "fasta",
+		"seq_format"	=> "bp"
+	);
 }
-my $task_dereplicate = $workflow->newTask(	'app:MG-RAST/base.dereplicate.default',
-											$dereplicate_input,
-											string_resource($job_id),
-											string_resource($vars->{prefix_length}),
-											string_resource($vars->{dereplicate})
-);
-
-$task_dereplicate->userattr(
-	"stage_id"		=> "150",
-	"stage_name"	=> "dereplication",
-	"file_format"	=> "fasta",
-	"seq_format"	=> "bp"
-);
-
 
 
 ### bowtie_screen ###
+my $bowtie_screen_input = undef; # since previous two tasks are optional, figure out the input for this task.
+if (defined $task_dereplicate) {
+	$bowtie_screen_input = task_resource($task_dereplicate->taskid(), 'passed');
+} else {
+	if (defined $task_preprocess) {
+		$bowtie_screen_input = task_resource($task_preprocess->taskid(), 'passed');
+	} else {
+		$bowtie_screen_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+	}
+}
 
 my $task_bowtie_screen = $workflow->newTask(	'app:MG-RAST/bowtie.bowtie.default',
-												task_resource($task_dereplicate->taskid(), 'passed'),
+												$bowtie_screen_input,
 												string_resource($job_id),
 												string_resource($vars->{screen_indexes}),
 												string_resource($vars->{bowtie})
