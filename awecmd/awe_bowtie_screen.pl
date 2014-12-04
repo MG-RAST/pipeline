@@ -79,7 +79,7 @@ else {
 
     # truncate input to 1000 bp
     my $input_file = $fasta.'.trunc';
-    PipelineAWE::run_cmd("seqUtil --truncate 1000 -i $fasta -o $input_file");
+    PipelineAWE::run_cmd("seqUtil --truncateuniqueid 1000 -i $fasta -o $input_file");
 
     # run bowtie2
     for my $index_name (@indexes) {

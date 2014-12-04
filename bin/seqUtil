@@ -11,6 +11,7 @@ parser.add_option('-o', '--output', dest="out", help="output file")
 group = OptionGroup(parser, "Command Options")
 group.add_option('--fastq', dest="fastq", action="store_true", default=False, help="input file is fastq: for fasta2tab|sortbyid2tab|uniquefasta")
 group.add_option('--truncate', dest="truncate", default=None, help="truncate reads to inputed length in bps")
+group.add_option('--truncateuniqueid', dest="truncateuniqid", default=None, help="truncate reads to inputted length in bps and replace seq headers with sequential integers")
 group.add_option('--bowtie_truncate', dest="bowtie_truncate", action="store_true", default=False, help="truncate reads to 1024 bp for bowtie")
 group.add_option('--fastq2uniquefasta', dest="fastq2uniquefasta", action="store_true", default=False, help="convert fastq to fasta file and replace ids with compact unique strings")
 group.add_option('--uniquefasta', dest="uniquefasta", action="store_true", default=False, help="replace ids with compact unique strings")
@@ -59,7 +60,7 @@ def tab2fasta(input, output, has_len=False):
 def fastq2fasta(input, output):
     SeqIO.convert(input, "fastq", output, "fasta")
 
-def truncate(input, output, bps):
+def truncate(input, output, bps, uniqid_flag):
     try:
         trunc_len = int(bps)
     except:
@@ -67,13 +68,21 @@ def truncate(input, output, bps):
         sys.exit(1)
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
+    count = 1
     for record in SeqIO.parse(input_handle, "fasta") :
         seq = ""
         if len(record.seq) > trunc_len:
-            seq = record.seq[0:trunc_len-1]
+            seq = record.seq[0:trunc_len]
         else:
             seq = record.seq
-        output_handle.write(">%s\n%s\n" % (record.id, seq))
+
+        if uniqid_flag:
+            output_handle.write(">%s\n%s\n" % (count, seq))
+        else:
+            output_handle.write(">%s\n%s\n" % (record.id, seq))
+
+        count = count + 1
+
     input_handle.close()
     output_handle.close()
 
@@ -214,9 +223,11 @@ if __name__ == '__main__':
     elif options.fastq2fasta:
         fastq2fasta(options.input, options.out)
     elif options.truncate:
-        truncate(options.input, options.out, options.truncate)
+        truncate(options.input, options.out, options.truncate, False)
+    elif options.truncateuniqid:
+        truncate(options.input, options.out, options.truncateuniqid, True)
     elif options.bowtie_truncate:
-        truncate(options.input, options.out, '1024')
+        truncate(options.input, options.out, '1024', False)
     elif options.stdfasta:
         fastastd(options.input, options.out)
     elif options.seqstats:
