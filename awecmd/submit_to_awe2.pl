@@ -367,7 +367,7 @@ my $workflow = new AWE::Workflow(
 
 my $task_preprocess = undef;
 if ($vars->{filter_options} ne 'skip') {
-	
+	print "preprocess\n";
 	
 	$task_preprocess = $workflow->newTask(	'MG-RAST/base.preprocess.'.$up_attr->{file_format},
 		shock_resource($vars->{shock_url}, $node_id, $file_name),
@@ -391,6 +391,8 @@ if ($vars->{filter_options} ne 'skip') {
 ### dereplicate ###
 my $task_dereplicate = undef;
 if ($vars->{dereplicate} != 0) {
+	print "dereplicate\n";
+	
 	my $dereplicate_input = undef;
 	if (defined $task_preprocess) {
 		$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
@@ -417,7 +419,7 @@ if ($vars->{dereplicate} != 0) {
 my $bowtie_screen_input = undef; # since previous two tasks are optional, figure out the input for this task.
 
 if ($vars->{bowtie} != 0 ) {
-
+	print "bowtie\n";
 	
 	my @bowtie_index_files=();
 	
