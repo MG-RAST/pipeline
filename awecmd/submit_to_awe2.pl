@@ -419,7 +419,7 @@ if ($vars->{dereplicate} != 0) {
 my $bowtie_screen_input = undef; # since previous two tasks are optional, figure out the input for this task.
 
 if ($vars->{bowtie} != 0 ) {
-	print "bowtie\n";
+	print "bowtie ".$vars->{screen_indexes}."\n";
 	
 	my @bowtie_index_files=();
 	
@@ -440,7 +440,7 @@ if ($vars->{bowtie} != 0 ) {
 	foreach my $idx (split(/,/, $vars->{screen_indexes})) {
 		if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
 			while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
-				
+				print "bowtie ".$ifile."\n";
 				my $sr = shock_resource( ${bowtie_url} , ${inode}, $ifile );
 				$sr->{'cache'} = 1; # this inidicates predata files
 				push(@bowtie_index_files, $sr );
@@ -448,7 +448,7 @@ if ($vars->{bowtie} != 0 ) {
 		}
 	}
 	if (@bowtie_index_files == 0 ) {
-		die;
+		die "@bowtie_index_files empty";
 	}
 	
 	
