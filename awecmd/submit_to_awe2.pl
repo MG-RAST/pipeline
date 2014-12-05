@@ -471,7 +471,7 @@ if ($vars->{bowtie} != 0 ) {
 		string_resource($job_id),
 		string_resource($vars->{screen_indexes}),
 		string_resource($vars->{bowtie}),
-		list_resource(@bowtie_index_files)
+		list_resource(\@bowtie_index_files)
 	);
 
 	$task_bowtie_screen->userattr(
