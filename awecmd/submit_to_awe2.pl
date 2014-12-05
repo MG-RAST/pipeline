@@ -420,21 +420,6 @@ if ($vars->{dereplicate} != 0) {
 }
 
 
-
-print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
-
-print "\nsubmiting .....\n";
-
-my $this_job_id = submit_workflow($workflow, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
-
-exit(0);
-
-
-
-
-
-
-
 ### bowtie_screen ###
 my $bowtie_screen_input = undef; # since previous two tasks are optional, figure out the input for this task.
 if (defined $task_dereplicate) {
@@ -448,19 +433,32 @@ if (defined $task_dereplicate) {
 }
 
 my $task_bowtie_screen = $workflow->newTask(	'app:MG-RAST/bowtie.bowtie.default',
-												$bowtie_screen_input,
-												string_resource($job_id),
-												string_resource($vars->{screen_indexes}),
-												string_resource($vars->{bowtie})
+$bowtie_screen_input,
+string_resource($job_id),
+string_resource($vars->{screen_indexes}),
+string_resource($vars->{bowtie})
 );
 
 $task_bowtie_screen->userattr(
-	"stage_id"		=> "299",
-	"stage_name"	=> "screen",
-	"data_type"		=> "sequence",
-	"file_format"	=> "fasta",
-	"seq_format"	=> "bp"
+"stage_id"		=> "299",
+"stage_name"	=> "screen",
+"data_type"		=> "sequence",
+"file_format"	=> "fasta",
+"seq_format"	=> "bp"
 );
+
+
+
+
+
+
+print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
+
+print "\nsubmiting .....\n";
+
+my $this_job_id = submit_workflow($workflow, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
+
+exit(0);
 
 
 
