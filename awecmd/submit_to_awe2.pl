@@ -347,7 +347,7 @@ my $workflow = new AWE::Workflow(
 ### qc ###
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/qc.json
 
-#my $task_qc = $workflow->newTask(	'app:MG-RAST/qc.qc.default',
+#my $task_qc = $workflow->newTask(	'MG-RAST/qc.qc.default',
 #									shock_resource($vars->{shock_url}, $node_id, $file_name),
 #									string_resource($up_attr->{file_format}),
 #									string_resource($job_id),
@@ -368,27 +368,20 @@ my $workflow = new AWE::Workflow(
 my $task_preprocess = undef;
 if ($vars->{filter_options} ne 'skip') {
 	
-	if ($up_attr->{file_format} eq "fastq")  {
-		
-		$task_preprocess = $workflow->newTask(	'app:MG-RAST/base.preprocess.fastq',
+	
+	$task_preprocess = $workflow->newTask(	'MG-RAST/base.preprocess.'.$up_attr->{file_format},
 		shock_resource($vars->{shock_url}, $node_id, $file_name),
 		string_resource($job_id),
 		string_resource($vars->{filter_options})
-		);
+	);
 		
-	} else {
-		$task_preprocess = $workflow->newTask(	'app:MG-RAST/base.preprocess.fasta',
-		shock_resource($vars->{shock_url}, $node_id, $file_name),
-		string_resource($job_id),
-		string_resource($vars->{filter_options})
-		);
-	}
+	
 	
 	$task_preprocess->userattr(
-	"stage_id"		=> "100",
-	"stage_name"	=> "preprocess",
-	"file_format"	=> "fasta",
-	"seq_format"	=> "bp"
+		"stage_id"		=> "100",
+		"stage_name"	=> "preprocess",
+		"file_format"	=> "fasta",
+		"seq_format"	=> "bp"
 	);
 	
 }
@@ -404,7 +397,7 @@ if ($vars->{dereplicate} != 0) {
 	} else {
 		$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
 	}
-	$task_dereplicate = $workflow->newTask(	'app:MG-RAST/base.dereplicate.default',
+	$task_dereplicate = $workflow->newTask(	'MG-RAST/base.dereplicate.default',
 		$dereplicate_input,
 		string_resource($job_id),
 		string_resource($vars->{prefix_length}),
@@ -422,34 +415,74 @@ if ($vars->{dereplicate} != 0) {
 
 ### bowtie_screen ###
 my $bowtie_screen_input = undef; # since previous two tasks are optional, figure out the input for this task.
-if (defined $task_dereplicate) {
-	$bowtie_screen_input = task_resource($task_dereplicate->taskid(), 'passed');
-} else {
-	if (defined $task_preprocess) {
-		$bowtie_screen_input = task_resource($task_preprocess->taskid(), 'passed');
-	} else {
-		$bowtie_screen_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+
+if ($vars->{bowtie} != 0 ) {
+
+	
+	my @bowtie_index_files=();
+	
+	# check if index exists
+	my $has_index = 0;
+	foreach my $idx (split(/,/, $vars->{screen_indexes})) {
+		if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
+			$has_index = 1;
+		}
 	}
+	if (! $has_index) {
+		# just use default
+		$vars->{screen_indexes} = 'h_sapiens';
+	}
+	# build bowtie index list
+	my $bowtie_url = $PipelineAWE_Conf::shock_bowtie_url || $vars->{shock_url};
+	$vars->{index_download_urls} = "";
+	foreach my $idx (split(/,/, $vars->{screen_indexes})) {
+		if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
+			while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
+				
+				my $sr = shock_resource( ${bowtie_url} , ${inode}, $ifile );
+				$sr->{'cache'} = 1; # this inidicates predata files
+				push(@bowtie_index_files, $sr );
+			}
+		}
+	}
+	if (@bowtie_index_files == 0 ) {
+		die;
+	}
+	
+	
+	
+	
+	
+	
+	if (defined $task_dereplicate) {
+		$bowtie_screen_input = task_resource($task_dereplicate->taskid(), 'passed');
+	} else {
+		if (defined $task_preprocess) {
+			$bowtie_screen_input = task_resource($task_preprocess->taskid(), 'passed');
+		} else {
+			$bowtie_screen_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+		}
+	}
+
+	my $task_bowtie_screen = $workflow->newTask('MG-RAST/bowtie.bowtie.default',
+		$bowtie_screen_input,
+		string_resource($job_id),
+		string_resource($vars->{screen_indexes}),
+		string_resource($vars->{bowtie}),
+		list_resource(@bowtie_index_files)
+	);
+
+	$task_bowtie_screen->userattr(
+		"stage_id"		=> "299",
+		"stage_name"	=> "screen",
+		"data_type"		=> "sequence",
+		"file_format"	=> "fasta",
+		"seq_format"	=> "bp"
+	);
+
+
+
 }
-
-my $task_bowtie_screen = $workflow->newTask(	'app:MG-RAST/bowtie.bowtie.default',
-$bowtie_screen_input,
-string_resource($job_id),
-string_resource($vars->{screen_indexes}),
-string_resource($vars->{bowtie})
-);
-
-$task_bowtie_screen->userattr(
-"stage_id"		=> "299",
-"stage_name"	=> "screen",
-"data_type"		=> "sequence",
-"file_format"	=> "fasta",
-"seq_format"	=> "bp"
-);
-
-
-
-
 
 
 print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
@@ -474,93 +507,6 @@ exit(0);
 
 
 
-
-# set node output type for preprocessing
-if ($up_attr->{file_format} eq 'fastq') {
-    $vars->{preprocess_pass} = qq(,
-                    "shockindex": "record");
-    $vars->{preprocess_fail} = "";
-} elsif ($vars->{filter_options} eq 'skip') {
-    $vars->{preprocess_pass} = qq(,
-                    "type": "copy",
-                    "formoptions": {
-                        "parent_node": "$node_id",
-                        "copy_indexes": "1"
-                    });
-    $vars->{preprocess_fail} = "";
-} else {
-    $vars->{preprocess_pass} = qq(,
-                    "type": "subset",
-                    "formoptions": {
-                        "parent_node": "$node_id",
-                        "parent_index": "record"
-                    });
-    $vars->{preprocess_fail} = $vars->{preprocess_pass};
-}
-# set node output type for dereplication
-if ($vars->{dereplicate} == 0) {
-    $vars->{dereplicate_pass} = qq(,
-                    "type": "copy",
-                    "formoptions": {                        
-                        "parent_name": "${job_id}.100.preprocess.passed.fna",
-                        "copy_indexes": "1"
-                    });
-    $vars->{dereplicate_fail} = "";
-} else {
-    $vars->{dereplicate_pass} = qq(,
-                    "type": "subset",
-                    "formoptions": {                        
-                        "parent_name": "${job_id}.100.preprocess.passed.fna",
-                        "parent_index": "record"
-                    });
-    $vars->{dereplicate_fail} = $vars->{dereplicate_pass};
-}
-# set node output type for bowtie
-if ($vars->{bowtie} == 0) {
-    $vars->{bowtie_pass} = qq(,
-                    "type": "copy",
-                    "formoptions": {                        
-                        "parent_name": "${job_id}.150.dereplication.passed.fna",
-                        "copy_indexes": "1"
-                    });
-} else {
-    $vars->{bowtie_pass} = qq(,
-                    "type": "subset",
-                    "formoptions": {                        
-                        "parent_name": "${job_id}.150.dereplication.passed.fna",
-                        "parent_index": "record"
-                    });
-}
-
-# check if index exists
-my $has_index = 0;
-foreach my $idx (split(/,/, $vars->{screen_indexes})) {
-    if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
-        $has_index = 1;
-    }
-}
-if (! $has_index) {
-    # just use default
-    $vars->{screen_indexes} = 'h_sapiens';
-}
-# build bowtie index list
-my $bowtie_url = $PipelineAWE_Conf::shock_bowtie_url || $vars->{shock_url};
-$vars->{index_download_urls} = "";
-foreach my $idx (split(/,/, $vars->{screen_indexes})) {
-    if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
-        while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
-            $vars->{index_download_urls} .= qq(
-                "$ifile": {
-                    "url": "${bowtie_url}/node/${inode}?download"
-                },);
-        }
-    }
-}
-if ($vars->{index_download_urls} eq "") {
-    print STDERR "ERROR: No valid bowtie indexes found in ".$vars->{screen_indexes}."\n";
-    exit 1;
-}
-chop $vars->{index_download_urls};
 
 
 
