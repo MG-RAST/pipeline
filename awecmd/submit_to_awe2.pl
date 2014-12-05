@@ -395,6 +395,32 @@ if ($vars->{filter_options} ne 'skip') {
 
 
 
+### dereplicate ###
+my $task_dereplicate = undef;
+if ($vars->{dereplicate} != 0) {
+	my $dereplicate_input = undef;
+	if (defined $task_preprocess) {
+		$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
+	} else {
+		$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
+	}
+	$task_dereplicate = $workflow->newTask(	'app:MG-RAST/base.dereplicate.default',
+		$dereplicate_input,
+		string_resource($job_id),
+		string_resource($vars->{prefix_length}),
+		string_resource($vars->{dereplicate})
+	);
+	
+	$task_dereplicate->userattr(
+		"stage_id"		=> "150",
+		"stage_name"	=> "dereplication",
+		"file_format"	=> "fasta",
+		"seq_format"	=> "bp"
+	);
+}
+
+
+
 print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
 
 print "\nsubmiting .....\n";
@@ -407,29 +433,6 @@ exit(0);
 
 
 
-### dereplicate ###
-my $task_dereplicate = undef;
-if ($vars->{dereplicate} != 0) {
-	my $dereplicate_input = undef;
-	if (defined $task_preprocess) {
-		$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
-	} else {
-		$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
-	}
-	$task_dereplicate = $workflow->newTask(	'app:MG-RAST/base.dereplicate.default',
-												$dereplicate_input,
-												string_resource($job_id),
-												string_resource($vars->{prefix_length}),
-												string_resource($vars->{dereplicate})
-	);
-
-	$task_dereplicate->userattr(
-		"stage_id"		=> "150",
-		"stage_name"	=> "dereplication",
-		"file_format"	=> "fasta",
-		"seq_format"	=> "bp"
-	);
-}
 
 
 ### bowtie_screen ###
