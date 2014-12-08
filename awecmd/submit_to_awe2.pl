@@ -487,35 +487,23 @@ if ($vars->{bowtie} != 0 ) {
 }
 
 
-print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() )."\n";
-
-print "\nsubmiting .....\n";
-
-my $this_job_id = submit_workflow($workflow, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
-
-exit(0);
 
 
+### diamond ###
+my $task_diamond = $workflow->newTask('diamond.search.blastx',
+	task_resource($task_bowtie_screen->taskid(), 'passed'),
+	shock_resource($vars->{shock_url}, $XXXXXnode_id, $XXXXXfile_name), # diamond database for M5NR
+	string_resource($job_id)
+);
 
 
-#my $json = JSON->new;
-print "AWE workflow:\n".$json->pretty->encode( $workflow->getHash() , $awe_url, $PipelineAWE_Conf::shock_pipeline_token)."\n";
+my $diamon_result = task_resource($task_diamond->taskid(), 'result');
 
 
 
+my $workflow_str = $json->pretty->encode( $workflow->getHash() );
+print "AWE workflow:\n".$workflow_str."\n";
 
-exit(0);
-
-
-
-
-
-
-
-my $workflow_str = "";
-
-# replace variables (reads from $template_str and writes to $workflow_str)
-#$tpage->process(\$template_str, $vars, \$workflow_str) || die $tpage->error()."\n";
 
 
 #write to file for debugging puposes (first time)
@@ -535,57 +523,6 @@ if ($@) {
 }
 
 
-#modifications on workflow hash
-unless ($production) {
-	#remove last 6 steps (1x awe_done.pl and 5 x awe_loaddb.pl)
-	
-	my @task_array = @{$workflow_hash->{'tasks'}};
-
-	
-	my $taskcount = @task_array;
-	
-	if ($taskcount < 10) {
-		die;
-	}
-	
-	my $removedtask = pop(@task_array);
-	
-	unless ($removedtask->{'cmd'}->{'name'} eq 'awe_done.pl') {
-		die;
-	}
-	
-	for (my $i = 0 ; $i < 5 ; $i++) {
-		
-		$removedtask = pop(@task_array);
-		
-		unless ($removedtask->{'cmd'}->{'name'} eq 'awe_loaddb.pl') {
-			my $found_name  = $removedtask->{'cmd'}->{'name'} || "undef";
-			die "expected awe_loaddb.pl but found ".$found_name;
-		}
-	}
-	
-	
-	$workflow_hash->{'tasks'} = \@task_array;
-	
-	
-}
-
-
-#transform workflow hash into json string
-$workflow_str = $json->encode($workflow_hash);
-
-
-
-#write to file for debugging puposes (second time)
-write_file($workflow_file, $workflow_str);
-
-
-
-
-
-print "workflow\t".$workflow_file."\n";
-exit 0;
-
 
 # test mode
 if ($no_start) {
@@ -593,34 +530,19 @@ if ($no_start) {
     exit 0;
 }
 
-# submit to AWE
-my $apost = $agent->post(
-    $awe_url.'/job',
-    'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token,
-    'Content_Type', 'multipart/form-data',
-    #'Content', [ upload => [$workflow_file] ]
-	'Content', [ upload => [undef, "n/a", Content => $workflow_str] ]
-);
+
+print "\nsubmiting .....\n";
+
+my $awe_id = submit_workflow($workflow, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
+
+exit(0);
 
 
-my $ares = undef;
-eval {
-    $ares = $json->decode($apost->content);
-};
-if ($@) {
-    print STDERR "ERROR: Return from AWE is not JSON:\n".$apost->content."\n";
-    exit 1;
-}
-if ($ares->{error}) {
-    print STDERR "ERROR: (AWE) ".$ares->{error}[0]."\n";
-    exit 1;
-}
+
 
 # get info
 my $awe_id  = $ares->{data}{id};
-my $awe_job = $ares->{data}{jid};
-my $state   = $ares->{data}{state};
+my $awe_job = "job_TODO";
 print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
 sub get_usage {
