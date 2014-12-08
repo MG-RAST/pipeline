@@ -497,6 +497,17 @@ my $task_diamond = $workflow->newTask('diamond.search.blastx',
 );
 
 
+
+$task_diamond->userattr(
+	"stage_id"		=> "???",
+	"stage_name"	=> "diamond",
+	"m5nr_sims_version" => "???",
+	"data_type"		=> "similarity",
+	"file_format"	=> "blast m8",
+	"sim_type"		=> "protein"
+);
+
+
 my $diamon_result = task_resource($task_diamond->taskid(), 'result');
 
 
