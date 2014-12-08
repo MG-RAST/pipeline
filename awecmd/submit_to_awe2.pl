@@ -442,7 +442,7 @@ if ($vars->{bowtie} != 0 ) {
 			while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
 				print "bowtie ".$ifile."\n";
 				my $sr = shock_resource( ${bowtie_url} , ${inode}, $ifile );
-				$sr->{'cache'} = 1; # this inidicates predata files
+				$sr->{'cache'} = true; # this inidicates predata files
 				push(@bowtie_index_files, $sr );
 			}
 		}
