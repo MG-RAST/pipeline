@@ -112,7 +112,7 @@
         {
             "cmd": {
                 "name": "awe_dereplicate.pl",
-                "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length %] -dereplicate=[% dereplicate %] -memory=20",
+                "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length %] -dereplicate=[% dereplicate %] -memory=10",
                 "description": "dereplication",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
