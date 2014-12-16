@@ -133,7 +133,7 @@ def get_min_md5s_by_source(md5s, md5_ach, seen_srcs, seen_md5s):
             cur_srcs.add(s)
         if len(cur_srcs) >= max_srcs:
             break
-    return cur_md5s, cur_srcs.keys()
+    return cur_md5s, cur_srcs
 
 def get_top_hits(total_md5s, data):
     filter_text   = ''
@@ -151,7 +151,7 @@ def get_top_hits(total_md5s, data):
     # ach = md5: source: function: (organism | ontology_id)
     # lca = md5: [lca]
     # id  = md5: md5id
-    md5_ach, md5_lca, md5_id = get_md5_data(total_md5s)
+    md5_ach, md5_lca, md5_id = get_md5_data(list(total_md5s))
     
     # get md5 and sources per frag
     # frag_srcs = frag: ( source )
@@ -159,12 +159,13 @@ def get_top_hits(total_md5s, data):
     for f, fset in data.iteritems():
         for s, sset in fset.iteritems():
             for m, sim in sset.iteritems():
-                for sid in md5_ach[m].iterkeys():
-                    frag_srcs[f].add(sid)
                 if GET_LCA:
         	        exp = get_exp(sim[8])
         	        if exp is not None:
         	            frag_md5s[f].append([m, exp, sim])
+        	    if m in md5_ach:
+        	        for sid in md5_ach[m].iterkeys():
+                        frag_srcs[f].add(sid)
     
     # get lca per frag = frag: { md5s: [md5], sims: [sim], lca: [lca] }
     if GET_LCA:
@@ -227,9 +228,11 @@ def get_top_hits(total_md5s, data):
             continue
         # process min md5s
         for s, sset in fset.iteritems():
+            if s not in data_min_md5[f]:
+                continue
             for m, sim in sset.iteritems():
                 # sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
-                if m not in md5_id:
+                if (m not in md5_id) and (m not in data_min_md5[f][s]):
                     continue
                 # filter text
                 filter_text += "%s\t%s\t%s\n"%(f, m, "\t".join(map(str, sim)))
@@ -264,6 +267,7 @@ def get_top_hits(total_md5s, data):
     md5_ach.clear()
     md5_lca.clear()
     md5_id.clear()
+    return filter_text, protein_text, ontology_text, rna_text, lca_text
     
 
 usage = "usage: %prog [options]\n"
@@ -326,7 +330,7 @@ def main(args):
     frags = 0
     curr  = ''
     
-    sys.stdout.write("Parsing file $in_file in $frag_num fragment size chunks ...\n")
+    sys.stdout.write("Parsing file %s in %d fragment size chunks ...\n"%(opts.input, opts.frag_num))
     # parse input file
     # line = md5, fragment, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
     for line in sims_fh:
@@ -334,7 +338,7 @@ def main(args):
             parts = line.split('\t')
             frag  = parts.pop(0)
             md5   = parts.pop(0)
-            score = int(parts[-1])
+            score = int(float(parts[-1]))
         except:
             continue
         if md5.startswith('lcl|'):

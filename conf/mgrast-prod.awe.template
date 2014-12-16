@@ -1,6 +1,6 @@
 {
     "info": {
-        "pipeline": "mgrast-prod",
+        "pipeline": "[% pipeline %]",
         "name": "[% job_id %]",
         "project": "[% project_name %]",
         "user": "[% user %]",
@@ -18,7 +18,7 @@
             "bp_count": "[% bp_count %]",
             "project_id": "[% project_id %]",
             "project_name": "[% project_name %]",
-            "type": "metagenome",
+            "type": "[% type %]",
             "pipeline_version": "[% pipeline_version %]"
         }
     },
@@ -27,7 +27,13 @@
             "cmd": {
                 "name": "awe_qc.pl",
                 "args": "-input @[% inputfile %] -format [% file_format %] -out_prefix [% job_id %].075 -assembled [% assembled %] -filter_options [% filter_options %] -proc 8",
-                "description": "qc_stats"
+                "description": "qc_stats",
+                "[% docker_switch %]Dockerimage": "mgrast/qc:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                }
             },
             "dependsOn": [],
             "inputs": {
@@ -66,7 +72,13 @@
             "cmd": {
                 "name": "awe_preprocess.pl",
                 "args": "-input @[% inputfile %] -format [% file_format %] -out_prefix [% job_id %].100.preprocess -filter_options [% filter_options %]",
-                "description": "preprocess"
+                "description": "preprocess",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                }
             },
             "dependsOn": [], 
             "inputs": {
@@ -100,8 +112,14 @@
         {
             "cmd": {
                 "name": "awe_dereplicate.pl",
-                "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length %] -dereplicate=[% dereplicate %] -memory=20",
-                "description": "dereplication"
+                "args": "-input=@[% job_id %].100.preprocess.passed.fna -out_prefix=[% job_id %].150.dereplication -prefix_length=[% prefix_length %] -dereplicate=[% dereplicate %] -memory=10",
+                "description": "dereplication",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["1"],
             "inputs": {
@@ -136,7 +154,13 @@
             "cmd": {
                 "name": "awe_bowtie_screen.pl",
                 "args": "-input=@[% job_id %].150.dereplication.passed.fna -output=[% job_id %].299.screen.passed.fna -index=[% screen_indexes %] -bowtie=[% bowtie %] -proc=8",
-                "description": "screen"
+                "description": "screen",
+                "[% docker_switch %]Dockerimage": "mgrast/bowtie:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             }, 
             "dependsOn": ["2"], 
             "inputs": {
@@ -169,7 +193,13 @@
             "cmd": {
                 "name": "awe_genecalling.pl",
                 "args": "-input=@[% job_id %].299.screen.passed.fna -out_prefix=[% job_id %].350.genecalling.coding -type=[% fgs_type %] -size=100 -proc=8",
-                "description": "genecalling"
+                "description": "genecalling",
+                "[% docker_switch %]Dockerimage": "mgrast/genecall:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["3"],
             "inputs": {
@@ -212,7 +242,13 @@
             "cmd": {
                 "name": "awe_cluster.pl",
                 "args": "-input=@[% job_id %].350.genecalling.coding.faa -out_prefix=[% job_id %].550.cluster -aa -pid=[% aa_pid %] -memory=20",
-                "description": "aa clustering"
+                "description": "aa clustering",
+                "[% docker_switch %]Dockerimage": "mgrast/cluster:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["4"],
             "inputs": {
@@ -252,7 +288,13 @@
             "cmd": {
                 "name": "awe_blat_prot.py",
                 "args": "--input=@[% job_id %].550.cluster.aa[% aa_pid %].faa --output=[% job_id %].650.superblat.sims",
-                "description": "aa sims blat"
+                "description": "aa sims blat",
+                "[% docker_switch %]Dockerimage": "mgrast/superblat:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             }, 
             "dependsOn": ["5"],  
             "inputs": {
@@ -295,16 +337,14 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %]",
+                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %] -ann_file=m5nr_v1.bdb",
                 "description": "aa sims annotation",
                 "environ": {
-                    "private": {
-                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
-                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
-                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
-                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
-                    }
-                }
+                    "[% docker_switch %]public" : {
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 
+                },
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]"
             }, 
             "dependsOn": ["6"],  
             "inputs": {
@@ -340,6 +380,11 @@
                     "attrfile": "[% job_id %].650.aa.expand.ontology.json"
                 }
             },
+            "predata": {
+                "m5nr_v1.bdb":{
+                    "url": "[% m5nr_annotation_url %]"
+                }
+            },
             "userattr": {
                 "stage_id": "650",
                 "stage_name": "protein.sims",
@@ -353,7 +398,13 @@
             "cmd": {
                 "name": "awe_search_rna.pl",
                 "args": "-input=@[% job_id %].100.preprocess.passed.fna -output=[% job_id %].425.search.rna.fna -rna_nr=[% m5rna_clust %] -size=100 -proc=8",
-                "description": "rna detection"
+                "description": "rna detection",
+                "[% docker_switch %]Dockerimage": "mgrast/rna_search:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                         "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             }, 
             "dependsOn": ["1"],
             "inputs": {
@@ -394,7 +445,13 @@
             "cmd": {
                 "name": "awe_cluster.pl",
                 "args": "-input=@[% job_id %].425.search.rna.fna -out_prefix=[% job_id %].440.cluster -rna -pid=[% rna_pid %] -memory=20", 
-                "description": "rna clustering"
+                "description": "rna clustering",
+                "[% docker_switch %]Dockerimage": "mgrast/cluster:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             }, 
             "dependsOn": ["8"],
             "inputs": {
@@ -434,7 +491,13 @@
             "cmd": {
                 "name": "awe_blat_rna.pl",
                 "args": "-input=@[% job_id %].440.cluster.rna97.fna -rna_nr=m5rna -output=[% job_id %].450.rna.sims -assembled=[% assembled %]",
-                "description": "rna sims blat"
+                "description": "rna sims blat",
+                "[% docker_switch %]Dockerimage": "mgrast/blat:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             }, 
             "dependsOn": ["9"],
             "inputs": {
@@ -474,16 +537,14 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %]",
+                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %] -ann_file=m5nr_v1.bdb",
                 "description": "rna sims annotation",
                 "environ": {
-                    "private": {
-                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
-                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
-                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
-                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
+                    "[% docker_switch %]public" : {
+                        "BASH_ENV" : "/root/mgrast_env.sh"
                     }
-                }
+                },
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]"
             }, 
             "dependsOn": ["10"],
             "inputs": {
@@ -513,6 +574,11 @@
                     "attrfile": "[% job_id %].450.rna.expand.lca.json"
                 }
             },
+            "predata": {
+                "m5nr_v1.bdb":{
+                    "url": "[% m5nr_annotation_url %]"
+                }
+            },
             "userattr": {
                 "stage_id": "450",
                 "stage_name": "rna.sims",
@@ -525,16 +591,14 @@
         {
             "cmd": {
                 "name": "awe_index_sim_seq.pl",
-                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=[% ach_annotation_ver %] -memory=10",
+                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=[% ach_annotation_ver %] -memory=10 -ann_file=m5nr_v1.bdb",
                 "description": "index sim seq",
                 "environ": {
-                    "private": {
-                        "ACH_MONGO_HOST": "[% ach_mongo_host %]",
-                        "ACH_MONGO_NAME": "[% ach_mongo_name %]",
-                        "ACH_MONGO_USER": "[% ach_mongo_user %]",
-                        "ACH_MONGO_PASS": "[% ach_mongo_pass %]"
+                    "[% docker_switch %]public" : {
+                        "BASH_ENV" : "/root/mgrast_env.sh"
                     }
-                }
+                },
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]"
             }, 
             "dependsOn": ["4", "5", "7", "8", "9", "11"],
             "inputs": {
@@ -584,6 +648,11 @@
                     "attrfile": "[% job_id %].700.annotation.sims.filter.seq.index.json"
                 }
             },
+            "predata": {
+                "m5nr_v1.bdb":{
+                    "url": "[% m5nr_annotation_url %]"
+                }
+            },
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "filter.sims",
@@ -597,7 +666,13 @@
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
-                "description": "md5 annotation summary"
+                "description": "md5 annotation summary",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["0", "5", "7", "9", "11", "12"],
             "inputs": {
@@ -653,38 +728,15 @@
         },
         {
             "cmd": {
-                "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=md5",
-                "description": "md5 summary load",
-                "environ": {
-                    "private": {
-                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
-                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
-                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
-                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
-                    }
-                }
-            },
-            "dependsOn": ["13"],
-            "inputs": {
-                "[% job_id %].700.annotation.md5.summary": {
-                    "host": "[% shock_url %]",
-                    "origin": "13",
-                    "node": "-"
-                },
-                "postgresql.tar": {
-                    "host": "[% cert_shock_url %]",
-                    "node": "[% postgresql_cert %]"
-                }
-            },
-            "taskid": "14",
-            "totalwork": 1
-        },
-        {
-            "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
-                "description": "function annotation summary"
+                "description": "function annotation summary",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -730,43 +782,20 @@
                 "file_format": "abundance table",
                 "data_type": "function"
             },
-            "taskid": "15",
-            "totalwork": 1
-        },
-        {
-            "cmd": {
-                "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=function",
-                "description": "function summary load",
-                "environ": {
-                    "private": {
-                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
-                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
-                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
-                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
-                    }
-                }
-            },
-            "dependsOn": ["15"],
-            "inputs": {
-                "[% job_id %].700.annotation.function.summary": {
-                    "host": "[% shock_url %]",
-                    "origin": "15",
-                    "node": "-"
-                },
-                "postgresql.tar": {
-                    "host": "[% cert_shock_url %]",
-                    "node": "[% postgresql_cert %]"
-                }
-            },
-            "taskid": "16",
+            "taskid": "14",
             "totalwork": 1
         },
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
-                "description": "organism annotation summary"
+                "description": "organism annotation summary",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -812,43 +841,20 @@
                 "file_format": "abundance table",
                 "data_type": "organism"
             },
-            "taskid": "17",
-            "totalwork": 1
-        },
-        {
-            "cmd": {
-                "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=organism",
-                "description": "organism summary load",
-                "environ": {
-                    "private": {
-                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
-                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
-                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
-                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
-                    }
-                }
-            },
-            "dependsOn": ["17"],
-            "inputs": {
-                "[% job_id %].700.annotation.organism.summary": {
-                    "host": "[% shock_url %]",
-                    "origin": "17",
-                    "node": "-"
-                },
-                "postgresql.tar": {
-                    "host": "[% cert_shock_url %]",
-                    "node": "[% postgresql_cert %]"
-                }
-            },
-            "taskid": "18",
+            "taskid": "15",
             "totalwork": 1
         },
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
-                "description": "lca annotation summary"
+                "description": "lca annotation summary",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -893,43 +899,20 @@
                 "file_format": "abundance table",
                 "data_type": "lca"
             },
-            "taskid": "19",
-            "totalwork": 1
-        },
-        {
-            "cmd": {
-                "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=lca",
-                "description": "lca summary load",
-                "environ": {
-                    "private": {
-                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
-                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
-                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
-                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
-                    }
-                }
-            },
-            "dependsOn": ["19"],
-            "inputs": {
-                "[% job_id %].700.annotation.lca.summary": {
-                    "host": "[% shock_url %]",
-                    "origin": "19",
-                    "node": "-"
-                },
-                "postgresql.tar": {
-                    "host": "[% cert_shock_url %]",
-                    "node": "[% postgresql_cert %]"
-                }
-            },
-            "taskid": "20",
+            "taskid": "16",
             "totalwork": 1
         },
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
-                "description": "ontology annotation summary"
+                "description": "ontology annotation summary",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                    "[% docker_switch %]public" : { 	 	
+                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                    } 	 	
+                } 
             },
             "dependsOn": ["0", "5", "7"],
             "inputs": {
@@ -965,43 +948,20 @@
                 "file_format": "abundance table",
                 "data_type": "ontology"
             },
-            "taskid": "21",
-            "totalwork": 1
-        },
-        {
-            "cmd": {
-                "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=ontology",
-                "description": "ontology summary load",
-                "environ": {
-                    "private": {
-                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
-                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
-                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
-                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
-                    }
-                }
-            },
-            "dependsOn": ["21"],
-            "inputs": {
-                "[% job_id %].700.annotation.ontology.summary": {
-                    "host": "[% shock_url %]",
-                    "origin": "21",
-                    "node": "-"
-                },
-                "postgresql.tar": {
-                    "host": "[% cert_shock_url %]",
-                    "node": "[% postgresql_cert %]"
-                }
-            },
-            "taskid": "22",
+            "taskid": "17",
             "totalwork": 1
         },
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
                 "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.source.stats -nr_ver=[% ach_annotation_ver %] -type=source",
-                "description": "source annotation summary"
+                "description": "source annotation summary",
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
+                "environ" : { 	 	
+                "[% docker_switch %]public" : { 	 	
+                    "BASH_ENV" : "/root/mgrast_env.sh" 	 	
+                        } 	 	
+                    }
             },
             "dependsOn": ["0", "5", "7", "9", "11"],
             "inputs": {
@@ -1047,6 +1007,151 @@
                 "file_format": "json",
                 "data_type": "source"
             },
+            "taskid": "18",
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "name": "awe_loaddb.pl",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=md5",
+                "description": "md5 summary load",
+                "environ": {
+                    "private": {
+                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
+                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
+                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
+                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
+                    }
+                }
+            },
+            "dependsOn": ["13"],
+            "inputs": {
+                "[% job_id %].700.annotation.md5.summary": {
+                    "host": "[% shock_url %]",
+                    "origin": "13",
+                    "node": "-"
+                },
+                "postgresql.tar": {
+                    "host": "[% cert_shock_url %]",
+                    "node": "[% postgresql_cert %]"
+                }
+            },
+            "taskid": "19",
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "name": "awe_loaddb.pl",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=function",
+                "description": "function summary load",
+                "environ": {
+                    "private": {
+                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
+                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
+                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
+                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
+                    }
+                }
+            },
+            "dependsOn": ["14"],
+            "inputs": {
+                "[% job_id %].700.annotation.function.summary": {
+                    "host": "[% shock_url %]",
+                    "origin": "14",
+                    "node": "-"
+                },
+                "postgresql.tar": {
+                    "host": "[% cert_shock_url %]",
+                    "node": "[% postgresql_cert %]"
+                }
+            },
+            "taskid": "20",
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "name": "awe_loaddb.pl",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=organism",
+                "description": "organism summary load",
+                "environ": {
+                    "private": {
+                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
+                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
+                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
+                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
+                    }
+                }
+            },
+            "dependsOn": ["15"],
+            "inputs": {
+                "[% job_id %].700.annotation.organism.summary": {
+                    "host": "[% shock_url %]",
+                    "origin": "15",
+                    "node": "-"
+                },
+                "postgresql.tar": {
+                    "host": "[% cert_shock_url %]",
+                    "node": "[% postgresql_cert %]"
+                }
+            },
+            "taskid": "21",
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "name": "awe_loaddb.pl",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=lca",
+                "description": "lca summary load",
+                "environ": {
+                    "private": {
+                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
+                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
+                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
+                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
+                    }
+                }
+            },
+            "dependsOn": ["16"],
+            "inputs": {
+                "[% job_id %].700.annotation.lca.summary": {
+                    "host": "[% shock_url %]",
+                    "origin": "16",
+                    "node": "-"
+                },
+                "postgresql.tar": {
+                    "host": "[% cert_shock_url %]",
+                    "node": "[% postgresql_cert %]"
+                }
+            },
+            "taskid": "22",
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "name": "awe_loaddb.pl",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=ontology",
+                "description": "ontology summary load",
+                "environ": {
+                    "private": {
+                        "ANALYSIS_DB_HOST": "[% analysis_dbhost %]",
+                        "ANALYSIS_DB_NAME": "[% analysis_dbname %]",
+                        "ANALYSIS_DB_USER": "[% analysis_dbuser %]",
+                        "ANALYSIS_DB_PASS": "[% analysis_dbpass %]"
+                    }
+                }
+            },
+            "dependsOn": ["17"],
+            "inputs": {
+                "[% job_id %].700.annotation.ontology.summary": {
+                    "host": "[% shock_url %]",
+                    "origin": "17",
+                    "node": "-"
+                },
+                "postgresql.tar": {
+                    "host": "[% cert_shock_url %]",
+                    "node": "[% postgresql_cert %]"
+                }
+            },
             "taskid": "23",
             "totalwork": 1
         },
@@ -1071,7 +1176,7 @@
                     }
                 }
             },
-            "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "14", "16", "18", "20", "22", "23"],
+            "dependsOn": ["0", "1", "2", "3", "4", "5", "8", "9", "12", "18", "19", "20", "21", "22", "23"],
             "inputs": {
                 "postgresql.tar": {
                     "host": "[% cert_shock_url %]",
@@ -1165,7 +1270,7 @@
                 },
                 "[% job_id %].700.annotation.source.stats": {
                     "host": "[% shock_url %]",
-                    "origin": "23",
+                    "origin": "18",
                     "node": "-"
                 }
             },
