@@ -179,7 +179,11 @@ def print_md5_stats(ohdl, data, imap):
             match = np.where(imap['md5']==md5)
             if len(match[0]) > 0:
                 row = match[0][0]
-                seek, length = str(imap[row][1]), str(imap[row][2])
+                # seek and length must be less than 2147483647
+                if imap[row][1] <= 2147483647 and imap[row][2] <= 2147483647:
+                    seek, length = str(imap[row][1]), str(imap[row][2])
+                else:
+                    seek, length = '\N', '\N'
         # output
         line = [ DB_VER,
                  JOBID,
