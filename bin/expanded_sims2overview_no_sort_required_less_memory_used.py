@@ -182,8 +182,6 @@ def print_md5_stats(ohdl, data, imap):
                 # length must be less than or equal to 2147483647
                 if imap[row][2] <= 2147483647:
                     seek, length = str(imap[row][1]), str(imap[row][2])
-                else:
-                    seek, length = '\N', '\N'
         # output
         line = [ DB_VER,
                  JOBID,
