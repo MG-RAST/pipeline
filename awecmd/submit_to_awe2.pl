@@ -347,17 +347,17 @@ my $workflow = new AWE::Workflow(
 ### qc ###
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/qc.json
 
-#my $task_qc = $workflow->newTask(	'MG-RAST/qc.qc.default',
-#									shock_resource($vars->{shock_url}, $node_id, $file_name),
-#									string_resource($up_attr->{file_format}),
-#									string_resource($job_id),
-#									string_resource($vars->{assembled}),
-#									string_resource($vars->{filter_options})
-#);
+my $task_qc = $workflow->newTask(	'MG-RAST/qc.qc.default',
+									shock_resource($vars->{shock_url}, $node_id, $file_name),
+									string_resource($up_attr->{file_format}),
+									string_resource($job_id),
+									string_resource($vars->{assembled}),
+									string_resource($vars->{filter_options})
+);
 
-#$task_qc->userattr(	"stage_id" 		=> "075",
-#					"stage_name" 	=> "qc"
-#);
+$task_qc->userattr(	"stage_id" 		=> "075",
+					"stage_name" 	=> "qc"
+);
 
 
 
@@ -488,28 +488,33 @@ if ($vars->{bowtie} != 0 ) {
 
 
 
-
 ### diamond ###
-my $task_diamond = $workflow->newTask('diamond.search.blastx',
-	task_resource($task_bowtie_screen->taskid(), 'passed'),
-	shock_resource($vars->{shock_url}, $XXXXXnode_id, $XXXXXfile_name), # diamond database for M5NR
-	string_resource($job_id)
-);
+if (0) {
+
+
+	my $m5nr_node_id = "";
+	my $m5nr_file_name = "" ;
+	
+	my $task_diamond = $workflow->newTask('diamond.search.blastx',
+		task_resource($task_bowtie_screen->taskid(), 'passed'),
+		shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name), # diamond database for M5NR
+		string_resource($job_id)
+	);
 
 
 
-$task_diamond->userattr(
-	"stage_id"		=> "???",
-	"stage_name"	=> "diamond",
-	"m5nr_sims_version" => "???",
-	"data_type"		=> "similarity",
-	"file_format"	=> "blast m8",
-	"sim_type"		=> "protein"
-);
+	$task_diamond->userattr(
+		"stage_id"		=> "???",
+		"stage_name"	=> "diamond",
+		"m5nr_sims_version" => "???",
+		"data_type"		=> "similarity",
+		"file_format"	=> "blast m8",
+		"sim_type"		=> "protein"
+	);
 
 
-my $diamon_result = task_resource($task_diamond->taskid(), 'result');
-
+	my $diamon_result = task_resource($task_diamond->taskid(), 'result');
+}
 
 
 my $workflow_str = $json->pretty->encode( $workflow->getHash() );
