@@ -558,9 +558,9 @@ exit(0);
 
 
 # get info
-my $awe_id  = $ares->{data}{id};
-my $awe_job = "job_TODO";
-print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
+#my $awe_id  = $ares->{data}{id};
+#my $awe_job = "job_TODO";
+#print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
 sub get_usage {
     return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
