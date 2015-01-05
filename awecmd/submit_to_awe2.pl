@@ -494,8 +494,7 @@ if (1) {
 	
 	my $task_diamond = $workflow->newTask('diamond.search.blastx',
 		$last_output,
-		shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name), # diamond database for M5NR
-		string_resource($job_id)
+		shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name) # diamond database for M5NR
 	);
 
 
