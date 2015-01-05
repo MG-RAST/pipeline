@@ -343,6 +343,9 @@ my $workflow = new AWE::Workflow(
 );
 
 
+my $last_output = shock_resource($vars->{shock_url}, $node_id, $file_name);
+
+
 
 ### qc ###
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/qc.json
@@ -385,6 +388,7 @@ if ($vars->{filter_options} ne 'skip') {
 		"seq_format"	=> "bp"
 	);
 	
+	$last_output = task_resource($task_preprocess->taskid(), 'passed');
 }
 
 
@@ -394,12 +398,9 @@ my $task_dereplicate = undef;
 if ($vars->{dereplicate} != 0) {
 	print "dereplicate\n";
 	
-	my $dereplicate_input = undef;
-	if (defined $task_preprocess) {
-		$dereplicate_input = task_resource($task_preprocess->taskid(), 'passed')
-	} else {
-		$dereplicate_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
-	}
+	my $dereplicate_input = $last_output;
+	
+	
 	$task_dereplicate = $workflow->newTask(	'MG-RAST/base.dereplicate.default',
 		$dereplicate_input,
 		string_resource($job_id),
@@ -413,6 +414,8 @@ if ($vars->{dereplicate} != 0) {
 		"file_format"	=> "fasta",
 		"seq_format"	=> "bp"
 	);
+	
+	$last_output = task_resource($task_dereplicate->taskid(), 'passed');
 }
 
 
@@ -456,17 +459,9 @@ if ($vars->{bowtie} != 0 ) {
 	
 	
 	
+	$bowtie_screen_input = $last_output;
 	
-	if (defined $task_dereplicate) {
-		$bowtie_screen_input = task_resource($task_dereplicate->taskid(), 'passed');
-	} else {
-		if (defined $task_preprocess) {
-			$bowtie_screen_input = task_resource($task_preprocess->taskid(), 'passed');
-		} else {
-			$bowtie_screen_input = shock_resource($vars->{shock_url}, $node_id, $file_name);
-		}
-	}
-
+	
 	my $task_bowtie_screen = $workflow->newTask('MG-RAST/bowtie.bowtie.default',
 		$bowtie_screen_input,
 		string_resource($job_id),
@@ -482,7 +477,8 @@ if ($vars->{bowtie} != 0 ) {
 		"file_format"	=> "fasta",
 		"seq_format"	=> "bp"
 	);
-
+	
+	$last_output = task_resource($task_bowtie_screen->taskid(), 'passed');
 
 
 }
@@ -490,14 +486,14 @@ if ($vars->{bowtie} != 0 ) {
 
 
 ### diamond ###
-if (0) {
+if (1) {
 
 
 	my $m5nr_node_id = "223fb237-cd7d-44b1-8441-0b41938959e5";
 	my $m5nr_file_name = "m5nr.dmnd" ;
 	
 	my $task_diamond = $workflow->newTask('diamond.search.blastx',
-		task_resource($task_bowtie_screen->taskid(), 'passed'),
+		$last_output,
 		shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name), # diamond database for M5NR
 		string_resource($job_id)
 	);
@@ -514,7 +510,8 @@ if (0) {
 	);
 
 
-	my $diamon_result = task_resource($task_diamond->taskid(), 'result');
+	my $diamond_result = task_resource($task_diamond->taskid(), 'result');
+	$last_output = $diamond_result;
 }
 
 
