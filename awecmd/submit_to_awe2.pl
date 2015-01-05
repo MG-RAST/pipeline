@@ -357,6 +357,7 @@ my $task_qc = $workflow->newTask(	'MG-RAST/qc.qc.default',
 
 $task_qc->userattr(	"stage_id" 		=> "075",
 					"stage_name" 	=> "qc"
+
 );
 
 
@@ -492,8 +493,8 @@ if ($vars->{bowtie} != 0 ) {
 if (0) {
 
 
-	my $m5nr_node_id = "";
-	my $m5nr_file_name = "" ;
+	my $m5nr_node_id = "223fb237-cd7d-44b1-8441-0b41938959e5";
+	my $m5nr_file_name = "m5nr.dmnd" ;
 	
 	my $task_diamond = $workflow->newTask('diamond.search.blastx',
 		task_resource($task_bowtie_screen->taskid(), 'passed'),
