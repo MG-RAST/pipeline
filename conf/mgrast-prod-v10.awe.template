@@ -335,7 +335,7 @@
             "userattr": {
                 "stage_id": "650",
                 "stage_name": "protein.sims",
-                "m5nr_sims_version": "[% ach_sequence_ver %]",
+                "m5nr_sims_version": "10",
                 "data_type": "similarity",
                 "file_format": "blast m8",
                 "sim_type": "protein"
@@ -346,7 +346,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=[% ach_annotation_ver %] -ann_file=m5nr_v1.bdb",
+                "args": "-input=@[% job_id %].650.superblat.sims -out_prefix=[% job_id %].650 -aa -ach_ver=10 -ann_file=m5nr_v10.bdb",
                 "description": "aa sims annotation",
                 "environ": {
                     "[% docker_switch %]public" : {
@@ -390,15 +390,15 @@
                 }
             },
             "predata": {
-                "m5nr_v1.bdb":{
+                "m5nr_v10.bdb":{
                     "url": "[% m5nr_v10_annotation_url %]"
                 }
             },
             "userattr": {
                 "stage_id": "650",
                 "stage_name": "protein.sims",
-                "m5nr_sims_version": "[% ach_sequence_ver %]",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]"
+                "m5nr_sims_version": "10",
+                "m5nr_annotation_version": "10"
             },
             "taskid": "7",
             "totalwork": 1
@@ -535,7 +535,7 @@
             "userattr": {
                 "stage_id": "450",
                 "stage_name": "rna.sims",
-                "m5rna_sims_version": "[% ach_sequence_ver %]",
+                "m5rna_sims_version": "10",
                 "data_type": "similarity",
                 "file_format": "blast m8",
                 "sim_type": "rna"
@@ -546,7 +546,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_sims.pl",
-                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=[% ach_annotation_ver %] -ann_file=m5nr_v1.bdb",
+                "args": "-input=@[% job_id %].450.rna.sims -out_prefix=[% job_id %].450 -rna -ach_ver=10 -ann_file=m5nr_v10.bdb",
                 "description": "rna sims annotation",
                 "environ": {
                     "[% docker_switch %]public" : {
@@ -584,15 +584,15 @@
                 }
             },
             "predata": {
-                "m5nr_v1.bdb":{
+                "m5nr_v10.bdb":{
                     "url": "[% m5nr_v10_annotation_url %]"
                 }
             },
             "userattr": {
                 "stage_id": "450",
                 "stage_name": "rna.sims",
-                "m5rna_sims_version": "[% ach_sequence_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]"
+                "m5rna_sims_version": "10",
+                "m5rna_annotation_version": "10"
             },
             "taskid": "11",
             "totalwork": 1
@@ -600,7 +600,7 @@
         {
             "cmd": {
                 "name": "awe_index_sim_seq.pl",
-                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=[% ach_annotation_ver %] -memory=10 -ann_file=m5nr_v1.bdb",
+                "args": "-in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -ach_ver=10 -memory=10 -ann_file=m5nr_v10.bdb",
                 "description": "index sim seq",
                 "environ": {
                     "[% docker_switch %]public" : {
@@ -658,15 +658,15 @@
                 }
             },
             "predata": {
-                "m5nr_v1.bdb":{
+                "m5nr_v10.bdb":{
                     "url": "[% m5nr_v10_annotation_url %]"
                 }
             },
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "filter.sims",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]"
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10"
             },
             "taskid": "12",
             "totalwork": 1
@@ -674,7 +674,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
-                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=[% ach_annotation_ver %] -type=md5",
+                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -in_index=@[% job_id %].700.annotation.sims.filter.seq.index -output=[% job_id %].700.annotation.md5.summary -nr_ver=10 -type=md5",
                 "description": "md5 annotation summary",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
@@ -727,8 +727,8 @@
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "annotation.summary",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]",
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10",
                 "file_format": "abundance table",
                 "data_type": "md5"
             },
@@ -738,7 +738,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
-                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=[% ach_annotation_ver %] -type=function",
+                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.function.summary -nr_ver=10 -type=function",
                 "description": "function annotation summary",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
@@ -786,8 +786,8 @@
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "annotation.summary",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]",
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10",
                 "file_format": "abundance table",
                 "data_type": "function"
             },
@@ -797,7 +797,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
-                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=[% ach_annotation_ver %] -type=organism",
+                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.organism.summary -nr_ver=10 -type=organism",
                 "description": "organism annotation summary",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
@@ -845,8 +845,8 @@
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "annotation.summary",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]",
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10",
                 "file_format": "abundance table",
                 "data_type": "organism"
             },
@@ -856,7 +856,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
-                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=[% ach_annotation_ver %] -type=lca",
+                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.lca -in_expand=@[% job_id %].450.rna.expand.lca -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.lca.summary -nr_ver=10 -type=lca",
                 "description": "lca annotation summary",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
@@ -903,8 +903,8 @@
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "annotation.summary",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]",
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10",
                 "file_format": "abundance table",
                 "data_type": "lca"
             },
@@ -914,7 +914,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
-                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=[% ach_annotation_ver %] -type=ontology",
+                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.ontology -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.ontology.summary -nr_ver=10 -type=ontology",
                 "description": "ontology annotation summary",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
@@ -952,8 +952,8 @@
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "annotation.summary",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]",
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10",
                 "file_format": "abundance table",
                 "data_type": "ontology"
             },
@@ -963,7 +963,7 @@
         {
             "cmd": {
                 "name": "awe_annotate_summary.pl",
-                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.source.stats -nr_ver=[% ach_annotation_ver %] -type=source",
+                "args": "-job=[% job_id %] -in_expand=@[% job_id %].650.aa.expand.protein -in_expand=@[% job_id %].450.rna.expand.rna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_assemb=@[% job_id %].075.assembly.coverage -output=[% job_id %].700.annotation.source.stats -nr_ver=10 -type=source",
                 "description": "source annotation summary",
                 "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
@@ -1011,8 +1011,8 @@
             "userattr": {
                 "stage_id": "700",
                 "stage_name": "annotation.summary",
-                "m5nr_annotation_version": "[% ach_annotation_ver %]",
-                "m5rna_annotation_version": "[% ach_annotation_ver %]",
+                "m5nr_annotation_version": "10",
+                "m5rna_annotation_version": "10",
                 "file_format": "json",
                 "data_type": "source"
             },
@@ -1022,7 +1022,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=md5",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.md5.summary -psql=@postgresql.tar -nr_ver=10 -type=md5",
                 "description": "md5 summary load",
                 "environ": {
                     "private": {
@@ -1051,7 +1051,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=function",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.function.summary -psql=@postgresql.tar -nr_ver=10 -type=function",
                 "description": "function summary load",
                 "environ": {
                     "private": {
@@ -1080,7 +1080,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=organism",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.organism.summary -psql=@postgresql.tar -nr_ver=10 -type=organism",
                 "description": "organism summary load",
                 "environ": {
                     "private": {
@@ -1109,7 +1109,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=lca",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.lca.summary -psql=@postgresql.tar -nr_ver=10 -type=lca",
                 "description": "lca summary load",
                 "environ": {
                     "private": {
@@ -1138,7 +1138,7 @@
         {
             "cmd": {
                 "name": "awe_loaddb.pl",
-                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -psql=@postgresql.tar -nr_ver=[% ach_annotation_ver %] -type=ontology",
+                "args": "-job=[% job_id %] -input=@[% job_id %].700.annotation.ontology.summary -psql=@postgresql.tar -nr_ver=10 -type=ontology",
                 "description": "ontology summary load",
                 "environ": {
                     "private": {
@@ -1167,7 +1167,7 @@
         {
             "cmd": {
                 "name": "awe_done.pl",
-                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=[% ach_sequence_ver %] -ann_ver=[% ach_annotation_ver %] -api_url=[% mgrast_api %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
+                "args": "-job=[% job_id %] -psql=@postgresql.tar -mysql=@mysql.tar -nr_ver=10 -ann_ver=10 -api_url=[% mgrast_api %] -upload=@[% job_id %].075.upload.stats -qc=@[% job_id %].075.qc.stats -preproc=@[% job_id %].100.preprocess.passed.fna -derep=@[% job_id %].150.dereplication.removed.fna -post_qc=@[% job_id %].299.screen.passed.fna -source=@[% job_id %].700.annotation.source.stats -search=@[% job_id %].425.search.rna.fna -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -genecall=@[% job_id %].350.genecalling.coding.faa -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -ontol=[% job_id %].650.aa.expand.ontology -filter=[% job_id %].700.annotation.sims.filter.seq",
                 "description": "done stage",
                 "environ": {
                     "private": {
