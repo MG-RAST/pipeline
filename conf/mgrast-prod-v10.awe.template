@@ -312,19 +312,19 @@
                 }
             },
             "predata": {
-                "md5nr.1":{
+                "md5nr_v10.1":{
                     "url": "[% m5nr1_v10_download_url %]"
                 },
-                "md5nr.2":{
+                "md5nr_v10.2":{
                     "url": "[% m5nr2_v10_download_url %]"
                 },
-                "md5nr.3":{
+                "md5nr_v10.3":{
                     "url": "[% m5nr3_v10_download_url %]"
                 },
-                "md5nr.4":{
+                "md5nr_v10.4":{
                     "url": "[% m5nr4_v10_download_url %]"
                 },
-                "md5nr.5":{
+                "md5nr_v10.5":{
                     "url": "[% m5nr5_v10_download_url %]"
                 }
             },
