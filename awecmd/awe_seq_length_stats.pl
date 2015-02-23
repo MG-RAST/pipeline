@@ -49,14 +49,20 @@ my $data = PipelineAWE::read_json($input_json_file);
 
 # Get file info if missing
 if (! exists($data->{stats_info})) {
+    my $format = "ASCII text";
     my $suffix = (split(/\./, $input_file))[-1];
     my $base   = (split(/\//, $input_file))[-1];
     my @stats  = stat($input_file);
     open my $fh, '<', $input_file;
     my $ctx = Digest::MD5->new;
     $ctx->addfile($fh);
+    # empty file
+    if ($stats[7] == 0) {
+        $format = "empty file";
+        $type = "none";
+    }
     $data->{stats_info} = {
-        type      => "ASCII text",
+        type      => $format,
         suffix    => $suffix,
         file_type => $type,
         file_name => $base,
@@ -64,6 +70,15 @@ if (! exists($data->{stats_info})) {
         checksum  => $ctx->hexdigest
     };
     close $fh;
+}
+
+# exit gracefully if empty
+if ($data->{stats_info}{file_size} == 0) {
+    if ($output_json_file eq "") {
+        $output_json_file = "$input_file.out.json";
+    }
+    PipelineAWE::print_json($output_json_file, $data);
+    exit 0;
 }
 
 # Run sequence stats analysis
