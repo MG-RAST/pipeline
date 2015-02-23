@@ -66,7 +66,7 @@ def runBlatProcess(infile, nr, output):
 
         for i in range(1,6):
             tmp_out = "%s.%s"%(output,i)
-            tmp_nr = "%s.%s"(nr,i)
+            tmp_nr = "%s.%s"%(nr,i)
             cmd  = "superblat -prot -fastMap -out=blast8 %s %s %s"%(tmp_nr, infile, tmp_out)
             proc = sub.Popen([cmd], shell=True, stdout=sub.PIPE)
             while (proc.returncode == None):
