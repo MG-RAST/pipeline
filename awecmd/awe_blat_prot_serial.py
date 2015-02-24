@@ -58,13 +58,13 @@ def bleach(sims, out):
         out.write("\t".join(s)+"\n")
         count += 1
 
-def runBlatProcess(infile, nr, output):
+def runBlatProcess(infile, nr, parts, output):
     try:
         start = datetime.datetime.utcnow()
         cat_output = "%s.cat_blat"%output
         destination = open(cat_output,'wb')
 
-        for i in range(1,6):
+        for i in range(1,parts+1):
             tmp_out = "%s.%s"%(output,i)
             tmp_nr = "%s.%s"%(nr,i)
             cmd  = "superblat -prot -fastMap -out=blast8 %s %s %s"%(tmp_nr, infile, tmp_out)
@@ -91,6 +91,8 @@ if __name__ == "__main__":
     parser = OptionParser(usage)
     parser.add_option("-i", "--input", dest="input", type = "string", default=None, help="input file path")
     parser.add_option("-o", "--output", dest="output", type = "string", default=None, help="output file path")
+    parser.add_option("-m", "--m5nr_version", dest="m5nr_version", type = "string", default="10", help="version of m5nr")
+    parser.add_option("-p", "--m5nr_parts", dest="m5nr_parts", type = "int", default="5", help="number of files m5nr is divided into")
     parser.add_option("-d", "--sort_dir", dest="sort_dir", type = "string", default='.', help="temporary sort directory")
     (opts, args) = parser.parse_args()
     
@@ -104,11 +106,11 @@ if __name__ == "__main__":
     else:
         outfile = "blat_output"
     if os.environ.get('REFDBPATH'):
-        refdb = "%s/md5nr"%(os.environ.get(ENV_VAR_DBPATH))
+        refdb = "%s/md5nr_v%"%(os.environ.get(ENV_VAR_DBPATH), opts.m5nr_version)
     else:
-        refdb = "md5nr"
+        refdb = "md5nr_v%"%(opts.m5nr_version)
     
-    blat_hits = runBlatProcess(infile, refdb, outfile)
+    blat_hits = runBlatProcess(infile, refdb, m5nr_parts, outfile)
     sortandbleach("%s.cat_blat"%outfile, outfile, opts.sort_dir)
     
     Info_log.close()
