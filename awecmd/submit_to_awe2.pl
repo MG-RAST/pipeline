@@ -14,7 +14,10 @@ use warnings;
 no warnings('once');
 
 use PipelineJob;
-use PipelineAWE_Conf;
+#use PipelineAWE_Conf;
+use Pipeline_conf_public;
+use Pipeline_conf_private;
+
 
 use JSON;
 use Template;
@@ -32,8 +35,10 @@ use File::Slurp;
 
 # options
 my $job_id     = "";
-my $input_file = "";
-my $input_node = "";
+my $input_file = ""; # file will be upload
+my $copy_node = ""; # existing node will be copied and gets new attributes
+my $input_node = ""; # existing node will be used without modification in attributes
+
 my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
@@ -49,7 +54,8 @@ my $production = 0; # indicates that this is production
 my $options = GetOptions (
         "job_id=s"     => \$job_id,
         "input_file=s" => \$input_file,
-        "input_node=s" => \$input_node,
+        "copy_node=s" => \$copy_node,
+		"input_node=s" => \$input_node,
 		"awe_url=s"    => \$awe_url,
 		"shock_url=s"  => \$shock_url,
 		"template=s"   => \$template,
@@ -69,8 +75,8 @@ if ($help) {
 } elsif (! $job_id) {
     print STDERR "ERROR: A job identifier is required.\n";
     exit 1;
-} elsif (! ($input_file || $input_node)) {
-    print STDERR "ERROR: An input file or node was not specified.\n";
+} elsif (! ($input_file || $copy_node || $input_node)) {
+    print STDERR "ERROR: An input file or node (copy or input) was not specified.\n";
     exit 1;
 } elsif ($input_file && (! -e $input_file)) {
     print STDERR "ERROR: The input file [$input_file] does not exist.\n";
@@ -107,6 +113,61 @@ sub submit_workflow {
 }
 
 
+sub read_jobdb {
+	
+	
+	unless (defined $job_id && length($job_id) > 0) {
+		die;
+	}
+	
+	# set obj handles
+	my $jobdb=undef;
+	
+	if ($use_ssh) {
+		my $mspath = $ENV{'HOME'}.'/.mysql/';
+		$jobdb = PipelineJob::get_jobcache_dbh(
+		$Pipeline_conf_private::job_dbhost,
+		$Pipeline_conf_private::job_dbname,
+		$Pipeline_conf_private::job_dbuser,
+		$Pipeline_conf_private::job_dbpass,
+		$mspath.'client-key.pem',
+		$mspath.'client-cert.pem',
+		$mspath.'ca-cert.pem'
+		);
+	} else {
+		$jobdb = PipelineJob::get_jobcache_dbh(
+		$Pipeline_conf_private::job_dbhost,
+		$Pipeline_conf_private::job_dbname,
+		$Pipeline_conf_private::job_dbuser,
+		$Pipeline_conf_private::job_dbpass
+		);
+	}
+	
+	
+	# get job related info from DB
+	my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
+	unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
+		print STDERR "ERROR: Job $job_id does not exist.\n";
+		exit 1;
+	}
+	my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
+	my $jattr = PipelineJob::get_job_attributes($jobdb, $job_id);
+	my $jopts = {};
+	foreach my $opt (split(/\&/, $jobj->{options})) {
+		if ($opt =~ /^filter_options=(.*)/) {
+			$jopts->{filter_options} = $1 || 'skip';
+		} else {
+			my ($k, $v) = split(/=/, $opt);
+			$jopts->{$k} = $v;
+		}
+	}
+	
+	
+	return $jobj, $jstat, $jattr, $jopts;
+}
+
+
+
 #########################################################
 
 if ($production) {
@@ -117,28 +178,7 @@ if ($production) {
 	
 }
 
-# set obj handles
-my $jobdb=undef;
 
-if ($use_ssh) {
-    my $mspath = $ENV{'HOME'}.'/.mysql/';
-	$jobdb = PipelineJob::get_jobcache_dbh(
-    	$PipelineAWE_Conf::job_dbhost,
-		$PipelineAWE_Conf::job_dbname,
-    	$PipelineAWE_Conf::job_dbuser,
-    	$PipelineAWE_Conf::job_dbpass,
-		$mspath.'client-key.pem',
-		$mspath.'client-cert.pem',
-		$mspath.'ca-cert.pem'
-	);
-} else {
-    $jobdb = PipelineJob::get_jobcache_dbh(
-		$PipelineAWE_Conf::job_dbhost,
-		$PipelineAWE_Conf::job_dbname,
-		$PipelineAWE_Conf::job_dbuser,
-		$PipelineAWE_Conf::job_dbpass
-	);
-}
 
 my $tpage = Template->new(ABSOLUTE => 1);
 my $agent = LWP::UserAgent->new();
@@ -149,45 +189,45 @@ $json->max_size(0);
 $json->allow_nonref;
 
 # get default urls
-my $vars = $PipelineAWE_Conf::template_keywords;
+#my $vars = $PipelineAWE_Conf::template_keywords;
+
+my $vars_pub = $Pipeline_conf_public::template_keywords;
+my $vars_priv = $Pipeline_conf_private::template_keywords;
+
+# merge
+my $vars = \(%$vars_pub , %$vars_priv);
+
 if ($shock_url) {
     $vars->{shock_url} = $shock_url;
 }
 if (! $awe_url) {
-    $awe_url = $PipelineAWE_Conf::awe_url;
+    $awe_url = $Pipeline_conf_private::awe_url;
 }
 if (! $template) {
-    $template = $PipelineAWE_Conf::template_file;
+    $template = $Pipeline_conf_private::template_file;
 }
 
 
 #my $template_str = read_file($template) ;
 
 
-# get job related info from DB
-my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
-unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
-    print STDERR "ERROR: Job $job_id does not exist.\n";
-    exit 1;
+my $jobj={};
+my $jstat={};
+my $jattr={};
+my $jopts={};
+
+if (defined($use_jobdb) && $use_jobdb==1) {
+	($jobj, $jstat, $jattr, $jopts)  = read_jobdb();
 }
-my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
-my $jattr = PipelineJob::get_job_attributes($jobdb, $job_id);
-my $jopts = {};
-foreach my $opt (split(/\&/, $jobj->{options})) {
-    if ($opt =~ /^filter_options=(.*)/) {
-        $jopts->{filter_options} = $1 || 'skip';
-    } else {
-        my ($k, $v) = split(/=/, $opt);
-        $jopts->{$k} = $v;
-    }
-}
+
+
 
 # build upload attributes
 my $up_attr = {
     id          => 'mgm'.$jobj->{metagenome_id},
     job_id      => $job_id,
-    name        => $jobj->{name},
-    created     => $jobj->{created_on},
+    name        => $jobj->{name} || '',
+    created     => $jobj->{created_on} || '',
     status      => 'private',
     assembled   => $jattr->{assembled} ? 'yes' : 'no',
     data_type   => 'sequence',
@@ -197,8 +237,8 @@ my $up_attr = {
     stage_name  => 'upload',
     type        => $type,
     statistics  => {},
-    sequence_type    => $jobj->{sequence_type} || $jattr->{sequence_type_guess},
-    pipeline_version => $vars->{pipeline_version}
+    sequence_type    => $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "sequence type unknown",
+    pipeline_version => $vars->{pipeline_version} || ''
 };
 if ($jobj->{project_id} && $jobj->{project_name}) {
     $up_attr->{project_id}   = 'mgp'.$jobj->{project_id};
@@ -210,47 +250,64 @@ foreach my $s (keys %$jstat) {
     }
 }
 
+
+
 my $content = {};
+my $node_id = "";
+my $file_name = "";
+
 $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 
-if ($input_file) {
-    # upload input to shock
-    $content = {
-        upload     => [$input_file],
-        attributes => [undef, "$input_file.json", Content => $json->encode($up_attr)]
-    };
-} elsif ($input_node) {
-    # copy input node
-    $content = {
-        copy_data => $input_node,
-        attributes => [undef, "attr.json", Content => $json->encode($up_attr)]
-    };
-}
-# POST to shock
-print "upload input to Shock... ";
-my $spost = $agent->post(
-    $vars->{shock_url}.'/node',
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
-    'Content_Type', 'multipart/form-data',
-    'Content', $content
-);
-my $sres = undef;
-eval {
-    $sres = $json->decode($spost->content);
-};
-if ($@) {
-    print STDERR "ERROR: Return from shock is not JSON:\n".$spost->content."\n";
-    exit 1;
-}
-if ($sres->{error}) {
-    print STDERR "ERROR: (shock) ".$sres->{error}[0]."\n";
-    exit 1;
-}
-print " ...done.\n";
+unless (defined $input_node) {
+	# upload file or create copy of existing node with new attributes
 
-my $node_id = $sres->{data}->{id};
-my $file_name = $sres->{data}->{file}->{name};
-print "upload shock node\t$node_id\n";
+	if ($input_file) {
+		# upload input to shock
+		$content = {
+			upload     => [$input_file],
+			attributes => [undef, "$input_file.json", Content => $json->encode($up_attr)]
+		};
+	} elsif ($copy_node) {
+		# copy input node
+		$content = {
+			copy_data => $copy_node,
+			attributes => [undef, "attr.json", Content => $json->encode($up_attr)]
+		};
+	} else {
+		die;
+	}
+
+	# POST to shock
+	print "upload input to Shock... ";
+	my $spost = $agent->post(
+		$vars->{shock_url}.'/node',
+		'Authorization', 'OAuth '.$Pipeline_conf_private::shock_pipeline_token,
+		'Content_Type', 'multipart/form-data',
+		'Content', $content
+	);
+	my $sres = undef;
+	eval {
+		$sres = $json->decode($spost->content);
+	};
+	if ($@) {
+		print STDERR "ERROR: Return from shock is not JSON:\n".$spost->content."\n";
+		exit 1;
+	}
+	if ($sres->{error}) {
+		print STDERR "ERROR: (shock) ".$sres->{error}[0]."\n";
+		exit 1;
+	}
+	print " ...done.\n";
+	
+	$node_id = $sres->{data}->{id};
+	$file_name = $sres->{data}->{file}->{name};
+	print "upload shock node\t$node_id\n";
+	
+	
+}
+
+
+
 
 # populate workflow variables
 $vars->{job_id}         = $job_id;
@@ -303,16 +360,17 @@ if ($jattr->{priority} && exists($priority_map->{$jattr->{priority}})) {
     $vars->{priority} = $priority_map->{$jattr->{priority}};
 }
 # higher priority if smaller data
-if (int($up_attr->{statistics}{bp_count}) < 100000000) {
-    $vars->{priority} = 30;
+if (defined $up_attr->{statistics}{bp_count}) {
+	if (int($up_attr->{statistics}{bp_count}) < 100000000) {
+		$vars->{priority} = 30;
+	}
+	if (int($up_attr->{statistics}{bp_count}) < 50000000) {
+		$vars->{priority} = 40;
+	}
+	if (int($up_attr->{statistics}{bp_count}) < 10000000) {
+		$vars->{priority} = 50;
+	}
 }
-if (int($up_attr->{statistics}{bp_count}) < 50000000) {
-    $vars->{priority} = 40;
-}
-if (int($up_attr->{statistics}{bp_count}) < 10000000) {
-    $vars->{priority} = 50;
-}
-
 
 
 ##############################################################################################################
@@ -323,9 +381,9 @@ my $workflow = new AWE::Workflow(
 	"project"		=> $up_attr->{project_name} || '',
 	"user"			=> 'mgu'.$jobj->{owner} || '',
 	"clientgroups"	=> $clientgroups,
-	"priority" 		=> $vars->{priority},
+	"priority" 		=> $vars->{priority} || 50,
 	"shockhost" 	=> $vars->{shock_url} || die, # default shock server for output files
-	"shocktoken" 	=> $PipelineAWE_Conf::shock_pipeline_token || die,
+	"shocktoken" 	=> $Pipeline_conf_private::shock_pipeline_token || die,
 	"userattr" => {
 		"id"				=> $vars->{'mg_id'},
 		"job_id"			=> $job_id,
@@ -430,7 +488,7 @@ if ($vars->{bowtie} != 0 ) {
 	# check if index exists
 	my $has_index = 0;
 	foreach my $idx (split(/,/, $vars->{screen_indexes})) {
-		if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
+		if (exists $Pipeline_conf_public::shock_bowtie_indexes->{$idx}) {
 			$has_index = 1;
 		}
 	}
@@ -439,11 +497,11 @@ if ($vars->{bowtie} != 0 ) {
 		$vars->{screen_indexes} = 'h_sapiens';
 	}
 	# build bowtie index list
-	my $bowtie_url = $PipelineAWE_Conf::shock_bowtie_url || $vars->{shock_url};
+	my $bowtie_url = $Pipeline_conf_public::shock_bowtie_url || $vars->{shock_url};
 	$vars->{index_download_urls} = "";
 	foreach my $idx (split(/,/, $vars->{screen_indexes})) {
-		if (exists $PipelineAWE_Conf::shock_bowtie_indexes->{$idx}) {
-			while (my ($ifile, $inode) = each %{$PipelineAWE_Conf::shock_bowtie_indexes->{$idx}}) {
+		if (exists $Pipeline_conf_public::shock_bowtie_indexes->{$idx}) {
+			while (my ($ifile, $inode) = each %{$Pipeline_conf_public::shock_bowtie_indexes->{$idx}}) {
 				print "bowtie ".$ifile."\n";
 				my $sr = shock_resource( ${bowtie_url} , ${inode}, $ifile );
 				$sr->{'cache'} = JSON::true; # this inidicates predata files
@@ -486,32 +544,35 @@ if ($vars->{bowtie} != 0 ) {
 
 
 ### diamond ###
-if (1) {
 
-
-	my $m5nr_node_id = "223fb237-cd7d-44b1-8441-0b41938959e5";
-	my $m5nr_file_name = "m5nr.dmnd" ;
+my $m5nr_node_id = "73abdf1a-9f91-4b06-b19c-8b326f82a8bd";
+my $m5nr_file_name = "m5nr.dmnd" ;
 	
-	my $task_diamond = $workflow->newTask('diamond.search.blastx',
-		$last_output,
-		shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name) # diamond database for M5NR
-	);
+my $task_diamond = $workflow->newTask('diamond.search.blastx',
+	$last_output,
+	shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name) # diamond database for M5NR
+);
 
 
 
-	$task_diamond->userattr(
-		"stage_id"		=> "???",
-		"stage_name"	=> "diamond",
-		"m5nr_sims_version" => "???",
-		"data_type"		=> "similarity",
-		"file_format"	=> "blast m8",
-		"sim_type"		=> "protein"
-	);
+$task_diamond->userattr(
+	"stage_id"		=> "???",
+	"stage_name"	=> "diamond",
+	"m5nr_sims_version" => "???",
+	"data_type"		=> "similarity",
+	"file_format"	=> "blast m8",
+	"sim_type"		=> "protein"
+);
 
 
-	my $diamond_result = task_resource($task_diamond->taskid(), 'result');
-	$last_output = $diamond_result;
-}
+my $diamond_result = task_resource($task_diamond->taskid(), 'result');
+$last_output = $diamond_result;
+
+
+
+##############################################################################################################
+
+
 
 
 my $workflow_str = $json->pretty->encode( $workflow->getHash() );
@@ -520,7 +581,7 @@ print "AWE workflow:\n".$workflow_str."\n";
 
 
 #write to file for debugging puposes (first time)
-my $workflow_file = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
+my $workflow_file = $Pipeline_conf_private::temp_dir."/".$job_id.".awe_workflow.json";
 write_file($workflow_file, $workflow_str);
 
 # transform workflow json string into hash
@@ -546,7 +607,7 @@ if ($no_start) {
 
 print "\nsubmiting .....\n";
 
-my $awe_id = submit_workflow($workflow, $awe_url, $PipelineAWE_Conf::shock_pipeline_token, $PipelineAWE_Conf::awe_pipeline_token);
+my $awe_id = submit_workflow($workflow, $awe_url, $Pipeline_conf_private::shock_pipeline_token, $Pipeline_conf_private::awe_pipeline_token);
 
 exit(0);
 
@@ -559,7 +620,7 @@ exit(0);
 #print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -copy_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
 
 # enable hash-resolving in the JSON->encode function
