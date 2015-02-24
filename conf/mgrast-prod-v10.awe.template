@@ -287,7 +287,7 @@
         {
             "cmd": {
                 "name": "awe_blat_prot_serial.py",
-                "args": "--input=@[% job_id %].550.cluster.aa[% aa_pid %].faa --output=[% job_id %].650.superblat.sims",
+                "args": "--input=@[% job_id %].550.cluster.aa[% aa_pid %].faa --output=[% job_id %].650.superblat.sims --m5nr_version=10 --m5nr_parts=5",
                 "description": "aa sims blat",
                 "[% docker_switch %]Dockerimage": "mgrast/superblat:[% docker_image_version %]", 	 	
                 "environ" : { 	 	
