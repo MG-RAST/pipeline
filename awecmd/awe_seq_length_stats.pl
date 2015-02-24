@@ -9,6 +9,7 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
+use Digest::MD5;
 umask 000;
 
 # options
@@ -46,10 +47,41 @@ if ($type ne 'fasta' && $type ne 'fastq') {
 # Validate other input and output file paths.
 my $data = PipelineAWE::read_json($input_json_file);
 
-# Run sequence stats analysis
+# Get file info if missing
 if (! exists($data->{stats_info})) {
-    $data->{stats_info} = {};
+    my $format = "ASCII text";
+    my $suffix = (split(/\./, $input_file))[-1];
+    my $base   = (split(/\//, $input_file))[-1];
+    my @stats  = stat($input_file);
+    open my $fh, '<', $input_file;
+    my $ctx = Digest::MD5->new;
+    $ctx->addfile($fh);
+    # empty file
+    if ($stats[7] == 0) {
+        $format = "empty file";
+        $type = "none";
+    }
+    $data->{stats_info} = {
+        type      => $format,
+        suffix    => $suffix,
+        file_type => $type,
+        file_name => $base,
+        file_size => $stats[7],
+        checksum  => $ctx->hexdigest
+    };
+    close $fh;
 }
+
+# exit gracefully if empty
+if ($data->{stats_info}{file_size} == 0) {
+    if ($output_json_file eq "") {
+        $output_json_file = "$input_file.out.json";
+    }
+    PipelineAWE::print_json($output_json_file, $data);
+    exit 0;
+}
+
+# Run sequence stats analysis
 my @error = ();
 my @stats = `seq_length_stats.py -i $input_file -t $type -s 2>&1`;
 chomp @stats;
@@ -149,6 +181,7 @@ if (@error > 0) {
 }
 
 # output attributes with stats
+$data->{data_type} = "sequence";
 if ($output_json_file eq "") {
     $output_json_file = "$input_file.out.json";
 }

@@ -39,7 +39,7 @@ my $use_docker = 0;
 my $help       = 0;
 my $pipeline   = "";
 my $type       = "";
-my $production = 0; # indicates that this is production
+my $production = 1; # indicates that this is production
 
 my $options = GetOptions (
         "job_id=s"     => \$job_id,
@@ -368,7 +368,7 @@ if ($vars->{index_download_urls} eq "") {
 }
 chop $vars->{index_download_urls};
 
-
+$vars->{m5nr_annotation_url} = $PipelineAWE_Conf::m5nr_annotation_url;
 
 my $workflow_str = "";
 

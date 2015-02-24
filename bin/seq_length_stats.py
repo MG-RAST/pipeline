@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, math, subprocess
+import os, re, sys, math, subprocess
 from collections import defaultdict
 from optparse import OptionParser
 from Bio import SeqIO
@@ -137,6 +137,10 @@ def main(args):
     try:
         for rec in seq_iter(in_hdl, opts.type):
             head, seq, qual = split_rec(rec, opts.type)
+            if (opts.type == 'fasta') and (re.match('^\s', rec.description)):
+                sys.stderr.write("[error] invalid fasta file, first character following '>' in header must be non-whitespace\n")
+                os._exit(1)
+
             slen = len(seq)
             seqnum += 1
             lengths[slen] += 1

@@ -79,22 +79,21 @@ else {
 
     # truncate input to 1000 bp
     my $input_file = $fasta.'.trunc';
-    PipelineAWE::run_cmd("seqUtil --truncate 1000 -i $fasta -o $input_file");
+    PipelineAWE::run_cmd("seqUtil --truncateuniqueid 1000 -i $fasta -o $input_file");
 
     # run bowtie2
+    my $tmp_input_var = $input_file;
     for my $index_name (@indexes) {
         my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
         # 'reorder' option outputs sequences in same order as input file
-        PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $input_file > /dev/null", 1);
-        $input_file = $unaligned;
+        PipelineAWE::run_cmd("bowtie2 -f --reorder -p $proc --un $unaligned -x $index_dir/$index_name -U $tmp_input_var > /dev/null", 1);
+        $tmp_input_var = $unaligned;
     }
-    PipelineAWE::run_cmd("mv $input_file $output");
-}
+    PipelineAWE::run_cmd("mv $tmp_input_var $output");
 
-# create subset record list
-# note: parent and child files in same order
-if ($run_bowtie != 0) {
-    PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -s -m 20");
+    # create subset record list
+    # note: parent and child files in same order
+    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $output -s -m 20");
     PipelineAWE::run_cmd("mv $output.index $output");
 }
 
