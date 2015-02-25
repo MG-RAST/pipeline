@@ -13,6 +13,8 @@ use strict;
 use warnings;
 no warnings('once');
 
+use local::lib "$FindBin::Bin/../conf/";
+
 use PipelineJob;
 
 use Pipeline_conf_public;
