@@ -22,8 +22,13 @@ our $template_keywords = {
 	
     
     # shock data download urls
-    'm5nr1_download_url' => "http://shock.metagenomics.anl.gov/node/4406405c-526c-4a63-be22-04b7c2d18434?download",
-    'm5nr2_download_url' => "http://shock.metagenomics.anl.gov/node/65d644a8-55a5-439f-a8b5-af1440472d8d?download",
+	
+	'm5nr_diamond_resource'	=> {	"resource" => "shock",
+									"host" => "http://shock.metagenomics.anl.gov",
+									"node" => "73abdf1a-9f91-4b06-b19c-8b326f82a8bd"}
+	
+    #'m5nr1_download_url' => "http://shock.metagenomics.anl.gov/node/4406405c-526c-4a63-be22-04b7c2d18434?download",
+    #'m5nr2_download_url' => "http://shock.metagenomics.anl.gov/node/65d644a8-55a5-439f-a8b5-af1440472d8d?download",
     'm5rna_download_url' => "http://shock.metagenomics.anl.gov/node/1284813a-91d1-42b1-bc72-e74f19e1a0d1?download",
     'm5rna_clust_download_url' => "http://shock.metagenomics.anl.gov/node/c4c76c22-297b-4404-af5c-8cd98e580f2a?download",
 

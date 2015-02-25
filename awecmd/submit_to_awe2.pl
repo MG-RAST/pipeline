@@ -2,8 +2,8 @@
 
 # MG-RAST pipeline job submitter for AWE
 # Command name: submit_to_awe
-# Use case: submit a job with a local input file and a pipeline template,
-#           input file is local and will be uploaded to shock automatially.
+# Use case: submit a job with a local input file, existing shock node or copy of existing shock node,
+#
 # Operations:
 #      1. upload input file to shock OR copy input shock node
 #      2. create job script based on job template and available info
@@ -14,7 +14,7 @@ use warnings;
 no warnings('once');
 
 use PipelineJob;
-#use PipelineAWE_Conf;
+
 use Pipeline_conf_public;
 use Pipeline_conf_private;
 
@@ -35,33 +35,37 @@ use File::Slurp;
 
 # options
 my $job_id     = "";
+my $no_job_id 	= 0;
+
 my $input_file = ""; # file will be upload
 my $copy_node = ""; # existing node will be copied and gets new attributes
 my $input_node = ""; # existing node will be used without modification in attributes
 
 my $awe_url    = "";
 my $shock_url  = "";
-my $template   = "";
+
 my $clientgroups = undef;
 my $no_start   = 0;
 my $use_ssh    = 0;
-my $use_docker = 0;
+
 my $help       = 0;
 my $pipeline   = "mgrast-test"; # will be overwritten by --production
 my $type       = "metagenome-test"; # will be overwritten by --production
 my $production = 0; # indicates that this is production
 
 my $options = GetOptions (
-        "job_id=s"     => \$job_id,
+        "job_id=s"		=> \$job_id,
+		"no_job_id!"	=> \$no_job_id,
+
         "input_file=s" => \$input_file,
         "copy_node=s" => \$copy_node,
 		"input_node=s" => \$input_node,
 		"awe_url=s"    => \$awe_url,
 		"shock_url=s"  => \$shock_url,
-		"template=s"   => \$template,
+
 		"no_start!"    => \$no_start,
 		"use_ssh!"     => \$use_ssh,
-		"use_docker!"  => \$use_docker, # enables docker specific workflow entries, dockerimage and environ
+
 		"clientgroups=s" => \$clientgroups,
 		"pipeline=s"      => \$pipeline,
 		"type=s"       => \$type,
@@ -72,8 +76,8 @@ my $options = GetOptions (
 if ($help) {
     print get_usage();
     exit 0;
-} elsif (! $job_id) {
-    print STDERR "ERROR: A job identifier is required.\n";
+} elsif (! $job_id && $no_job_id==0) {
+    print STDERR "ERROR: A job identifier is required (unless you specify --no_job_id).\n";
     exit 1;
 } elsif (! ($input_file || $copy_node || $input_node)) {
     print STDERR "ERROR: An input file or node (copy or input) was not specified.\n";
@@ -107,14 +111,15 @@ sub submit_workflow {
 		print STDERR Dumper($submission_result);
 		exit(1);
 	}
-	my $job_id = $submission_result->{'data'}->{'id'} || die "no job_id found";
+	my $awe_job_id = $submission_result->{'data'}->{'id'} || die "no job_id found";
 	print "result from AWE server:\n".$json->pretty->encode( $submission_result )."\n";
-	return $job_id;
+	return $awe_job_id;
 }
 
 
 sub read_jobdb {
 	
+	my ($job_id) = @_;
 	
 	unless (defined $job_id && length($job_id) > 0) {
 		die;
@@ -203,12 +208,8 @@ if ($shock_url) {
 if (! $awe_url) {
     $awe_url = $Pipeline_conf_private::awe_url;
 }
-if (! $template) {
-    $template = $Pipeline_conf_private::template_file;
-}
 
 
-#my $template_str = read_file($template) ;
 
 
 my $jobj={};
@@ -216,39 +217,92 @@ my $jstat={};
 my $jattr={};
 my $jopts={};
 
-if (defined($use_jobdb) && $use_jobdb==1) {
-	($jobj, $jstat, $jattr, $jopts)  = read_jobdb();
+my $statistics = {}
+
+#read jobdb
+if (defined($job_id) && length($job_id) > 0) ) {
+	($jobj, $jstat, $jattr, $jopts)  = read_jobdb($job_id);
+	
+	foreach my $s (keys %$jstat) {
+		if ($s =~ /(.+)_raw$/) {
+			$statistics->{$1} = $jstat->{$s};
+		}
+	}
+
 }
 
 
 
-# build upload attributes
-my $up_attr = {
-    id          => 'mgm'.$jobj->{metagenome_id},
-    job_id      => $job_id,
-    name        => $jobj->{name} || '',
-    created     => $jobj->{created_on} || '',
-    status      => 'private',
-    assembled   => $jattr->{assembled} ? 'yes' : 'no',
-    data_type   => 'sequence',
-    seq_format  => 'bp',
-    file_format => ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta',
-    stage_id    => '050',
-    stage_name  => 'upload',
-    type        => $type,
-    statistics  => {},
-    sequence_type    => $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "sequence type unknown",
-    pipeline_version => $vars->{pipeline_version} || ''
-};
+
+# populate workflow variables
+$vars->{job_id}         = $job_id;
+$vars->{mg_id}          = 'mgm'.$jobj->{metagenome_id}; #$up_attr->{id};
+#$vars->{mg_name}        = $up_attr->{name};
+$vars->{job_date}       = $jobj->{created_on} || ''; #$up_attr->{created};
+$vars->{file_format}    = ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta'; #$up_attr->{file_format};
+$vars->{seq_type}       = $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "sequence type unknown"; #$up_attr->{sequence_type};
+$vars->{bp_count}       = $statistics->{bp_count} #$up_attr->{statistics}{bp_count};
+#$vars->{user}           = 'mgu'.$jobj->{owner} || '';
+$vars->{inputfile}      = $file_name;
+$vars->{shock_node}     = $node_id;
+$vars->{filter_options} = $jopts->{filter_options} || 'skip';
+$vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
+$vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
+$vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
+$vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
+
 if ($jobj->{project_id} && $jobj->{project_name}) {
-    $up_attr->{project_id}   = 'mgp'.$jobj->{project_id};
-    $up_attr->{project_name} = $jobj->{project_name};
+	#$up_attr->{project_id}   = 'mgp'.$jobj->{project_id};
+	#$up_attr->{project_name} = $jobj->{project_name};
+	$vars->{project_id}   = 'mgp'.$jobj->{project_id} || '';
+	$vars->{project_name} = $jobj->{project_name} || '';
 }
-foreach my $s (keys %$jstat) {
-    if ($s =~ /(.+)_raw$/) {
-        $up_attr->{statistics}{$1} = $jstat->{$s};
-    }
+
+
+if (defined $pipeline && $pipeline ne "") {
+	$vars->{'pipeline'} = $pipeline;
+} else {
+	die "template variable \"pipeline\" not defined";
 }
+
+if (defined $type && $type ne "") {
+	$vars->{'type'} = $type;
+} else {
+	die "template variable \"type\" not defined";
+}
+
+
+if (defined $clientgroups) {
+	$vars->{'clientgroups'} = $clientgroups;
+}
+
+
+# set priority
+my $priority_map = {
+	"never"       => 1,
+	"date"        => 5,
+	"6months"     => 10,
+	"3months"     => 15,
+	"immediately" => 20
+};
+if ($jattr->{priority} && exists($priority_map->{$jattr->{priority}})) {
+	$vars->{priority} = $priority_map->{$jattr->{priority}};
+}
+# higher priority if smaller data
+if (defined $statistics->{bp_count}) {
+	if (int($statistics->{bp_count}) < 100000000) {
+		$vars->{priority} = 30;
+	}
+	if (int($statistics->{bp_count}) < 50000000) {
+		$vars->{priority} = 40;
+	}
+	if (int($statistics->{bp_count}) < 10000000) {
+		$vars->{priority} = 50;
+	}
+}
+
+
+
 
 
 
@@ -261,6 +315,31 @@ $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 unless (defined $input_node) {
 	# upload file or create copy of existing node with new attributes
 
+	# build upload attributes
+	my $up_attr = {
+		id          => $vars->{mg_id},
+		job_id      => $job_id,
+		name        => $jobj->{name} || '',
+		created     => $vars->{job_date}, # $jobj->{created_on} || '',
+		status      => 'private',
+		assembled   => $jattr->{assembled} ? 'yes' : 'no',
+		data_type   => 'sequence',
+		seq_format  => 'bp',
+		file_format => $vars->{file_format}, #($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta',
+		stage_id    => '050',
+		stage_name  => 'upload',
+		type        => $vars->{'type'},
+		statistics  => $statistics,
+		sequence_type    => $vars->{seq_type}, #$jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "sequence type unknown",
+		pipeline_version => $vars->{pipeline_version} || '',
+		project_id		=> $vars->{project_id},
+		project_name	=> $vars->{project_name}
+	};
+	#if ($jobj->{project_id} && $jobj->{project_name}) {
+	#    $up_attr->{project_id}   = 'mgp'.$jobj->{project_id};
+	#    $up_attr->{project_name} = $jobj->{project_name};
+	#}
+	
 	if ($input_file) {
 		# upload input to shock
 		$content = {
@@ -309,76 +388,13 @@ unless (defined $input_node) {
 
 
 
-# populate workflow variables
-$vars->{job_id}         = $job_id;
-$vars->{mg_id}          = $up_attr->{id};
-#$vars->{mg_name}        = $up_attr->{name};
-$vars->{job_date}       = $up_attr->{created};
-$vars->{file_format}    = $up_attr->{file_format};
-$vars->{seq_type}       = $up_attr->{sequence_type};
-$vars->{bp_count}       = $up_attr->{statistics}{bp_count};
-$vars->{project_id}     = $up_attr->{project_id} || '';
-#$vars->{project_name}   = $up_attr->{project_name} || '';
-#$vars->{user}           = 'mgu'.$jobj->{owner} || '';
-$vars->{inputfile}      = $file_name;
-$vars->{shock_node}     = $node_id;
-$vars->{filter_options} = $jopts->{filter_options} || 'skip';
-$vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
-$vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
-$vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
-$vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
-
-
- 
-if (defined $pipeline && $pipeline ne "") {
-	$vars->{'pipeline'} = $pipeline;
-} else {
-	die "template variable \"pipeline\" not defined";
-}
-
-if (defined $type && $type ne "") {
-	$vars->{'type'} = $type;
-} else {
-	die "template variable \"type\" not defined";
-}
-
-
-if (defined $clientgroups) {
-	$vars->{'clientgroups'} = $clientgroups;
-}
-
-
-# set priority
-my $priority_map = {
-    "never"       => 1,
-    "date"        => 5,
-    "6months"     => 10,
-    "3months"     => 15,
-    "immediately" => 20
-};
-if ($jattr->{priority} && exists($priority_map->{$jattr->{priority}})) {
-    $vars->{priority} = $priority_map->{$jattr->{priority}};
-}
-# higher priority if smaller data
-if (defined $up_attr->{statistics}{bp_count}) {
-	if (int($up_attr->{statistics}{bp_count}) < 100000000) {
-		$vars->{priority} = 30;
-	}
-	if (int($up_attr->{statistics}{bp_count}) < 50000000) {
-		$vars->{priority} = 40;
-	}
-	if (int($up_attr->{statistics}{bp_count}) < 10000000) {
-		$vars->{priority} = 50;
-	}
-}
-
 
 ##############################################################################################################
 
 my $workflow = new AWE::Workflow(
 	"pipeline"		=> $pipeline,
 	"name"			=> $job_id,
-	"project"		=> $up_attr->{project_name} || '',
+	"project"		=> $vars->{project_name} || '',
 	"user"			=> 'mgu'.$jobj->{owner} || '',
 	"clientgroups"	=> $clientgroups,
 	"priority" 		=> $vars->{priority} || 50,
@@ -401,6 +417,7 @@ my $workflow = new AWE::Workflow(
 );
 
 
+# using "$last_output" simplifies skipping of tasks
 my $last_output = shock_resource($vars->{shock_url}, $node_id, $file_name);
 
 
@@ -410,7 +427,7 @@ my $last_output = shock_resource($vars->{shock_url}, $node_id, $file_name);
 
 my $task_qc = $workflow->newTask(	'MG-RAST/qc.qc.default',
 									shock_resource($vars->{shock_url}, $node_id, $file_name),
-									string_resource($up_attr->{file_format}),
+									string_resource($vars->{file_format}),
 									string_resource($job_id),
 									string_resource($vars->{assembled}),
 									string_resource($vars->{filter_options})
@@ -431,7 +448,7 @@ my $task_preprocess = undef;
 if ($vars->{filter_options} ne 'skip') {
 	print "preprocess\n";
 	
-	$task_preprocess = $workflow->newTask(	'MG-RAST/base.preprocess.'.$up_attr->{file_format},
+	$task_preprocess = $workflow->newTask(	'MG-RAST/base.preprocess.'.$vars->{file_format},
 		shock_resource($vars->{shock_url}, $node_id, $file_name),
 		string_resource($job_id),
 		string_resource($vars->{filter_options})
@@ -546,11 +563,11 @@ if ($vars->{bowtie} != 0 ) {
 ### diamond ###
 
 my $m5nr_node_id = "73abdf1a-9f91-4b06-b19c-8b326f82a8bd";
-my $m5nr_file_name = "m5nr.dmnd" ;
+
 	
 my $task_diamond = $workflow->newTask('diamond.search.blastx',
 	$last_output,
-	shock_resource($vars->{shock_url}, $m5nr_node_id, $m5nr_file_name) # diamond database for M5NR
+	$vars->{'m5nr_diamond_resource'} # diamond database for M5NR
 );
 
 
@@ -599,7 +616,7 @@ if ($@) {
 
 
 # test mode
-if ($no_start) {
+if (defined($no_start) && $no_start==1) {
     print "workflow\t".$workflow_file."\n";
     exit 0;
 }
