@@ -25,7 +25,7 @@ our $template_keywords = {
 	
 	'm5nr_diamond_resource'	=> {	"resource" => "shock",
 									"host" => "http://shock.metagenomics.anl.gov",
-									"node" => "73abdf1a-9f91-4b06-b19c-8b326f82a8bd"}
+									"node" => "73abdf1a-9f91-4b06-b19c-8b326f82a8bd"},
 	
     #'m5nr1_download_url' => "http://shock.metagenomics.anl.gov/node/4406405c-526c-4a63-be22-04b7c2d18434?download",
     #'m5nr2_download_url' => "http://shock.metagenomics.anl.gov/node/65d644a8-55a5-439f-a8b5-af1440472d8d?download",
