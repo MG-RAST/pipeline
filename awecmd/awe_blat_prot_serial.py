@@ -110,7 +110,7 @@ if __name__ == "__main__":
     else:
         refdb = "md5nr_v%s"%(opts.m5nr_version)
     
-    blat_hits = runBlatProcess(infile, refdb, m5nr_parts, outfile)
+    blat_hits = runBlatProcess(infile, refdb, opts.m5nr_parts, outfile)
     sortandbleach("%s.cat_blat"%outfile, outfile, opts.sort_dir)
     
     Info_log.close()
