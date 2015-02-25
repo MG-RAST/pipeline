@@ -14,7 +14,8 @@ use warnings;
 no warnings('once');
 
 use FindBin;
-use local::lib "$FindBin::Bin/../conf/";
+use local::lib "$FindBin::Bin/../conf/:$FindBin::Bin/../lib/";
+
 
 use PipelineJob;
 
