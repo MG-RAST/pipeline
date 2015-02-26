@@ -212,6 +212,12 @@ my $vars_priv = $Pipeline_conf_private::template_keywords;
 # merge
 my $vars = \(%$vars_pub , %$vars_priv);
 
+
+print Dumper($vars_pub) ."\n";
+print Dumper($vars_priv) ."\n";
+print Dumper($vars) ."\n";
+exit 0
+
 if ($shock_url) {
     $vars->{shock_url} = $shock_url;
 }
