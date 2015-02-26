@@ -245,7 +245,7 @@ if (defined $input_node) {
 		print STDERR "ERROR: Return from shock is not JSON:\n".$response->content."\n";
 		exit 1;
 	}
-	if ($sres->{error}) {
+	if ($response->{error}) {
 		print STDERR "ERROR: (shock) ".$response->{error}[0]."\n";
 		exit 1;
 	}
