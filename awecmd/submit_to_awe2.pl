@@ -214,7 +214,7 @@ my $vars = {};
 foreach my $key ( keys %$vars_pub ) {
 	$vars->{$key} = $vars_pub->{$key};
 }
-foreach my $key ( keys %$vars_pub ) {
+foreach my $key ( keys %$vars_priv ) {
 	$vars->{$key} = $vars_priv->{$key};
 }
 
