@@ -221,7 +221,10 @@ my $jstat={};
 my $jattr={};
 my $jopts={};
 
-my $statistics = {}
+my $statistics = {};
+
+my $file_name = "";
+my $node_id = "";
 
 #read jobdb
 if (defined($job_id) && length($job_id) > 0) ) {
@@ -310,9 +313,9 @@ if (defined $statistics->{bp_count}) {
 
 
 
-my $content = {};
-my $node_id = "";
-my $file_name = "";
+
+
+
 
 $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 
@@ -343,6 +346,8 @@ unless (defined $input_node) {
 	#    $up_attr->{project_id}   = 'mgp'.$jobj->{project_id};
 	#    $up_attr->{project_name} = $jobj->{project_name};
 	#}
+	
+	my $content = {};
 	
 	if ($input_file) {
 		# upload input to shock
@@ -391,6 +396,9 @@ unless (defined $input_node) {
 
 
 
+unless (defined($file_name) ) {
+	die;
+}
 
 
 ##############################################################################################################
