@@ -270,6 +270,7 @@ if (defined($input_node) && $job_id eq "") {
 
 #read jobdb
 if (defined($job_id) && length($job_id) > 0 ) {
+	print "read jobdb...\n"; 
 	($jobj, $jstat, $jattr, $jopts)  = read_jobdb($job_id);
 	
 	foreach my $s (keys %$jstat) {
