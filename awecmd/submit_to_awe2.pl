@@ -234,9 +234,8 @@ if (defined $input_node) {
 	
 	my $request = $agent->get(
 		$vars->{shock_url}.'/node',
-		'Authorization', 'OAuth '.$Pipeline_conf_private::shock_pipeline_token,
-		'Content_Type', 'multipart/form-data',
-		'Content', $content
+		'Authorization', 'OAuth '.$Pipeline_conf_private::shock_pipeline_token
+		#'Content_Type', 'multipart/form-data'
 	);
 	my $response = undef;
 	eval {
