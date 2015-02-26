@@ -134,7 +134,7 @@ sub read_jobdb {
 	
 	# set obj handles
 	my $jobdb=undef;
-	
+	print "PipelineJob::get_jobcache_dbh...\n";
 	if ($use_ssh) {
 		my $mspath = $ENV{'HOME'}.'/.mysql/';
 		$jobdb = PipelineJob::get_jobcache_dbh(
@@ -157,12 +157,15 @@ sub read_jobdb {
 	
 	
 	# get job related info from DB
+	print "PipelineJob::get_jobcache_info...\n";
 	my $jobj = PipelineJob::get_jobcache_info($jobdb, $job_id);
 	unless ($jobj && (scalar(keys %$jobj) > 0) && exists($jobj->{options})) {
 		print STDERR "ERROR: Job $job_id does not exist.\n";
 		exit 1;
 	}
+	print "PipelineJob::get_job_statistics...\n";
 	my $jstat = PipelineJob::get_job_statistics($jobdb, $job_id);
+	print "PipelineJob::get_job_attributes...\n";
 	my $jattr = PipelineJob::get_job_attributes($jobdb, $job_id);
 	my $jopts = {};
 	foreach my $opt (split(/\&/, $jobj->{options})) {
