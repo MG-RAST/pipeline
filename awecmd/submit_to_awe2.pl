@@ -227,7 +227,7 @@ my $file_name = "";
 my $node_id = "";
 
 #read jobdb
-if (defined($job_id) && length($job_id) > 0) ) {
+if (defined($job_id) && length($job_id) > 0 ) {
 	($jobj, $jstat, $jattr, $jopts)  = read_jobdb($job_id);
 	
 	foreach my $s (keys %$jstat) {
