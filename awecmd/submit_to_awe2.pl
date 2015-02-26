@@ -250,6 +250,7 @@ if (defined $input_node) {
 		exit 1;
 	}
 	
+	print Dumper($response);
 	$job_id = $response->{'data'}->{'attributes'}->{job_id} || die "could not read job_id from attributes";
 
 	print "read job_id from shock attributes: ".$job_id."\n";
