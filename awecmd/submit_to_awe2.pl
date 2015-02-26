@@ -227,7 +227,7 @@ my $file_name = "";
 my $node_id = "";
 
 
-if (defined $input_node) {
+if (defined($input_node) && ! defined($job_id)) {
 	# try to find job_id
 	# data -> attributes -> job_id
 	
@@ -235,7 +235,6 @@ if (defined $input_node) {
 	my $request = $agent->get(
 		$vars->{shock_url}.'/node/'.$input_node,
 		'Authorization', 'OAuth '.$Pipeline_conf_private::shock_pipeline_token
-		#'Content_Type', 'multipart/form-data'
 	);
 	my $response = undef;
 	eval {
@@ -251,8 +250,19 @@ if (defined $input_node) {
 	}
 	
 	print Dumper($response);
-	$job_id = $response->{'data'}->{'attributes'}->{job_id} || die "could not read job_id from attributes";
+	$job_id = $response->{'data'}->{'attributes'}->{job_id};
 
+	
+	unless (defined($job_id) && length($job_id) > 0) {
+		die "job_id is empty";
+	}
+	
+	
+	$file_name = $response->{'data'}->{'file'}->{'name'};
+	unless (defined($file_name) && length($file_name) > 0 ) {
+		die "no filename found";
+	}
+	
 	print "read job_id from shock attributes: ".$job_id."\n";
 	
 }
