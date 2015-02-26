@@ -233,7 +233,7 @@ if (defined $input_node) {
 	
 	
 	my $request = $agent->get(
-		$vars->{shock_url}.'/node',
+		$vars->{shock_url}.'/node/'.$input_node,
 		'Authorization', 'OAuth '.$Pipeline_conf_private::shock_pipeline_token
 		#'Content_Type', 'multipart/form-data'
 	);
