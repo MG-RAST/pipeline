@@ -243,7 +243,7 @@ if (defined $input_node) {
 		$response = $json->decode($request->content);
 	};
 	if ($@) {
-		print STDERR "ERROR: Return from shock is not JSON:\n".$request->content."\n";
+		print STDERR "ERROR: Return from shock is not JSON:\n".$response->content."\n";
 		exit 1;
 	}
 	if ($sres->{error}) {
