@@ -210,7 +210,7 @@ my $vars_pub = $Pipeline_conf_public::template_keywords;
 my $vars_priv = $Pipeline_conf_private::template_keywords;
 
 # merge
-my $vars = \(%$vars_pub , %$vars_priv);
+my $vars = \%{(%$vars_pub , %$vars_priv)};
 
 
 print Dumper($vars_pub) ."\n";
