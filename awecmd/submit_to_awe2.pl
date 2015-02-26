@@ -210,13 +210,18 @@ my $vars_pub = $Pipeline_conf_public::template_keywords;
 my $vars_priv = $Pipeline_conf_private::template_keywords;
 
 # merge
-my $vars = \%{(%$vars_pub , %$vars_priv)};
+my $vars = {};
+foreach my $key ( keys %$vars_pub ) {
+	$vars->{$key} = $vars_pub->{$key};
+}
+foreach my $key ( keys %$vars_pub ) {
+	$vars->{$key} = $vars_priv->{$key};
+}
 
-
-print Dumper($vars_pub) ."\n";
-print Dumper($vars_priv) ."\n";
-print Dumper($vars) ."\n";
-exit(0);
+#print Dumper($vars_pub) ."\n";
+#print Dumper($vars_priv) ."\n";
+#print Dumper($vars) ."\n";
+#exit(0);
 
 if ($shock_url) {
     $vars->{shock_url} = $shock_url;
