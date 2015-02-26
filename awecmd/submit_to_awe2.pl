@@ -226,6 +226,39 @@ my $statistics = {};
 my $file_name = "";
 my $node_id = "";
 
+
+if (defined $input_node) {
+	# try to find job_id
+	# data -> attributes -> job_id
+	
+	
+	my $request = $agent->get(
+		$vars->{shock_url}.'/node',
+		'Authorization', 'OAuth '.$Pipeline_conf_private::shock_pipeline_token,
+		'Content_Type', 'multipart/form-data',
+		'Content', $content
+	);
+	my $response = undef;
+	eval {
+		$response = $json->decode($request->content);
+	};
+	if ($@) {
+		print STDERR "ERROR: Return from shock is not JSON:\n".$request->content."\n";
+		exit 1;
+	}
+	if ($sres->{error}) {
+		print STDERR "ERROR: (shock) ".$response->{error}[0]."\n";
+		exit 1;
+	}
+	
+	$job_id = $response->{'data'}->{'attributes'}->{job_id} || die "could not read job_id from attributes";
+
+	print "read job_id from shock attributes: ".$job_id."\n";
+	
+}
+
+exit(0);
+
 #read jobdb
 if (defined($job_id) && length($job_id) > 0 ) {
 	($jobj, $jstat, $jattr, $jopts)  = read_jobdb($job_id);
@@ -319,7 +352,11 @@ if (defined $statistics->{bp_count}) {
 
 $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 
-unless (defined $input_node) {
+if (defined $input_node) {
+	$node_id = $input_node;
+} else {
+		
+	
 	# upload file or create copy of existing node with new attributes
 
 	# build upload attributes
