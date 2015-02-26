@@ -236,7 +236,7 @@ my $node_id = "";
 if (defined($input_node) && $job_id eq "") {
 	# try to find job_id
 	# data -> attributes -> job_id
-	
+	$node_id = $input_node
 	
 	my $request = $agent->get(
 		$vars->{shock_url}.'/node/'.$input_node,
