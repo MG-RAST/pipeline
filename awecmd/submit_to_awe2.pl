@@ -9,6 +9,9 @@
 #      2. create job script based on job template and available info
 #      3. submit the job json script to awe
 
+# example
+# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start | tee test.log
+
 use strict;
 use warnings;
 no warnings('once');
