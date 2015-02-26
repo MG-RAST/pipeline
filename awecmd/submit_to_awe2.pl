@@ -227,7 +227,7 @@ my $file_name = "";
 my $node_id = "";
 
 
-if (defined($input_node) && $job_id=="") {
+if (defined($input_node) && $job_id eq "") {
 	# try to find job_id
 	# data -> attributes -> job_id
 	
