@@ -267,7 +267,6 @@ if (defined($input_node) && $job_id eq "") {
 	
 }
 
-exit(0);
 
 #read jobdb
 if (defined($job_id) && length($job_id) > 0 ) {
@@ -351,7 +350,7 @@ if (defined $statistics->{bp_count}) {
 	}
 }
 
-
+print Dumper($vars)."\n";
 
 
 
