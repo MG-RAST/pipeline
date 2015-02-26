@@ -218,10 +218,10 @@ foreach my $key ( keys %$vars_pub ) {
 	$vars->{$key} = $vars_priv->{$key};
 }
 
-#print Dumper($vars_pub) ."\n";
-#print Dumper($vars_priv) ."\n";
-#print Dumper($vars) ."\n";
-#exit(0);
+print Dumper($vars_pub) ."\n";
+print Dumper($vars_priv) ."\n";
+print Dumper($vars) ."\n";
+exit(0);
 
 if ($shock_url) {
     $vars->{shock_url} = $shock_url;
