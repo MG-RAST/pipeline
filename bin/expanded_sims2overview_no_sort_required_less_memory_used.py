@@ -341,6 +341,8 @@ def main(args):
         ihdl = open(opts.input, 'rU')
         for line in ihdl:
             parts = line.strip().split('\t')
+            if len(parts) != 7:
+                continue
             (md5, frag, ident, length, e_val, fid, oid) = parts[:7]
             is_protein = True
             if (len(parts) > 8) and (parts[8] == "1"):
@@ -435,16 +437,16 @@ def main(args):
                         if is_protein:
                             merge = 20
                         akey = (aid, merge)
-			data[aid][merge-1]['source'] = merge
-			data[aid][merge-1]['abun'] += abun
-			data[aid][merge-1]['esum'] += abun * eval_exp
-			data[aid][merge-1]['esos'] += abun * eval_exp * eval_exp
-			data[aid][merge-1]['lsum'] += abun * length
-			data[aid][merge-1]['lsos'] += abun * length * length
-			data[aid][merge-1]['isum'] += abun * ident
-			data[aid][merge-1]['isos'] += abun * ident * ident
-			md5s[aid][merge].add(md5)
-			frag_keys.add(akey)                
+                        data[aid][merge-1]['source'] = merge
+                        data[aid][merge-1]['abun'] += abun
+                        data[aid][merge-1]['esum'] += abun * eval_exp
+                        data[aid][merge-1]['esos'] += abun * eval_exp * eval_exp
+                        data[aid][merge-1]['lsum'] += abun * length
+                        data[aid][merge-1]['lsos'] += abun * length * length
+                        data[aid][merge-1]['isum'] += abun * ident
+                        data[aid][merge-1]['isos'] += abun * ident * ident
+                        md5s[aid][merge].add(md5)
+                        frag_keys.add(akey)                
             elif opts.type == 'source':
                 if not source:
                     continue
