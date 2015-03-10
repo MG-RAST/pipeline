@@ -341,7 +341,7 @@ def main(args):
         ihdl = open(opts.input, 'rU')
         for line in ihdl:
             parts = line.strip().split('\t')
-            if len(parts) != 7:
+            if len(parts) < 7:
                 continue
             (md5, frag, ident, length, e_val, fid, oid) = parts[:7]
             is_protein = True
