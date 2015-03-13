@@ -481,7 +481,7 @@ my $workflow = new AWE::Workflow(
 	"shocktoken" 	=> $Pipeline_conf_private::shock_pipeline_token || die,
 	"userattr" => {
 		"id"				=> $vars->{'mg_id'},
-		"job_id"			=> $vars->{job_id},
+		"job_id"			=> $vars->{'job_id'},
 		"name"				=> $vars->{'mg_name'},
 		"created"			=> $vars->{'job_date'},
 		"status"			=> "private",
@@ -671,8 +671,14 @@ $last_output = $diamond_result;
 
 
 
+my $wf_hash = $workflow->getHash();
 
-my $workflow_str = $json->pretty->encode( $workflow->getHash() );
+
+unless (defined $wf_hash->{'shockhost'}) {
+	die "shockhost not defined";
+}
+
+my $workflow_str = $json->pretty->encode( $wf_hash );
 print "AWE workflow:\n".$workflow_str."\n";
 
 
