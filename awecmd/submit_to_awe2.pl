@@ -303,7 +303,7 @@ if (defined($job_id) && length($job_id) > 0 ) {
 print "populate workflow variables...\n";
 
 # populate workflow variables
-$vars->{job_id}         = $job_id;
+$vars->{job_id}         = $job_id || "0";
 $vars->{mg_id}          = 'mgm'.($jobj->{metagenome_id} || ''); #$up_attr->{id};
 #$vars->{mg_name}        = $up_attr->{name};
 $vars->{job_date}       = $jobj->{created_on} || ''; #$up_attr->{created};
@@ -392,7 +392,7 @@ if (defined $input_node) {
 	# build upload attributes
 	my $up_attr = {
 		id          => $vars->{mg_id},
-		job_id      => $job_id,
+		job_id      => $vars->{job_id},
 		name        => $jobj->{name} || '',
 		created     => $vars->{job_date}, # $jobj->{created_on} || '',
 		status      => 'private',
@@ -548,6 +548,7 @@ if ($vars->{filter_options} ne 'skip') {
 
 
 ### dereplicate ###
+#https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/base.json
 my $task_dereplicate = undef;
 if ($vars->{dereplicate} != 0) {
 	print "dereplicate\n";
