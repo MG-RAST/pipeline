@@ -119,7 +119,7 @@ sub submit_workflow {
 		print STDERR Dumper($submission_result);
 		exit(1);
 	}
-	my $awe_job_id = $submission_result->{'data'}->{'id'} || die "no job_id found";
+	my $awe_job_id = ($submission_result->{'data'}->{'id'} || die "no job_id found");
 	print "result from AWE server:\n".$json->pretty->encode( $submission_result )."\n";
 	return $awe_job_id;
 }
@@ -171,7 +171,7 @@ sub read_jobdb {
 	my $jopts = {};
 	foreach my $opt (split(/\&/, $jobj->{options})) {
 		if ($opt =~ /^filter_options=(.*)/) {
-			$jopts->{filter_options} = $1 || 'skip';
+			$jopts->{filter_options} = ($1 || 'skip');
 		} else {
 			my ($k, $v) = split(/=/, $opt);
 			$jopts->{$k} = $v;
@@ -303,17 +303,17 @@ if (defined($job_id) && length($job_id) > 0 ) {
 print "populate workflow variables...\n";
 
 # populate workflow variables
-$vars->{job_id}         = $job_id || "0";
+$vars->{job_id}         = ($job_id || "0");
 $vars->{mg_id}          = 'mgm'.($jobj->{metagenome_id} || ''); #$up_attr->{id};
 #$vars->{mg_name}        = $up_attr->{name};
-$vars->{job_date}       = $jobj->{created_on} || ''; #$up_attr->{created};
+$vars->{job_date}       = ($jobj->{created_on} || ''); #$up_attr->{created};
 $vars->{file_format}    = ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta'; #$up_attr->{file_format};
-$vars->{seq_type}       = $seq_type || $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "please specify sequence type"; #$up_attr->{sequence_type};
+$vars->{seq_type}       = ($seq_type || $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "please specify sequence type"); #$up_attr->{sequence_type};
 $vars->{bp_count}       = $statistics->{bp_count}; #$up_attr->{statistics}{bp_count};
 #$vars->{user}           = 'mgu'.$jobj->{owner} || '';
-$vars->{inputfile}      = $file_name || 'filename';
-$vars->{shock_node}     = $node_id || 'unknown';
-$vars->{filter_options} = $jopts->{filter_options} || 'skip';
+$vars->{inputfile}      = ($file_name || 'filename');
+$vars->{shock_node}     = ($node_id || 'unknown');
+$vars->{filter_options} = ($jopts->{filter_options} || 'skip');
 $vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
 $vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
 $vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
@@ -322,8 +322,8 @@ $vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_ind
 if ($jobj->{project_id} && $jobj->{project_name}) {
 	#$up_attr->{project_id}   = 'mgp'.$jobj->{project_id};
 	#$up_attr->{project_name} = $jobj->{project_name};
-	$vars->{project_id}   = 'mgp'.$jobj->{project_id} || '';
-	$vars->{project_name} = $jobj->{project_name} || '';
+	$vars->{project_id}   = 'mgp'.($jobj->{project_id} || '');
+	$vars->{project_name} = ($jobj->{project_name} || '');
 }
 
 
@@ -393,7 +393,7 @@ if (defined $input_node) {
 	my $up_attr = {
 		id          => $vars->{mg_id},
 		job_id      => $vars->{job_id},
-		name        => $jobj->{name} || '',
+		name        => ($jobj->{name} || ''),
 		created     => $vars->{job_date}, # $jobj->{created_on} || '',
 		status      => 'private',
 		assembled   => $jattr->{assembled} ? 'yes' : 'no',
@@ -405,7 +405,7 @@ if (defined $input_node) {
 		type        => $vars->{'type'},
 		statistics  => $statistics,
 		sequence_type    => $vars->{seq_type}, #$jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "sequence type unknown",
-		pipeline_version => $vars->{pipeline_version} || '',
+		pipeline_version => ($vars->{pipeline_version} || ''),
 		project_id		=> $vars->{project_id},
 		project_name	=> $vars->{project_name}
 	};
@@ -474,12 +474,12 @@ unless (defined($file_name) ) {
 my $workflow_args = {
 	"pipeline"		=> $pipeline,
 	"name"			=> $vars->{job_id},
-	"project"		=> $vars->{project_name} || '',
+	"project"		=> ($vars->{project_name} || ''),
 	"user"			=> 'mgu'.($jobj->{owner} || ''),
-	"clientgroups"	=> $vars->{'clientgroups'} || die "clientgroup is not defined",
-	"priority" 		=> $vars->{priority} || 50,
-	"shockhost" 	=> $vars->{shock_url} || die, # default shock server for output files
-	"shocktoken" 	=> $Pipeline_conf_private::shock_pipeline_token || die,
+	"clientgroups"	=> ($vars->{'clientgroups'} || die "clientgroup is not defined"),
+	"priority" 		=> ($vars->{priority} || 50),
+	"shockhost" 	=> ($vars->{shock_url} || die), # default shock server for output files
+	"shocktoken" 	=> ($Pipeline_conf_private::shock_pipeline_token || die),
 	"userattr" => {
 		"id"				=> $vars->{'mg_id'},
 		"job_id"			=> $vars->{'job_id'},
@@ -603,7 +603,7 @@ if ($vars->{bowtie} != 0 ) {
 		$vars->{screen_indexes} = 'h_sapiens';
 	}
 	# build bowtie index list
-	my $bowtie_url = $Pipeline_conf_public::shock_bowtie_url || $vars->{shock_url};
+	my $bowtie_url = ($Pipeline_conf_public::shock_bowtie_url || $vars->{shock_url});
 	$vars->{index_download_urls} = "";
 	foreach my $idx (split(/,/, $vars->{screen_indexes})) {
 		if (exists $Pipeline_conf_public::shock_bowtie_indexes->{$idx}) {
