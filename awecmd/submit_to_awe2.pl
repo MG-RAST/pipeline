@@ -675,6 +675,7 @@ my $wf_hash = $workflow->getHash();
 
 
 unless (defined $wf_hash->{'shockhost'}) {
+	print Dumper($wf_hash)."\n";
 	die "shockhost not defined";
 }
 
