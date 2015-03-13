@@ -496,6 +496,10 @@ my $workflow = new AWE::Workflow(
 );
 
 
+print "sh: ".$vars->{shock_url}."\n";
+exit(0);
+
+
 # using "$last_output" simplifies skipping of tasks
 my $last_output = shock_resource($vars->{shock_url}, $node_id, $file_name);
 
