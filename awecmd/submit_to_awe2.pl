@@ -501,8 +501,6 @@ print "workflow_args: ".Dumper($workflow_args);
 my $workflow = new AWE::Workflow(%$workflow_args);
 
 
-print "sh: ".$vars->{shock_url}."\n";
-exit(0);
 
 
 # using "$last_output" simplifies skipping of tasks
