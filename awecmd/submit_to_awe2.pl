@@ -470,7 +470,8 @@ unless (defined($file_name) ) {
 
 ##############################################################################################################
 
-my $workflow = new AWE::Workflow(
+
+my $workflow_args = (
 	"pipeline"		=> $pipeline,
 	"name"			=> $vars->{job_id},
 	"project"		=> $vars->{project_name} || '',
@@ -494,6 +495,10 @@ my $workflow = new AWE::Workflow(
 		"pipeline_version"	=> $vars->{'pipeline_version'}
 	}
 );
+
+print "workflow_args: ".Dumper($workflow_args);
+
+my $workflow = new AWE::Workflow(%$workflow_args);
 
 
 print "sh: ".$vars->{shock_url}."\n";
