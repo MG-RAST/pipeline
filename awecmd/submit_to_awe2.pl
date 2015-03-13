@@ -6,7 +6,7 @@
 #
 #
 # example
-# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start --use_ssh
+# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start --use_ssh --seq_type=fastq
 # 	--no_job_id if metagenome is not in jobdb
 
 
@@ -311,8 +311,8 @@ $vars->{file_format}    = ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq
 $vars->{seq_type}       = $seq_type || $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "please specify sequence type"; #$up_attr->{sequence_type};
 $vars->{bp_count}       = $statistics->{bp_count}; #$up_attr->{statistics}{bp_count};
 #$vars->{user}           = 'mgu'.$jobj->{owner} || '';
-$vars->{inputfile}      = $file_name || die;
-$vars->{shock_node}     = $node_id || die;
+$vars->{inputfile}      = $file_name || 'filename';
+$vars->{shock_node}     = $node_id || 'unknown';
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
 $vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
 $vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
