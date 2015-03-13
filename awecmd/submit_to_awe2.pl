@@ -6,7 +6,7 @@
 #
 #
 # example
-# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start --use_ssh --seq_type=fastq
+# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start --use_ssh --seq_type=fastq 2>&1 | tee test.log
 # 	--no_job_id if metagenome is not in jobdb
 
 
@@ -471,7 +471,7 @@ unless (defined($file_name) ) {
 ##############################################################################################################
 
 
-my $workflow_args = (
+my $workflow_args = {
 	"pipeline"		=> $pipeline,
 	"name"			=> $vars->{job_id},
 	"project"		=> $vars->{project_name} || '',
@@ -494,7 +494,7 @@ my $workflow_args = (
 		"type"				=> $vars->{'type'},
 		"pipeline_version"	=> $vars->{'pipeline_version'}
 	}
-);
+};
 
 print "workflow_args: ".Dumper($workflow_args);
 
