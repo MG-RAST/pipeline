@@ -4,13 +4,11 @@
 # Command name: submit_to_awe
 # Use case: submit a job with a local input file, existing shock node or copy of existing shock node,
 #
-# Operations:
-#      1. upload input file to shock OR copy input shock node
-#      2. create job script based on job template and available info
-#      3. submit the job json script to awe
-
+#
 # example
-# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start | tee test.log
+# ./submit_to_awe2.pl --no_job_id --input_node=154f1536-4248-4fee-a7a7-81fdc60870a0 --no_start --use_ssh
+# 	--no_job_id if metagenome is not in jobdb
+
 
 use strict;
 use warnings;
@@ -244,7 +242,7 @@ my $file_name = "";
 my $node_id = "";
 
 
-if (defined($input_node) && $job_id eq "") {
+if (defined($input_node) && $job_id eq "" && $no_job_id==0) {
 	# try to find job_id
 	# data -> attributes -> job_id
 	$node_id = $input_node;
@@ -472,7 +470,7 @@ my $workflow = new AWE::Workflow(
 	"name"			=> $job_id,
 	"project"		=> $vars->{project_name} || '',
 	"user"			=> 'mgu'.$jobj->{owner} || '',
-	"clientgroups"	=> $clientgroups,
+	"clientgroups"	=> $vars->{'clientgroups'} || die "clientgroup is not defined",
 	"priority" 		=> $vars->{priority} || 50,
 	"shockhost" 	=> $vars->{shock_url} || die, # default shock server for output files
 	"shocktoken" 	=> $Pipeline_conf_private::shock_pipeline_token || die,
