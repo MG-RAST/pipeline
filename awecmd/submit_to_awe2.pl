@@ -301,7 +301,7 @@ print "populate workflow variables...\n";
 
 # populate workflow variables
 $vars->{job_id}         = $job_id;
-$vars->{mg_id}          = 'mgm'.$jobj->{metagenome_id}; #$up_attr->{id};
+$vars->{mg_id}          = 'mgm'.($jobj->{metagenome_id} || ''); #$up_attr->{id};
 #$vars->{mg_name}        = $up_attr->{name};
 $vars->{job_date}       = $jobj->{created_on} || ''; #$up_attr->{created};
 $vars->{file_format}    = ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta'; #$up_attr->{file_format};
