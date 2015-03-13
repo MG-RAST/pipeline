@@ -472,7 +472,7 @@ unless (defined($file_name) ) {
 
 my $workflow = new AWE::Workflow(
 	"pipeline"		=> $pipeline,
-	"name"			=> $job_id,
+	"name"			=> $vars->{job_id},
 	"project"		=> $vars->{project_name} || '',
 	"user"			=> 'mgu'.$jobj->{owner} || '',
 	"clientgroups"	=> $vars->{'clientgroups'} || die "clientgroup is not defined",
@@ -481,7 +481,7 @@ my $workflow = new AWE::Workflow(
 	"shocktoken" 	=> $Pipeline_conf_private::shock_pipeline_token || die,
 	"userattr" => {
 		"id"				=> $vars->{'mg_id'},
-		"job_id"			=> $job_id,
+		"job_id"			=> $vars->{job_id},
 		"name"				=> $vars->{'mg_name'},
 		"created"			=> $vars->{'job_date'},
 		"status"			=> "private",
@@ -507,7 +507,7 @@ my $last_output = shock_resource($vars->{shock_url}, $node_id, $file_name);
 my $task_qc = $workflow->newTask(	'MG-RAST/qc.qc.default',
 									shock_resource($vars->{shock_url}, $node_id, $file_name),
 									string_resource($vars->{file_format}),
-									string_resource($job_id),
+									string_resource($vars->{job_id}),
 									string_resource($vars->{assembled}),
 									string_resource($vars->{filter_options})
 );
@@ -529,7 +529,7 @@ if ($vars->{filter_options} ne 'skip') {
 	
 	$task_preprocess = $workflow->newTask(	'MG-RAST/base.preprocess.'.$vars->{file_format},
 		shock_resource($vars->{shock_url}, $node_id, $file_name),
-		string_resource($job_id),
+		string_resource($vars->{job_id}),
 		string_resource($vars->{filter_options})
 	);
 		
@@ -558,7 +558,7 @@ if ($vars->{dereplicate} != 0) {
 	
 	$task_dereplicate = $workflow->newTask(	'MG-RAST/base.dereplicate.default',
 		$dereplicate_input,
-		string_resource($job_id),
+		string_resource($vars->{job_id}),
 		string_resource($vars->{prefix_length}),
 		string_resource($vars->{dereplicate})
 	);
@@ -619,7 +619,7 @@ if ($vars->{bowtie} != 0 ) {
 	
 	my $task_bowtie_screen = $workflow->newTask('MG-RAST/bowtie.bowtie.default',
 		$bowtie_screen_input,
-		string_resource($job_id),
+		string_resource($vars->{job_id}),
 		string_resource($vars->{screen_indexes}),
 		string_resource($vars->{bowtie}),
 		list_resource(\@bowtie_index_files)
@@ -678,7 +678,7 @@ print "AWE workflow:\n".$workflow_str."\n";
 
 
 #write to file for debugging puposes (first time)
-my $workflow_file = $Pipeline_conf_private::temp_dir."/".$job_id.".awe_workflow.json";
+my $workflow_file = $Pipeline_conf_private::temp_dir."/".$vars->{job_id}.".awe_workflow.json";
 write_file($workflow_file, $workflow_str);
 
 # transform workflow json string into hash
