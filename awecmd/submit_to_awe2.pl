@@ -50,6 +50,7 @@ my $awe_url    = "";
 my $shock_url  = "";
 
 my $clientgroups = undef;
+my $seq_type = undef;
 my $no_start   = 0;
 my $use_ssh    = 0;
 
@@ -72,6 +73,8 @@ my $options = GetOptions (
 		"use_ssh!"     => \$use_ssh,
 
 		"clientgroups=s" => \$clientgroups,
+		"seq_type=s" => \$seq_type,
+
 		"pipeline=s"      => \$pipeline,
 		"type=s"       => \$type,
 		"production!"     => \$production,
@@ -305,7 +308,7 @@ $vars->{mg_id}          = 'mgm'.($jobj->{metagenome_id} || ''); #$up_attr->{id};
 #$vars->{mg_name}        = $up_attr->{name};
 $vars->{job_date}       = $jobj->{created_on} || ''; #$up_attr->{created};
 $vars->{file_format}    = ($jattr->{file_type} && ($jattr->{file_type} eq 'fastq')) ? 'fastq' : 'fasta'; #$up_attr->{file_format};
-$vars->{seq_type}       = $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "sequence type unknown"; #$up_attr->{sequence_type};
+$vars->{seq_type}       = $seq_type || $jobj->{sequence_type} || $jattr->{sequence_type_guess}|| die "please specify sequence type"; #$up_attr->{sequence_type};
 $vars->{bp_count}       = $statistics->{bp_count}; #$up_attr->{statistics}{bp_count};
 #$vars->{user}           = 'mgu'.$jobj->{owner} || '';
 $vars->{inputfile}      = $file_name || die;
@@ -340,6 +343,8 @@ if (defined $type && $type ne "") {
 if (defined $clientgroups) {
 	$vars->{'clientgroups'} = $clientgroups;
 }
+
+
 
 
 # set priority
