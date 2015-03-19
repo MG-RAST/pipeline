@@ -533,7 +533,7 @@ $task_qc->userattr(	"stage_id" 		=> "075",
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/base.json
 
 my $task_preprocess = undef;
-if ($vars->{filter_options} ne 'skip') {
+if ($vars->{filter_options} ne 'skip' || $vars->{file_format} ne 'fasta') {
 	print "preprocess\n";
 	
 	$task_preprocess = $workflow->newTask(	'MG-RAST/base.preprocess.'.$vars->{file_format},
@@ -558,6 +558,7 @@ if ($vars->{filter_options} ne 'skip') {
 
 ### dereplicate ###
 #https://github.com/MG-RAST/Skyport/blob/master/app_definitions/MG-RAST/base.json
+# input must be fasta, not fastq
 my $task_dereplicate = undef;
 if ($vars->{dereplicate} != 0) {
 	print "dereplicate\n";
