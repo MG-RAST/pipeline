@@ -353,6 +353,7 @@
                 "[% job_id %].350.genecalling.coding.faa": {
                     "host": "[% shock_url %]",
                     "node": "-",
+                    "shockindex": "record",
                     "attrfile": "userattr.json"
                 },
                 "[% job_id %].350.genecalling.coding.fna": {
@@ -412,6 +413,11 @@
                 "[% job_id %].375.filtering.faa": {
                     "host": "[% shock_url %]",
                     "node": "-",
+                    "type": "subset",
+                    "formoptions": {
+                        "parent_name": "[% job_id %].350.genecalling.coding.faa",
+                        "parent_index": "record"
+                    },
                     "attrfile": "[% job_id %].375.filtering.faa.json"
                 }
             },
