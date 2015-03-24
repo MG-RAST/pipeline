@@ -145,10 +145,7 @@ sub filter_fasta {
         if ($id =~ /^(.+)_(\d+)_(\d+)_(\+|-)$/) {
             my ($read, $start, $stop, $dir) = ($1, $2, $3, $4);
             # process by read id
-            if (@prots && ($prev != $read)) {
-                if ($prev eq "") {
-                    $prev = $read; # handle first record
-                }
+            if (@prots && ($prev ne $read)) {
                 print OUT process_reads(\@prots, \@rnas, $prev);
                 @rnas  = ();
                 @prots = ();
