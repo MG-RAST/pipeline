@@ -142,7 +142,7 @@ sub filter_fasta {
     while (my $line = <IN>) {
         chomp $line;
         my ($id, $seq) = split(/\t/, $line);
-        if ($id =~ /^(.+)_(\d+)_(\d+)_(+|-)$/) {
+        if ($id =~ /^(.+)_(\d+)_(\d+)_(\+|-)$/) {
             my ($read, $start, $stop, $dir) = ($1, $2, $3, $4);
             # process by read id
             if (@prots && ($prev != $read)) {
