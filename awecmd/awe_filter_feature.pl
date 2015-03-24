@@ -149,8 +149,7 @@ sub filter_fasta {
                 if ($prev eq "") {
                     $prev = $read; # handle first record
                 }
-                my $text = process_reads(\@prots, \@rnas, $prev);
-                print OUT $text;
+                print OUT process_reads(\@prots, \@rnas, $prev);
                 @rnas  = ();
                 @prots = ();
             }
@@ -166,8 +165,7 @@ sub filter_fasta {
     
     # handle last batch
     if (@prots) {
-        my $text = process_reads(\@prots, \@rnas, $prev);
-        print OUT $text;
+        print OUT process_reads(\@prots, \@rnas, $prev);
     }
     close OUT;
 }
@@ -194,7 +192,7 @@ sub process_reads {
         }
         if ($write_record) {
             # not filtered
-            $out_text .= ">${prev}_${pstart}_${pstop}_${pdir}\n$pseq\n";
+            $out_text .= ">${read}_${pstart}_${pstop}_${pdir}\n$pseq\n";
         }
     }
     return $out_text;
