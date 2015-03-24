@@ -406,7 +406,7 @@
                     "host": "[% shock_url %]",
                     "node": "-",
                     "origin": "7"
-                },
+                }
             },
             "outputs": {
                 "[% job_id %].375.filtering.faa": {
