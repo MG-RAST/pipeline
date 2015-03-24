@@ -60,12 +60,11 @@ def sort_file(fname, num=False):
     os.remove(fname)
     os.rename(fname+'.tmp', fname)
 
-
 usage = "usage: %prog [options] -p <parent file> -c <child file>\n" + __doc__
 
 def main(args):
     global TMP_DIR, MAX_MEM
-    parser = OptionParser(usage="usage: %prog -j <job id> > log.txt")
+    parser = OptionParser(usage=usage)
     parser.add_option("-p", "--parent", dest="parent", default=None, help="parent sequence file")
     parser.add_option("-c", "--children", dest="children", type="string", action="append", default=[], help="One or more child seq files")
     parser.add_option("-s", "--sorted", dest="sorted", action="store_true", default=False, help="parent and child are sorted by header IDs [default false]")
