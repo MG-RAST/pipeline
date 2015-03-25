@@ -8,11 +8,16 @@ use PipelineAWE;
 use PipelineJob;
 use PipelineAnalysis;
 use StreamingUpload;
+use Mail::Mailer;
 
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
 use Getopt::Long;
 umask 000;
+
+# globals
+my $mg_email = 'Metagenomics Analysis Server <mg-rast@mcs.anl.gov>';
+my $mg_link  = 'http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=';
 
 # options
 my $job_id    = "";
@@ -35,6 +40,7 @@ my $aa_clust  = "";
 my $aa_map    = "";
 my $ontol     = "";
 my $filter    = "";
+my $email     = 1;
 my $help      = 0;
 my $options   = GetOptions (
 		"job=s"       => \$job_id,
@@ -57,6 +63,7 @@ my $options   = GetOptions (
 		"aa_map=s"    => \$aa_map,
 		"ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
+		"email!"      => \$email,
 		"help!"       => \$help
 );
 
@@ -245,6 +252,26 @@ solr_post($solr_url, $solr_col, $solr_file);
 
 # done done !!
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
+
+# email owner on completion
+if ($email && $done_attr->{email} && $done_attr->{email} ne "" && $done_attr->{id} && $done_attr->{name} && $done_attr->{owner_name}) {
+    my $mailer     = Mail::Mailer->new();
+    my $owner_name = $done_attr->{owner_name};
+    my $body_txt   = "Dear $owner_name,\n\nThe annotation job that you submitted for '" . $done_attr->{name} . "' has completed.\n\n" .
+                     "Your job has been assigned MG-RAST metagenome ID " . $done_attr->{id} .
+                     " and can be linked to using:\n$mg_link" . $done_attr->{id} . "\n\n" .
+                     "PLEASE NOTE: your data will not automatically be made public.\n".
+                     "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
+                     'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
+
+    $mailer->open({ From    => $mg_email,
+                    To      => "$owner_name <" . $done_attr->{email} . ">",
+                    Subject => "MG-RAST Job Completed",
+                  })
+      or die "Can't open Mail::Mailer: $!\n";
+    print $mailer $body_txt;
+    $mailer->close();
+}
 
 # cleanup
 #PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
