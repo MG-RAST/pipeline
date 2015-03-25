@@ -104,7 +104,7 @@ if ($use_ssh) {
 	$PipelineAWE_Conf::job_dbuser,
 	$PipelineAWE_Conf::job_dbpass
     );
-    $userdb = PipelineJob::get_usercache_dbh(
+    $userdb = PipelineUser::get_usercache_dbh(
 	$PipelineAWE_Conf::user_dbhost,
 	$PipelineAWE_Conf::user_dbname,
 	$PipelineAWE_Conf::user_dbuser,
