@@ -257,9 +257,12 @@ PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 if ($email && $done_attr->{email} && $done_attr->{email} ne "" && $done_attr->{id} && $done_attr->{name} && $done_attr->{owner_name}) {
     my $mailer     = Mail::Mailer->new();
     my $owner_name = $done_attr->{owner_name};
+    my $link       = $done_attr->{id};
+    $link =~ s/^mgm(.*)/$1/;
+    $link = $mg_link.$link;
     my $body_txt   = "Dear $owner_name,\n\nThe annotation job that you submitted for '" . $done_attr->{name} . "' has completed.\n\n" .
                      "Your job has been assigned MG-RAST metagenome ID " . $done_attr->{id} .
-                     " and can be linked to using:\n$mg_link" . $done_attr->{id} . "\n\n" .
+                     " and can be linked to using:\n$link\n\n" .
                      "PLEASE NOTE: your data will not automatically be made public.\n".
                      "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
                      'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
