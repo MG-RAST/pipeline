@@ -411,8 +411,6 @@ if ($vars->{index_download_urls} eq "") {
 }
 chop $vars->{index_download_urls};
 
-$vars->{m5nr_annotation_url} = $PipelineAWE_Conf::m5nr_annotation_url;
-
 my $workflow_str = "";
 
 # replace variables (reads from $template_str and writes to $workflow_str)
