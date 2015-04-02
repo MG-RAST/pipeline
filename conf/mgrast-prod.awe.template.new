@@ -14,12 +14,15 @@
             "created": "[% job_date %]",
             "status": "private",
             "owner": "[% user %]",
+            "owner_name": "[% user_name %]",
+            "email": "[% email %]",
             "sequence_type": "[% seq_type %]",
             "bp_count": "[% bp_count %]",
             "project_id": "[% project_id %]",
             "project_name": "[% project_name %]",
             "type": "[% type %]",
-            "pipeline_version": "[% pipeline_version %]"
+            "pipeline_version": "[% pipeline_version %]",
+            "submission": "[% submission_id %]"
         }
     },
     "tasks": [

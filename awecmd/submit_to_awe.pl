@@ -30,6 +30,7 @@ use File::Slurp;
 my $job_id     = "";
 my $input_file = "";
 my $input_node = "";
+my $submit_id  = "";
 my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
@@ -43,9 +44,10 @@ my $type       = "";
 my $production = 1; # indicates that this is production
 
 my $options = GetOptions (
-        "job_id=s"       => \$job_id,
-        "input_file=s"   => \$input_file,
-        "input_node=s"   => \$input_node,
+    "job_id=s"       => \$job_id,
+    "input_file=s"   => \$input_file,
+    "input_node=s"   => \$input_node,
+    "submit_id=s"    => \$submit_id,
 	"awe_url=s"      => \$awe_url,
 	"shock_url=s"    => \$shock_url,
 	"template=s"     => \$template,
@@ -130,6 +132,9 @@ if (! $awe_url) {
 }
 if (! $template) {
     $template = $PipelineAWE_Conf::template_file;
+}
+if ($submit_id) {
+    $vars->{submission_id} = $submit_id;
 }
 
 my $template_str = read_file($template) ;
@@ -518,7 +523,7 @@ my $state   = $ares->{data}{state};
 print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-submit_id=<submission id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
 
 # enable hash-resolving in the JSON->encode function
