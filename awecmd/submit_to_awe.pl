@@ -522,6 +522,9 @@ my $awe_job = $ares->{data}{jid};
 my $state   = $ares->{data}{state};
 print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
+# update job attributes
+PipelineJob::set_job_attributes($jobdb, $job_id, {"pipeline_id" => $awe_id});
+
 sub get_usage {
     return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-submit_id=<submission id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
