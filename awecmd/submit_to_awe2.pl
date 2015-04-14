@@ -652,7 +652,7 @@ if ($vars->{bowtie} != 0 ) {
 
 ### diamond ###
 
-my $m5nr_node_id = "73abdf1a-9f91-4b06-b19c-8b326f82a8bd";
+my $m5nr_node_id = "c228325a-568f-4118-8fb7-05d9a012f5fe";
 
 	
 my $task_diamond = $workflow->newTask('diamond.search.blastx',
@@ -674,6 +674,20 @@ $task_diamond->userattr(
 
 my $diamond_result = task_resource($task_diamond->taskid(), 'result');
 $last_output = $diamond_result;
+
+
+
+
+
+### annotate_sims ###
+
+my $task_annotate_sims = $workflow->newTask('MG-RAST/base.annotate_sims.default',
+	$last_output,
+	string_resource($vars->{'job_id'}),
+	string_resource($vars->{'ach_annotation_ver'})
+); # produces 4 output files, sims.filter, expand.protein, expand.lca, expand.ontology
+
+
 
 
 
