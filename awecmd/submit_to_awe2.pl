@@ -652,14 +652,11 @@ if ($vars->{bowtie} != 0 ) {
 
 ### diamond ###
 
-my $m5nr_node_id = "c228325a-568f-4118-8fb7-05d9a012f5fe";
 
-	
 my $task_diamond = $workflow->newTask('diamond.search.blastx',
 	$last_output,
 	$vars->{'m5nr_diamond_resource'} # diamond database for M5NR
 );
-
 
 
 $task_diamond->userattr(
