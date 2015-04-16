@@ -14,7 +14,6 @@ use warnings;
 no warnings('once');
 
 use PipelineJob;
-use PipelineUser;
 use PipelineAWE_Conf;
 
 use JSON;
@@ -76,41 +75,25 @@ if ($help) {
 }
 
 # set obj handles
-my $jobdb=undef;
-my $userdb=undef;
+my $jobdb = undef;
 
 if ($use_ssh) {
     my $mspath = $ENV{'HOME'}.'/.mysql/';
     $jobdb = PipelineJob::get_jobcache_dbh(
     	$PipelineAWE_Conf::job_dbhost,
-	$PipelineAWE_Conf::job_dbname,
+	    $PipelineAWE_Conf::job_dbname,
     	$PipelineAWE_Conf::job_dbuser,
     	$PipelineAWE_Conf::job_dbpass,
-	$mspath.'client-key.pem',
-	$mspath.'client-cert.pem',
-	$mspath.'ca-cert.pem'
-    );
-    $userdb = PipelineUser::get_usercache_dbh(
-    	$PipelineAWE_Conf::user_dbhost,
-	$PipelineAWE_Conf::user_dbname,
-    	$PipelineAWE_Conf::user_dbuser,
-    	$PipelineAWE_Conf::user_dbpass,
-	$mspath.'client-key.pem',
-	$mspath.'client-cert.pem',
-	$mspath.'ca-cert.pem'
+	    $mspath.'client-key.pem',
+	    $mspath.'client-cert.pem',
+	    $mspath.'ca-cert.pem'
     );
 } else {
     $jobdb = PipelineJob::get_jobcache_dbh(
-	$PipelineAWE_Conf::job_dbhost,
-	$PipelineAWE_Conf::job_dbname,
-	$PipelineAWE_Conf::job_dbuser,
-	$PipelineAWE_Conf::job_dbpass
-    );
-    $userdb = PipelineUser::get_usercache_dbh(
-	$PipelineAWE_Conf::user_dbhost,
-	$PipelineAWE_Conf::user_dbname,
-	$PipelineAWE_Conf::user_dbuser,
-	$PipelineAWE_Conf::user_dbpass
+	    $PipelineAWE_Conf::job_dbhost,
+	    $PipelineAWE_Conf::job_dbname,
+	    $PipelineAWE_Conf::job_dbuser,
+	    $PipelineAWE_Conf::job_dbpass
     );
 }
 
@@ -156,30 +139,6 @@ foreach my $opt (split(/\&/, $jobj->{options})) {
         my ($k, $v) = split(/=/, $opt);
         $jopts->{$k} = $v;
     }
-}
-
-# get job owner information
-if (!exists($jobj->{owner}) || $jobj->{owner} eq '') {
-    print STDERR "ERROR: Job $job_id is missing 'owner' field.\n";
-    exit 1;
-}
-my $user_id = $jobj->{owner};
-my $uobj = PipelineUser::get_usercache_info($userdb, $user_id);
-unless ($uobj && (scalar(keys %$uobj) > 0)) {
-    print STDERR "ERROR: User $user_id does not exist.\n";
-    exit 1;
-}
-if (!exists($uobj->{firstname}) || $uobj->{firstname} eq '') {
-    print STDERR "ERROR: User $user_id is missing 'firstname' field.\n";
-    exit 1;
-}
-if (!exists($uobj->{lastname}) || $uobj->{lastname} eq '') {
-    print STDERR "ERROR: User $user_id is missing 'lastname' field.\n";
-    exit 1;
-}
-if (!exists($uobj->{email}) || $uobj->{email} eq '') {
-    print STDERR "ERROR: User $user_id is missing 'email' field.\n";
-    exit 1;
 }
 
 # build upload attributes
@@ -263,8 +222,6 @@ $vars->{bp_count}       = $up_attr->{statistics}{bp_count};
 $vars->{project_id}     = $up_attr->{project_id} || '';
 $vars->{project_name}   = $up_attr->{project_name} || '';
 $vars->{user}           = 'mgu'.$jobj->{owner} || '';
-$vars->{user_name}      = $uobj->{firstname}." ".$uobj->{lastname};
-$vars->{email}          = $uobj->{email};
 $vars->{inputfile}      = $file_name;
 $vars->{shock_node}     = $node_id;
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
