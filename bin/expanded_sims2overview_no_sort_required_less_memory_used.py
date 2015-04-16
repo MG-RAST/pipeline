@@ -21,7 +21,7 @@ from collections import defaultdict
 from optparse import OptionParser
 
 # constants
-SOURCES = 18
+SOURCES = None
 ev_re  = re.compile(r"^(\d(\.\d)?)e([-+])?0?(\d+)$") # .group(4) == abs(exponent)
 TYPES  = ['md5', 'function', 'organism', 'ontology', 'lca', 'source']
 EVALS  = [-5 , -10 , -20 , -30 , -1000]
@@ -179,7 +179,9 @@ def print_md5_stats(ohdl, data, imap):
             match = np.where(imap['md5']==md5)
             if len(match[0]) > 0:
                 row = match[0][0]
-                seek, length = str(imap[row][1]), str(imap[row][2])
+                # length must be less than or equal to 2147483647
+                if imap[row][2] <= 2147483647:
+                    seek, length = str(imap[row][1]), str(imap[row][2])
         # output
         line = [ DB_VER,
                  JOBID,
@@ -268,13 +270,14 @@ def print_source_stats(ohdl, data):
 usage = "usage: %prog [options]\n"
 
 def main(args):
-    global JOBID, DB_VER
+    global SOURCES, JOBID, DB_VER
     parser = OptionParser(usage=usage)
     parser.add_option('-i', '--input', dest="input", default=None, help="input file: expanded sims")
     parser.add_option('-o', '--output', dest="output", default=None, help="output file: summary abundace")
     parser.add_option('-j', '--job', dest="job", default=None, help="job identifier")
     parser.add_option('-t', '--type', dest="type", default=None, help="type of summary, one of: "+",".join(TYPES))
-    parser.add_option('-v', '--m5nr_version', dest="m5nr_version", type="int", default=1, help="version of m5nr annotation")   
+    parser.add_option('-s', '--m5nr_sources', dest="m5nr_sources", type="int", default=18, help="number of real sources in m5nr")
+    parser.add_option('-v', '--m5nr_version', dest="m5nr_version", type="int", default=1, help="version of m5nr annotation")
     parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
     parser.add_option('--coverage', dest="coverage", default=None, help="optional input file: assembely coverage")
     parser.add_option('--cluster', dest="cluster", default=None, help="optional input file: cluster mapping")
@@ -293,8 +296,9 @@ def main(args):
     if not (opts.type and (opts.type in TYPES)):
         parser.error("[error] missing or invalid type")
         return 1
-    JOBID  = opts.job
-    DB_VER = str(opts.m5nr_version)
+    SOURCES = opts.m5nr_sources
+    JOBID   = opts.job
+    DB_VER  = str(opts.m5nr_version)
     
     # fork the process
     pid = None
@@ -339,6 +343,8 @@ def main(args):
         ihdl = open(opts.input, 'rU')
         for line in ihdl:
             parts = line.strip().split('\t')
+            if len(parts) < 7:
+                continue
             (md5, frag, ident, length, e_val, fid, oid) = parts[:7]
             is_protein = True
             if (len(parts) > 8) and (parts[8] == "1"):
@@ -429,20 +435,18 @@ def main(args):
                     md5s[aid][source].add(md5)
                     frag_keys.add(akey)                
                     if opts.type == 'organism':
-                        merge = 19
-                        if is_protein:
-                            merge = 20
-                        akey = (aid, merge)
-			data[aid][merge-1]['source'] = merge
-			data[aid][merge-1]['abun'] += abun
-			data[aid][merge-1]['esum'] += abun * eval_exp
-			data[aid][merge-1]['esos'] += abun * eval_exp * eval_exp
-			data[aid][merge-1]['lsum'] += abun * length
-			data[aid][merge-1]['lsos'] += abun * length * length
-			data[aid][merge-1]['isum'] += abun * ident
-			data[aid][merge-1]['isos'] += abun * ident * ident
-			md5s[aid][merge].add(md5)
-			frag_keys.add(akey)                
+                        merge = 20 if is_protein else 19
+                        akey  = (aid, merge)
+                        data[aid][merge-1]['source'] = merge
+                        data[aid][merge-1]['abun'] += abun
+                        data[aid][merge-1]['esum'] += abun * eval_exp
+                        data[aid][merge-1]['esos'] += abun * eval_exp * eval_exp
+                        data[aid][merge-1]['lsum'] += abun * length
+                        data[aid][merge-1]['lsos'] += abun * length * length
+                        data[aid][merge-1]['isum'] += abun * ident
+                        data[aid][merge-1]['isos'] += abun * ident * ident
+                        md5s[aid][merge].add(md5)
+                        frag_keys.add(akey)                
             elif opts.type == 'source':
                 if not source:
                     continue

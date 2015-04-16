@@ -47,7 +47,7 @@ ssahapematches = {}
 linkerlengths = {}
 
 # set to true if something really fishy is going on with the sequences
-stern_warning = True
+stern_warning = False
 
 def read_bin_fragment(struct_def, fileh, offset=0, data=None,
                                                              byte_padding=None):
