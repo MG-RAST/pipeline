@@ -54,7 +54,7 @@ sub obj_from_url {
     my $content = undef;
     eval {
         my $result = undef;
-        my @args = $auth ? ('Auth', $auth) : ();
+        my @args = $key ? ('Auth', $key) : ();
         if ($data && ref($data)) {
             push @args, ('Content', $data);
             $result = $agent->post($url, @args);
