@@ -33,7 +33,9 @@ RUN apt-get update && apt-get install -y \
 	libunicode-escape-perl \
 	liblist-allutils-perl \
 	libposix-strptime-perl \
-	libberkeleydb-perl
+	libberkeleydb-perl \
+	libemail-simple-perl \
+	libemail-sender-perl
 RUN pip install biopython psycopg2 gspread openpyxl numpy
 RUN cd /root \
 	; mkdir bin \
