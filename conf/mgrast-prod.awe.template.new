@@ -29,11 +29,14 @@
                 "name": "awe_qc.pl",
                 "args": "-input @[% inputfile %] -format [% file_format %] -out_prefix [% job_id %].075 -assembled [% assembled %] -filter_options [% filter_options %] -proc 8",
                 "description": "qc_stats",
-                "[% docker_switch %]Dockerimage": "mgrast/qc:[% docker_image_version %]", 	 	
-                "environ" : { 	 	
-                    "[% docker_switch %]public" : { 	 	
-                        "BASH_ENV" : "/root/mgrast_env.sh" 	 	
-                    } 	 	
+                "[% docker_switch %]Dockerimage": "mgrast/qc:[% docker_image_version %]",
+                "environ" : {
+                    "private": {
+                        "MGRAST_WEBKEY": "[% api_key %]"
+                    },
+                    "[% docker_switch %]public" : {
+                        "BASH_ENV" : "/root/mgrast_env.sh"
+                    }
                 }
             },
             "dependsOn": [],
