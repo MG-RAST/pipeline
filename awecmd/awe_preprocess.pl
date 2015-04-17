@@ -101,8 +101,9 @@ if (-z $passed_seq) {
     my $user_attr = PipelineAWE::get_userattr();
     my $user_info = PipelineAWE::get_user_info($user_attr->{owner}, undef, $api_key);
     my $body_txt = "The annotation job that you submitted for '".$done_attr->{name}."' (".$done_attr->{id}.") has failed.\n".
-                   "No sequences passed our QC screening steps. Either your sequences were too short or your pipeline QC settings were to stringent.".
-                   "\n\nThis is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.";
+                   "No sequences passed our QC screening steps. ".
+                   "Either your sequences were too short or your pipeline QC settings were to stringent.\n\n".
+                   'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
     PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
     print STDERR "pipeline failed, no sequences passed preprocessing\n";
     # delete job ??

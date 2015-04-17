@@ -261,7 +261,7 @@ if ($email) {
                    "Your job has been assigned MG-RAST metagenome ID ".$done_attr->{id}." and can be linked to using:\n$link\n\n".
                    "PLEASE NOTE: your data will not automatically be made public.\n".
                    "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
-                   "This is an automated message. Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.";
+                   'This is an automated message. Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
     PipelineAWE::send_mail($body_txt, "MG-RAST Job Completed", $user_info);
 }
 
