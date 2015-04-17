@@ -17,7 +17,7 @@ umask 000;
 
 # globals
 my $mg_email = 'Metagenomics Analysis Server <mg-rast@mcs.anl.gov>';
-my $mg_link  = 'http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=';
+my $mg_link  = 'http://metagenomics.anl.gov/linkin.cgi?metagenome=';
 
 # options
 my $job_id    = "";
@@ -254,9 +254,10 @@ solr_post($solr_url, $solr_col, $solr_file);
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 
 # email owner on completion
-if ($email && $done_attr->{email} && $done_attr->{email} ne "" && $done_attr->{id} && $done_attr->{name} && $done_attr->{owner_name}) {
+my $user_info = PipelineAWE::obj_from_url($api_url."/user/".$done_attr->{owner}, $api_key);
+if ($email && $user_info->{email} && $done_attr->{id} && $done_attr->{name}) {
     my $mailer     = Mail::Mailer->new();
-    my $owner_name = $done_attr->{owner_name};
+    my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
     my $link       = $done_attr->{id};
     $link =~ s/^mgm(.*)/$1/;
     $link = $mg_link.$link;
@@ -268,7 +269,7 @@ if ($email && $done_attr->{email} && $done_attr->{email} ne "" && $done_attr->{i
                      'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
 
     $mailer->open({ From    => $mg_email,
-                    To      => "$owner_name <" . $done_attr->{email} . ">",
+                    To      => "$owner_name <" . $user_info->{email} . ">",
                     Subject => "MG-RAST Job Completed",
                   })
       or die "Can't open Mail::Mailer: $!\n";

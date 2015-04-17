@@ -14,7 +14,6 @@ use warnings;
 no warnings('once');
 
 use PipelineJob;
-use PipelineUser;
 use PipelineAWE_Conf;
 
 use JSON;
@@ -30,6 +29,7 @@ use File::Slurp;
 my $job_id     = "";
 my $input_file = "";
 my $input_node = "";
+my $submit_id  = "";
 my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
@@ -43,9 +43,10 @@ my $type       = "";
 my $production = 1; # indicates that this is production
 
 my $options = GetOptions (
-        "job_id=s"       => \$job_id,
-        "input_file=s"   => \$input_file,
-        "input_node=s"   => \$input_node,
+    "job_id=s"       => \$job_id,
+    "input_file=s"   => \$input_file,
+    "input_node=s"   => \$input_node,
+    "submit_id=s"    => \$submit_id,
 	"awe_url=s"      => \$awe_url,
 	"shock_url=s"    => \$shock_url,
 	"template=s"     => \$template,
@@ -74,41 +75,25 @@ if ($help) {
 }
 
 # set obj handles
-my $jobdb=undef;
-my $userdb=undef;
+my $jobdb = undef;
 
 if ($use_ssh) {
     my $mspath = $ENV{'HOME'}.'/.mysql/';
     $jobdb = PipelineJob::get_jobcache_dbh(
     	$PipelineAWE_Conf::job_dbhost,
-	$PipelineAWE_Conf::job_dbname,
+	    $PipelineAWE_Conf::job_dbname,
     	$PipelineAWE_Conf::job_dbuser,
     	$PipelineAWE_Conf::job_dbpass,
-	$mspath.'client-key.pem',
-	$mspath.'client-cert.pem',
-	$mspath.'ca-cert.pem'
-    );
-    $userdb = PipelineUser::get_usercache_dbh(
-    	$PipelineAWE_Conf::user_dbhost,
-	$PipelineAWE_Conf::user_dbname,
-    	$PipelineAWE_Conf::user_dbuser,
-    	$PipelineAWE_Conf::user_dbpass,
-	$mspath.'client-key.pem',
-	$mspath.'client-cert.pem',
-	$mspath.'ca-cert.pem'
+	    $mspath.'client-key.pem',
+	    $mspath.'client-cert.pem',
+	    $mspath.'ca-cert.pem'
     );
 } else {
     $jobdb = PipelineJob::get_jobcache_dbh(
-	$PipelineAWE_Conf::job_dbhost,
-	$PipelineAWE_Conf::job_dbname,
-	$PipelineAWE_Conf::job_dbuser,
-	$PipelineAWE_Conf::job_dbpass
-    );
-    $userdb = PipelineUser::get_usercache_dbh(
-	$PipelineAWE_Conf::user_dbhost,
-	$PipelineAWE_Conf::user_dbname,
-	$PipelineAWE_Conf::user_dbuser,
-	$PipelineAWE_Conf::user_dbpass
+	    $PipelineAWE_Conf::job_dbhost,
+	    $PipelineAWE_Conf::job_dbname,
+	    $PipelineAWE_Conf::job_dbuser,
+	    $PipelineAWE_Conf::job_dbpass
     );
 }
 
@@ -131,6 +116,9 @@ if (! $awe_url) {
 if (! $template) {
     $template = $PipelineAWE_Conf::template_file;
 }
+if ($submit_id) {
+    $vars->{submission_id} = $submit_id;
+}
 
 my $template_str = read_file($template) ;
 
@@ -151,30 +139,6 @@ foreach my $opt (split(/\&/, $jobj->{options})) {
         my ($k, $v) = split(/=/, $opt);
         $jopts->{$k} = $v;
     }
-}
-
-# get job owner information
-if (!exists($jobj->{owner}) || $jobj->{owner} eq '') {
-    print STDERR "ERROR: Job $job_id is missing 'owner' field.\n";
-    exit 1;
-}
-my $user_id = $jobj->{owner};
-my $uobj = PipelineUser::get_usercache_info($userdb, $user_id);
-unless ($uobj && (scalar(keys %$uobj) > 0)) {
-    print STDERR "ERROR: User $user_id does not exist.\n";
-    exit 1;
-}
-if (!exists($uobj->{firstname}) || $uobj->{firstname} eq '') {
-    print STDERR "ERROR: User $user_id is missing 'firstname' field.\n";
-    exit 1;
-}
-if (!exists($uobj->{lastname}) || $uobj->{lastname} eq '') {
-    print STDERR "ERROR: User $user_id is missing 'lastname' field.\n";
-    exit 1;
-}
-if (!exists($uobj->{email}) || $uobj->{email} eq '') {
-    print STDERR "ERROR: User $user_id is missing 'email' field.\n";
-    exit 1;
 }
 
 # build upload attributes
@@ -258,8 +222,6 @@ $vars->{bp_count}       = $up_attr->{statistics}{bp_count};
 $vars->{project_id}     = $up_attr->{project_id} || '';
 $vars->{project_name}   = $up_attr->{project_name} || '';
 $vars->{user}           = 'mgu'.$jobj->{owner} || '';
-$vars->{user_name}      = $uobj->{firstname}." ".$uobj->{lastname};
-$vars->{email}          = $uobj->{email};
 $vars->{inputfile}      = $file_name;
 $vars->{shock_node}     = $node_id;
 $vars->{filter_options} = $jopts->{filter_options} || 'skip';
@@ -517,8 +479,11 @@ my $awe_job = $ares->{data}{jid};
 my $state   = $ares->{data}{state};
 print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
+# update job attributes
+PipelineJob::set_job_attributes($jobdb, $job_id, {"pipeline_id" => $awe_id});
+
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-submit_id=<submission id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
 
 # enable hash-resolving in the JSON->encode function

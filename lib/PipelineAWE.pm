@@ -50,16 +50,18 @@ sub file_to_array {
 }
 
 sub obj_from_url {
-    my ($url, $key) =@_;
+    my ($url, $key, $data) = @_;
     my $content = undef;
     eval {
-        my $get = undef;
-        if ($key) {
-            $get = $agent->get($url, 'AUTH' => $key);
+        my $result = undef;
+        my @args = $key ? ('Auth', $key) : ();
+        if ($data && ref($data)) {
+            push @args, ('Content', $data);
+            $result = $agent->post($url, @args);
         } else {
-            $get = $agent->get($url);
+            $result = $agent->get($url, @args);
         }
-        $content = $json->decode( $get->content );
+        $content = $json->decode( $result->content );
     };
     if ($@ || (! ref($content))) {
         print STDERR "Unable to connect to $url\n";
