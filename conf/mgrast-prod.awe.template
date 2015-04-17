@@ -74,11 +74,14 @@
                 "name": "awe_preprocess.pl",
                 "args": "-input @[% inputfile %] -format [% file_format %] -out_prefix [% job_id %].100.preprocess -filter_options [% filter_options %]",
                 "description": "preprocess",
-                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]", 	 	
-                "environ" : { 	 	
+                "[% docker_switch %]Dockerimage": "mgrast/base:[% docker_image_version %]",
+                "environ" : {
+                    "private": {
+                        "MGRAST_WEBKEY": "[% api_key %]"
+                    },
                     "[% docker_switch %]public" : { 	 	
                         "BASH_ENV" : "/root/mgrast_env.sh" 	 	
-                    } 	 	
+                    }
                 }
             },
             "dependsOn": [], 

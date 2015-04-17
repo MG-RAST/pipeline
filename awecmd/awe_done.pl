@@ -8,7 +8,6 @@ use PipelineAWE;
 use PipelineJob;
 use PipelineAnalysis;
 use StreamingUpload;
-use Mail::Mailer;
 
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
@@ -16,8 +15,7 @@ use Getopt::Long;
 umask 000;
 
 # globals
-my $mg_email = 'Metagenomics Analysis Server <mg-rast@mcs.anl.gov>';
-my $mg_link  = 'http://metagenomics.anl.gov/linkin.cgi?metagenome=';
+my $mg_link = 'http://metagenomics.anl.gov/linkin.cgi?metagenome=';
 
 # options
 my $job_id    = "";
@@ -254,27 +252,17 @@ solr_post($solr_url, $solr_col, $solr_file);
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
 
 # email owner on completion
-my $user_info = PipelineAWE::obj_from_url($api_url."/user/".$done_attr->{owner}, $api_key);
-if ($email && $user_info->{email} && $done_attr->{id} && $done_attr->{name}) {
-    my $mailer     = Mail::Mailer->new();
-    my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
-    my $link       = $done_attr->{id};
+my $user_info = PipelineAWE::get_user_info($done_attr->{owner}, $api_url, $api_key);
+if ($email) {
+    my $link = $done_attr->{id};
     $link =~ s/^mgm(.*)/$1/;
     $link = $mg_link.$link;
-    my $body_txt   = "Dear $owner_name,\n\nThe annotation job that you submitted for '" . $done_attr->{name} . "' has completed.\n\n" .
-                     "Your job has been assigned MG-RAST metagenome ID " . $done_attr->{id} .
-                     " and can be linked to using:\n$link\n\n" .
-                     "PLEASE NOTE: your data will not automatically be made public.\n".
-                     "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
-                     'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
-
-    $mailer->open({ From    => $mg_email,
-                    To      => "$owner_name <" . $user_info->{email} . ">",
-                    Subject => "MG-RAST Job Completed",
-                  })
-      or die "Can't open Mail::Mailer: $!\n";
-    print $mailer $body_txt;
-    $mailer->close();
+    my $body_txt = "The annotation job that you submitted for '".$done_attr->{name}."' has completed.\n\n".
+                   "Your job has been assigned MG-RAST metagenome ID ".$done_attr->{id}." and can be linked to using:\n$link\n\n".
+                   "PLEASE NOTE: your data will not automatically be made public.\n".
+                   "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
+                   'This is an automated message. Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
+    PipelineAWE::send_mail($body_txt, "MG-RAST Job Completed", $user_info);
 }
 
 # cleanup
