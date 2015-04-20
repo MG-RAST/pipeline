@@ -681,7 +681,8 @@ $last_output = $diamond_result;
 my $task_annotate_sims = $workflow->newTask('MG-RAST/base.annotate_sims.default',
 	$last_output,
 	string_resource($vars->{'job_id'}),
-	string_resource($vars->{'ach_annotation_ver'})
+	string_resource($vars->{'ach_annotation_ver'}),
+	$vars->{'m5nr_annotation_url'}
 ); # produces 4 output files, sims.filter, expand.protein, expand.lca, expand.ontology
 
 
