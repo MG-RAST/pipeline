@@ -32,8 +32,9 @@ our $template_keywords = {
     'm5rna_download_url' => "http://shock.metagenomics.anl.gov/node/1284813a-91d1-42b1-bc72-e74f19e1a0d1?download",
     'm5rna_clust_download_url' => "http://shock.metagenomics.anl.gov/node/c4c76c22-297b-4404-af5c-8cd98e580f2a?download",
 
-    'm5nr_annotation_url' => "http://shock.metagenomics.anl.gov/node/e5dc6081-e289-4445-9617-b53fdc4023a8?download",    
-
+	'm5nr_annotation_url' => {	"resource" => "shock",
+								"host" => "http://shock.metagenomics.anl.gov",
+								"node" => "e5dc6081-e289-4445-9617-b53fdc4023a8" }
 
 };
 
