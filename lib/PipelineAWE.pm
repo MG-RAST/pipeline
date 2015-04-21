@@ -108,7 +108,7 @@ sub send_mail {
             ],
             body => "Dear $owner_name,\n\n".$body
         );
-        Email::Sender::Simple->send($email_simple);
+        #Email::Sender::Simple->send($email_simple);
     }
 }
 
