@@ -46,7 +46,7 @@ my $user_info = PipelineAWE::get_user_info($user, $api_url, $api_key);
 my $link = $mgid;
 $link =~ s/^mgm(.*)/$1/;
 $link = $mg_link.$link;
-my $name = $user_attr->{name} ? " for ".$user_attr->{name} : ""
+my $name = $user_attr->{name} ? " for ".$user_attr->{name} : "";
 my $body_txt = "The annotation job that you submitted$name has completed.\n\n".
                "Your job has been assigned MG-RAST metagenome ID $mgidand can be linked to using:\n$link\n\n".
                "PLEASE NOTE: your data will not automatically be made public.\n".

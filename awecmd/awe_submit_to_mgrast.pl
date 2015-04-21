@@ -27,11 +27,11 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($input)==0){
-    print STDERR "ERROR: An input cluster map file was not specified.\n";
+    print STDERR "ERROR: An input parameters file was not specified.\n";
     print STDERR get_usage();
     exit 1;
 }elsif (! -e $input){
-    print STDERR "ERROR: The input cluster map file [$in_clust] does not exist.\n";
+    print STDERR "ERROR: The input parameters file [$input] does not exist.\n";
     print STDERR get_usage();
     exit 1;
 }
@@ -127,7 +127,7 @@ FILES: foreach my $fname (keys %$to_submit) {
     }
     # reserve and create job
     my $reserve_job = PipelineAWE::obj_from_url($api."/job/reserve", $auth, {name => $to_submit->{$fname}, input_id => $info->{id}});
-    my $mg_id = $reserve_job->{metagenome_id}
+    my $mg_id = $reserve_job->{metagenome_id};
     my $create_data = $params->{parameters};
     $create_data->{metagenome_id} = $mg_id;
     $create_data->{input_id}      = $info->{id};
@@ -141,5 +141,5 @@ FILES: foreach my $fname (keys %$to_submit) {
 
 
 sub get_usage {
-    return "USAGE: awe_submit_to_mgrast.pl -params=<pipeline parameters> [-metadata=<metadata file>, -project=<project id>]\n";
+    return "USAGE: awe_submit_to_mgrast.pl -input=<pipeline parameters> [-metadata=<metadata file>, -project=<project id>]\n";
 }
