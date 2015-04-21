@@ -48,7 +48,7 @@ $link =~ s/^mgm(.*)/$1/;
 $link = $mg_link.$link;
 my $name = $user_attr->{name} ? " for ".$user_attr->{name} : "";
 my $body_txt = "The annotation job that you submitted$name has completed.\n\n".
-               "Your job has been assigned MG-RAST metagenome ID $mgidand can be linked to using:\n$link\n\n".
+               "Your job has been assigned MG-RAST metagenome ID $mgid and can be linked to using:\n$link\n\n".
                "PLEASE NOTE: your data will not automatically be made public.\n".
                "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
                'This is an automated message. Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
