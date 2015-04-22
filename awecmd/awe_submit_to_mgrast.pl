@@ -69,7 +69,9 @@ foreach my $fname (@{$params->{files}}) {
         $no_inbox->{$fname} = 1;
     }
 }
-print STDOUT "no_inbox\t".join("\t", keys %$no_inbox)."\n";
+foreach my $miss (keys %$no_inbox) {
+    print STDOUT "no_inbox\t$miss\n";
+}
 
 # if metadata, check that input files in metadata
 if ($mdata) {
@@ -104,11 +106,12 @@ if ($mdata) {
             }
         }
     }
-    print STDOUT "no_metadata\t".join("\t", keys %$no_metadata)."\n";
+    foreach my $miss (keys %$no_metadata) {
+        print STDOUT "no_metadata\t$miss\n";
+    }
 }
 
 my $submitted = {}; # file_name => [name, awe_id, mg_id]
-print STDOUT "submitted\n";
 
 # submit one at a time
 FILES: foreach my $fname (keys %$to_submit) {
@@ -120,7 +123,7 @@ FILES: foreach my $fname (keys %$to_submit) {
             if ($mg->{submission} && ($mg->{submission} eq $params->{submission})) {
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
                 $submitted->{$fname} = [$mg->{name}, $awe_id, $mg->{id}];
-                print STDOUT join("\t", ($fname, $mg->{name}, $awe_id, $mg->{id}))."\n";
+                print STDOUT join("\t", ("submitted", $fname, $mg->{name}, $awe_id, $mg->{id}))."\n";
                 next FILES;
             }
         }
@@ -136,7 +139,7 @@ FILES: foreach my $fname (keys %$to_submit) {
     # submit it
     my $submit_job = PipelineAWE::obj_from_url($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
-    print STDOUT join("\t", ($fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
+    print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
 }
 
 
