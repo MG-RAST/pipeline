@@ -39,7 +39,11 @@ def barcode_files(bfile, odir, stype, prefix):
     bhdl  = open(bfile, 'rU')
     stype = 'fna' if stype == 'fasta' else stype
     for b in bhdl:
+        if not b:
+            continue
         bset = b.strip().split("\t")
+        if not bset[0]:
+            continue
         barc = prefix.upper() + bset[0].upper()
         name = os.path.join(odir, "%s.%s"%(bset[0] if len(bset) == 1 else bset[1], stype))
         clen = len(barc)
