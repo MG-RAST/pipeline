@@ -14,9 +14,6 @@ use URI::Escape;
 use Getopt::Long;
 umask 000;
 
-# globals
-my $mg_link = 'http://metagenomics.anl.gov/linkin.cgi?metagenome=';
-
 # options
 my $job_id    = "";
 my $psql      = "";
@@ -38,7 +35,6 @@ my $aa_clust  = "";
 my $aa_map    = "";
 my $ontol     = "";
 my $filter    = "";
-my $email     = 1;
 my $help      = 0;
 my $options   = GetOptions (
 		"job=s"       => \$job_id,
@@ -61,7 +57,6 @@ my $options   = GetOptions (
 		"aa_map=s"    => \$aa_map,
 		"ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
-		"email!"      => \$email,
 		"help!"       => \$help
 );
 
@@ -250,20 +245,6 @@ solr_post($solr_url, $solr_col, $solr_file);
 
 # done done !!
 PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
-
-# email owner on completion
-my $user_info = PipelineAWE::get_user_info($done_attr->{owner}, $api_url, $api_key);
-if ($email) {
-    my $link = $done_attr->{id};
-    $link =~ s/^mgm(.*)/$1/;
-    $link = $mg_link.$link;
-    my $body_txt = "The annotation job that you submitted for '".$done_attr->{name}."' has completed.\n\n".
-                   "Your job has been assigned MG-RAST metagenome ID ".$done_attr->{id}." and can be linked to using:\n$link\n\n".
-                   "PLEASE NOTE: your data will not automatically be made public.\n".
-                   "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
-                   'This is an automated message. Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
-    PipelineAWE::send_mail($body_txt, "MG-RAST Job Completed", $user_info);
-}
 
 # cleanup
 #PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
