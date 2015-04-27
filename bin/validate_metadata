@@ -586,7 +586,7 @@ def validate_data(cat, name, data, template, skip):
             validVal = validate_type(term, data[key], items['type'], name=clean)
             if validVal is None:
                 bad_type = 'found in %s ontology'%key if items['type'] == 'ontology' else 'type '+items['type']
-                bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][key]) if items['type'] == 'select' else bad_type
+                bad_type = 'one of: %s'%', '.join(CV_PARAM['select'][term]) if items['type'] == 'select' else bad_type
                 add_invalid(cat, key, name, data[key], 'not '+bad_type)
                 errorMsg("%s '%s' field '%s' not %s: '%s'"%(cat, name, key, bad_type, unicode(data[key]).encode('ascii','replace')))
             validData[key] = copy.deepcopy(items)
