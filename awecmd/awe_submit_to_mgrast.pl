@@ -120,6 +120,7 @@ FILES: foreach my $fname (keys %$to_submit) {
     my $mg_by_md5 = PipelineAWE::obj_from_url($api."/metagenome/md5/".$info->{stats_info}{checksum}, $auth);
     if ($mg_by_md5 && ($mg_by_md5->{total_count} > 0)) {
         foreach my $mg (@{$mg_by_md5->{data}}) {
+            next if (mg->{status} =~ /deleted/);
             if ($mg->{submission} && ($mg->{submission} eq $params->{submission})) {
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
                 $submitted->{$fname} = [$mg->{name}, $awe_id, $mg->{id}];
