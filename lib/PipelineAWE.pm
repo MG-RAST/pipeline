@@ -60,8 +60,8 @@ sub obj_from_url {
         my $result = undef;
         my @args = $key ? ('Auth', $key) : ();
         if ($data && ref($data)) {
-            push @args, ('Content', $data);
-            $result = $agent->post($url, @args);
+            push @args, ('Content-Type', 'application/json');
+            $result = $agent->post($url, @args, 'Content' => $json->encode($data));
         } else {
             $result = $agent->get($url, @args);
         }
