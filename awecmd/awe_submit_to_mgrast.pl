@@ -120,7 +120,7 @@ FILES: foreach my $fname (keys %$to_submit) {
     my $mg_by_md5 = PipelineAWE::obj_from_url($api."/metagenome/md5/".$info->{stats_info}{checksum}, $auth);
     if ($mg_by_md5 && ($mg_by_md5->{total_count} > 0)) {
         foreach my $mg (@{$mg_by_md5->{data}}) {
-            next if (mg->{status} =~ /deleted/);
+            next if ($mg->{status} =~ /deleted/);
             if ($mg->{submission} && ($mg->{submission} eq $params->{submission})) {
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
                 $submitted->{$fname} = [$mg->{name}, $awe_id, $mg->{id}];
@@ -137,8 +137,8 @@ FILES: foreach my $fname (keys %$to_submit) {
     $create_data->{input_id}      = $info->{id};
     $create_data->{submission}    = $params->{submission};
     my $create_job = PipelineAWE::obj_from_url($api."/job/create", $auth, $create_data);
-    # submit it
-    my $submit_job = PipelineAWE::obj_from_url($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
+    # submit it - hardcoded for debug
+    my $submit_job = PipelineAWE::obj_from_url("http://api.metagenomics.anl.gov/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
     print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
 }
