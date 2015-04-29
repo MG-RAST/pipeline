@@ -60,8 +60,8 @@ sub obj_from_url {
         my $result = undef;
         my @args = $key ? ('Auth', $key) : ();
         if ($data && ref($data)) {
-            push @args, ('Content', $data);
-            $result = $agent->post($url, @args);
+            push @args, ('Content-Type', 'application/json');
+            $result = $agent->post($url, @args, 'Content' => $json->encode($data));
         } else {
             $result = $agent->get($url, @args);
         }
@@ -102,7 +102,7 @@ sub send_mail {
     if ($user_info->{email}) {
         my $email_simple = Email::Simple->create(
             header => [
-                To      => '"$owner_name" <'.$user_info->{email}.'>',
+                To      => "\"$owner_name\" <".$user_info->{email}.">",
                 From    => $mg_email,
                 Subject => $subject,
             ],

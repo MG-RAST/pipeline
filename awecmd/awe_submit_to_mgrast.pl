@@ -41,7 +41,6 @@ my $mdata  = ($metadata && (-s $metadata)) ? PipelineAWE::read_json($metadata) :
 
 unless ($mdata || $project) {
     print STDERR "ERROR: Must have one of -metadata or -project.\n";
-    print STDERR get_usage();
     exit 1;
 }
 
@@ -49,7 +48,6 @@ my $auth = $ENV{'USER_AUTH'} || undef;
 my $api  = $ENV{'MGRAST_API'} || undef;
 unless ($auth && $api) {
     print STDERR "ERROR: Missing authentication ENV variables.\n";
-    print STDERR get_usage();
     exit 1;
 }
 
@@ -69,10 +67,13 @@ foreach my $fname (@{$params->{files}}) {
         $no_inbox->{$fname} = 1;
     }
 }
-print STDOUT "no_inbox\t".join("\t", keys %$no_inbox)."\n";
+foreach my $miss (keys %$no_inbox) {
+    print STDOUT "no_inbox\t$miss\n";
+}
 
 # if metadata, check that input files in metadata
-if ($mdata) {
+# extract metagenome names
+if ($mdata && $params->{metadata}) {
     my %md_names = ();
     foreach my $sample ( @{$mdata->{samples}} ) {
         next unless ($sample->{libraries} && scalar(@{$sample->{libraries}}));
@@ -104,23 +105,34 @@ if ($mdata) {
             }
         }
     }
-    print STDOUT "no_metadata\t".join("\t", keys %$no_metadata)."\n";
+    foreach my $miss (keys %$no_metadata) {
+        print STDOUT "no_metadata\t$miss\n";
+    }
+} elsif ($project) {
+    my $pinfo = PipelineAWE::obj_from_url($api."/project/".$project, $auth);
+    unless ($project eq $pinfo->{id}) {
+        print STDERR "ERROR: project $project does not exist";
+    }
+} else {
+    print STDERR "ERROR: Missing metadata or project.\n";
+    exit 1;
 }
 
 my $submitted = {}; # file_name => [name, awe_id, mg_id]
-print STDOUT "submitted\n";
 
-# submit one at a time
+# submit one at a time / add to project as submitted
+my $mgids = [];
 FILES: foreach my $fname (keys %$to_submit) {
     my $info = $seq_files{$fname};
     # see if already exists for this submission (due to re-start)
     my $mg_by_md5 = PipelineAWE::obj_from_url($api."/metagenome/md5/".$info->{stats_info}{checksum}, $auth);
     if ($mg_by_md5 && ($mg_by_md5->{total_count} > 0)) {
         foreach my $mg (@{$mg_by_md5->{data}}) {
+            next if ($mg->{status} =~ /deleted/);
             if ($mg->{submission} && ($mg->{submission} eq $params->{submission})) {
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
                 $submitted->{$fname} = [$mg->{name}, $awe_id, $mg->{id}];
-                print STDOUT join("\t", ($fname, $mg->{name}, $awe_id, $mg->{id}))."\n";
+                print STDOUT join("\t", ("submitted", $fname, $mg->{name}, $awe_id, $mg->{id}))."\n";
                 next FILES;
             }
         }
@@ -133,13 +145,27 @@ FILES: foreach my $fname (keys %$to_submit) {
     $create_data->{input_id}      = $info->{id};
     $create_data->{submission}    = $params->{submission};
     my $create_job = PipelineAWE::obj_from_url($api."/job/create", $auth, $create_data);
+    push @$mgids, $mg_id;
+    # project ?
+    if ($project) {
+        PipelineAWE::obj_from_url($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
+    }
     # submit it
     my $submit_job = PipelineAWE::obj_from_url($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
-    print STDOUT join("\t", ($fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
+    print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
+}
+
+# apply metadata
+if ($mdata) {
+    my $import = {node_id => $params->{metadata}, metagenome => $mgids};
+    my $result = PipelineAWE::obj_from_url($api."/metadata/import", $auth, $import);
+    if ($result->{errors}) {
+        print STDERR "ERROR: Unable to import metadata:\n".$result->{errors}."\n";
+    }
 }
 
 
 sub get_usage {
-    return "USAGE: awe_submit_to_mgrast.pl -input=<pipeline parameters> [-metadata=<metadata file>, -project=<project id>]\n";
+    return "USAGE: awe_submit_to_mgrast.pl -input=<pipeline parameter file> [-metadata=<metadata file>, -project=<project id>]\n";
 }
