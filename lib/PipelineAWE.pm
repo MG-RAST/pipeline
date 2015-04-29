@@ -102,7 +102,7 @@ sub send_mail {
     if ($user_info->{email}) {
         my $email_simple = Email::Simple->create(
             header => [
-                To      => '"$owner_name" <'.$user_info->{email}.'>',
+                To      => "\"$owner_name\" <".$user_info->{email}.">",
                 From    => $mg_email,
                 Subject => $subject,
             ],
