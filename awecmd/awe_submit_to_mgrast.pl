@@ -74,6 +74,9 @@ foreach my $miss (keys %$no_inbox) {
 # if metadata, check that input files in metadata
 # extract metagenome names
 if ($mdata && $params->{metadata}) {
+    if ($mdata->{id} && ($mdata->{id} =~ /^mgp/)) {
+        $project = $mdata->{id};
+    }
     my %md_names = ();
     foreach my $sample ( @{$mdata->{samples}} ) {
         next unless ($sample->{libraries} && scalar(@{$sample->{libraries}}));
@@ -133,6 +136,7 @@ FILES: foreach my $fname (keys %$to_submit) {
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
                 $submitted->{$fname} = [$mg->{name}, $awe_id, $mg->{id}];
                 print STDOUT join("\t", ("submitted", $fname, $mg->{name}, $awe_id, $mg->{id}))."\n";
+                push @$mgids, $mg->{id};
                 next FILES;
             }
         }
@@ -145,7 +149,6 @@ FILES: foreach my $fname (keys %$to_submit) {
     $create_data->{input_id}      = $info->{id};
     $create_data->{submission}    = $params->{submission};
     my $create_job = PipelineAWE::obj_from_url($api."/job/create", $auth, $create_data);
-    push @$mgids, $mg_id;
     # project ?
     if ($project) {
         PipelineAWE::obj_from_url($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
@@ -154,10 +157,11 @@ FILES: foreach my $fname (keys %$to_submit) {
     my $submit_job = PipelineAWE::obj_from_url($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
     print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
+    push @$mgids, $mg_id;
 }
 
 # apply metadata
-if ($mdata) {
+if ($mdata && $params->{metadata}) {
     my $import = {node_id => $params->{metadata}, metagenome => $mgids};
     my $result = PipelineAWE::obj_from_url($api."/metadata/import", $auth, $import);
     if ($result->{errors}) {
