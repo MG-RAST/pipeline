@@ -42,24 +42,30 @@ def create_prefix_file(in_file, out_file, prefix_len, memory, fformat):
                 md5 = hashlib.md5( seq ).hexdigest()
             else:
                 md5 = hashlib.md5( seq[:prefix_len] ).hexdigest()
-            tmp_hdl.write("%s\t%s\t%d\t%s\n" %(md5, head, len(seq), seq))
+            tmp_hdl.write("%s\t%s\t%d\t%s\t%s\n" %(md5, head, len(seq), seq, qual))
     finally:
         input_hdl.close()
         tmp_hdl.close()
     run_cmd(['sort', '-T', TMP_DIR, '-S', str(memory)+'G', '-t', "\t", '-k', '1,1', '-k', '3,3nr', '-o', out_file, tmp_file])
     os.remove(tmp_file)
 
-def remove_reps(rep_file, pass_file, fail_file):
+def remove_reps(rep_file, pass_file, fail_file, o_format):
     pass_hdl = open(pass_file, 'w')
     fail_hdl = open(fail_file, 'w')
     last_md5 = ""
     with open(rep_file, 'r') as infile:
         for line in infile:
-            (md5, sid, length, seq) = line.strip().split('\t')
+            (md5, sid, length, seq, qual) = line.strip().split('\t')
             if md5 != last_md5:
-                pass_hdl.write(">%s\n%s\n"%(sid, seq))
+                if o_format == 'fastq':
+                    pass_hdl.write("@%s\n%s\n+\n%s\n"%(sid, seq, qual))
+                else:
+                    pass_hdl.write(">%s\n%s\n"%(sid, seq))
             else:
-                fail_hdl.write(">%s\n%s\n"%(sid, seq))
+                if o_format == 'fastq':
+                    fail_hdl.write("@%s\n%s\n+\n%s\n"%(sid, seq, qual))
+                else:
+                    fail_hdl.write(">%s\n%s\n"%(sid, seq))
             last_md5 = md5
     pass_hdl.close()
     fail_hdl.close()
@@ -71,6 +77,7 @@ def main(args):
     parser = OptionParser(usage=usage)
     parser.add_option("-l", "--prefix_length", dest="prefix_length", type="int", default=50, help="Length of prefix [default '50']")
     parser.add_option("-s", "--seq_type", dest="seq_type", default='fasta', help="Sequence type: fasta, fastq [default 'fasta']")
+    parser.add_option("-o", "--o_format", dest="o_format", default='fasta', help="Output file format: fasta, fastq [default 'fasta']")
     parser.add_option("-d", "--tmp_dir", dest="tmpdir", default="/tmp", help="DIR for sorting files (must be full path) [default '/tmp']")
     parser.add_option("-m", "--memory", dest="memory", type="int", default=4, help="Memory for sorting in GB [default 4]")
     
@@ -81,6 +88,9 @@ def main(args):
     if not os.path.isdir(opts.tmpdir):
         parser.error("[error] invalid tmpdir")
         return 1
+    if opts.seq_type == 'fasta' and opts.o_format == 'fastq':
+        parser.error("[error] cannot output fastq format from fasta input")
+        return 1
 
     (in_seq, out_name) = args
     TMP_DIR = opts.tmpdir
@@ -88,8 +98,11 @@ def main(args):
     rep_file  = out_name+'.derep'
     pass_file = out_name+'.passed.fna'
     fail_file = out_name+'.removed.fna'
+    if opts.o_format == 'fastq':
+        pass_file = out_name+'.passed.fastq'
+        fail_file = out_name+'.removed.fastq'
     create_prefix_file(in_seq, rep_file, opts.prefix_length, opts.memory, opts.seq_type)
-    remove_reps(rep_file, pass_file, fail_file)
+    remove_reps(rep_file, pass_file, fail_file, opts.o_format)
     return 0
 
 if __name__ == "__main__":
