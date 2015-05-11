@@ -53,6 +53,9 @@ if ($help){
     exit 1;
 }
 
+# get api variable
+my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
+
 # temp files
 my $sim_file = "sims.filter.".time();
 my $map_file = "mapping.".time();
@@ -80,6 +83,19 @@ if (@in_seqs > 1) {
 
 my $mem = $memory * 1024;
 my $run_dir = getcwd;
+
+# file is empty !!!
+if (-z $sim_file) {
+    my $user_attr = PipelineAWE::get_userattr();
+    my $user_info = PipelineAWE::get_user_info($user_attr->{owner}, undef, $api_key);
+    my $body_txt = "The annotation job that you submitted for '".$user_attr->{name}."' (".$user_attr->{id}.") has failed.\n".
+                   "No similarities were found using blat against our M5NR database.\n\n".
+                   'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
+    PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
+    print STDERR "pipeline failed, no similarities found\n";
+    # delete job ??
+    exit 1;
+}
 
 PipelineAWE::run_cmd("uncluster_sims -v -c $map_file -i $sim_file -o $sim_file.unclust");
 PipelineAWE::run_cmd("rm $sim_file $map_file");
