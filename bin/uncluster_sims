@@ -84,14 +84,15 @@ while (my $siml = <SIM>) {
         my $query = $1;
         my $rest  = $2;
         unless ($query) { next; }
+        # print seed
+        $q_num += 1;
+        print OUT "$query\t$rest\n";
+        # print rest
         if (exists $cmap->{$query}) {
             foreach my $id ( @{$cmap->{$query}} ) {
 	            $q_num += 1;
                 print OUT "$id\t$rest\n";
             }
-        } else {
-            $q_num += 1;
-            print OUT "$query\t$rest\n";
         }
     }
 }

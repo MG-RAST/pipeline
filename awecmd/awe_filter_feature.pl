@@ -103,8 +103,10 @@ PipelineAWE::create_attr($output.'.json', $filter_stats);
 
 # create subset record list
 # note: parent and child files NOT in same order
-PipelineAWE::run_cmd("index_subset_seq.py -p $in_seq -c $output -m $memory -t $run_dir");
-PipelineAWE::run_cmd("mv $output.index $output");
+if (-s $output) {
+    PipelineAWE::run_cmd("index_subset_seq.py -p $in_seq -c $output -m $memory -t $run_dir");
+    PipelineAWE::run_cmd("mv $output.index $output");
+}
 
 exit 0;
 
