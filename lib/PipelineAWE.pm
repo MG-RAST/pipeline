@@ -7,7 +7,11 @@ no warnings('once');
 use JSON;
 use Data::Dumper;
 use LWP::UserAgent;
+use Email::Simple;
+use Email::Sender::Simple;
 
+our $default_api = "http://api.metagenomics.anl.gov";
+our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $global_attr = "userattr.json";
 our $agent = LWP::UserAgent->new();
 our $json = JSON->new;
@@ -50,16 +54,18 @@ sub file_to_array {
 }
 
 sub obj_from_url {
-    my ($url, $key) =@_;
+    my ($url, $key, $data) = @_;
     my $content = undef;
     eval {
-        my $get = undef;
-        if ($key) {
-            $get = $agent->get($url, 'AUTH' => $key);
+        my $result = undef;
+        my @args = $key ? ('Auth', $key) : ();
+        if ($data && ref($data)) {
+            push @args, ('Content-Type', 'application/json');
+            $result = $agent->post($url, @args, 'Content' => $json->encode($data));
         } else {
-            $get = $agent->get($url);
+            $result = $agent->get($url, @args);
         }
-        $content = $json->decode( $get->content );
+        $content = $json->decode( $result->content );
     };
     if ($@ || (! ref($content))) {
         print STDERR "Unable to connect to $url\n";
@@ -74,8 +80,36 @@ sub obj_from_url {
 
 sub get_metadata {
     my ($mgid, $base_url, $key) = @_;
+    unless ($base_url) {
+        $base_url = $default_api;
+    }
     my $get_url = $base_url.'/metadata/export/'.$mgid;
     return obj_from_url($get_url, $key);
+}
+
+sub get_user_info {
+    my ($user_id, $base_url, $key) = @_;
+    unless ($base_url) {
+        $base_url = $default_api;
+    }
+    my $get_url = $base_url.'/user/'.$user_id;
+    return obj_from_url($get_url, $key);
+}
+
+sub send_mail {
+    my ($body, $subject, $user_info) = @_;
+    my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
+    if ($user_info->{email}) {
+        my $email_simple = Email::Simple->create(
+            header => [
+                To      => "\"$owner_name\" <".$user_info->{email}.">",
+                From    => $mg_email,
+                Subject => $subject,
+            ],
+            body => "Dear $owner_name,\n\n".$body
+        );
+        Email::Sender::Simple->send($email_simple);
+    }
 }
 
 ######### JSON Functions ##########

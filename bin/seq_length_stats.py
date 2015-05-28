@@ -101,6 +101,7 @@ def main(args):
     parser.add_option("-f", "--fast", dest="fast", default=False, action="store_true", help="Fast mode, only calculate length stats")
     parser.add_option("-s", "--seq_type", dest="seq_type", default=False, action="store_true", help="Guess sequence type [wgs|amplicon] from kmer entropy")
     parser.add_option("-m", "--seq_max", dest="seq_max", default=100000, type="int", help="max number of seqs to process (for kmer entropy) [default 100000]")
+    parser.add_option("-c", "--ignore_comma", dest="ignore_comma", default=False, action="store_true", help="Ignore commas in header ID [default is to throw error]")
 
     # check options
     (opts, args) = parser.parse_args()
@@ -139,6 +140,9 @@ def main(args):
             head, seq, qual = split_rec(rec, opts.type)
             if (opts.type == 'fasta') and (re.match('^\s', rec.description)):
                 sys.stderr.write("[error] invalid fasta file, first character following '>' in header must be non-whitespace\n")
+                os._exit(1)
+            if (not opts.ignore_comma) and ("," in head):
+                sys.stderr.write("[error] invalid sequence file, header may not contain a comma (,)\n")
                 os._exit(1)
 
             slen = len(seq)

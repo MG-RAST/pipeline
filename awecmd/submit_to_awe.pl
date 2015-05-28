@@ -29,6 +29,7 @@ use File::Slurp;
 my $job_id     = "";
 my $input_file = "";
 my $input_node = "";
+my $submit_id  = "";
 my $awe_url    = "";
 my $shock_url  = "";
 my $template   = "";
@@ -42,20 +43,21 @@ my $type       = "";
 my $production = 1; # indicates that this is production
 
 my $options = GetOptions (
-        "job_id=s"     => \$job_id,
-        "input_file=s" => \$input_file,
-        "input_node=s" => \$input_node,
-		"awe_url=s"    => \$awe_url,
-		"shock_url=s"  => \$shock_url,
-		"template=s"   => \$template,
-		"no_start!"    => \$no_start,
-		"use_ssh!"     => \$use_ssh,
-		"use_docker!"  => \$use_docker, # enables docker specific workflow entries, dockerimage and environ
-		"clientgroups=s" => \$clientgroups,
-		"pipeline=s"      => \$pipeline,
-		"type=s"       => \$type,
-		"production!"     => \$production,
-		"help!"        => \$help
+    "job_id=s"       => \$job_id,
+    "input_file=s"   => \$input_file,
+    "input_node=s"   => \$input_node,
+    "submit_id=s"    => \$submit_id,
+	"awe_url=s"      => \$awe_url,
+	"shock_url=s"    => \$shock_url,
+	"template=s"     => \$template,
+	"no_start!"      => \$no_start,
+	"use_ssh!"       => \$use_ssh,
+	"use_docker!"    => \$use_docker, # enables docker specific workflow entries, dockerimage and environ
+	"clientgroups=s" => \$clientgroups,
+	"pipeline=s"     => \$pipeline,
+	"type=s"         => \$type,
+	"production!"    => \$production,
+	"help!"          => \$help
 );
 
 if ($help) {
@@ -73,26 +75,26 @@ if ($help) {
 }
 
 # set obj handles
-my $jobdb=undef;
+my $jobdb = undef;
 
 if ($use_ssh) {
     my $mspath = $ENV{'HOME'}.'/.mysql/';
-	$jobdb = PipelineJob::get_jobcache_dbh(
+    $jobdb = PipelineJob::get_jobcache_dbh(
     	$PipelineAWE_Conf::job_dbhost,
-		$PipelineAWE_Conf::job_dbname,
+	    $PipelineAWE_Conf::job_dbname,
     	$PipelineAWE_Conf::job_dbuser,
     	$PipelineAWE_Conf::job_dbpass,
-		$mspath.'client-key.pem',
-		$mspath.'client-cert.pem',
-		$mspath.'ca-cert.pem'
-	);
+	    $mspath.'client-key.pem',
+	    $mspath.'client-cert.pem',
+	    $mspath.'ca-cert.pem'
+    );
 } else {
     $jobdb = PipelineJob::get_jobcache_dbh(
-		$PipelineAWE_Conf::job_dbhost,
-		$PipelineAWE_Conf::job_dbname,
-		$PipelineAWE_Conf::job_dbuser,
-		$PipelineAWE_Conf::job_dbpass
-	);
+	    $PipelineAWE_Conf::job_dbhost,
+	    $PipelineAWE_Conf::job_dbname,
+	    $PipelineAWE_Conf::job_dbuser,
+	    $PipelineAWE_Conf::job_dbpass
+    );
 }
 
 my $tpage = Template->new(ABSOLUTE => 1);
@@ -113,6 +115,9 @@ if (! $awe_url) {
 }
 if (! $template) {
     $template = $PipelineAWE_Conf::template_file;
+}
+if ($submit_id) {
+    $vars->{submission_id} = $submit_id;
 }
 
 my $template_str = read_file($template) ;
@@ -368,8 +373,6 @@ if ($vars->{index_download_urls} eq "") {
 }
 chop $vars->{index_download_urls};
 
-$vars->{m5nr_annotation_url} = $PipelineAWE_Conf::m5nr_annotation_url;
-
 my $workflow_str = "";
 
 # replace variables (reads from $template_str and writes to $workflow_str)
@@ -476,8 +479,11 @@ my $awe_job = $ares->{data}{jid};
 my $state   = $ares->{data}{state};
 print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 
+# update job attributes
+PipelineJob::set_job_attributes($jobdb, $job_id, {"pipeline_id" => $awe_id});
+
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-submit_id=<submission id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
 }
 
 # enable hash-resolving in the JSON->encode function

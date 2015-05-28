@@ -106,11 +106,11 @@ if __name__ == "__main__":
     else:
         outfile = "blat_output"
     if os.environ.get('REFDBPATH'):
-        refdb = "%s/md5nr_v%"%(os.environ.get(ENV_VAR_DBPATH), opts.m5nr_version)
+        refdb = "%s/md5nr_v%s"%(os.environ.get(ENV_VAR_DBPATH), opts.m5nr_version)
     else:
-        refdb = "md5nr_v%"%(opts.m5nr_version)
+        refdb = "md5nr_v%s"%(opts.m5nr_version)
     
-    blat_hits = runBlatProcess(infile, refdb, m5nr_parts, outfile)
+    blat_hits = runBlatProcess(infile, refdb, opts.m5nr_parts, outfile)
     sortandbleach("%s.cat_blat"%outfile, outfile, opts.sort_dir)
     
     Info_log.close()
