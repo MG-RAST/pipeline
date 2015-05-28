@@ -20,7 +20,7 @@ def split_rec(rec, stype):
     if stype == 'fastq':
         return rec[0].split()[0], rec[1].upper(), rec[2]
     else:
-        return rec.id, str(rec.seq).upper(), ""
+        return rec.id, str(rec.seq).upper(), "-"
 
 def run_cmd(cmd):
     proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
