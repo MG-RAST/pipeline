@@ -87,7 +87,7 @@ while (my $ucl = <SUC>) {
         chomp $seql;
         ($id, $seq) = split(/\t/, $seql);
     }
-    $seq_match = substr($seq, $qstart, $qlen);
+    my $seq_match = substr($seq, $qstart, $qlen);
     print OUT ">${qname}_${qstart}_${qstop}_${strand}\n$seq_match\n";
 }
 
