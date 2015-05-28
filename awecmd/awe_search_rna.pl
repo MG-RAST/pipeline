@@ -63,8 +63,8 @@ PipelineAWE::run_cmd("seqUtil -t $run_dir -i $fasta -o $fasta.tab --fasta2tab");
 
 # uc -> fasta
 open(OUT, ">$output") || die "Can't open file $output!\n";
-open(STAB, ">$fasta.tab") || die "Can't open file $fasta.tab!\n";
-open(SUC, ">$fasta.uc") || die "Can't open file $fasta.uc!\n";
+open(STAB, "<$fasta.tab") || die "Can't open file $fasta.tab!\n";
+open(SUC, "<$fasta.uc") || die "Can't open file $fasta.uc!\n";
 
 my $seql = <STAB>;
 chomp $seql;
