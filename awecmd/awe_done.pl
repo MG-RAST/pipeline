@@ -105,6 +105,8 @@ unless ( defined($solr_url) && defined($solr_col) ) {
     print STDERR get_usage();
     exit 1;
 }
+$solr_url = "http://140.221.76.68:8983";
+$solr_col = "metagenome_1";
 
 # get api variable
 my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
