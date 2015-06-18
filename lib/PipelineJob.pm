@@ -13,7 +13,7 @@ sub get_jobcache_dbh {
     if ($key && $cert && $ca) {
         $conn_str .= ";mysql_ssl=1;mysql_ssl_client_key=".$key.";mysql_ssl_client_cert=".$cert.";mysql_ssl_ca_file=".$ca;
     }
-    my $dbh = DBI->connect($conn_str, $user, $pass) || die $DBI::errstr;
+    my $dbh = DBI->connect($conn_str, $user, $pass, { mysql_auto_reconnect => 1 }) || die $DBI::errstr;
     return $dbh;
 }
 
