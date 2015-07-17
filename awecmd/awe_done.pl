@@ -374,6 +374,7 @@ sub solr_post {
             'Content-Length' => -s $solr_file,
         )
     );
+    $PipelineAWE::agent->timeout(600);
     my $response = $PipelineAWE::agent->request($req);
     if ($response->{"_msg"} ne 'OK') {
         my $content = $response->{"_content"};

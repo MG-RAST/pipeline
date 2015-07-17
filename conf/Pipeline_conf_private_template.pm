@@ -9,7 +9,9 @@ my $BASE = "/homes/.../git/pipeline"; #"/mcs/bio/mg-rast/prod/pipeline";
 # default variables
 our $awe_url = "";
 our $awe_pipeline_token = '';
+our $awe_token_prefix = '';
 our $shock_pipeline_token = '';
+our $shock_token_prefix = '';
 our $template_file = $BASE."/conf/mgrast-prod.awe.template";
 our $temp_dir = $BASE."/temp";
 
