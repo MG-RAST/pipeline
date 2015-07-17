@@ -103,7 +103,7 @@ def uc2fasta(infasta, inclust, outfasta):
                 break
             if not curFasta:
                 break
-        seq_match = str(curFasta.seq)[qstart:qlen]
+        seq_match = str(curFasta.seq)[qstart:qstop]
         outHdl.write(">%s_%d_%d_%s\n%s\n"%(qname, qstart, qstop, strand, seq_match))
     clustHdl.close()
     fastaHdl.close()
