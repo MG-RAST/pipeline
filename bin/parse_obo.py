@@ -10,6 +10,7 @@ from collections import defaultdict
 # declare a blank dictionary, keys are the term_ids
 terms = {}
 quote = re.compile(r'\"(.+?)\"')
+term = re.compile(r'^[A-Z]+:\d+$')
 
 def getTerm(stream):
     block = []
@@ -81,28 +82,46 @@ def getParents(tid, full=False):
                 parents.append((terms[p]['label'], p))
     return parents if full else list(set(parents))
 
-def outputData(data, ofile):
+def getTop(full=False):
+    top = {} if full else []
+    for t, info in terms.iteritems():
+        if (len(info['parentNodes']) == 0) and (len(info['childNodes']) > 0) and term.match(t):
+            if full:
+                top[t] = terms[t]
+            else:
+                top.append((terms[t]['label'], t))
+    return top if full else list(set(top))
+
+def outputJson(data, ofile):
     if ofile:
         json.dump(data, open(ofile, 'w'))
     else:
         print json.dumps(data, sort_keys=True, indent=4)
 
+def outputTab(data, ofile):
+    out_str = "\n".join(map(lambda x: "\t".join(x), data))
+    if ofile:
+        open(ofile, 'w').write(out_str+"\n")
+    else:
+        print out_str
+
 def main(args):
     global terms
     parser = OptionParser(usage="usage: %prog [options] -i <input file> -o <output file>")
     parser.add_option("-i", "--input", dest="input", default=None, help="input .obo file")
-    parser.add_option("-o", "--output", dest="output", default=None, help="output .json file")
-    parser.add_option("-g", "--get", dest="get", default='all', help="output to get: all, ancestors, parents, children, descendents. 'all' if no term_id")
+    parser.add_option("-o", "--output", dest="output", default=None, help="output: .json file or stdout, default is stdout")
+    parser.add_option("-g", "--get", dest="get", default='all', help="output to get: all, top, ancestors, parents, children, descendents. 'all' if no term_id")
     parser.add_option("-f", "--full", dest="full", action="store_true", default=False, help="return output as struct with relationships, default is list of tuples (name, id)")
     parser.add_option("-t", "--term_id", dest="term_id", default=None, help="term id if doing relationship lookup")
     parser.add_option("-r", "--relations", dest="relations", default='is_a,part_of,located_in', help="comma seperated list of relations to use, default is 'is_a,part_of,located_in'")
     parser.add_option("-m", "--metadata", dest="metadata", default=None, help="add the given JSON data as top level metadata info to return struct, only usable with --full option")
+    parser.add_option("", "--tab", dest="tab", action="store_true", default=False, help="return output as tabbed list instead of json, only for not --full")
     (opts, args) = parser.parse_args()
     if not (opts.input and os.path.isfile(opts.input)):
         parser.error("missing input")
     if not opts.relations:
         parser.error("missing relations")
-    if not opts.term_id:
+    if (not opts.term_id) and (opts.get != 'top'):
         opts.get = 'all'
     
     oboFile = open(opts.input, 'r')
@@ -148,7 +167,9 @@ def main(args):
     
     # output
     data = None
-    if opts.get == 'ancestors':
+    if opts.get == 'top':
+        data = getTop(full=opts.full)
+    elif opts.get == 'ancestors':
         data = getAncestors(opts.term_id, full=opts.full)
     elif opts.get == 'parents':
         data = getParents(opts.term_id, full=opts.full)
@@ -166,12 +187,15 @@ def main(args):
         try:
             mdata = json.loads(opts.metadata)
             mdata['nodes'] = data
-            outputData(mdata, opts.output)
+            outputJson(mdata, opts.output)
         except:
-            outputData(data, opts.output)
+            outputJson(data, opts.output)
+    # tabbed list output
+    elif opts.tab and (not opts.full):
+        outputTab(data, opts.output)
     # just dump as is
     else:
-        outputData(data, opts.output)
+        outputJson(data, opts.output)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
