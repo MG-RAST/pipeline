@@ -21,6 +21,7 @@ ID_COL   = 0
 HEADER   = 1
 TEMPLATE = None
 CV_PARAM = None
+ENVO_VER = None
 LOG_FILE = None
 JSON_FILE = None
 INVALID   = []
@@ -82,7 +83,7 @@ def obj_from_url(url):
     if not res:
         return None
     obj = json.loads(res.read())
-    if not (obj and isinstance(obj, dict)):
+    if not obj:
         return None
     if 'ERROR' in obj:
         errorMsg(obj['ERROR'], 1)
@@ -91,9 +92,25 @@ def obj_from_url(url):
 def mgrast_api(request):
     url = MGRAST_URL+'metadata/'+request
     obj = obj_from_url(url)
-    if obj.keys() == 0:
+    if len(obj) == 0:
         errorMsg("no data available: %s"%url, 1)
     return obj
+
+def get_envo_version(pdata):
+    global ENVO_VER, CV_PARAM
+    if "envo_release" not in pdata:
+        ENVO_VER = CV_PARAM["latest_version"]["biome"]
+        pdata["envo_release"] = ENVO_VER
+        print "using latest ENVO version %s"%(ENVO_VER)
+    else:
+        ENVO_VER = pdata["envo_release"]
+        for name in CV_PARAM["ontology"].iterkeys():
+            if ENVO_VER not in CV_PARAM["versions"][name]:
+                errorMsg("envo_release '%s' for %s is not valid, use one of: %s"%(ENVO_VER, name, ", ".join(CV_PARAM["versions"][name])))
+            elif ENVO_VER != CV_PARAM["latest_version"][name]:
+                # update it with listed version
+                print "switching ENVO %s to version %s"%(name, ENVO_VER)
+                CV_PARAM["ontology"][name] = mgrast_api("cv?label=%s&version=%s"%(name, ENVO_VER))
 
 def validate_type(key, val, atype, name=False):
     ### return string of valid value, else None
@@ -316,6 +333,7 @@ def tables_to_mdraw_inc(tables, dupe):
     ## env_package: { name:<samp_name-env_package_type: str>, type:<env_package_type: str>, data<env_package_data: dict> }
     update_header_size(tables)
     pdata = data_from_table(tables, 'project')
+    get_envo_version(pdata[0][1])
     sdata = data_from_table(tables, 'sample')
     ldata = dict([(x, data_from_table(tables,'library '+x)) for x in TEMPLATE['library']])
     edata = dict([(x, data_from_table(tables,'ep '+x)) for x in TEMPLATE['ep']])
@@ -399,6 +417,7 @@ def tables_to_mdraw(tables, dupe):
     ## env_package: { name:<samp_name-env_package_type: str>, type:<env_package_type: str>, data<env_package_data: dict> }
     update_header_size(tables)
     pdata = data_from_table(tables, 'project')
+    get_envo_version(pdata[0][1])
     sdata = data_from_table(tables, 'sample')
     ldata = dict([(x, data_from_table(tables,'library '+x)) for x in TEMPLATE['library']])
     edata = dict([(x, data_from_table(tables,'ep '+x)) for x in TEMPLATE['ep']])
