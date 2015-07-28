@@ -56,7 +56,10 @@ unless (-s $rna_nr_path) {
 }
 
 my $run_dir = getcwd;
-#PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
+# use usearch
+PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
+exit 0;
+
 # use vsearch
 PipelineAWE::run_cmd("vsearch --strand both --wordlength 4 --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc ");
 PipelineAWE::run_cmd("seqUtil -t $run_dir -i $fasta -o $fasta.tab --fasta2tab");
