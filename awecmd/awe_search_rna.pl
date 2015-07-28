@@ -56,9 +56,65 @@ unless (-s $rna_nr_path) {
 }
 
 my $run_dir = getcwd;
+# use usearch
 PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
+exit 0;
+
+# use vsearch
+PipelineAWE::run_cmd("vsearch --strand both --wordlength 4 --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc ");
+PipelineAWE::run_cmd("seqUtil -t $run_dir -i $fasta -o $fasta.tab --fasta2tab");
+
+# uc -> fasta
+open(OUT, ">$output") || die "Can't open file $output!\n";
+open(STAB, "<$fasta.tab") || die "Can't open file $fasta.tab!\n";
+open(SUC, "<$fasta.uc") || die "Can't open file $fasta.uc!\n";
+
+my $seql = <STAB>;
+chomp $seql;
+my ($id, $seq) = split(/\t/, $seql);
+
+while (my $ucl = <SUC>) {
+    chomp $ucl;
+    unless ($ucl =~ /^H/) {
+        next;
+    }
+    my @parts = split(/\t/, $ucl);
+    my ($strand, $qstart, $cigar, $qname) = ($parts[4], $parts[5], $parts[7], $parts[8]);
+    my @qname_fields = split(/ /, $qname);
+    $qname = $qname_fields[0];
+    my $qlen = cigar_length($cigar);
+    my $qstop = $qstart + $qlen;
+    while ($qname ne $id) {
+        $seql = <STAB>;
+        unless (defined($seql)) { last; }
+        chomp $seql;
+        ($id, $seq) = split(/\t/, $seql);
+    }
+    my $seq_match = substr($seq, $qstart, $qlen);
+    print OUT ">${qname}_${qstart}_${qstop}_${strand}\n$seq_match\n";
+}
+
+close(SUC);
+close(STAB);
+close(OUT);
 
 exit 0;
+
+sub cigar_length {
+    my ($text) = @_;
+    my $len = 0;
+    while ($text =~ /([0-9]*)([DMI])/g) {
+        if ($2 eq 'I') {
+            next;
+        }
+        if ($1) {
+            $len += $1;
+        } else {
+            $len += 1;
+        }
+    }
+    return $len;
+}
 
 sub get_usage {
     return "USAGE: awe_search_rna.pl -input=<input fasta> -output=<output fasta> [-rna_nr=<rna cluster file, default: md5rna.clust> -proc=<number of threads, default: 8> -size=<size, default: 100> -ident=<ident percentage, default: 70>] \n";
