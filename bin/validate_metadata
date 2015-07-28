@@ -101,7 +101,7 @@ def get_envo_version(pdata):
     if "envo_release" not in pdata:
         ENVO_VER = CV_PARAM["latest_version"]["biome"]
         pdata["envo_release"] = ENVO_VER
-        print "using latest ENVO version %s"%(ENVO_VER)
+        #print "using latest ENVO version %s"%(ENVO_VER)
     else:
         ENVO_VER = pdata["envo_release"]
         for name in CV_PARAM["ontology"].iterkeys():
@@ -109,8 +109,8 @@ def get_envo_version(pdata):
                 errorMsg("envo_release '%s' for %s is not valid, use one of: %s"%(ENVO_VER, name, ", ".join(CV_PARAM["versions"][name])))
             elif ENVO_VER != CV_PARAM["latest_version"][name]:
                 # update it with listed version
-                print "switching ENVO %s to version %s"%(name, ENVO_VER)
                 CV_PARAM["ontology"][name] = mgrast_api("cv?label=%s&version=%s"%(name, ENVO_VER))
+                #print "switching ENVO %s to version %s"%(name, ENVO_VER)
 
 def validate_type(key, val, atype, name=False):
     ### return string of valid value, else None
