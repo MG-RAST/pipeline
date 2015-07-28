@@ -15,7 +15,7 @@ my $output  = "";
 my $rna_nr  = "md5rna.clust";
 my $proc    = 8;
 my $size    = 100;
-my $ident   = 50;
+my $ident   = 70;
 my $help    = 0;
 my $options = GetOptions (
 		"input=s"  => \$fasta,
