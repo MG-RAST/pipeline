@@ -4,6 +4,8 @@ import sys, os, shutil, pprint, subprocess
 from collections import defaultdict
 from optparse import OptionParser
 from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.Alphabet import generic_dna
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 __doc__ = """
@@ -32,7 +34,7 @@ def write_rec(out_hdl, head, seq, qual):
     else:
         out_hdl.write("@%s\n%s\n+\n%s\n" %(head, seq, qual))
 
-def barcode_files(bfile, odir, stype, prefix):
+def barcode_files(bfile, odir, stype, prefix, rc_bar):
     global BLEN
     uniq_fname = {}
     barc_fname = defaultdict(list)
@@ -45,6 +47,9 @@ def barcode_files(bfile, odir, stype, prefix):
         if not bset[0]:
             continue
         barc = prefix.upper() + bset[0].upper()
+        if rc_bar:
+            rcb = Seq(barc, generic_dna)
+            barc = str(rcb.reverse_complement()).upper()
         name = os.path.join(odir, "%s.%s"%(bset[0] if len(bset) == 1 else bset[1], stype))
         clen = len(barc)
         if BLEN == 0:
@@ -56,6 +61,21 @@ def barcode_files(bfile, odir, stype, prefix):
         uniq_fname[name] = None
     return barc_fname, uniq_fname
 
+def match_barcode(barcodemap, seqbar):
+    # first exact
+    if seqbar in barcodemap:
+        return True, seqbar
+    else:
+        # match may be off by 1 bp
+        for bar in barcodemap.iterkeys():
+            mismatch = 0
+            for i in range(BLEN):
+                if seqbar[i] != bar[i]:
+                    mismatch += 1
+            if mismatch < 2:
+                return True, bar
+        return False, None
+
 def main(args):
     usage  = "usage: %prog [options] -b <barcode list> -i <input sequence file> -o <output dir>"+__doc__
     parser = OptionParser(usage)
@@ -63,6 +83,7 @@ def main(args):
     parser.add_option("-o", "--output", dest="output", default=".", help="Output dir (default cwd), filenames will be 'barcode.type' or 'name.type'")
     parser.add_option("-f", "--format", dest="format", default='fasta', help="File format: fasta, fastq [default 'fasta']")
     parser.add_option("-b", "--barcode", dest="barcode", default=None, help="File with list of barcodes or list of barcode name pairs")
+    parser.add_option("-r", "--rc_bar", dest="rc_bar", action="store_true", default=False, help="Barcodes in sequences file are reverse complement of barcodes file [default is same].")
     parser.add_option("-p", "--prefix", dest="prefix", default="", help="Optional sequence to prepend to barcodes")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default off]")
 
@@ -73,7 +94,7 @@ def main(args):
         parser.error("Missing barcode list")
 
     # get barcode / filename
-    barc_fname, uniq_fname = barcode_files(opts.barcode, opts.output, opts.format, opts.prefix)
+    barc_fname, uniq_fname = barcode_files(opts.barcode, opts.output, opts.format, opts.prefix, opts.rc_bar)
     # open filehandles
     for f in uniq_fname.iterkeys():
         uniq_fname[f] = open(f, 'w')
@@ -89,9 +110,10 @@ def main(args):
         seqbar = seq[:BLEN]
         seq  = seq[BLEN:]
         qual = qual[BLEN:] if qual is not None else None
-        if seqbar in barc_fname:
-            bar_count[seqbar] += 1
-            for f in barc_fname[seqbar]:
+        match, mbar = match_barcode(barc_fname, seqbar)
+        if match:
+            bar_count[mbar] += 1
+            for f in barc_fname[mbar]:
                 write_rec(uniq_fname[f], head, seq, qual)
         else:
             miss_count += 1
