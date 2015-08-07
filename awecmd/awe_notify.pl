@@ -48,9 +48,9 @@ $link =~ s/^mgm(.*)/$1/;
 $link = $mg_link.$link;
 my $name = $user_attr->{name} ? " for ".$user_attr->{name} : "";
 my $body_txt = "The annotation job that you submitted$name has completed.\n\n".
-               "Your job has been assigned MG-RAST metagenome ID $mgid and can be linked to using:\n$link\n\n".
-               "PLEASE NOTE: your data will not automatically be made public.\n".
-               "You will need to make the data public yourself, even if you selected that the data is going to be public.\n\n".
+               "You can view you job here:\n$link\n\n".
+               "PLEASE NOTE: Your data has NOT been made public and ONLY you can currently view the data and results.\n".
+		"If you wish to publicly share the link to your results, you will need to make the data public yourself. This is needed even if you selected that the data is going to be made public immediately after completion.\n".
                'This is an automated message. Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
 PipelineAWE::send_mail($body_txt, "MG-RAST Job Completed", $user_info);
 
