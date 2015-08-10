@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 
+use lib "/pipeline/conf";
+use lib "/pipeline/lib";
+
 use strict;
 use warnings;
 no warnings('once');
