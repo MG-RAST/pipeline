@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sys, os, shutil, pprint, subprocess
+import os
+import sys
 from collections import defaultdict
 from optparse import OptionParser
 from Bio import SeqIO
@@ -36,21 +37,41 @@ def write_rec(out_hdl, head, seq, qual):
 
 def barcode_files(bfile, odir, stype, prefix, rc_bar):
     global BLEN
+    bar_name = []
+    with open(bfile, 'rU') as x:
+        blines = x.readlines()
+    # QIIME barcode file
+    if blines[0].startswith("#SampleID"):
+        blines.pop(0)
+        for b in blines:
+            if not b:
+                continue
+            bset = b.strip().split("\t")
+            if not bset[0]:
+                continue
+            bar_name.append([bset[1], bset[0]])
+    # simple barcode format
+    else:
+        for b in blines:
+            if not b:
+                continue
+            bset = b.strip().split("\t")
+            if not bset[0]:
+                continue
+            if len(bset) == 1:
+                bar_name.append([bset[0], bset[0]])
+            else:
+                bar_name.append([bset[0], bset[1]])
+    # set files
     uniq_fname = {}
     barc_fname = defaultdict(list)
-    bhdl  = open(bfile, 'rU')
     stype = 'fna' if stype == 'fasta' else stype
-    for b in bhdl:
-        if not b:
-            continue
-        bset = b.strip().split("\t")
-        if not bset[0]:
-            continue
-        barc = prefix.upper() + bset[0].upper()
+    for bn in bar_name:
+        barc = prefix.upper() + bn[0].upper()
         if rc_bar:
             rcb = Seq(barc, generic_dna)
             barc = str(rcb.reverse_complement()).upper()
-        name = os.path.join(odir, "%s.%s"%(bset[0] if len(bset) == 1 else bset[1], stype))
+        name = os.path.join(odir, "%s.%s"%(bn[1], stype))
         clen = len(barc)
         if BLEN == 0:
             BLEN = clen
