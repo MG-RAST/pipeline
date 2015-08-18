@@ -164,6 +164,7 @@ FILES: foreach my $fname (keys %$to_submit) {
 
 if (@$mgids == 0) {
     print STDERR "ERROR: No metagenomes created for submission.\n";
+    exit 1;
 }
 
 # apply metadata
@@ -172,6 +173,7 @@ if ($mdata && $params->{metadata}) {
     my $result = PipelineAWE::obj_from_url($api."/metadata/import", $auth, $import);
     if ($result->{errors}) {
         print STDERR "ERROR: Unable to import metadata:\n".$result->{errors}."\n";
+        exit 1;
     }
 }
 
