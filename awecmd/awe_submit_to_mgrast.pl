@@ -60,9 +60,11 @@ my $no_inbox    = {}; # file_name
 my $no_metadata = {}; # file_name
 
 # check that input files in inbox
+my $in_inbox = {}; # file_name w/o extension => file_name
 foreach my $fname (@{$params->{files}}) {
     if (exists $seq_files{$fname}) {
-        $to_submit->{$fname} = fileparse($fname, qr/\.[^.]*/);
+        my $basename = fileparse($fname, qr/\.[^.]*/);
+        $in_inbox->{$basename} = $fname;
     } else {
         $no_inbox->{$fname} = 1;
     }
@@ -71,47 +73,47 @@ foreach my $miss (keys %$no_inbox) {
     print STDOUT "no_inbox\t$miss\n";
 }
 
+# populate to_submit from in_inbox or mg_names
 # if metadata, check that input files in metadata
 # extract metagenome names
 if ($mdata && $params->{metadata}) {
     if ($mdata->{id} && ($mdata->{id} =~ /^mgp/)) {
         $project = $mdata->{id};
     }
-    my %md_names = ();
+    my %md_names = (); # file w/o extension => mg name
     foreach my $sample ( @{$mdata->{samples}} ) {
         next unless ($sample->{libraries} && scalar(@{$sample->{libraries}}));
         foreach my $library (@{$sample->{libraries}}) {
             next unless (exists $library->{data});
             my $mg_name = "";
             my $file_name = "";
-            if (exists $library->{data}{file_name}) {
-                $file_name = $library->{data}{file_name}{value};
-                $mg_name = fileparse($library->{data}{file_name}{value}, qr/\.[^.]*/);
-            }
             if (exists $library->{data}{metagenome_name}) {
                 $mg_name = $library->{data}{metagenome_name}{value};
+            }
+            if (exists $library->{data}{file_name}) {
+                $file_name = fileparse($library->{data}{file_name}{value}, qr/\.[^.]*/);
+            } else {
+                $file_name = $mg_name;
             }
             if ($mg_name && $file_name) {
                 $md_names{$file_name} = $mg_name;
             }
         }
     }
-    foreach my $fname (@{$params->{files}}) {        
-        if (exists $md_names{$fname}) {
-            # update filename
-            $to_submit->{$fname} = $md_names{$fname};
+    while (my ($basename, $fname) = each %$in_inbox) {
+        if (exists $md_names{$basename}) {
+            $to_submit->{$fname} = $md_names{$basename};
         } else {
-            # remove from list
             $no_metadata->{$fname} = 1;
-            if ($to_submit->{$fname}) {
-                delete $to_submit->{$fname};
-            }
         }
     }
     foreach my $miss (keys %$no_metadata) {
         print STDOUT "no_metadata\t$miss\n";
     }
 } elsif ($project) {
+    while (my ($basename, $file_name) = each %$in_inbox) {
+        $to_submit->{$file_name} = $basename;
+    }
     my $pinfo = PipelineAWE::obj_from_url($api."/project/".$project, $auth);
     unless ($project eq $pinfo->{id}) {
         print STDERR "ERROR: project $project does not exist";
@@ -158,6 +160,10 @@ FILES: foreach my $fname (keys %$to_submit) {
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
     print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
     push @$mgids, $mg_id;
+}
+
+if (@$mgids == 0) {
+    print STDERR "ERROR: No metagenomes created for submission.\n";
 }
 
 # apply metadata
