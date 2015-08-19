@@ -50,10 +50,6 @@ if ($help){
     print STDERR "ERROR: The input sequence file [$infile] does not exist.\n";
     print STDERR get_usage();
     exit 1;
-}elsif ($infile !~ /\.(fna|fasta|fq|fastq)$/i) {
-    print STDERR "ERROR: The input sequence file must be fasta or fastq format.\n";
-    print STDERR get_usage();
-    exit 1;
 }
 
 my @kmers = split(/,/, $kmers);
