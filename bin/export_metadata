@@ -8,15 +8,6 @@ from collections import defaultdict
 from lepl.apps.rfc3696 import HttpUrl
 from openpyxl import Workbook
 
-try:
-    from openpyxl.style import Color
-except ImportError:
-    try:
-        from openpyxl.styles import Color
-    except ImportError:
-        sys.stderr.write("Error: openpyxl package not installed correctly\n")
-        sys.exit(1)
-
 __doc__ = """Script to export metadata from MG-RAST api to xlsx file"""
 
 valid_url  = HttpUrl()
@@ -129,7 +120,7 @@ def data2sheet(sheet, data, is_template):
     rKeys = filter(lambda x: (merge[x]['required'] == '1') or (merge[x]['required'] is True), merge.keys())
     sheet.append( keys )
     sheet.append( row_by_keys(merge, keys, 'definition') )
-    sheet = color_row(sheet, rKeys, 0, Color.RED)
+    sheet = color_row(sheet, rKeys, 0, 'FFFF0000')
     if not is_template:
         for d in data:
             sheet.append( row_by_keys(d, keys, 'value') )
