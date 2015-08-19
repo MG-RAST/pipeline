@@ -7,7 +7,15 @@ from optparse import OptionParser
 from collections import defaultdict
 from lepl.apps.rfc3696 import HttpUrl
 from openpyxl import Workbook
-from openpyxl.style import Color
+
+try:
+    from openpyxl.style import Color
+except ImportError:
+    try:
+        from openpyxl.styles import Color
+    except ImportError:
+        sys.stderr.write("Error: openpyxl package not installed correctly\n")
+        sys.exit(1)
 
 __doc__ = """Script to export metadata from MG-RAST api to xlsx file"""
 
