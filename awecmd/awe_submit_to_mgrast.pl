@@ -172,7 +172,7 @@ if ($mdata && $params->{metadata}) {
     my $import = {node_id => $params->{metadata}, metagenome => $mgids};
     my $result = PipelineAWE::obj_from_url($api."/metadata/import", $auth, $import);
     if ($result->{errors}) {
-        print STDERR "ERROR: Unable to import metadata:\n".$result->{errors}."\n";
+        print STDERR "ERROR: Unable to import metadata:\n".Dumper($result)."\n";
         exit 1;
     }
 }
