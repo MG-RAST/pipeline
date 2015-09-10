@@ -39,7 +39,6 @@ my $help      = 0;
 my $options   = GetOptions (
 		"job=s"       => \$job_id,
 		"psql=s"      => \$psql,
-		"mysql=s"     => \$mysql,
 		"nr_ver=s"    => \$nr_ver,
 		"ann_ver=s"   => \$ann_ver,
 		"api_url=s"   => \$api_url,
@@ -71,26 +70,13 @@ if ($help){
     print STDERR "ERROR: The input postgresql file [$psql] does not exist.\n";
     print STDERR get_usage();
     exit 1;
-}elsif (! -e $mysql){
-    print STDERR "ERROR: The input mysql file [$mysql] does not exist.\n";
-    print STDERR get_usage();
-    exit 1;
 }
 
 # get db variables from enviroment
-my $jdbhost = $ENV{'JOB_DB_HOST'} || undef;
-my $jdbname = $ENV{'JOB_DB_NAME'} || undef;
-my $jdbuser = $ENV{'JOB_DB_USER'} || undef;
-my $jdbpass = $ENV{'JOB_DB_PASS'} || undef;
 my $adbhost = $ENV{'ANALYSIS_DB_HOST'} || undef;
 my $adbname = $ENV{'ANALYSIS_DB_NAME'} || undef;
 my $adbuser = $ENV{'ANALYSIS_DB_USER'} || undef;
 my $adbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
-unless ( defined($jdbhost) && defined($jdbname) && defined($jdbuser) && defined($jdbpass) ) {
-    print STDERR "ERROR: missing job info database ENV variables.\n";
-    print STDERR get_usage();
-    exit 1;
-}
 unless ( defined($adbhost) && defined($adbname) && defined($adbuser) && defined($adbpass) ) {
     print STDERR "ERROR: missing analysis database ENV variables.\n";
     print STDERR get_usage();
@@ -113,11 +99,8 @@ my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 
 # place certs in home dir
 PipelineAWE::run_cmd('tar --no-same-owner --no-same-permissions -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
-PipelineAWE::run_cmd('tar --no-same-owner --no-same-permissions -xf '.$mysql.' -C '.$ENV{'HOME'}, 1);
-my $mspath = $ENV{'HOME'}.'/.mysql/';
 
 # get db handles
-my $jdbh = PipelineJob::get_jobcache_dbh($jdbhost, $jdbname, $jdbuser, $jdbpass, $mspath.'client-key.pem', $mspath.'client-cert.pem', $mspath.'ca-cert.pem');
 my $adbh = PipelineAnalysis::get_analysis_dbh($adbhost, $adbname, $adbuser, $adbpass);
 
 ### update attribute stats
@@ -152,7 +135,9 @@ unlink($post_qc, $search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
 ### JobDB update
 # get JobDB statistics
 print "Retrieving sequence statistics from attributes\n";
-my $job_stats = PipelineJob::get_job_statistics($jdbh, $job_id);
+my $job_info  = PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key);
+my $mgid      = $job_info->{metagenome_id};
+my $job_stats = $job_info->{data};
 # get additional attributes
 my $up_attr = PipelineAWE::read_json($upload.'.json');
 my $qc_attr = PipelineAWE::read_json($qc.'.json');
@@ -181,7 +166,7 @@ $job_stats->{ratio_reads_aa} = $aa_ratio;
 $job_stats->{ratio_reads_rna} = $rna_ratio;
 
 # get sequence type
-my $job_attrs = PipelineJob::get_job_attributes($jdbh, $job_id);
+my $job_attrs = PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key)->{data};
 my $seq_type  = seq_type($job_attrs, $rna_ratio);
 
 # get versions
@@ -194,12 +179,9 @@ my $m5nr_vers = {
 
 # update DB
 print "Updating Job DB with new stats / info\n";
-PipelineJob::set_job_statistics($jdbh, $job_id, $job_stats);
-PipelineJob::set_job_attributes($jdbh, $job_id, $m5nr_vers);
-PipelineJob::set_jobcache_info($jdbh, $job_id, 'sequence_type', $seq_type);
-if ($up_attr->{statistics}{file_size}) {
-    PipelineJob::set_jobcache_info($jdbh, $job_id, 'file_size_raw', $up_attr->{statistics}{file_size});
-}
+PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => $job_stats});
+PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => $m5nr_vers});
+PipelineAWE::obj_from_url($api_url."/metagenome/$mgid/changesequencetype/$seq_type", $api_key);
 
 ### create metagenome statistics node
 # get stats from inputs

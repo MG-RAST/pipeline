@@ -65,12 +65,6 @@ our $template_keywords = {
     'm5rna_download_url'  => "",
     'm5rna_clust_download_url' => "",
     
-    # jobcache db for pipeline
-    'job_dbhost' => $job_dbhost,
-    'job_dbname' => $job_dbname,
-    'job_dbuser' => "",
-    'job_dbpass' => "",
-    
     # analysis db
     'analysis_dbhost' => $analysis_dbhost,
     'analysis_dbname' => $analysis_dbname,
