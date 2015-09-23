@@ -39,6 +39,7 @@ my $help      = 0;
 my $options   = GetOptions (
 		"job=s"       => \$job_id,
 		"psql=s"      => \$psql,
+		"mysql=s"     => \$mysql,
 		"nr_ver=s"    => \$nr_ver,
 		"ann_ver=s"   => \$ann_ver,
 		"api_url=s"   => \$api_url,
