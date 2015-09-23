@@ -105,6 +105,9 @@ PipelineAWE::run_cmd('tar --no-same-owner --no-same-permissions -xf '.$psql.' -C
 my $adbh = PipelineAnalysis::get_analysis_dbh($adbhost, $adbname, $adbuser, $adbpass);
 
 ### update attribute stats
+my $done_attr = PipelineAWE::get_userattr();
+my $mgid = $done_attr->{id};
+
 # get attributes
 print "Computing file statistics and updating attributes\n";
 my $pq_attr = PipelineAWE::read_json($post_qc.'.json');
@@ -136,9 +139,7 @@ unlink($post_qc, $search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
 ### JobDB update
 # get JobDB statistics
 print "Retrieving sequence statistics from attributes\n";
-my $job_info  = PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key);
-my $mgid      = $job_info->{metagenome_id};
-my $job_stats = $job_info->{data};
+my $job_stats = PipelineAWE::obj_from_url($api_url."/job/statistics/".$mgid, $api_key)->{data};
 # get additional attributes
 my $up_attr = PipelineAWE::read_json($upload.'.json');
 my $qc_attr = PipelineAWE::read_json($qc.'.json');
@@ -167,7 +168,7 @@ $job_stats->{ratio_reads_aa} = $aa_ratio;
 $job_stats->{ratio_reads_rna} = $rna_ratio;
 
 # get sequence type
-my $job_attrs = PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key)->{data};
+my $job_attrs = PipelineAWE::obj_from_url($api_url."/job/attributes/".$mgid, $api_key)->{data};
 my $seq_type  = seq_type($job_attrs, $rna_ratio);
 
 # get versions
@@ -223,17 +224,15 @@ PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "
 
 # upload of solr data
 print "Outputing and POSTing solr file\n";
-my $done_attr = PipelineAWE::get_userattr();
 my $metadata  = PipelineAWE::get_metadata($done_attr->{id}, $api_url, $api_key);
 my $solr_file = solr_dump($job_id, $seq_type, $job_attrs, $done_attr, $mgstats, $metadata);
 solr_post($solr_url, $solr_col, $solr_file);
 
 # done done !!
-PipelineJob::set_jobcache_info($jdbh, $job_id, 'viewable', 1);
+PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
 
 # cleanup
 #PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
-#PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.mysql');
 
 exit 0;
 
