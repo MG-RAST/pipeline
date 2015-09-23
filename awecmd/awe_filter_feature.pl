@@ -72,6 +72,18 @@ my $run_dir = getcwd;
 my $common  = "common.ids.".time();
 my $members = "member.ids.".time();
 
+if (-z $in_sim) {
+    # no rna sims, filtered is same as genecalled
+    my $filter_stats = PipelineAWE::get_seq_stats($in_seq, 'fasta', 1);
+    PipelineAWE::create_attr($output.'.json', $filter_stats);
+
+    open(OUT, ">$output") || die "Can't open file $output!\n";
+    foreach my $i (1..int($filter_stats->{sequence_count})) {
+        print OUT "$i\n";
+    }
+    exit 0;
+}
+
 # get sorted unique sim ids
 PipelineAWE::run_cmd("cut -f1 $in_sim | sort -u -T $run_dir -S ${mem}M > $in_sim.sort.ids", 1);
 PipelineAWE::run_cmd("rm $in_sim");
