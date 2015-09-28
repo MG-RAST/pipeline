@@ -135,7 +135,7 @@ def update_e_bin(exp, abun, bins):
 
 def get_abundance(frag, amap):
     abun = amap[frag] if frag in amap else 1
-    return math.ceil(abun)
+    return int(math.ceil(abun))
 
 def get_exponent(e_val):
     if e_val == 0:
