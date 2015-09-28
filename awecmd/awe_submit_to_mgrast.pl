@@ -171,9 +171,24 @@ if (@$mgids == 0) {
 if ($mdata && $params->{metadata}) {
     my $import = {node_id => $params->{metadata}, metagenome => $mgids};
     my $result = PipelineAWE::obj_from_url($api."/metadata/import", $auth, $import);
-    if ($result->{errors} && (@{$result->{errors}} > 0)) {
-        print STDERR "ERROR: Unable to import metadata:\n".join("\n", @{$result->{errors}})."\n";
+    # no success
+    if (scalar(@{$result->{added}}) == 0) {
+        if ($result->{errors} && (@{$result->{errors}} > 0)) {
+            print STDERR "ERROR: Unable to import metadata:\n".join("\n", @{$result->{errors}})."\n";
+        } else {
+            print STDERR "ERROR: Unable to import any metadata\n";
+        }
         exit 1;
+    }
+    # partial success
+    if (scalar(@{$result->{added}}) < scalar(@$mgids)) {
+        my %success = map { $_, 1 } @{$result->{added}};
+        print STDERR "Warning: unable to import metadata for the following:\n";
+        foreach my $m (@$mgids) {
+            unless ($success{$m}) {
+                print STDERR $m."\n";
+            }
+        }
     }
 }
 
