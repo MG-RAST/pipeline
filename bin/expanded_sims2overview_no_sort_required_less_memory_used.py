@@ -135,7 +135,12 @@ def update_e_bin(exp, abun, bins):
 
 def get_abundance(frag, amap):
     abun = amap[frag] if frag in amap else 1
-    return int(math.ceil(abun))
+    if np.isinf(val) or np.isnan(val):
+        return 0
+    elif np.int(val) == val:
+        return abun
+    else:
+        return np.int(math.ceil(abun))
 
 def get_exponent(e_val):
     if e_val == 0:
@@ -156,7 +161,9 @@ def get_exponent(e_val):
 
 # round to nearest thousandth
 def str_round(val):
-    if int(val) == val:
+    if np.isinf(val) or np.isnan(val):
+        return "0"
+    elif np.int(val) == val:
         return str(val)
     else:
         return "%.3f"%(math.ceil(val * 1000) / 1000)
