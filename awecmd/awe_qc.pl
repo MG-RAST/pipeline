@@ -87,7 +87,7 @@ my $a_text  = ($assembled == 1) ? "yes" : "no";
 my $seq_stats = PipelineAWE::get_seq_stats($infile, $format, undef, $seq_out);
 $seq_stats->{file_size} = -s $infile;
 
-if ($assembled != 1) {
+if (($assembled != 1) || ($format eq 'fastq')) {
     # create drisee table
     PipelineAWE::run_cmd("drisee -v -p $proc -t $format -d $run_dir -f $infile $d_stats > $d_info", 1);
     
@@ -115,7 +115,6 @@ if ($assembled != 1) {
     PipelineAWE::run_cmd("touch $c_stats");
     # create assembly abundance file
     my $cov_found_count = 0;
-    my $total_reads = 0;
     open ABUN, ">$a_file" || exit 1;
     open SEQS, $infile || exit 1;
     while (my $line = <SEQS>) {
