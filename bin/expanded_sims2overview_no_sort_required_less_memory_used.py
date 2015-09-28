@@ -135,9 +135,9 @@ def update_e_bin(exp, abun, bins):
 
 def get_abundance(frag, amap):
     abun = amap[frag] if frag in amap else 1
-    if np.isinf(val) or np.isnan(val):
+    if np.isinf(abun) or np.isnan(abun):
         return 0
-    elif np.int(val) == val:
+    elif np.int(abun) == abun:
         return abun
     else:
         return np.int(math.ceil(abun))
