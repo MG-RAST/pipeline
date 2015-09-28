@@ -115,6 +115,7 @@ if (($assembled != 1) || ($format eq 'fastq')) {
     PipelineAWE::run_cmd("touch $c_stats");
     # create assembly abundance file
     my $cov_found_count = 0;
+    my $total_reads = 0;
     open ABUN, ">$a_file" || exit 1;
     open SEQS, $infile || exit 1;
     while (my $line = <SEQS>) {
