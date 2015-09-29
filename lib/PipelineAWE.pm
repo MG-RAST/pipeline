@@ -78,15 +78,6 @@ sub obj_from_url {
     }
 }
 
-sub get_metadata {
-    my ($mgid, $base_url, $key) = @_;
-    unless ($base_url) {
-        $base_url = $default_api;
-    }
-    my $get_url = $base_url.'/metadata/export/'.$mgid;
-    return obj_from_url($get_url, $key);
-}
-
 sub get_user_info {
     my ($user_id, $base_url, $key) = @_;
     unless ($base_url) {
