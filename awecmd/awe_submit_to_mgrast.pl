@@ -76,6 +76,7 @@ foreach my $miss (keys %$no_inbox) {
 # populate to_submit from in_inbox or mg_names
 # if metadata, check that input files in metadata
 # extract metagenome names
+# need to create project before submitted
 if ($mdata && $params->{metadata}) {
     if ($mdata->{id} && ($mdata->{id} =~ /^mgp/)) {
         $project = $mdata->{id};
@@ -110,17 +111,17 @@ if ($mdata && $params->{metadata}) {
     foreach my $miss (keys %$no_metadata) {
         print STDOUT "no_metadata\t$miss\n";
     }
-} elsif ($project) {
-    while (my ($basename, $file_name) = each %$in_inbox) {
-        $to_submit->{$file_name} = $basename;
+}
+if ($project) {
+    unless ($mdata && $params->{metadata}) {
+        while (my ($basename, $file_name) = each %$in_inbox) {
+            $to_submit->{$file_name} = $basename;
+        }
     }
     my $pinfo = PipelineAWE::obj_from_url($api."/project/".$project, $auth);
     unless ($project eq $pinfo->{id}) {
         print STDERR "ERROR: project $project does not exist";
     }
-} else {
-    print STDERR "ERROR: Missing metadata or project.\n";
-    exit 1;
 }
 
 my $submitted = {}; # file_name => [name, awe_id, mg_id]
@@ -151,10 +152,8 @@ FILES: foreach my $fname (keys %$to_submit) {
     $create_data->{input_id}      = $info->{id};
     $create_data->{submission}    = $params->{submission};
     my $create_job = PipelineAWE::obj_from_url($api."/job/create", $auth, $create_data);
-    # project ?
-    if ($project) {
-        PipelineAWE::obj_from_url($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
-    }
+    # project
+    PipelineAWE::obj_from_url($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
     # submit it
     my $submit_job = PipelineAWE::obj_from_url($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
