@@ -56,19 +56,23 @@ sub file_to_array {
 sub obj_from_url {
     my ($url, $key, $data) = @_;
     my $content = undef;
+    my $result  = undef;
+    my @args    = $key ? ('Auth', $key) : ();
+    if ($data && ref($data)) {
+        push @args, ('Content-Type', 'application/json');
+        $result = $agent->post($url, @args, 'Content' => $json->encode($data));
+    } else {
+        $result = $agent->get($url, @args);
+    }
+    if (! ref($result)) {
+        print STDERR "ERROR: Unable to connect to $url\n";
+        exit 1;
+    }
     eval {
-        my $result = undef;
-        my @args = $key ? ('Auth', $key) : ();
-        if ($data && ref($data)) {
-            push @args, ('Content-Type', 'application/json');
-            $result = $agent->post($url, @args, 'Content' => $json->encode($data));
-        } else {
-            $result = $agent->get($url, @args);
-        }
         $content = $json->decode( $result->content );
     };
     if ($@ || (! ref($content))) {
-        print STDERR "Unable to connect to $url\n";
+        print STDERR "ERROR: ".$result->content."\n";
         exit 1;
     } elsif ($content->{'ERROR'}) {
         print STDERR "From $url: ".$content->{'ERROR'}."\n";
