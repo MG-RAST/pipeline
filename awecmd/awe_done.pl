@@ -84,17 +84,6 @@ unless ( defined($adbhost) && defined($adbname) && defined($adbuser) && defined(
     exit 1;
 }
 
-# get solr variables
-my $solr_url = $ENV{'SOLR_SERVER'} || undef;
-my $solr_col = $ENV{'SOLR_COLLECTION'} || undef;
-unless ( defined($solr_url) && defined($solr_col) ) {
-    print STDERR "ERROR: missing solr server ENV variable.\n";
-    print STDERR get_usage();
-    exit 1;
-}
-$solr_url = "http://140.221.76.68:8983";
-$solr_col = "metagenome_1";
-
 # get api variable
 my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 
@@ -147,9 +136,9 @@ my $de_attr = PipelineAWE::read_json($derep.'.json');
 my $pp_attr = PipelineAWE::read_json($preproc.'.json');
 my $fl_attr = PipelineAWE::read_json($filter.'.json');
 my $on_attr = PipelineAWE::read_json($ontol.'.json');
+
 # populate job_stats
 $job_stats->{sequence_count_dereplication_removed} = $de_attr->{statistics}{sequence_count} || '0';  # derep fail
-$job_stats->{alpha_diversity_shannon}  = PipelineAnalysis::get_alpha_diversity($adbh, $job_id, $ann_ver);
 $job_stats->{read_count_processed_rna} = $sr_attr->{statistics}{sequence_count} || '0';      # pre-cluster / rna search
 $job_stats->{read_count_processed_aa}  = $gc_attr->{statistics}{sequence_count} || '0';      # pre-cluster / genecall
 $job_stats->{sequence_count_processed_rna} = $rc_attr->{statistics}{sequence_count} || '0';  # post-cluster / rna clust
@@ -162,6 +151,11 @@ map { $job_stats->{$_.'_preprocessed_rna'} = $pp_attr->{statistics}{$_} } keys %
 map { $job_stats->{$_.'_preprocessed'}     = $pq_attr->{statistics}{$_} } keys %{$pq_attr->{statistics}};  # screen seq stats
 map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %{$rm_attr->{statistics}};  # rna clust stats
 map { $job_stats->{$_.'_processed_aa'}     = $am_attr->{statistics}{$_} } keys %{$am_attr->{statistics}};  # aa clust stats
+
+# diversity computation
+my $alpha_rare = PipelineAWE::obj_from_url($api_url."/compute/rarefaction/".$mgid."?alpha=1&level=species&ann_ver=".$ann_ver."&seq_num=".$job_stats->{sequence_count_raw}, $api_key)->{data};
+$job_stats->{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
+
 # read ratios
 my ($aa_ratio, $rna_ratio) = read_ratios($job_stats);
 $job_stats->{ratio_reads_aa} = $aa_ratio;
@@ -191,14 +185,12 @@ print "Building / computing metagenome statistics file\n";
 my $u_stats = PipelineAWE::read_json($upload);
 my $q_stats = PipelineAWE::read_json($qc);
 my $s_stats = PipelineAWE::read_json($source);
-my $s_map   = PipelineAnalysis::get_sources($adbh);
-my %s_data  = map { $s_map->{$_}, $s_stats->{$_} } keys %$s_stats;
-# get stats from DB
-my $taxa = {};
-foreach my $t (('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')) {
-   my $other = ($t eq 'domain') ? 1 : 0;
-   $taxa->{$t} = PipelineAnalysis::get_taxa_abundances($adbh, $job_id, $t, $other, $ann_ver);
-}
+my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
+my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
+
+# get stats from API
+my $abundances = PipelineAWE::obj_from_url($api_url."/job/abundance/".$mgid."?type=all&ann_ver=".$ann_ver, $api_key)->{data};
+
 # build stats obj
 my $mgstats = {
     gc_histogram => {
@@ -211,22 +203,26 @@ my $mgstats = {
     },
     qc => $q_stats,
     source => \%s_data,
-    taxonomy => $taxa,
-    function => PipelineAnalysis::get_function_abundances($adbh, $job_id, $ann_ver),
-    ontology => PipelineAnalysis::get_ontology_abundances($adbh, $job_id, $ann_ver),
-    rarefaction => PipelineAnalysis::get_rarefaction_xy($adbh, $job_id, $job_stats->{sequence_count_raw}, $ann_ver),
+    taxonomy => $abundances->{taxonomy},
+    function => $abundances->{function},
+    ontology => $abundances->{ontology},
+    rarefaction => $alpha_rare->{rarefaction};
     sequence_stats => $job_stats
 };
+
 # output stats object
 print "Outputing statistics file\n";
 PipelineAWE::print_json($job_id.".statistics.json", $mgstats);
 PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "statistics", file_format => "json"});
 
 # upload of solr data
-print "Outputing and POSTing solr file\n";
-my $metadata  = PipelineAWE::get_metadata($done_attr->{id}, $api_url, $api_key);
-my $solr_file = solr_dump($job_id, $seq_type, $job_attrs, $done_attr, $mgstats, $metadata);
-solr_post($solr_url, $solr_col, $solr_file);
+print "POSTing solr data\n";
+my $solrdata = {
+    sequence_stats => $mgstats->{sequence_stats},
+    function => [ map {$_->[0]} @{$mgstats->{function}} ],
+    organism => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ]
+};
+PipelineAWE::obj_from_url($api_url."/job/solr/".$mgid, $api_key, $solrdata);
 
 # done done !!
 PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
@@ -267,110 +263,4 @@ sub seq_type {
     else {
         return ($rna_ratio > 0.25) ? 'MT' : 'WGS';
     }
-}
-
-sub solr_dump {
-    my ($job, $seq_type, $jobattr, $mginfo, $mgstats, $metadata) = @_;
-    
-    # top level data
-    my $mgid = $mginfo->{id};
-    my $solr_data = {
-        job                => int($job),
-        id                 => $mgid,
-        id_sort            => $mgid,
-        status             => $mginfo->{status},
-        status_sort        => $mginfo->{status},
-        created            => solr_time_format($mginfo->{created}),
-        created_sort       => solr_time_format($mginfo->{created}),
-        name               => $mginfo->{name},
-        name_sort          => $mginfo->{name},
-        project_id         => $mginfo->{project_id},
-        project_id_sort    => $mginfo->{project_id},
-        project_name       => $mginfo->{project_name},
-        project_name_sort  => $mginfo->{project_name},
-        sequence_type      => $seq_type,
-        sequence_type_sort => $seq_type,
-        seq_method         => $jobattr->{sequencing_method_guess},
-        seq_method_sort    => $jobattr->{sequencing_method_guess},
-        version            => 1,
-        function           => [ map {$_->[0]} @{$mgstats->{function}} ],
-        organism           => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ],
-        md5                => [ keys %{$PipelineAnalysis::md5_abundance} ]
-    };
-    # seq stats
-    while (my ($key, $val) = each(%{$mgstats->{sequence_stats}})) {
-        if (looks_like_number($val)) {
-            if ($key =~ /count/ || $key =~ /min/ || $key =~ /max/) {
-                $solr_data->{$key.'_l'} = $val * 1;
-            } else {
-                $solr_data->{$key.'_d'} = $val * 1.0;
-            }
-        }
-    }
-    # mixs metadata
-    if ($metadata && exists($metadata->{mixs})) {
-        while (my ($key, $val) = each(%{$metadata->{mixs}})) {
-            if ($val) {
-                $solr_data->{$key} = $val;
-                $solr_data->{$key.'_sort'} = $val;
-            }
-        }
-    }
-    # full metadata
-    foreach my $cat (('project', 'sample', 'env_package', 'library')) {
-        eval {
-            if ($metadata && exists($metadata->{$cat}) && $metadata->{$cat}{id} && $metadata->{$cat}{name} && $metadata->{$cat}{data}) {
-                $solr_data->{$cat.'_id'} = $metadata->{$cat}{id};
-                $solr_data->{$cat.'_id_sort'} = $metadata->{$cat}{id};
-                $solr_data->{$cat.'_name'} = $metadata->{$cat}{name};
-                $solr_data->{$cat} = join(", ", @{$metadata->{$cat}{data}});
-            }
-        };
-    }
-    
-    # print
-    my $solr_str  = $PipelineAWE::json->encode($solr_data);
-    my $solr_file = $job.'.solr.json';
-    open(SOLR, ">$solr_file") or die "Couldn't open file: $!";
-    print SOLR qq({
-    "delete": { "id": "$mgid" },
-    "commit": { "expungeDeletes": "true" },
-    "add": {
-        "doc": $solr_str
-    }
-});
-    close(SOLR);
-    return $solr_file;
-}
-
-sub solr_post {
-    my ($solr_url, $solr_col, $solr_file) = @_;
-    
-    # post commands and data
-    my $post_url = "$solr_url/solr/$solr_col/update/json?commit=true";
-    my $req = StreamingUpload->new(
-        POST => $post_url,
-        path => $solr_file,
-        headers => HTTP::Headers->new(
-            'Content-Type' => 'application/json',
-            'Content-Length' => -s $solr_file,
-        )
-    );
-    $PipelineAWE::agent->timeout(7200);
-    my $response = $PipelineAWE::agent->request($req);
-    if ($response->{"_msg"} ne 'OK') {
-        my $content = $response->{"_content"};
-        print STDERR "solr POST failed: ".$content."\n";
-        exit 1;
-    }
-}
-
-sub solr_time_format {
-    my ($dt) = @_;
-    if ($dt =~ /^(\d{4}\-\d\d\-\d\d)[ T](\d\d\:\d\d\:\d\d)/) {
-        $dt = $1.'T'.$2.'Z';
-    } elsif ($dt =~ /^(\d{4}\-\d\d\-\d\d)/) {
-        $dt = $1.'T00:00:00Z'
-    }
-    return $dt;
 }
