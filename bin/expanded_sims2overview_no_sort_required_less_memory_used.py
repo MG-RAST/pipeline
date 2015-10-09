@@ -103,11 +103,7 @@ def abundance_map(afile, cfile):
                 #ids = tabs[2].split(',') # old way
                 #ids.append(tabs[1])      # old way
                 ids = tabs[1].split(',') # new way
-                for i in ids:
-                    if i in data:
-                        data[tabs[0]] += data[i]
-                    else:
-                        data[tabs[0]] += 1
+                data[tabs[0]] += len(ids)
     return data
 
 def get_e_bin(val):
