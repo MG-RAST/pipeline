@@ -422,12 +422,7 @@ def main(args):
                     if abun < 1:
                         continue
                     data[aid][source-1]['source'] = source
-                    try:
-                        data[aid][source-1]['abun'] += abun
-                    except:
-                        print frag, amap[frag]
-                        print aid, source-1, data[aid][source-1]['source'], data[aid][source-1]['abun'], abun
-                        return 1
+                    data[aid][source-1]['abun'] += abun
                     data[aid][source-1]['esum'] += abun * eval_exp
                     data[aid][source-1]['esos'] += abun * eval_exp * eval_exp
                     data[aid][source-1]['lsum'] += abun * length
