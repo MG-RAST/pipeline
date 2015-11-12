@@ -98,7 +98,7 @@ def mgrast_api(request):
 
 def get_envo_version(pdata):
     global ENVO_VER, CV_PARAM
-    if "envo_release" not in pdata:
+    if ("envo_release" not in pdata) or (not pdata["envo_release"]):
         ENVO_VER = CV_PARAM["latest_version"]["biome"]
         pdata["envo_release"] = ENVO_VER
         #print "using latest ENVO version %s"%(ENVO_VER)
@@ -285,8 +285,8 @@ def xls_to_mdraw(xfile, dupe, inc):
 def sheet_to_table(sheet, source):
     table = []
     if source == 'xlsx':
-        maxRow = sheet.get_highest_row()
-        maxCol = sheet.get_highest_column()
+        maxRow = sheet.max_row
+        maxCol = sheet.max_column
         for r in range(maxRow):
             row = []
             for c in range(maxCol):
