@@ -6,7 +6,6 @@ no warnings('once');
 
 use PipelineAWE;
 use PipelineJob;
-use PipelineAnalysis;
 use StreamingUpload;
 
 use Scalar::Util qw(looks_like_number);
@@ -73,25 +72,8 @@ if ($help){
     exit 1;
 }
 
-# get db variables from enviroment
-my $adbhost = $ENV{'ANALYSIS_DB_HOST'} || undef;
-my $adbname = $ENV{'ANALYSIS_DB_NAME'} || undef;
-my $adbuser = $ENV{'ANALYSIS_DB_USER'} || undef;
-my $adbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
-unless ( defined($adbhost) && defined($adbname) && defined($adbuser) && defined($adbpass) ) {
-    print STDERR "ERROR: missing analysis database ENV variables.\n";
-    print STDERR get_usage();
-    exit 1;
-}
-
 # get api variable
 my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
-
-# place certs in home dir
-PipelineAWE::run_cmd('tar --no-same-owner --no-same-permissions -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
-
-# get db handles
-my $adbh = PipelineAnalysis::get_analysis_dbh($adbhost, $adbname, $adbuser, $adbpass);
 
 ### update attribute stats
 my $done_attr = PipelineAWE::get_userattr();
