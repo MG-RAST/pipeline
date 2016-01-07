@@ -1,5 +1,6 @@
 FROM mgrast/base:latest
-RUN apt-get install -y curl subversion \
+RUN apt-get update \
+    && apt-get install -y curl subversion \
 	&& apt-get autoremove -y \
 	; apt-get clean all
 RUN pip install sphinx

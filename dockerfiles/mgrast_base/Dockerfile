@@ -1,6 +1,6 @@
 # MG-RAST dockerfiles
 
-FROM	ubuntu:14.04
+FROM	ubuntu:15.10
 MAINTAINER The MG-RAST team
 
 RUN apt-get update && apt-get install -y \
