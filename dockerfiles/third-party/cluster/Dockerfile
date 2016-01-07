@@ -1,4 +1,4 @@
-FROM mgrast/base:latest
+FROM mgrast/pipeline-base:latest
 RUN cd /root \
 	&& wget "https://cdhit.googlecode.com/files/cd-hit-v4.6.1-2012-08-27.tgz" \
 	&& tar -zxvf cd-hit-v4.6.1-2012-08-27.tgz \

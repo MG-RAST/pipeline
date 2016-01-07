@@ -1,4 +1,4 @@
-FROM mgrast/base:latest
+FROM mgrast/pipeline-base:latest
 RUN apt-get update \
     && apt-get install -y zip \
     && apt-get autoremove -y \
