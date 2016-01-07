@@ -7,10 +7,11 @@ docker rmi mgrast/base:latest
 set -e
 set -x
 
-docker build --no-cache --tag mgrast/base:${MGRASTVERSION} mgrast_base
+docker build --no-cache --tag mgrast/pipeline-base:${MGRASTVERSION} mgrast_base
 
 docker tag mgrast/base:${MGRASTVERSION} mgrast/base:latest
 
 cd third-party
-for i in * ; do docker build --no-cache --tag mgrast/${i}:${MGRASTVERSION} ${i} ; done
-
+for i in *
+    do docker build --no-cache --tag mgrast/pipeline-${i}:${MGRASTVERSION} ${i}
+done
