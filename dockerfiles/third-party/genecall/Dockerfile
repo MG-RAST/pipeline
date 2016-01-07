@@ -1,4 +1,4 @@
-FROM mgrast/base:latest
+FROM mgrast/pipeline-base:latest
 RUN cd /root \
 	&& git clone https://github.com/wltrimbl/FGS.git FragGeneScan \
 	&& cd FragGeneScan \

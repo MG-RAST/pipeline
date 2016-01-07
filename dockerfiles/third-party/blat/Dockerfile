@@ -1,4 +1,4 @@
-FROM mgrast/base:latest
+FROM mgrast/pipeline-base:latest
 ADD superblat /root/bin/superblat
 RUN chmod +x /root/bin/superblat
 RUN apt-get update \
