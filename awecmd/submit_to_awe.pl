@@ -43,7 +43,6 @@ my $use_docker = 0;
 my $help       = 0;
 my $pipeline   = "";
 my $type       = "";
-my $production = 1; # indicates that this is production
 
 my $options = GetOptions (
     "job_id=s"       => \$job_id,
@@ -59,7 +58,6 @@ my $options = GetOptions (
 	"clientgroups=s" => \$clientgroups,
 	"pipeline=s"     => \$pipeline,
 	"type=s"         => \$type,
-	"production!"    => \$production,
 	"help!"          => \$help
 );
 
@@ -75,6 +73,14 @@ if ($help) {
 } elsif ($input_file && (! -e $input_file)) {
     print STDERR "ERROR: The input file [$input_file] does not exist.\n";
     exit 1;
+}
+
+# default is production
+unless ($pipeline) {
+    $pipeline = "mgrast-prod";
+}
+unless ($type) {
+    $type = "metagenome";
 }
 
 # set obj handles
@@ -232,39 +238,18 @@ $vars->{assembled}      = exists($jattr->{assembled}) ? $jattr->{assembled} : 0;
 $vars->{dereplicate}    = exists($jopts->{dereplicate}) ? $jopts->{dereplicate} : 1;
 $vars->{bowtie}         = exists($jopts->{bowtie}) ? $jopts->{bowtie} : 1;
 $vars->{screen_indexes} = exists($jopts->{screen_indexes}) ? $jopts->{screen_indexes} : 'h_sapiens';
-
-if ($production) {
-	unless (defined $pipeline && $pipeline ne "") {
-		$pipeline = "mgrast-prod"; # production default
-	}
-
-	unless (defined $type && $type ne "") {
-		$type = "metagenome"; # production default
-	}
-}
- 
-if (defined $pipeline && $pipeline ne "") {
-	$vars->{'pipeline'} = $pipeline;
-} else {
-	die "template variable \"pipeline\" not defined";
-}
-
-if (defined $type && $type ne "") {
-	$vars->{'type'} = $type;
-} else {
-	die "template variable \"type\" not defined";
-}
-
+$vars->{pipeline}       = $pipeline;
+$vars->{type}           = $type;
 
 if (defined $clientgroups) {
-	$vars->{'clientgroups'} = $clientgroups;
+	$vars->{clientgroups} = $clientgroups;
 }
 
-$vars->{'docker_image_version'} = 'latest'; #'20141113c';
+$vars->{docker_image_version} = 'latest';
 if ($use_docker) {
-	$vars->{'docker_switch'} = '';
+	$vars->{docker_switch} = '';
 } else {
-	$vars->{'docker_switch'} = '_'; # disables these entries
+	$vars->{docker_switch} = '_'; # disables these entries
 }
 
 # set priority
@@ -381,7 +366,6 @@ my $workflow_str = "";
 # replace variables (reads from $template_str and writes to $workflow_str)
 $tpage->process(\$template_str, $vars, \$workflow_str) || die $tpage->error()."\n";
 
-
 #write to file for debugging puposes (first time)
 my $workflow_file = $PipelineAWE_Conf::temp_dir."/".$job_id.".awe_workflow.json";
 write_file($workflow_file, $workflow_str);
@@ -398,53 +382,11 @@ if ($@) {
 	exit 1;
 }
 
-
-#modifications on workflow hash
-unless ($production) {
-	#remove last 6 steps (1x awe_done.pl and 5 x awe_loaddb.pl)
-	
-	my @task_array = @{$workflow_hash->{'tasks'}};
-
-	
-	my $taskcount = @task_array;
-	
-	if ($taskcount < 10) {
-		die;
-	}
-	
-	my $removedtask = pop(@task_array);
-	
-	unless ($removedtask->{'cmd'}->{'name'} eq 'awe_done.pl') {
-		die;
-	}
-	
-	for (my $i = 0 ; $i < 5 ; $i++) {
-		
-		$removedtask = pop(@task_array);
-		
-		unless ($removedtask->{'cmd'}->{'name'} eq 'awe_loaddb.pl') {
-			my $found_name  = $removedtask->{'cmd'}->{'name'} || "undef";
-			die "expected awe_loaddb.pl but found ".$found_name;
-		}
-	}
-	
-	
-	$workflow_hash->{'tasks'} = \@task_array;
-	
-	
-}
-
-
 #transform workflow hash into json string
 $workflow_str = $json->encode($workflow_hash);
 
-
-
 #write to file for debugging puposes (second time)
 write_file($workflow_file, $workflow_str);
-
-
-
 
 # test mode
 if ($no_start) {
