@@ -23,6 +23,8 @@ my $awe_url   = "";
 my $shock_url = "";
 my $template  = "";
 my $help      = 0;
+my $use_docker   = 0;
+my $clientgroups = "";
 
 my $options = GetOptions (
         "job_id=s"    => \$job_id,
@@ -30,6 +32,8 @@ my $options = GetOptions (
         "awe_url=s"   => \$awe_url,
         "shock_url=s" => \$shock_url,
         "template=s"  => \$template,
+        "use_docker!"    => \$use_docker, # enables docker specific workflow entries, dockerimage and environ
+    	"clientgroups=s" => \$clientgroups,
         "help!"       => \$help
 );
 
@@ -121,8 +125,14 @@ PipelineJob::set_jobcache_info($jobdb, $job_id, 'viewable', 0);
 
 # submit job
 my $cmd_str = $PipelineAWE_Conf::BASE."/awecmd/submit_to_awe.pl --job_id $job_id --input_node $input_node";
-if($template ne "") {
+if ($template ne "") {
     $cmd_str .= " --template $template";
+}
+if ($clientgroups ne "") {
+	$cmd_str .= " --clientgroups $clientgroups";
+}
+if ($use_docker) {
+	$cmd_str .= " --use_docker";
 }
 my $status = system($cmd_str);
 if ($status != 0) {
@@ -152,7 +162,7 @@ foreach my $n (@nids) {
 }
 
 sub get_usage {
-    return "USAGE: resubmit_to_awe.pl -job_id=<job identifier> [-awe_id=<awe job id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file>]\n";
+    return "USAGE: resubmit_to_awe.pl -job_id=<job identifier> [-awe_id=<awe job id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -clientgroups=<group list> -use_docker]\n";
 }
 
 # enable hash-resolving in the JSON->encode function

@@ -428,7 +428,7 @@ print "awe job (".$ares->{data}{jid}.")\t".$ares->{data}{id}."\n";
 PipelineJob::set_job_attributes($jobdb, $job_id, {"pipeline_id" => $awe_id});
 
 sub get_usage {
-    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-submit_id=<submission id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -no_start]\n";
+    return "USAGE: submit_to_awe.pl -job_id=<job identifier> -input_file=<input file> -input_node=<input shock node> [-submit_id=<submission id> -awe_url=<awe url> -shock_url=<shock url> -template=<template file> -clientgroups=<group list> -no_start -use_docker]\n";
 }
 
 # enable hash-resolving in the JSON->encode function
