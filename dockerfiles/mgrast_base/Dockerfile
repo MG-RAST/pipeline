@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y \
 	libberkeleydb-perl \
 	libemail-simple-perl \
 	libemail-sender-perl
-RUN pip install biopython psycopg2 gspread openpyxl numpy
+RUN pip install biopython psycopg2 gspread openpyxl numpy leveldb
 RUN cd /root \
 	; mkdir bin \
 	; git clone https://github.com/MG-RAST/pipeline
