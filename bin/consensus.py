@@ -76,9 +76,9 @@ def populate(infile, stype, Nmax, Sratio):
     for i in range(0, min(len(seq), Nmax)):
       if seq[i] == "A":
         a[i] += 1
-      elif seq[i] == "G":
-        c[i] += 1
       elif seq[i] == "C":
+        c[i] += 1
+      elif seq[i] == "G":
         g[i] += 1
       elif seq[i] == "T":
         t[i] += 1
