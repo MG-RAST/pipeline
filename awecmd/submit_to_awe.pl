@@ -198,7 +198,7 @@ if ($input_file) {
 print "upload input to Shock... ";
 my $spost = $agent->post(
     $vars->{shock_url}.'/node',
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token,
+    'Authorization', $PipelineAWE_Conf::shock_pipeline_token,
     'Content_Type', 'multipart/form-data',
     'Content', $content
 );
@@ -398,7 +398,7 @@ if ($no_start) {
 my $apost = $agent->post(
     $awe_url.'/job',
     'Datatoken', $PipelineAWE_Conf::shock_pipeline_token,
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token,
+    'Authorization', $PipelineAWE_Conf::awe_pipeline_token,
     'Content_Type', 'multipart/form-data',
     #'Content', [ upload => [$workflow_file] ]
 	'Content', [ upload => [undef, "n/a", Content => $workflow_str] ]
