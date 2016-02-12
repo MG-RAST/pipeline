@@ -72,7 +72,7 @@ my @nids = ();
 my $gres = undef;
 my $nget = $agent->get(
     $vars->{shock_url}.'/node?query&type=metagenome&limit=0&job_id='.$job_id,
-    'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token
+    'Authorization', $PipelineAWE_Conf::shock_pipeline_token
 );
 eval {
     $gres = $json->decode($nget->content);
@@ -105,7 +105,7 @@ if ($awe_id) {
     my $ares = undef;
     my $adel = $agent->delete(
         $awe_url.'/job/'.$awe_id,
-        'Authorization', 'OAuth '.$PipelineAWE_Conf::awe_pipeline_token
+        'Authorization', $PipelineAWE_Conf::awe_pipeline_token
     );
     eval {
         $ares = $json->decode($adel->content);
@@ -146,7 +146,7 @@ foreach my $n (@nids) {
     my $dres = undef;
     my $ndel = $agent->delete(
         $vars->{shock_url}.'/node/'.$n,
-        'Authorization', 'OAuth '.$PipelineAWE_Conf::shock_pipeline_token
+        'Authorization', $PipelineAWE_Conf::shock_pipeline_token
     );
     eval {
         $dres = $json->decode($ndel->content);
