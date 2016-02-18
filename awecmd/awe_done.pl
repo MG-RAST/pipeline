@@ -200,7 +200,7 @@ my $solrdata = {
     function => [ map {$_->[0]} @{$mgstats->{function}} ],
     organism => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ]
 };
-PipelineAWE::obj_from_url($api_url."/job/solr/".$mgid, $api_key, $solrdata);
+PipelineAWE::obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
 # done done !!
 PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
