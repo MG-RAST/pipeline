@@ -66,10 +66,6 @@ if ($help){
     print STDERR "ERROR: A job ID is required.\n";
     print STDERR get_usage();
     exit 1;
-}elsif (! -e $psql){
-    print STDERR "ERROR: The input postgresql file [$psql] does not exist.\n";
-    print STDERR get_usage();
-    exit 1;
 }
 
 # get api variable
