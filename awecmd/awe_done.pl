@@ -184,7 +184,7 @@ my $mgstats = {
     taxonomy => $abundances->{taxonomy},
     function => $abundances->{function},
     ontology => $abundances->{ontology},
-    rarefaction => $alpha_rare->{rarefaction};
+    rarefaction => $alpha_rare->{rarefaction},
     sequence_stats => $job_stats
 };
 
