@@ -8,6 +8,7 @@ use PipelineAWE;
 use PipelineJob;
 use StreamingUpload;
 
+use POSIX qw/strftime/;
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
 use Getopt::Long;
@@ -203,6 +204,8 @@ my $solrdata = {
 PipelineAWE::obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
 # done done !!
+my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
 PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
 
 # cleanup
