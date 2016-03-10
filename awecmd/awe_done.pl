@@ -167,8 +167,13 @@ my $s_stats = PipelineAWE::read_json($source);
 my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
 my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
 
-# get stats from API
-my $abundances = PipelineAWE::obj_from_url($api_url."/job/abundance/".$mgid."?type=all&ann_ver=".$ann_ver, $api_key)->{data};
+# get abundance stats from API, this is an asynchronous call
+my $get_abund = PipelineAWE::obj_from_url($api_url."/job/abundance/".$mgid."?type=all&ann_ver=".$ann_ver, $api_key);
+while ($get_abund->{status} != 'done') {
+    sleep 30;
+    $get_abund = PipelineAWE::obj_from_url($get_abund->{url});
+}
+my $abundances = $get_abund->{data};
 
 # build stats obj
 my $mgstats = {
