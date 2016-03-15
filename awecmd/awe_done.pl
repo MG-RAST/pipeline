@@ -131,8 +131,13 @@ map { $job_stats->{$_.'_preprocessed'}     = $pq_attr->{statistics}{$_} } keys %
 map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %{$rm_attr->{statistics}};  # rna clust stats
 map { $job_stats->{$_.'_processed_aa'}     = $am_attr->{statistics}{$_} } keys %{$am_attr->{statistics}};  # aa clust stats
 
-# diversity computation
-my $alpha_rare = PipelineAWE::obj_from_url($api_url."/compute/rarefaction/".$mgid."?alpha=1&level=species&ann_ver=".$ann_ver."&seq_num=".$job_stats->{sequence_count_raw}, $api_key)->{data};
+# diversity computation from API, this is an asynchronous call
+my $get_diversity = PipelineAWE::obj_from_url($api_url."/compute/rarefaction/".$mgid."?asynchronous=1&alpha=1&level=species&ann_ver=".$ann_ver."&seq_num=".$job_stats->{sequence_count_raw}, $api_key);
+while ($get_diversity->{status} != 'done') {
+    sleep 30;
+    $get_diversity = PipelineAWE::obj_from_url($get_diversity->{url});
+}
+my $alpha_rare = $get_diversity->{data};
 $job_stats->{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
 
 # read ratios
