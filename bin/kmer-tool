@@ -36,6 +36,8 @@ def split_fasta(in_file, fhdl_set, max_size):
   curr_file = 0
   strbuffer = ''
   for line in open(in_file):
+    if not line:
+      continue
     head = fa_re.match(line)
     if head and ((curr_size + curr_buff) >= max_size):
       fhdl_set[curr_file].write(strbuffer)
@@ -60,6 +62,8 @@ def split_fastq(in_file, fhdl_set, max_size):
   strbuffer = ''
   with open(in_file) as f:
     for lines in itertools.izip_longest(*[f]*4):
+      if not lines:
+        continue
       if (curr_size + curr_buff) >= max_size:
         fhdl_set[curr_file].write(strbuffer)
         curr_size = 0
