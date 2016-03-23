@@ -61,7 +61,7 @@ def split_fastq(in_file, fhdl_set, max_size):
   curr_file = 0
   strbuffer = ''
   with open(in_file) as f:
-    for lines in itertools.izip_longest(*[f]*4):
+    for lines in itertools.izip_longest(*[f]*4, fillvalue=''):
       if not lines:
         continue
       if (curr_size + curr_buff) >= max_size:
