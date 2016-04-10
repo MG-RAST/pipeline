@@ -39,7 +39,7 @@ unless ($stat_node) {
     exit 1;
 }
 
-my t1 = time;
+my $t1 = time;
 # get abundance stats from API, this is an asynchronous call
 my $get_abund = obj_from_url($api_url."/job/abundance/".$mg_id."?type=all&ann_ver=1", $api_key);
 while ($get_abund->{status} != 'done') {
@@ -47,12 +47,12 @@ while ($get_abund->{status} != 'done') {
     $get_abund = obj_from_url($get_abund->{url});
 }
 my $abundances = $get_abund->{data};
-print STDERR "compute abundace time: ".(time - t1)."\n"
+print STDERR "compute abundace time: ".(time - $t1)."\n"
 print STDERR "taxa: ".scalar(@{$abundances->{taxonomy}})."\n";
 print STDERR "func: ".scalar(@{$abundances->{function}})."\n";
 print STDERR "ontol: ".scalar(@{$abundances->{ontology}})."\n";
 
-t2 = time
+my $t2 = time;
 # diversity computation from API, this is an asynchronous call
 my $get_diversity = obj_from_url($api_url."/compute/rarefaction/".$mg_id."?asynchronous=1&alpha=1&level=species&ann_ver=1&seq_num=".$seq_num, $api_key);
 while ($get_diversity->{status} != 'done') {
@@ -60,7 +60,7 @@ while ($get_diversity->{status} != 'done') {
     $get_diversity = obj_from_url($get_diversity->{url});
 }
 my $alpha_rare = $get_diversity->{data};
-print STDERR "compute alpha_rare time: ".(time - t2)."\n"
+print STDERR "compute alpha_rare time: ".(time - $t2)."\n"
 print STDERR "alpha: ".$alpha_rare->{alphadiversity}."\n";
 print STDERR "rare: ".scalar(@{$alpha_rare->{rarefaction}})."\n";
 
