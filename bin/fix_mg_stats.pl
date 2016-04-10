@@ -4,7 +4,15 @@ use strict;
 use warnings;
 no warnings('once');
 
+use JSON;
+use LWP::UserAgent;
 use Getopt::Long;
+
+my $agent = LWP::UserAgent->new();
+my $json = JSON->new;
+$json = $json->utf8();
+$json->max_size(0);
+$json->allow_nonref;
 
 my $mg_id   = "";
 my $api_url = "http://api.metagenomics.anl.gov";
@@ -47,7 +55,7 @@ while ($get_abund->{status} != 'done') {
     $get_abund = obj_from_url($get_abund->{url});
 }
 my $abundances = $get_abund->{data};
-print STDERR "compute abundace time: ".(time - $t1)."\n"
+print STDERR "compute abundace time: ".(time - $t1)."\n";
 print STDERR "taxa: ".scalar(@{$abundances->{taxonomy}})."\n";
 print STDERR "func: ".scalar(@{$abundances->{function}})."\n";
 print STDERR "ontol: ".scalar(@{$abundances->{ontology}})."\n";
@@ -60,7 +68,7 @@ while ($get_diversity->{status} != 'done') {
     $get_diversity = obj_from_url($get_diversity->{url});
 }
 my $alpha_rare = $get_diversity->{data};
-print STDERR "compute alpha_rare time: ".(time - $t2)."\n"
+print STDERR "compute alpha_rare time: ".(time - $t2)."\n";
 print STDERR "alpha: ".$alpha_rare->{alphadiversity}."\n";
 print STDERR "rare: ".scalar(@{$alpha_rare->{rarefaction}})."\n";
 
@@ -94,11 +102,11 @@ sub set_shock_node {
     my $response = undef;
     my $content = {};
     if ($file) {
-        my $file_str = $self->json->encode($file);
+        my $file_str = $json->encode($file);
         $content->{upload} = [undef, $name, Content => $file_str];
     }
     if ($attr) {
-        $content->{attributes} = [undef, "$name.json", Content => $self->json->encode($attr)];
+        $content->{attributes} = [undef, "$name.json", Content => $json->encode($attr)];
     }
     eval {
         my @args = (
@@ -106,13 +114,14 @@ sub set_shock_node {
             'Content_Type', 'multipart/form-data',
             $content ? ('Content', $content) : ()
         );
-        my $post = $self->agent->post($url, @args);
-        $response = $self->json->decode( $post->content );
+        my $post = $agent->post($url, @args);
+        $response = $json->decode( $post->content );
     };
     if ($@ || (! ref($response))) {
         return undef;
     } elsif (exists($response->{error}) && $response->{error}) {
-        $self->return_data( {"ERROR" => "Unable to POST to Shock: ".$response->{error}[0]}, $response->{status} );
+        print STDERR "ERROR: Unable to POST to Shock: ".$response->{error}[0]."\n";
+        exit 1;
     } else {
         return $response->{data};
     }
