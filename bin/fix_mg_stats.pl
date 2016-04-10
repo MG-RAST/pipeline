@@ -57,12 +57,13 @@ while ($get_abund->{status} ne 'done') {
 }
 my $abundances = $get_abund->{data};
 print STDERR "compute abundace time: ".(time - $t1)."\n";
-foreach my $k (keys %$abundances) {
-    print $k." => ".$abundances->{$k}."\n";
+print STDERR "func: ".scalar(@{$abundances->{function}})."\n";
+foreach my $t (keys %{$abundances->{taxonomy}}) {
+    print STDERR $t." => ".scalar(@{$abundances->{taxonomy}{$t}})."\n";
 }
-#print STDERR "taxa: ".scalar(@{$abundances->{taxonomy}})."\n";
-#print STDERR "func: ".scalar(@{$abundances->{function}})."\n";
-#print STDERR "ontol: ".scalar(@{$abundances->{ontology}})."\n";
+foreach my $o (keys %{$abundances->{ontology}}) {
+    print STDERR $o." => ".scalar(@{$abundances->{ontology}{$o}})."\n";
+}
 
 my $t2 = time;
 # diversity computation from API, this is an asynchronous call
