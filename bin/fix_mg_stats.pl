@@ -50,7 +50,7 @@ unless ($stat_node) {
 my $t1 = time;
 # get abundance stats from API, this is an asynchronous call
 my $get_abund = obj_from_url($api_url."/job/abundance/".$mg_id."?type=all&ann_ver=1", $api_key);
-while ($get_abund->{status} != 'done') {
+while ($get_abund->{status} ne 'done') {
     sleep 30;
     $get_abund = obj_from_url($get_abund->{url}, $api_key);
 }
@@ -63,7 +63,7 @@ print STDERR "ontol: ".scalar(@{$abundances->{ontology}})."\n";
 my $t2 = time;
 # diversity computation from API, this is an asynchronous call
 my $get_diversity = obj_from_url($api_url."/compute/rarefaction/".$mg_id."?asynchronous=1&alpha=1&level=species&ann_ver=1&seq_num=".$seq_num, $api_key);
-while ($get_diversity->{status} != 'done') {
+while ($get_diversity->{status} ne 'done') {
     sleep 30;
     $get_diversity = obj_from_url($get_diversity->{url}, $api_key);
 }
