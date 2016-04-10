@@ -7,6 +7,7 @@ no warnings('once');
 use JSON;
 use LWP::UserAgent;
 use Getopt::Long;
+use Data::Dumper;
 
 my $agent = LWP::UserAgent->new();
 my $json = JSON->new;
@@ -56,6 +57,9 @@ while ($get_abund->{status} ne 'done') {
 }
 my $abundances = $get_abund->{data};
 print STDERR "compute abundace time: ".(time - $t1)."\n";
+print STDERR Dumper($abundances);
+exit 0;
+
 print STDERR "taxa: ".scalar(@{$abundances->{taxonomy}})."\n";
 print STDERR "func: ".scalar(@{$abundances->{function}})."\n";
 print STDERR "ontol: ".scalar(@{$abundances->{ontology}})."\n";
@@ -114,7 +118,7 @@ sub set_shock_node {
             'Content_Type', 'multipart/form-data',
             $content ? ('Content', $content) : ()
         );
-        print STDERR "\"authorization: mgrast $auth\" -> ".$url;
+        print STDERR "\"authorization: mgrast $auth\" -> ".$url."\n";
         my $post = $agent->post($url, @args);
         $response = $json->decode( $post->content );
     };
@@ -134,7 +138,7 @@ sub obj_from_url {
     my $content = undef;
     my $result  = undef;
     my @args    = $key ? ('authorization', "mgrast ".$key) : ();
-    print STDERR "\"authorization: mgrast $key\" -> ".$url;
+    print STDERR "\"authorization: mgrast $key\" -> ".$url."\n";
     if ($data && ref($data)) {
         push @args, ('Content-Type', 'application/json');
         $result = $agent->post($url, @args, 'Content' => $json->encode($data));
