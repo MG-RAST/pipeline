@@ -39,7 +39,7 @@ unless ($stat_node) {
     exit 1;
 }
 
-my t1 = time
+my t1 = time;
 # get abundance stats from API, this is an asynchronous call
 my $get_abund = obj_from_url($api_url."/job/abundance/".$mg_id."?type=all&ann_ver=1", $api_key);
 while ($get_abund->{status} != 'done') {
