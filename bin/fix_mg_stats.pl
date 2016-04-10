@@ -134,7 +134,7 @@ sub obj_from_url {
     my $content = undef;
     my $result  = undef;
     my @args    = $key ? ('authorization', "mgrast ".$key) : ();
-    print STDERR "\"authorization: mgrast $auth\" -> ".$url;
+    print STDERR "\"authorization: mgrast $key\" -> ".$url;
     if ($data && ref($data)) {
         push @args, ('Content-Type', 'application/json');
         $result = $agent->post($url, @args, 'Content' => $json->encode($data));
