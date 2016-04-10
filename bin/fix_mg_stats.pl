@@ -36,7 +36,7 @@ my $seq_num = $mgstats->{sequence_stats}{sequence_count_raw};
 
 # stats node
 my $stat_node = "";
-my $stat_down = obj_from_url($api_url."/download/".$mg_id."?stage=999");
+my $stat_down = obj_from_url($api_url."/download/".$mg_id."?stage=999", $api_key);
 foreach my $n (@{$stat_down->{data}}) {
     if ($n->{data_type} eq "statistics") {
         $stat_node = $n->{node_id};
@@ -52,7 +52,7 @@ my $t1 = time;
 my $get_abund = obj_from_url($api_url."/job/abundance/".$mg_id."?type=all&ann_ver=1", $api_key);
 while ($get_abund->{status} != 'done') {
     sleep 30;
-    $get_abund = obj_from_url($get_abund->{url});
+    $get_abund = obj_from_url($get_abund->{url}, $api_key);
 }
 my $abundances = $get_abund->{data};
 print STDERR "compute abundace time: ".(time - $t1)."\n";
@@ -65,7 +65,7 @@ my $t2 = time;
 my $get_diversity = obj_from_url($api_url."/compute/rarefaction/".$mg_id."?asynchronous=1&alpha=1&level=species&ann_ver=1&seq_num=".$seq_num, $api_key);
 while ($get_diversity->{status} != 'done') {
     sleep 30;
-    $get_diversity = obj_from_url($get_diversity->{url});
+    $get_diversity = obj_from_url($get_diversity->{url}, $api_key);
 }
 my $alpha_rare = $get_diversity->{data};
 print STDERR "compute alpha_rare time: ".(time - $t2)."\n";
@@ -114,6 +114,7 @@ sub set_shock_node {
             'Content_Type', 'multipart/form-data',
             $content ? ('Content', $content) : ()
         );
+        print STDERR "\"authorization: mgrast $auth\" -> ".$url;
         my $post = $agent->post($url, @args);
         $response = $json->decode( $post->content );
     };
