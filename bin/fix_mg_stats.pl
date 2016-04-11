@@ -91,7 +91,7 @@ my $old_stats = obj_from_url("http://shock.metagenomics.anl.gov/node/".$stat_nod
 my $attr = $old_stats->{data}{attributes};
 my $new_stats = set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
 print STDERR "new stats node: ".$new_stats->{id}."\n";
-add_shock_acl("http://shock.metagenomics.anl.gov/node/".$stat_node."/acl/read?users=mgrast", $api_key);
+add_shock_acl("http://shock.metagenomics.anl.gov/node/".$new_stats->{id}."/acl/read?users=mgrast", $api_key);
 del_shock_node("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
 
 # upload of solr data
