@@ -84,11 +84,14 @@ $mgstats->{ontology} = $abundances->{ontology};
 $mgstats->{rarefaction} = $alpha_rare->{rarefaction};
 $mgstats->{sequence_stats}{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
 
+obj_from_url($api_url."/job/statistics", $api_key, {metagenome_id => $mg_id, statistics => {alpha_diversity_shannon => $alpha_rare->{alphadiversity}}});
+
 # new stats node
 my $old_stats = obj_from_url("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
 my $attr = $old_stats->{data}{attributes};
 my $new_stats = set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
 print STDERR "new stats node: ".$new_stats->{id}."\n";
+add_shock_acl("http://shock.metagenomics.anl.gov/node/".$stat_node."/acl/read?users=mgrast", $api_key);
 del_shock_node("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
 
 # upload of solr data
@@ -132,6 +135,27 @@ sub set_shock_node {
         return $response->{data};
     }
 }
+
+# add an ACL based on username
+sub add_shock_acl {
+    my ($url, $auth) = @_;
+    
+    my $response = undef;
+    eval {
+        print STDERR "PUT \"authorization: mgrast $auth\" -> ".$url."\n";
+        my $tmp = $agent->put($url, 'authorization' => "mgrast ".$auth);
+        $response = $json->decode( $tmp->content );
+    };
+    if ($@ || (! ref($response))) {
+        return undef;
+    } elsif (exists($response->{error}) && $response->{error}) {
+        return "ERROR: Unable to add read ACL to node in Shock: ".$response->{error}[0]."\n";
+        exit 1;
+    } else {
+        return $response->{data};
+    }
+}
+
 
 # delete node
 sub del_shock_node {
