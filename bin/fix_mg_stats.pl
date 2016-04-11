@@ -87,7 +87,7 @@ $mgstats->{sequence_stats}{alpha_diversity_shannon} = $alpha_rare->{alphadiversi
 # new stats node
 my $stat_obj = obj_from_url("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
 my $attr = $stat_obj->{data}{attributes};
-#set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
+set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
 
 # upload of solr data
 my $solrdata = {
@@ -95,7 +95,7 @@ my $solrdata = {
     function => [ map {$_->[0]} @{$mgstats->{function}} ],
     organism => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ]
 };
-#obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mg_id, solr_data => $solrdata});
+obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mg_id, solr_data => $solrdata});
 
 # create node with optional file and/or attributes
 # file is json struct by default
