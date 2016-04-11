@@ -141,8 +141,8 @@ sub del_shock_node {
     print STDERR "DELETE \"authorization: mgrast $auth\" -> ".$url."\n";
     eval {
         my @args = $auth ? ('authorization', "mgrast $auth") : ();
-        my $get = $self->agent->delete($Conf::shock_url.'/node/'.$id, @args);
-        $response = $self->json->decode( $get->content );
+        my $get = $agent->delete($Conf::shock_url.'/node/'.$id, @args);
+        $response = $json->decode( $get->content );
     };
     if ($@ || (! ref($response))) {
         return undef;
