@@ -89,7 +89,7 @@ my $old_stats = obj_from_url("http://shock.metagenomics.anl.gov/node/".$stat_nod
 my $attr = $old_stats->{data}{attributes};
 my $new_stats = set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
 print STDERR "new stats node: ".$new_stats->{id}."\n";
-del_shock_node("http://shock.metagenomics.anl.gov/node", $stat_node, $api_key);
+del_shock_node("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
 
 # upload of solr data
 my $solrdata = {
@@ -135,13 +135,13 @@ sub set_shock_node {
 
 # delete node
 sub del_shock_node {
-    my ($url, $id, $auth) = @_;
+    my ($url, $auth) = @_;
 
     my $response = undef;
     print STDERR "DELETE \"authorization: mgrast $auth\" -> ".$url."\n";
     eval {
         my @args = $auth ? ('authorization', "mgrast $auth") : ();
-        my $get = $agent->delete($Conf::shock_url.'/node/'.$id, @args);
+        my $get = $agent->delete($url, @args);
         $response = $json->decode( $get->content );
     };
     if ($@ || (! ref($response))) {
