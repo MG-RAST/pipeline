@@ -133,7 +133,7 @@ map { $job_stats->{$_.'_processed_aa'}     = $am_attr->{statistics}{$_} } keys %
 
 # diversity computation from API, this is an asynchronous call
 my $get_diversity = PipelineAWE::obj_from_url($api_url."/compute/rarefaction/".$mgid."?asynchronous=1&alpha=1&level=species&ann_ver=".$ann_ver."&seq_num=".$job_stats->{sequence_count_raw}, $api_key);
-while ($get_diversity->{status} != 'done') {
+while ($get_diversity->{status} ne 'done') {
     sleep 30;
     $get_diversity = PipelineAWE::obj_from_url($get_diversity->{url});
 }
@@ -174,7 +174,7 @@ my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
 
 # get abundance stats from API, this is an asynchronous call
 my $get_abund = PipelineAWE::obj_from_url($api_url."/job/abundance/".$mgid."?type=all&ann_ver=".$ann_ver, $api_key);
-while ($get_abund->{status} != 'done') {
+while ($get_abund->{status} ne 'done') {
     sleep 30;
     $get_abund = PipelineAWE::obj_from_url($get_abund->{url});
 }
