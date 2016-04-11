@@ -147,7 +147,7 @@ sub del_shock_node {
     if ($@ || (! ref($response))) {
         return undef;
     } elsif (exists($response->{error}) && $response->{error}) {
-        print STDERR "ERROR: Unable to DELETE node $id from Shock: ".$response->{error}[0]."\n";
+        print STDERR "ERROR: Unable to DELETE node from Shock: ".$response->{error}[0]."\n";
         exit 1;
     } else {
         return $response->{data};
