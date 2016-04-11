@@ -85,9 +85,11 @@ $mgstats->{rarefaction} = $alpha_rare->{rarefaction};
 $mgstats->{sequence_stats}{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
 
 # new stats node
-my $stat_obj = obj_from_url("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
-my $attr = $stat_obj->{data}{attributes};
-set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
+my $old_stats = obj_from_url("http://shock.metagenomics.anl.gov/node/".$stat_node, $api_key);
+my $attr = $old_stats->{data}{attributes};
+my $new_stats = set_shock_node("http://shock.metagenomics.anl.gov/node", "statistics.json", $mgstats, $attr, $api_key);
+print STDERR "new stats node: ".$new_stats->{id}."\n";
+del_shock_node("http://shock.metagenomics.anl.gov/node", $stat_node, $api_key);
 
 # upload of solr data
 my $solrdata = {
@@ -117,7 +119,7 @@ sub set_shock_node {
             'Content_Type', 'multipart/form-data',
             $content ? ('Content', $content) : ()
         );
-        print STDERR "\"authorization: mgrast $auth\" -> ".$url."\n";
+        print STDERR "POST \"authorization: mgrast $auth\" -> ".$url."\n";
         my $post = $agent->post($url, @args);
         $response = $json->decode( $post->content );
     };
@@ -131,17 +133,39 @@ sub set_shock_node {
     }
 }
 
+# delete node
+sub del_shock_node {
+    my ($url, $id, $auth) = @_;
+
+    my $response = undef;
+    print STDERR "DELETE \"authorization: mgrast $auth\" -> ".$url."\n";
+    eval {
+        my @args = $auth ? ('authorization', "mgrast $auth") : ();
+        my $get = $self->agent->delete($Conf::shock_url.'/node/'.$id, @args);
+        $response = $self->json->decode( $get->content );
+    };
+    if ($@ || (! ref($response))) {
+        return undef;
+    } elsif (exists($response->{error}) && $response->{error}) {
+        print STDERR "ERROR: Unable to DELETE node $id from Shock: ".$response->{error}[0]."\n";
+        exit 1;
+    } else {
+        return $response->{data};
+    }
+}
+
 
 sub obj_from_url {
     my ($url, $key, $data) = @_;
     my $content = undef;
     my $result  = undef;
     my @args    = $key ? ('authorization', "mgrast ".$key) : ();
-    print STDERR "\"authorization: mgrast $key\" -> ".$url."\n";
     if ($data && ref($data)) {
         push @args, ('Content-Type', 'application/json');
+        print STDERR "POST \"authorization: mgrast $key\" -> ".$url."\n";
         $result = $agent->post($url, @args, 'Content' => $json->encode($data));
     } else {
+        print STDERR "GET \"authorization: mgrast $key\" -> ".$url."\n";
         $result = $agent->get($url, @args);
     }
     if (! ref($result)) {
