@@ -194,6 +194,9 @@ def main(args):
     output_cmd.extend(['-c', '-t'])
   output_cmd.append(jf_hash)
   sout, serr = run_cmd(output_cmd)
+  if sout == "":
+    sys.stderr.write("[error] jellyfish returned no results, no kmers found\n")
+    return 1
 
   ohdl = open(opts.output, 'w')
   if opts.ranked:
@@ -208,7 +211,7 @@ def main(args):
   if opts.type != 'hash':
     os.remove(jf_hash)
   if not os.path.isfile(opts.output):
-    sys.stderr.write("[error] jellyfish %s returned no results"%(opts.format))
+    sys.stderr.write("[error] jellyfish %s returned no results\n"%(opts.format))
     sys.stderr.write(serr)
     return 1
   
