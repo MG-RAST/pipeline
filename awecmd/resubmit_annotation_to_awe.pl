@@ -16,6 +16,7 @@ use Getopt::Long;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use Data::Dumper;
+use File::Slurp;
 
 # options
 my $job_id    = "";
@@ -28,7 +29,7 @@ my $priority  = 1000;
 my $help      = 0;
 my $no_start  = 0;
 my $use_docker   = 0;
-my $clientgroups = "";
+my $clientgroups = undef;
 
 my $options = GetOptions (
         "job_id=s"    => \$job_id,

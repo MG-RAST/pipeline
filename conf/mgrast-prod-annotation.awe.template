@@ -693,7 +693,7 @@
                     "host": "[% shock_url %]",
                     "node": "-",
                     "attrfile": "[% job_id %].statistics.json.attr"
-                },
+                }
             },
             "userattr": {
                 "stage_id": "999",
