@@ -154,6 +154,13 @@ foreach my $n (@{$gres->{data}}) {
     }
 }
 
+foreach my $x (("prot_sims_node", "rna_sims_node", "sim_seq_node", "assembly_node", "rna_mapping_node", "prot_mapping_node", "mg_stats_node")) {
+    if (! $vars->{$x}) {
+        print STDERR "ERROR: Incomplete metagenome, missing stage: $x\n";
+        exit 1;
+    }
+}
+
 # create workflow
 my $workflow_str = "";
 my $template_str = read_file($PipelineAWE_Conf::BASE."/conf/".$template);
