@@ -56,7 +56,7 @@ while ($get_abund->{status} ne 'done') {
     $get_abund = obj_from_url($get_abund->{url}, $api_key);
 }
 my $abundances = $get_abund->{data};
-print STDERR "compute abundace time: ".(time - $t1)."\n";
+print STDERR "compute abundance time: ".(time - $t1)."\n";
 print STDERR "func: ".scalar(@{$abundances->{function}})."\n";
 foreach my $t (keys %{$abundances->{taxonomy}}) {
     print STDERR $t." => ".scalar(@{$abundances->{taxonomy}{$t}})."\n";
