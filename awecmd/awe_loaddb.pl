@@ -75,6 +75,7 @@ unless (defined($dbhost) && defined($dbname) && defined($dbuser) && defined($dbp
 
 # place postgresql cert in home dir
 PipelineAWE::run_cmd('tar -xf '.$psql.' -C '.$ENV{'HOME'}, 1);
+PipelineAWE::run_cmd('chown -R '.$ENV{'USERNAME'}.':'.$ENV{'USERNAME'}.' '.$ENV{'HOME'}.'/.postgresql', 1);
 my $pgssldir  = $ENV{'HOME'}.'/.postgresql';
 my $pgsslcert = "sslcert=".$pgssldir."/postgresql.crt;sslkey=".$pgssldir."/postgresql.key";
 
