@@ -14,6 +14,7 @@ my $dbhost  = "";
 my $dbname  = "";
 my $dbuser  = "";
 my $dbpass  = "";
+my $dbcert  = "";
 my $dbtable_range = 0;
 my %filenames = ( md5s       => "",
                   functions  => "",
@@ -39,6 +40,7 @@ $filenames_string
   --dbname               db name        Required. Name of database
   --dbuser               db user        Required. Owner of database
   --dbpass               db password    Required. Password of database
+  --dbcert               db ssl certs   Optional. Use SSL if exists
   --dbtable_range                       Required. Number of jobs per partition
   --verbose                             Optional. Verbose output.
   --reload                              Optional. Overwrite data if exists for job/version.
@@ -54,6 +56,7 @@ my %options = ( 'verbose!'         => \$verbose,
                 'dbname:s'         => \$dbname,
                 'dbuser:s'         => \$dbuser,
                 'dbpass:s'         => \$dbpass,
+                'dbcert:s'         => \$dbcert,
                 'dbtable_range:i'  => \$dbtable_range,
                 'reload!'          => \$reload
               );
@@ -78,7 +81,11 @@ unless (($file_count > 0) && $jobID && $dbhost && $dbname && $dbuser && $dbpass 
   print STDERR $usage . "Missing parameter.\n"; exit 1;
 }
 
-my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpass, {AutoCommit => 0 , RaiseError => 1});
+my $conn_str = "DBI:Pg:dbname=$dbname;host=$dbhost";
+if ($dbcert) {
+    $conn_str .= ";".$dbcert
+}
+my $dbh = DBI->connect($conn_str, $dbuser, $dbpass, {AutoCommit => 0 , RaiseError => 1});
 unless ($dbh) { print STDERR "Error: ".DBI->errstr."\n"; exit 1; }
 
 # Check if job-version combination already exists.
