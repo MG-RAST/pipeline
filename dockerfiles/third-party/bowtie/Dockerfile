@@ -1,6 +1,8 @@
+# mgrast/pipeline-bowtie
+
 FROM mgrast/pipeline-base:latest
 RUN apt-get update \
-    && apt-get install -y zip \
+    && apt-get install -y zip wget make \
     && apt-get autoremove -y \
 	; apt-get clean all
 RUN cd /root \

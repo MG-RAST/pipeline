@@ -1,13 +1,11 @@
 # MG-RAST dockerfiles
+# mgrast/pipeline-base
 
 FROM	ubuntu:16.04
 MAINTAINER The MG-RAST team
 
 RUN apt-get update && apt-get install -y \
-	vim \
-	ssh \
 	git \
-	build-essential \
 	python-dev \
 	python-pip \
 	libpq-dev \

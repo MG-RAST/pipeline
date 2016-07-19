@@ -1,6 +1,8 @@
+# mgrast/pipeline-qc
+
 FROM mgrast/pipeline-base:latest
 RUN apt-get update \
-    && apt-get install -y curl subversion \
+    && apt-get install -y curl subversion tar make \
 	&& apt-get autoremove -y \
 	; apt-get clean all
 RUN pip install sphinx

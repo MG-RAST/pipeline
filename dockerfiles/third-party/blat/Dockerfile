@@ -1,8 +1,10 @@
+# mgrast/pipeline-blat
+
 FROM mgrast/pipeline-base:latest
 ADD superblat /root/bin/superblat
 RUN chmod +x /root/bin/superblat
 RUN apt-get update \
-	&& apt-get install -y zip libpng-dev \
+	&& apt-get install -y zip libpng-dev wget make \
 	&& apt-get autoremove -y \
 	; apt-get clean all
 RUN cd /root \
