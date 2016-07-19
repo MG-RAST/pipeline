@@ -1,17 +1,17 @@
 #!/bin/bash
 
-export MGRASTVERSION=`date +"%Y%m%d"`
+export TAG=`date +"%Y%m%d"`
 
-docker rmi mgrast/base:latest
+docker rmi mgrast/pipeline-base:latest
 
 set -e
 set -x
 
-docker build --no-cache --tag mgrast/pipeline-base:${MGRASTVERSION} mgrast_base
+docker build --force-rm --no-cache --tag mgrast/pipeline-base:${TAG} mgrast_base
 
-docker tag mgrast/base:${MGRASTVERSION} mgrast/base:latest
+docker tag mgrast/pipeline-base:${TAG} mgrast/pipeline-base:latest
 
 cd third-party
 for i in *
-    do docker build --no-cache --tag mgrast/pipeline-${i}:${MGRASTVERSION} ${i}
+    do docker build --force-rm --no-cache --tag mgrast/pipeline-${i}:${TAG} ${i}
 done
