@@ -5,7 +5,6 @@ use warnings;
 no warnings('once');
 
 use PipelineAWE;
-use PipelineJob;
 
 use POSIX qw/strftime/;
 use Data::Dumper;
