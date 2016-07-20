@@ -21,9 +21,7 @@ RUN apt-get update && apt-get install -y \
 	libcache-memcached-perl \
 	libcwd-guard-perl \
 	libdbi-perl \
-	libdbd-mysql-perl \
 	libdbd-pg-perl \
-	libmongodb-perl \
 	libdata-dump-streamer-perl \
 	libdatetime-perl \
 	libdigest-md5-perl \
