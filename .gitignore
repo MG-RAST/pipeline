@@ -4,6 +4,10 @@
 conf/Pipeline_Conf.pm
 conf/env.sh
 
+# binaries
+superblat
+usearch
+
 # ignore files with # and ~
 *\#*
 *\~*
