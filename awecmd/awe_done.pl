@@ -5,8 +5,6 @@ use warnings;
 no warnings('once');
 
 use PipelineAWE;
-use PipelineJob;
-use StreamingUpload;
 
 use POSIX qw/strftime/;
 use Scalar::Util qw(looks_like_number);
