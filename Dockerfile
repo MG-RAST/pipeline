@@ -4,6 +4,7 @@ FROM	debian
 MAINTAINER The MG-RAST team
 
 RUN apt-get update && apt-get install -y \
+    git \
 	unzip \
 	wget \
 	make \
