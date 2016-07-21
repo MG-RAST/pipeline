@@ -17,3 +17,9 @@ usearch
 
 # Thumbnails
 ._*
+# editor files
+*.swp
+
+
+# 
+

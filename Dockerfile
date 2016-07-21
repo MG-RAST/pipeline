@@ -40,10 +40,9 @@ RUN apt-get update && apt-get install -y \
 	python-scipy \
 	python-leveldb \
 	python-biopython
-RUN cd /root \
-	; mkdir bin \
-	; git clone https://github.com/MG-RAST/pipeline
-ADD ./mgrast_env.sh /root/
+RUN mkdir -p /root/bin; mkdir -p /root/pipeline
+COPY . /root/pipeline
+RUN mv /root/pipeline/mgrast_env.sh /root/
 
 
 #### install superblat (from binary in local dir) and BLAT from src
