@@ -4,9 +4,6 @@ FROM	debian
 MAINTAINER The MG-RAST team
 
 RUN apt-get update && apt-get install -y \
-	git \
-	build-essential \
-#	apt-utils \
 	unzip \
 	wget \
 	make \
@@ -40,12 +37,13 @@ RUN apt-get update && apt-get install -y \
 	python-scipy \
 	python-leveldb \
 	python-biopython
-RUN mkdir -p /root/bin; mkdir -p /root/pipeline
+
+### add pipeline repo code
+RUN mkdir -p /root/bin /root/pipeline
 COPY . /root/pipeline
 RUN mv /root/pipeline/mgrast_env.sh /root/
 
-
-#### install superblat (from binary in local dir) and BLAT from src
+### install superblat (from binary in local dir) and BLAT from src
 ADD superblat /root/bin/superblat
 RUN chmod +x /root/bin/superblat
 RUN cd /root \
@@ -57,11 +55,10 @@ RUN cd /root \
 	&& cd .. \
 	&& rm -rf blatSrc blatSrc35.zip
 
-
 ### install bowtie2 
 RUN apt-get install -y bowtie2 	
 
-### install CD-hit from Cluster
+### install CD-hit
 RUN apt-get install -y cd-hit		
 
 ### install FragGeneScan from our patched source in github
@@ -77,15 +74,11 @@ RUN cd /root \
 	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
 
 ### install QC tools
-RUN	apt-get install -y cdbfasta \
-	jellyfish
-
+RUN	apt-get install -y cdbfasta jellyfish
 
 ### install usearch binary from local dir
 ADD usearch /root/bin/usearch
 RUN chmod +x /root/bin/usearch
-
-
 
 #
 # If you you need a specific commit:
