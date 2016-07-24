@@ -4,65 +4,65 @@ FROM	debian
 MAINTAINER The MG-RAST team
 
 RUN apt-get update && apt-get install -y \
-	git \
+	apt-utils 	\
+	bowtie2 	\
 	build-essential \
-#	apt-utils \
-	unzip \
-	wget \
-	make \
-	python-dev \
-	python-pip \ 					
-	libpq-dev \
-	libpng-dev \
-	perl-modules \
+	cdbfasta 	\
+	cd-hit		\
+	git 		\
+	jellyfish 	\
+	make 		\
 	libcwd-guard-perl \
-	libdbi-perl \
-	libdbd-pg-perl \
+	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
 	libdatetime-perl \
+	libdbi-perl 	\
 	libdigest-md5-perl \
 	libdigest-md5-file-perl \
-	libfile-slurp-perl \
-	libfilehandle-fmode-perl \
-	libjson-perl \
-	libstring-random-perl \
-	libtemplate-perl \
-	libwww-perl \
-	libgetopt-long-descriptive-perl \
-	liburi-encode-perl \
-	libunicode-escape-perl \
-	liblist-allutils-perl \
-	libposix-strptime-perl \
-	libberkeleydb-perl \
+	libdbd-pg-perl \
 	libemail-simple-perl \
 	libemail-sender-perl \
+	libfile-slurp-perl \
+	libfilehandle-fmode-perl \
+	libgetopt-long-descriptive-perl \
+	libjson-perl \
+	liblist-allutils-perl \
+	libpq-dev \
+	libpng-dev \
+	libposix-strptime-perl \
+	libstring-random-perl \
+	libtemplate-perl \
+	liburi-encode-perl \
+	libunicode-escape-perl \
+	libwww-perl \
+	python-biopython \
+	python-dev \
+	python-pip \ 					
+	python-leveldb \
+	perl-modules \
    	python-numpy \
 	python-scipy \
-	python-leveldb \
-	python-biopython
-RUN mkdir -p /root/bin; mkdir -p /root/pipeline
-COPY . /root/pipeline
-RUN mv /root/pipeline/mgrast_env.sh /root/
+	unzip \
+	wget 
 
+# ###########
+# copy files into image
+RUN mkdir -p mkdir -p /root/pipeline
+COPY mgrast_env.sh awecmd bin conf lib /root/pipeline/
+COPY usearch superblat /usr/local//bin/
+RUN chmod 555  /usr/local/bin/* && strip /usr/local/bin/*
 
 #### install superblat (from binary in local dir) and BLAT from src
-ADD superblat /root/bin/superblat
-RUN chmod +x /root/bin/superblat
 RUN cd /root \
 	&& wget "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip" \
 	&& unzip blatSrc35.zip && export C_INCLUDE_PATH=/root/include \
 	&& export MACHTYPE=x86_64-pc-linux-gnu \
 	&& cd blatSrc \
-	&& make BINDIR=/root/bin \
+	&& make BINDIR=/usr/local/bin/ \
+	&& strip /usr/local/bin/* \
 	&& cd .. \
 	&& rm -rf blatSrc blatSrc35.zip
 
-
-### install bowtie2 
-RUN apt-get install -y bowtie2 	
-
-### install CD-hit from Cluster
-RUN apt-get install -y cd-hit		
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
@@ -72,21 +72,20 @@ RUN cd /root \
 	&& mkdir bin \
 	&& mv train bin/. \
 	&& mv *.pl bin/. \
-	&& mv FragGeneScan bin/. \
+	&& install -s -m555 FragGeneScan bin/. \
 	&& cd .. \
 	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
 
-### install QC tools
-RUN	apt-get install -y cdbfasta \
-	jellyfish
 
-
-### install usearch binary from local dir
-ADD usearch /root/bin/usearch
-RUN chmod +x /root/bin/usearch
-
-
-
+### install DIAMOND
+RUN cd /root \
+	&& git clone https://github.com/bbuchfink/diamond.git \
+	&& cd diamond \
+	&& cat build_simple.sh | sed s/-static//g > build_simple.sh \
+	&& sh ./build_simple.sh \
+	&& install -s -m555 diamond /usr/local/bin \
+#	&& rm -rf /root/diamond
+	
 #
 # If you you need a specific commit:
 #
