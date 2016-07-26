@@ -3,15 +3,19 @@
 FROM	debian
 MAINTAINER The MG-RAST team
 
+ENV LC_ALL UTF-8
+RUN echo 'LC_ALL=UTF-8' >> /etc/environment 
+ENV DEBIAN_FRONTEND noninteractive
+RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
+
 RUN apt-get update && apt-get install -y \
-	apt-utils 	\
 	bowtie2 	\
 	build-essential \
 	cdbfasta 	\
 	cd-hit		\
+	dh-autoreconf \
 	git 		\
 	jellyfish 	\
-	make 		\
 	libcwd-guard-perl \
 	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
@@ -35,6 +39,7 @@ RUN apt-get update && apt-get install -y \
 	liburi-encode-perl \
 	libunicode-escape-perl \
 	libwww-perl \
+	make 		\
 	python-biopython \
 	python-dev \
 	python-pip \ 					
@@ -43,14 +48,17 @@ RUN apt-get update && apt-get install -y \
    	python-numpy \
 	python-scipy \
 	unzip \
-	wget 
+	wget \
+	&& rm -rf /usr/share/doc/ /usr/share/man/ /usr/share/X11/ /usr/share/i18n/ /usr/share/mime /usr/share/locale
+
 
 # ###########
 # copy files into image
-RUN mkdir -p mkdir -p /root/pipeline
+RUN mkdir -p /root/pipeline
 COPY mgrast_env.sh awecmd bin conf lib /root/pipeline/
-COPY usearch superblat /usr/local//bin/
-RUN chmod 555  /usr/local/bin/* && strip /usr/local/bin/*
+COPY usearch superblat /usr/local/bin/
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/*
+
 
 #### install superblat (from binary in local dir) and BLAT from src
 RUN cd /root \
@@ -73,6 +81,8 @@ RUN cd /root \
 	&& mv train bin/. \
 	&& mv *.pl bin/. \
 	&& install -s -m555 FragGeneScan bin/. \
+	&& make clean \
+	&& rm -rf example .git \
 	&& cd .. \
 	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
 
@@ -80,13 +90,21 @@ RUN cd /root \
 ### install DIAMOND
 RUN cd /root \
 	&& git clone https://github.com/bbuchfink/diamond.git \
-	&& cd diamond \
-	&& cat build_simple.sh | sed s/-static//g > build_simple.sh \
+	&& mkdir -p /root/diamond \
+	&& cd /root/diamond \
+	# && cat build_simple.sh | sed s/-static//g > build_simple.sh \
 	&& sh ./build_simple.sh \
 	&& install -s -m555 diamond /usr/local/bin \
-#	&& rm -rf /root/diamond
+	&& rm -rf /root/diamond
 	
-#
-# If you you need a specific commit:
-#
-# RUN cd /root/pipeline/ && git pull && git reset --hard [ENTER HERE THE COMMIT HASH YOU WANT]
+### install vsearch 2.02
+RUN cd /root \
+	&& wget https://github.com/torognes/vsearch/archive/v2.0.2.tar.gz \
+	&& tar xzf v2.0.2.tar.gz \
+	&& cd vsearch-2.0.2 \
+	&& ./autogen.sh \
+	&& ./configure --prefix=/usr/local/ \
+	&& make \
+	&& make install \
+	&& make clean \
+	&& rm -rf /root/vsearch-2.02/*
