@@ -59,11 +59,8 @@ RUN cd /root \
 	&& cd .. \
 	&& rm -rf blatSrc blatSrc35.zip
 
-### install bowtie2 
-RUN apt-get install -y bowtie2 	
-
-### install CD-hit
-RUN apt-get install -y cd-hit		
+### install thrid party tools from apt-get
+RUN apt-get install -y bowtie2 cd-hit cdbfasta jellyfish		
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
@@ -76,9 +73,6 @@ RUN cd /root \
 	&& mv FragGeneScan bin/. \
 	&& cd .. \
 	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
-
-### install QC tools
-RUN	apt-get install -y cdbfasta jellyfish
 
 ### install usearch binary from local dir
 ADD usearch /root/bin/usearch
