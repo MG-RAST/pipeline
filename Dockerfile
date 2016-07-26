@@ -54,10 +54,10 @@ RUN apt-get update && apt-get install -y \
 
 # ###########
 # copy files into image
-RUN mkdir -p /root/pipeline
-COPY mgrast_env.sh awecmd bin conf lib /root/pipeline/
+COPY awecmd/* bin/* /usr/local/bin/
+COPY lib/* /usr/local/lib/perl/perl5/
 COPY usearch superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/*
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/usearch && strip /usr/local/bin/superblat
 
 
 #### install superblat (from binary in local dir) and BLAT from src
@@ -67,7 +67,7 @@ RUN cd /root \
 	&& export MACHTYPE=x86_64-pc-linux-gnu \
 	&& cd blatSrc \
 	&& make BINDIR=/usr/local/bin/ \
-	&& strip /usr/local/bin/* \
+	&& strip /usr/local/bin/blat \
 	&& cd .. \
 	&& rm -rf blatSrc blatSrc35.zip
 
@@ -107,4 +107,4 @@ RUN cd /root \
 	&& make \
 	&& make install \
 	&& make clean \
-	&& rm -rf /root/vsearch-2.02/*
+	&& rm -rf /root/vsearch-2.02
