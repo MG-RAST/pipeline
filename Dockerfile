@@ -40,9 +40,12 @@ RUN apt-get update && apt-get install -y \
 	python-biopython
 
 ### add pipeline repo code
-RUN mkdir -p /root/bin /root/pipeline
 COPY . /root/pipeline
 RUN mv /root/pipeline/mgrast_env.sh /root/
+RUN cd /root/pipeline/awecmd \
+    && for X in *; do ln -f -s /root/pipeline/awecmd/$X /usr/local/bin/$X; done \
+    && cd /root/pipeline/bin \
+    && for X in *; do ln -f -s /root/pipeline/bin/$X /usr/local/bin/$X; done
 
 ### install superblat (from binary in local dir) and BLAT from src
 ADD superblat /root/bin/superblat
