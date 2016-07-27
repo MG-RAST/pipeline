@@ -136,6 +136,10 @@ while ($get_diversity->{status} ne 'done') {
     $get_diversity = PipelineAWE::obj_from_url($get_diversity->{url});
 }
 my $alpha_rare = $get_diversity->{data};
+if ($alpha_rare->{alphadiversity} == 0) {
+    print STDERR "ERROR: Unable to compute alpha diversity, organism abundance data is missing.\n";
+    exit 1;
+}
 $job_stats->{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
 
 # read ratios
@@ -178,6 +182,12 @@ while ($get_abund->{status} ne 'done') {
 }
 my $abundances = $get_abund->{data};
 
+# test for missing data
+if ((scalar(@{$abundances->{function}}) == 0) || (scalar(@{$abundances->{taxonomy}{species}}) == 0) || (scalar(keys %{$abundances->{ontology}}) == 0) ) {
+    print STDERR "ERROR: Unable to compute annotation abundances, data is missing from DB.\n";
+    exit 1;
+}
+
 # build stats obj
 my $mgstats = {
     gc_histogram => {
@@ -215,9 +225,6 @@ PipelineAWE::obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mgi
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
 PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
 PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
-
-# cleanup
-#PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
 
 exit 0;
 
