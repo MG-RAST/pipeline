@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
 	liburi-encode-perl \
 	libunicode-escape-perl \
 	libwww-perl \
+	liblog-log4perl-perl \
 	make 		\
 	python-biopython \
 	python-dev \
@@ -46,6 +47,7 @@ RUN apt-get update && apt-get install -y \
 	perl-modules \
    	python-numpy \
 	python-scipy \
+	qiime \
 	unzip \
 	wget \
 	&& rm -rf /usr/share/doc/ /usr/share/man/ /usr/share/X11/ /usr/share/i18n/ /usr/share/mime /usr/share/locale
