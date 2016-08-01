@@ -48,9 +48,12 @@ my $mgstats = PipelineAWE::read_json($stat_file);
 my $seq_num = $mgstats->{sequence_stats}{sequence_count_raw};
 
 # get source stats
-my $s_stats = PipelineAWE::read_json($source);
-my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
-my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
+if ($source) {
+    my $s_stats = PipelineAWE::read_json($source);
+    my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
+    my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
+    $mgstats->{source} = \%s_data;
+}
 
 # get abundance stats from API, this is an asynchronous call
 my $t1 = time;
@@ -73,7 +76,6 @@ my $alpha_rare = $get_diversity->{data};
 print STDERR "compute alpha_rare time: ".(time - $t2)."\n";
 
 # new stats
-$mgstats->{source}   = \%s_data;
 $mgstats->{taxonomy} = $abundances->{taxonomy};
 $mgstats->{function} = $abundances->{function};
 $mgstats->{ontology} = $abundances->{ontology};

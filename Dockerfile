@@ -10,7 +10,6 @@ RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
 
 RUN apt-get update && apt-get install -y \
 	bowtie2 	\
-	build-essential \
 	cdbfasta 	\
 	cd-hit		\
 	dh-autoreconf \
@@ -39,6 +38,7 @@ RUN apt-get update && apt-get install -y \
 	liburi-encode-perl \
 	libunicode-escape-perl \
 	libwww-perl \
+	liblog-log4perl-perl \
 	make 		\
 	python-biopython \
 	python-dev \
@@ -52,14 +52,12 @@ RUN apt-get update && apt-get install -y \
 	wget \
 	&& rm -rf /usr/share/doc/ /usr/share/man/ /usr/share/X11/ /usr/share/i18n/ /usr/share/mime /usr/share/locale
 
-
 # ###########
 # copy files into image
 COPY awecmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/perl/perl5/
 COPY usearch superblat /usr/local/bin/
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/usearch && strip /usr/local/bin/superblat
-
 
 #### install superblat (from binary in local dir) and BLAT from src
 RUN cd /root \
@@ -71,7 +69,6 @@ RUN cd /root \
 	&& strip /usr/local/bin/blat \
 	&& cd .. \
 	&& rm -rf blatSrc blatSrc35.zip
-
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
@@ -86,7 +83,6 @@ RUN cd /root \
 	&& rm -rf example .git \
 	&& cd .. \
 	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
-
 
 ### install DIAMOND
 RUN cd /root \
@@ -109,4 +105,7 @@ RUN cd /root \
 	&& make install \
 	&& make clean \
 	&& rm -rf /root/vsearch-2.02
-	
+
+### install qiime licensed uclust
+RUN wget -O /usr/local/bin/uclust http://www.drive5.com/uclust/uclustq1.2.22_i86linux64 \
+    && chmod +x /usr/local/bin/uclust
