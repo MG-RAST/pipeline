@@ -11,6 +11,7 @@ use Email::Simple;
 use Email::Sender::Simple;
 
 our $debug = 1;
+our $layout = '[%d] [%-5p] %m%n';
 our $default_api = "http://api.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $global_attr = "userattr.json";
@@ -25,9 +26,9 @@ $json->allow_nonref;
 
 use Log::Log4perl qw(:easy);
 if ($debug) {
-    Log::Log4perl->easy_init($DEBUG);
+    Log::Log4perl->easy_init({level => $DEBUG, layout => $layout});
 } else {
-    Log::Log4perl->easy_init($INFO);
+    Log::Log4perl->easy_init({level => $INFO, layout => $layout});
 }
 our $logger = Log::Log4perl->get_logger();
 
@@ -51,14 +52,21 @@ sub run_cmd {
     my $status = undef;
     my @parts  = split(/ /, $cmd);
     logger('info', $cmd);
-    if ($shell) {
-        $status = system($cmd);
-    } else {
-        $status = system(@parts);
-    }
-    if ($status != 0) {
-        logger('error', $parts[0]." returns value $status");
-        exit $status >> 8;
+    eval {
+        if ($shell) {
+            $status = system($cmd);
+        } else {
+            $status = system(@parts);
+        }
+    };
+    if ($@) {
+        logger('error', "died running child process ".$parts[0]);
+        logger('debug', $parts[0]." throws: ".$@);
+        if (defined($status) && ($status != 0)) {
+            logger('error', $parts[0]." returns value $status");
+            exit $status >> 8;
+        }
+        exit 1;
     }
 }
 

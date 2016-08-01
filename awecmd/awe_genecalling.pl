@@ -32,19 +32,16 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $fasta){
-    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$fasta] does not exist");
     exit 1;
 }
 
 my %types = (sanger => 'sanger_10', 454 => '454_30', illumina => 'illumina_10', complete => "complete");
 unless (exists $types{$type}) {
-    print STDERR "ERROR: The input type [$type] is not supported.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input type [$type] is not supported");
     exit 1;
 }
 

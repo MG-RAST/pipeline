@@ -26,16 +26,13 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (length($output)==0){
-    print STDERR "ERROR: An output file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "output file was not specified");
     exit 1;
 }elsif (! -e $fasta){
-    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$fasta] does not exist");
     exit 1;
 }
 
@@ -45,8 +42,7 @@ if ($ENV{'REFDBPATH'}) {
 }
 my $rna_nr_path = $refdb_dir."/".$rna_nr;
 unless (-s $rna_nr_path) {
-    print STDERR "ERROR: rna_nr not exist: $rna_nr_path\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "rna_nr not exist: $rna_nr_path");
     exit 1;
 }
 my $opts = "";

@@ -27,12 +27,10 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($input)==0){
-    print STDERR "ERROR: An input parameters file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input parameters file was not specified");
     exit 1;
 }elsif (! -e $input){
-    print STDERR "ERROR: The input parameters file [$input] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input parameters file [$input] does not exist");
     exit 1;
 }
 
@@ -40,14 +38,14 @@ my $params = PipelineAWE::read_json($input);
 my $mdata  = ($metadata && (-s $metadata)) ? PipelineAWE::read_json($metadata) : undef;
 
 unless ($mdata || $project) {
-    print STDERR "ERROR: Must have one of -metadata or -project.\n";
+    PipelineAWE::logger('error', "must have one of --metadata or --project");
     exit 1;
 }
 
 my $auth = $ENV{'USER_AUTH'} || undef;
 my $api  = $ENV{'MGRAST_API'} || undef;
 unless ($auth && $api) {
-    print STDERR "ERROR: Missing authentication ENV variables.\n";
+    PipelineAWE::logger('error', "missing authentication ENV variables");
     exit 1;
 }
 
@@ -120,7 +118,7 @@ if ($project) {
     }
     my $pinfo = PipelineAWE::obj_from_url($api."/project/".$project, $auth);
     unless ($project eq $pinfo->{id}) {
-        print STDERR "ERROR: project $project does not exist";
+        PipelineAWE::logger('error', "project $project does not exist");
     }
 }
 
@@ -162,7 +160,7 @@ FILES: foreach my $fname (keys %$to_submit) {
 }
 
 if (@$mgids == 0) {
-    print STDERR "ERROR: No metagenomes created for submission.\n";
+    PipelineAWE::logger('error', "no metagenomes created for submission");
     exit 1;
 }
 
@@ -173,20 +171,23 @@ if ($mdata && $params->{metadata}) {
     # no success
     if (scalar(@{$result->{added}}) == 0) {
         if ($result->{errors} && (@{$result->{errors}} > 0)) {
-            print STDERR "ERROR: Unable to import metadata:\n".join("\n", @{$result->{errors}})."\n";
+            PipelineAWE::logger('error', "unable to import metadata: ".join(", ", @{$result->{errors}}));
         } else {
-            print STDERR "ERROR: Unable to import any metadata\n";
+            PipelineAWE::logger('error', "unable to import any metadata");
         }
         exit 1;
     }
     # partial success
     if (scalar(@{$result->{added}}) < scalar(@$mgids)) {
         my %success = map { $_, 1 } @{$result->{added}};
-        print STDERR "Warning: unable to import metadata for the following:\n";
+        my @list = ();
         foreach my $m (@$mgids) {
             unless ($success{$m}) {
-                print STDERR $m."\n";
+                push @list, $m;
             }
+        }
+        if (@list > 0) {
+            PipelineAWE::logger('error', "unable to import metadata for the following: ".join(", ", @list));
         }
     }
 }

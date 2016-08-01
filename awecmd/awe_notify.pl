@@ -26,12 +26,10 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($user)==0){
-    print STDERR "ERROR: A user ID is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "user ID is required");
     exit 1;
 }elsif (length($mgid)==0){
-    print STDERR "ERROR: A MG-RAST ID is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "MG-RAST ID is required");
     exit 1;
 }
 
