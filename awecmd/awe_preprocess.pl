@@ -30,12 +30,10 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($input_file)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $input_file){
-    print STDERR "ERROR: The input sequence file [$input_file] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$input_file] does not exist");
     exit 1;
 }
 
@@ -101,7 +99,7 @@ if (-z $passed_seq) {
                    "Either your sequences were too short or your pipeline QC settings were to stringent.\n\n".
                    'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
     PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
-    print STDERR "pipeline failed, no sequences passed preprocessing\n";
+    PipelineAWE::logger('error', "pipeline failed, no sequences passed preprocessing");
     # delete job ??
     exit 1;
 }

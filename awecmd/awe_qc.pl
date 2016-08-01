@@ -43,12 +43,10 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($infile)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $infile){
-    print STDERR "ERROR: The input sequence file [$infile] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$infile] does not exist");
     exit 1;
 }
 
@@ -58,7 +56,7 @@ foreach (@kmers) {
     if ($_ !~ /^\d+$/) { $bad_kmer = 1; }
 }
 if ((@kmers == 0) || $bad_kmer) {
-    print STDERR "ERROR: invalid kmeer list: $kmers.\n";
+    PipelineAWE::logger('error', "invalid kmeer list: $kmers");
     exit 1;
 }
 unless ($format && ($format =~ /^fasta|fastq$/)) {

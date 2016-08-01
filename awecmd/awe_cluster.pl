@@ -39,20 +39,16 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $fasta){
-    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$fasta] does not exist");
     exit 1;
 }elsif ((! $pid) || ($pid < 40)){
-    print STDERR "ERROR: The percent identity must be greater than 50\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "percent identity must be greater than 50");
     exit 1;
 }elsif ((! $aa) && (! $rna) && (! $dna)){
-    print STDERR "ERROR: one of the following modes is required: aa, rna, dna\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "one of the following modes is required: --aa, --rna, --dna");
     exit 1;
 }
 
@@ -138,12 +134,12 @@ sub parse_clust {
                 push @$pers, (split(/\s+/, $2))[1];
             }
         } else {
-            print STDERR "Warning: bad cluster line: $x\n";
+            PipelineAWE::logger('warn', "bad cluster line: $x");
             return ("", 0);
         }
     }
     unless ($seed && (@$ids > 0)) {
-        print STDERR "Warning: bad cluster block\n";
+        PipelineAWE::logger('warn', "bad cluster block");
         return ("", 0);
     } else {
         return ($seed."\t".join(",", @$ids)."\t".join(",", @$pers)."\n", scalar(@$ids)+1);

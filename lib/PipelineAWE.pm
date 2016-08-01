@@ -11,6 +11,7 @@ use Email::Simple;
 use Email::Sender::Simple;
 
 our $debug = 1;
+our $layout = '[%d] [%-5p] %m%n';
 our $default_api = "http://api.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $global_attr = "userattr.json";
@@ -25,9 +26,9 @@ $json->allow_nonref;
 
 use Log::Log4perl qw(:easy);
 if ($debug) {
-    Log::Log4perl->easy_init($DEBUG);
+    Log::Log4perl->easy_init({level => $DEBUG, layout => $layout});
 } else {
-    Log::Log4perl->easy_init($INFO);
+    Log::Log4perl->easy_init({level => $INFO, layout => $layout});
 }
 our $logger = Log::Log4perl->get_logger();
 

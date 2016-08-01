@@ -36,28 +36,22 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($input)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $input){
-    print STDERR "ERROR: The input summary file [$input] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input summary file [$input] does not exist");
     exit 1;
 }elsif (! -e $psql){
-    print STDERR "ERROR: The input postgresql file [$psql] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input postgresql file [$psql] does not exist");
     exit 1;
 }elsif (length($job_id)==0){
-    print STDERR "ERROR: A job ID is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "job ID is required");
     exit 1;
 }elsif (length($type)==0){
-    print STDERR "ERROR: A summary type is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "summary type is required");
     exit 1;
 }elsif (! exists($types{$type})){
-    print STDERR "ERROR: type $type is invalid.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "type $type is invalid");
     exit 1;
 }
 
@@ -68,8 +62,7 @@ my $dbuser = $ENV{'ANALYSIS_DB_USER'} || undef;
 my $dbpass = $ENV{'ANALYSIS_DB_PASS'} || undef;
 
 unless (defined($dbhost) && defined($dbname) && defined($dbuser) && defined($dbpass)) {
-    print STDERR "ERROR: missing analysis database ENV variables.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "missing analysis database ENV variables");
     exit 1;
 }
 
