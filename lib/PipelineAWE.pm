@@ -52,14 +52,21 @@ sub run_cmd {
     my $status = undef;
     my @parts  = split(/ /, $cmd);
     logger('info', $cmd);
-    if ($shell) {
-        $status = system($cmd);
-    } else {
-        $status = system(@parts);
-    }
-    if ($status != 0) {
-        logger('error', $parts[0]." returns value $status");
-        exit $status >> 8;
+    eval {
+        if ($shell) {
+            $status = system($cmd);
+        } else {
+            $status = system(@parts);
+        }
+    };
+    if ($@) {
+        logger('error', "died running child process ".$parts[0]);
+        logger('debug', $parts[0]." throws: ".$@);
+        if (defined($status) && ($status != 0)) {
+            logger('error', $parts[0]." returns value $status");
+            exit $status >> 8;
+        }
+        exit 1;
     }
 }
 
