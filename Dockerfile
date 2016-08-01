@@ -49,8 +49,7 @@ RUN apt-get update && apt-get install -y \
 	python-scipy \
 	python-sphinx \
 	unzip \
-	wget \
-	&& rm -rf /usr/share/doc/ /usr/share/man/ /usr/share/X11/ /usr/share/i18n/ /usr/share/mime
+	wget
 
 # ###########
 # copy files into image
