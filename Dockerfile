@@ -47,6 +47,7 @@ RUN apt-get update && apt-get install -y \
 	perl-modules \
    	python-numpy \
 	python-scipy \
+	qiime \
 	unzip \
 	wget \
 	&& rm -rf /usr/share/doc/ /usr/share/man/ /usr/share/X11/ /usr/share/i18n/ /usr/share/mime /usr/share/locale
@@ -108,3 +109,4 @@ RUN cd /root \
 	&& make install \
 	&& make clean \
 	&& rm -rf /root/vsearch-2.02
+	
