@@ -55,10 +55,10 @@ RUN apt-get update && apt-get install -y \
 # copy files into image
 COPY awecmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
-COPY usearch superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/usearch && strip /usr/local/bin/superblat
+COPY superblat /usr/local/bin/
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
 
-#### install superblat (from binary in local dir) and BLAT from src
+#### install BLAT from src
 RUN cd /root \
 	&& wget "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip" \
 	&& unzip blatSrc35.zip && export C_INCLUDE_PATH=/root/include \
@@ -106,11 +106,11 @@ RUN cd /root \
 	&& cd .. \
     && rm -rf /root/vsearch-2.02 /root/v2.0.2.tar.gz
 
-### install qiime licensed uclust
+### install Qiime licensed uclust
 RUN wget -O /usr/local/bin/uclust http://www.drive5.com/uclust/uclustq1.2.22_i86linux64 \
     && chmod +x /usr/local/bin/uclust
 
-### install qiime python libs
+### install Qiime python libs
 RUN svn co https://svn.code.sf.net/p/pprospector/code/trunk pprospector \
 	&& git clone git://github.com/pycogent/pycogent.git \
 	&& git clone git://github.com/biocore/pynast.git \
