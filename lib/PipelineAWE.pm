@@ -36,6 +36,9 @@ our $logger = Log::Log4perl->get_logger();
 
 sub logger {
     my ($type, $msg) = @_;
+    # replace line breaks
+    $msg =~ s/\n/, /g;
+    # find logger channel
     if ($type eq 'debug') {
         $logger->debug($msg);
     } elsif ($type eq 'info') {
