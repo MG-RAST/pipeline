@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 	cd-hit		\
 	dh-autoreconf \
 	git 		\
+	subversion  \
 	jellyfish 	\
 	libcwd-guard-perl \
 	libberkeleydb-perl \
@@ -42,24 +43,22 @@ RUN apt-get update && apt-get install -y \
 	make 		\
 	python-biopython \
 	python-dev \
-	python-pip \ 					
 	python-leveldb \
 	perl-modules \
    	python-numpy \
 	python-scipy \
-	qiime \
+	python-sphinx \
 	unzip \
-	wget \
-	&& rm -rf /usr/share/doc/ /usr/share/man/ /usr/share/X11/ /usr/share/i18n/ /usr/share/mime /usr/share/locale
+	wget
 
 # ###########
 # copy files into image
 COPY awecmd/* bin/* /usr/local/bin/
-COPY lib/* /usr/local/lib/perl/perl5/
-COPY usearch superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/usearch && strip /usr/local/bin/superblat
+COPY lib/* /usr/local/lib/site_perl/
+COPY superblat /usr/local/bin/
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
 
-#### install superblat (from binary in local dir) and BLAT from src
+#### install BLAT from src
 RUN cd /root \
 	&& wget "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip" \
 	&& unzip blatSrc35.zip && export C_INCLUDE_PATH=/root/include \
@@ -104,8 +103,32 @@ RUN cd /root \
 	&& make \
 	&& make install \
 	&& make clean \
-	&& rm -rf /root/vsearch-2.02
+	&& cd .. \
+    && rm -rf /root/vsearch-2.02 /root/v2.0.2.tar.gz
 
-### install qiime licensed uclust
+### install Qiime licensed uclust
 RUN wget -O /usr/local/bin/uclust http://www.drive5.com/uclust/uclustq1.2.22_i86linux64 \
     && chmod +x /usr/local/bin/uclust
+
+### install Qiime python libs
+RUN svn co https://svn.code.sf.net/p/pprospector/code/trunk pprospector \
+	&& git clone git://github.com/pycogent/pycogent.git \
+	&& git clone git://github.com/biocore/pynast.git \
+	&& git clone git://github.com/biocore/qiime.git \
+	&& git clone git://github.com/biocore/biom-format.git \
+	&& cd pycogent \
+	&& git checkout c77e75ebf42c4a6379693cb792034efb9acd5891 \
+	&& python setup.py install \
+	&& cd ../pprospector \
+	&& python setup.py install \
+	&& cd ../pynast \
+	&& git checkout 262acb14982c0fa48047c1e14ace950e77442169 \
+	&& python setup.py install \
+	&& cd ../qiime \
+	&& git checkout d4333e2ea06af942f1f61148c4ccb02ffc438d6b \
+	&& python setup.py install \
+	&& cd ../biom-format \
+	&& git checkout d5b85a85498783f45b7e1ab9c66aaa9460e1d10a \
+	&& python setup.py install \
+	&& cd .. \
+	&& rm -rf pycogent pprospector pynast qiime biom-format
