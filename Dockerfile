@@ -3,10 +3,8 @@
 FROM	debian
 MAINTAINER The MG-RAST team
 
-ENV LC_ALL UTF-8
-RUN echo 'LC_ALL=UTF-8' >> /etc/environment 
 ENV DEBIAN_FRONTEND noninteractive
-RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
+
 
 RUN apt-get update && apt-get install -y \
 	bowtie2 	\
@@ -40,6 +38,7 @@ RUN apt-get update && apt-get install -y \
 	libunicode-escape-perl \
 	libwww-perl \
 	liblog-log4perl-perl \
+	locales \
 	make 		\
 	python-biopython \
 	python-dev \
@@ -50,6 +49,10 @@ RUN apt-get update && apt-get install -y \
 	python-sphinx \
 	unzip \
 	wget
+	
+
+RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
+RUN locale-gen en_US.UTF-8 && dpkg-reconfigure locales
 
 # ###########
 # copy files into image
