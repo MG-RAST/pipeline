@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, time, datetime, operator, shutil
+import os, sys, time, datetime, operator, shutil, logging
 import subprocess as sub
 from optparse import OptionParser
 
@@ -9,10 +9,14 @@ Max_Eval = 0.001
 EXIT_MISSING_INPUT = 1
 EXIT_RUNBLAT_FAIL = 2
 ENV_VAR_DBPATH = 'REFDBPATH'
-Info_log = open("awe_blat_prot.info", "w")
+
+# logging
+LOG_FORMAT = '[%(asctime)-15s] [%(levelname)-5s] %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+logger = logging.getLogger()
 
 def sortandbleach(sims_file, out_file, sort_dir):
-    print "started sort and bleach"
+    logger.info("sortandbleach - started")
     sorted_file = "%s.sorted"%sims_file
     # sort by id, bleach functions sorts by bitscore
     cmd  = "sort -t '\t' -k 1,1 -T %s %s > %s"%(sort_dir, sims_file, sorted_file)
@@ -42,9 +46,8 @@ def sortandbleach(sims_file, out_file, sort_dir):
     sims_handle.close()            
     out_handle.close()
     os.remove(sorted_file)
-       
-    Info_log.write("sortandbleach - finished")
-    print "finished sort and bleach"
+    
+    logger.info("sortandbleach - finished")
     return out_file
 
 def bleach(sims, out):
@@ -84,11 +87,10 @@ def runBlatProcess(infile, nr, output):
         os.remove(tmp_out1)
         os.remove(tmp_out2)
         
-        print "finished running superblat - time: %s m\n"%((datetime.datetime.utcnow() - start).seconds / 60)
-        Info_log.write("runBlatProcess - finished - time: %s m\n"%((datetime.datetime.utcnow() - start).seconds / 60))
+        logger.info("runBlatProcess - finished - time: %s m\n"%((datetime.datetime.utcnow() - start).seconds / 60))
         return
     except (KeyboardInterrupt, SystemExit):
-        Info_log.write("runBlatProcessPara - killed")
+        logger.error("runBlatProcess - killed")
         sys.exit(EXIT_RUNBLAT_FAIL)
 
 if __name__ == "__main__":
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args()
     
     if not (opts.input and os.path.isfile(opts.input)):
-        parser.error("Missing input src file %s"%opts.input)
+        logger.error("Missing input src file %s"%opts.input)
         sys.exit(EXIT_MISSING_INPUT)
     
     infile = opts.input
@@ -115,5 +117,3 @@ if __name__ == "__main__":
     
     blat_hits = runBlatProcess(infile, refdb, outfile)
     sortandbleach("%s.cat_blat"%outfile, outfile, opts.sort_dir)
-    
-    Info_log.close()

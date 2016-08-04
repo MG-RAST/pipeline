@@ -62,8 +62,7 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($job_id)==0){
-    print STDERR "ERROR: A job ID is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "job ID is required");
     exit 1;
 }
 
@@ -75,7 +74,7 @@ my $done_attr = PipelineAWE::get_userattr();
 my $mgid = $done_attr->{id};
 
 # get attributes
-print "Computing file statistics and updating attributes\n";
+PipelineAWE::logger('info', "Computing file statistics and updating attributes");
 my $pq_attr = PipelineAWE::read_json($post_qc.'.json');
 my $sr_attr = PipelineAWE::read_json($search.'.json');
 my $gc_attr = PipelineAWE::read_json($genecall.'.json');
@@ -104,7 +103,7 @@ unlink($post_qc, $search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
 
 ### JobDB update
 # get JobDB statistics
-print "Retrieving sequence statistics from attributes\n";
+PipelineAWE::logger('info', "Retrieving sequence statistics from attributes");
 my $job_stats = PipelineAWE::obj_from_url($api_url."/job/statistics/".$mgid, $api_key)->{data};
 # get additional attributes
 my $up_attr = PipelineAWE::read_json($upload.'.json');
@@ -136,6 +135,10 @@ while ($get_diversity->{status} ne 'done') {
     $get_diversity = PipelineAWE::obj_from_url($get_diversity->{url});
 }
 my $alpha_rare = $get_diversity->{data};
+if ($alpha_rare->{alphadiversity} == 0) {
+    PipelineAWE::logger('error', "unable to compute alpha diversity, organism abundance data is missing");
+    exit 1;
+}
 $job_stats->{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
 
 # read ratios
@@ -156,14 +159,14 @@ my $m5nr_vers = {
 };
 
 # update DB
-print "Updating Job DB with new stats / info\n";
+PipelineAWE::logger('info', "Updating Job DB with new stats / info");
 PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => $job_stats});
 PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => $m5nr_vers});
 PipelineAWE::obj_from_url($api_url."/metagenome/$mgid/changesequencetype/$seq_type", $api_key);
 
 ### create metagenome statistics node
 # get stats from inputs
-print "Building / computing metagenome statistics file\n";
+PipelineAWE::logger('info', "Building / computing metagenome statistics file");
 my $u_stats = PipelineAWE::read_json($upload);
 my $q_stats = PipelineAWE::read_json($qc);
 my $s_stats = PipelineAWE::read_json($source);
@@ -177,6 +180,12 @@ while ($get_abund->{status} ne 'done') {
     $get_abund = PipelineAWE::obj_from_url($get_abund->{url});
 }
 my $abundances = $get_abund->{data};
+
+# test for missing data
+if ((scalar(@{$abundances->{function}}) == 0) || (scalar(@{$abundances->{taxonomy}{species}}) == 0) || (scalar(keys %{$abundances->{ontology}}) == 0) ) {
+    PipelineAWE::logger('error', "unable to compute annotation abundances, data is missing from DB.");
+    exit 1;
+}
 
 # build stats obj
 my $mgstats = {
@@ -198,12 +207,12 @@ my $mgstats = {
 };
 
 # output stats object
-print "Outputing statistics file\n";
+PipelineAWE::logger('info', "Outputing statistics file");
 PipelineAWE::print_json($job_id.".statistics.json", $mgstats);
 PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "statistics", file_format => "json"});
 
 # upload of solr data
-print "POSTing solr data\n";
+PipelineAWE::logger('info', "POSTing solr data");
 my $solrdata = {
     sequence_stats => $mgstats->{sequence_stats},
     function => [ map {$_->[0]} @{$mgstats->{function}} ],
@@ -215,9 +224,6 @@ PipelineAWE::obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mgi
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
 PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
 PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
-
-# cleanup
-#PipelineAWE::run_cmd('rm -rf '.$ENV{'HOME'}.'/.postgresql');
 
 exit 0;
 

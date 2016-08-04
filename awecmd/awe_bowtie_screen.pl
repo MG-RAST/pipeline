@@ -39,16 +39,13 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (length($output)==0){
-    print STDERR "ERROR: An output file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "output file was not specified");
     exit 1;
 }elsif (! -e $fasta){
-    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$fasta] does not exist");
     exit 1;
 }
 
@@ -61,12 +58,12 @@ else {
     # check indexes
     my @indexes = split(/,/, $index);
     if (scalar(@indexes) == 0) {
-        print STDERR "ERROR: missing index\n";
+        PipelineAWE::logger('error', "missing index");
         exit 1;
     }
     for my $i (@indexes) {
         unless ( defined $index_ids->{$i} ) {
-            print STDERR "ERROR: undefined index name: $i\n";
+            PipelineAWE::logger('error', "undefined index name: $i");
             exit 1;
         }
     }

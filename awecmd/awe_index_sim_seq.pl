@@ -36,20 +36,16 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (scalar(@in_sims)==0){
-    print STDERR "ERROR: At least one input similarity file is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "at least one input similarity file is required");
     exit 1;
 }elsif (scalar(@in_maps)==0){
-    print STDERR "ERROR: At least one input mapping file is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "at least one input mapping file is required");
     exit 1;
 }elsif (scalar(@in_seqs)==0){
-    print STDERR "ERROR: An input sequence file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (length($output)==0){
-    print STDERR "ERROR: An output file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "output file was not specified");
     exit 1;
 }
 
@@ -92,7 +88,7 @@ if (-z $sim_file) {
                    "No similarities were found using blat against our M5NR database.\n\n".
                    'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
     PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
-    print STDERR "pipeline failed, no similarities found\n";
+    PipelineAWE::logger('error', "pipeline failed, no similarities found");
     # delete job ??
     exit 1;
 }

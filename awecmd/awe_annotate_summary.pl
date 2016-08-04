@@ -42,32 +42,25 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (scalar(@in_expand)==0){
-    print STDERR "ERROR: At least one input expand file is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "at least one input expand file is required");
     exit 1;
 }elsif (scalar(@in_maps)==0){
-    print STDERR "ERROR: At least one input mapping file is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "at least one input expand file is required");
     exit 1;
 }elsif (length($job_id)==0){
-    print STDERR "ERROR: A job ID is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "job ID is required");
     exit 1;
 }elsif (length($type)==0){
-    print STDERR "ERROR: A summary type is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "summary type is required");
     exit 1;
 }elsif (! exists($types{$type})){
-    print STDERR "ERROR: type $type is invalid.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "type $type is invalid");
     exit 1;
 }elsif (($type eq 'md5') && (length($in_index)==0)){
-    print STDERR "ERROR: -in_index is required with type 'md5'.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "--in_index is required with type 'md5'");
     exit 1;
 }elsif (length($output)==0){
-    print STDERR "ERROR: An output file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "output file was not specified");
     exit 1;
 }
 
@@ -108,8 +101,8 @@ if (-s $expand_file) {
 
 # throw error if empty md5s
 if (($type eq 'md5') && (! -s $output)) {
-   print STDERR "ERROR: input files ".join(", ", @in_expand)." produced empty output $output\n";
-   exit 1;
+    PipelineAWE::logger('error', "input files ".join(", ", @in_expand)." produced empty output $output");
+    exit 1;
 }
 
 if ($type eq 'source') {

@@ -34,32 +34,25 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($in_clust)==0){
-    print STDERR "ERROR: An input cluster map file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input cluster map file was not specified");
     exit 1;
 }elsif (length($in_sim)==0){
-    print STDERR "ERROR: An input similarity file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input similarity file was not specified");
     exit 1;
 }elsif (length($in_seq)==0){
-    print STDERR "ERROR: An input sequence file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file was not specified");
     exit 1;
 }elsif (! -e $in_clust){
-    print STDERR "ERROR: The input cluster map file [$in_clust] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input cluster map file [$in_clust] does not exist");
     exit 1;
 }elsif (! -e $in_sim){
-    print STDERR "ERROR: The input similarity file [$in_sim] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input similarity file [$in_sim] does not exist");
     exit 1;
 }elsif (! -e $in_seq){
-    print STDERR "ERROR: The input sequence file [$in_seq] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$in_seq] does not exist");
     exit 1;
 }elsif (length($output)==0){
-    print STDERR "ERROR: An output sequence file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "output sequence file was not specified");
     exit 1;
 }
 

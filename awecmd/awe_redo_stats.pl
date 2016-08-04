@@ -31,8 +31,7 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($job_id)==0){
-    print STDERR "ERROR: A job ID is required.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "job ID is required");
     exit 1;
 }
 
@@ -48,9 +47,12 @@ my $mgstats = PipelineAWE::read_json($stat_file);
 my $seq_num = $mgstats->{sequence_stats}{sequence_count_raw};
 
 # get source stats
-my $s_stats = PipelineAWE::read_json($source);
-my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
-my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
+if ($source) {
+    my $s_stats = PipelineAWE::read_json($source);
+    my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
+    my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
+    $mgstats->{source} = \%s_data;
+}
 
 # get abundance stats from API, this is an asynchronous call
 my $t1 = time;
@@ -60,7 +62,7 @@ while ($get_abund->{status} ne 'done') {
     $get_abund = PipelineAWE::obj_from_url($get_abund->{url}, $api_key);
 }
 my $abundances = $get_abund->{data};
-print STDERR "compute abundance time: ".(time - $t1)."\n";
+PipelineAWE::logger('info', "compute abundance time: ".(time - $t1));
 
 # diversity computation from API, this is an asynchronous call
 my $t2 = time;
@@ -70,10 +72,9 @@ while ($get_diversity->{status} ne 'done') {
     $get_diversity = PipelineAWE::obj_from_url($get_diversity->{url}, $api_key);
 }
 my $alpha_rare = $get_diversity->{data};
-print STDERR "compute alpha_rare time: ".(time - $t2)."\n";
+PipelineAWE::logger('info', "compute alpha_rare time: ".(time - $t2));
 
 # new stats
-$mgstats->{source}   = \%s_data;
 $mgstats->{taxonomy} = $abundances->{taxonomy};
 $mgstats->{function} = $abundances->{function};
 $mgstats->{ontology} = $abundances->{ontology};
@@ -83,12 +84,12 @@ $mgstats->{sequence_stats}{alpha_diversity_shannon} = $alpha_rare->{alphadiversi
 PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => {alpha_diversity_shannon => $alpha_rare->{alphadiversity}}});
 
 # output stats object
-print "Outputing statistics file\n";
+PipelineAWE::logger('info', "Outputing statistics file");
 PipelineAWE::print_json($job_id.".statistics.json", $mgstats);
 PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "statistics", file_format => "json"});
 
 # upload of solr data
-print "POSTing solr data\n";
+PipelineAWE::logger('info', "POSTing solr data");
 my $solrdata = {
     sequence_stats => $mgstats->{sequence_stats},
     function => [ map {$_->[0]} @{$mgstats->{function}} ],

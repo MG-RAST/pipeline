@@ -32,12 +32,10 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($input)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $input){
-    print STDERR "ERROR: The input sequence file [$input] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$input] does not exist");
     exit 1;
 }
 

@@ -31,16 +31,13 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($fasta)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (length($output)==0){
-    print STDERR "ERROR: An output file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "output file was not specified");
     exit 1;
 }elsif (! -e $fasta){
-    print STDERR "ERROR: The input sequence file [$fasta] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input sequence file [$fasta] does not exist");
     exit 1;
 }
 
@@ -50,15 +47,14 @@ if ($ENV{'REFDBPATH'}) {
 }
 my $rna_nr_path = $refdb_dir."/".$rna_nr;
 unless (-s $rna_nr_path) {
-    print STDERR "ERROR: rna_nr not exist: $rna_nr_path\n";
-    print STDERR print_usage();
+    PipelineAWE::logger('error', "rna_nr not exist: $rna_nr_path");
     exit 1;
 }
 
 my $run_dir = getcwd;
-# use usearch
-PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
-exit 0;
+### use usearch - depricated
+# PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
+# exit 0;
 
 # use vsearch
 PipelineAWE::run_cmd("vsearch --strand both --wordlength 4 --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc ");
@@ -79,10 +75,10 @@ while (my $ucl = <SUC>) {
         next;
     }
     my @parts = split(/\t/, $ucl);
-    my ($strand, $qstart, $cigar, $qname) = ($parts[4], $parts[5], $parts[7], $parts[8]);
+    my ($qlen, $strand, $qstart, $cigar, $qname) = ($parts[2], $parts[4], $parts[5], $parts[7], $parts[8]);
     my @qname_fields = split(/ /, $qname);
     $qname = $qname_fields[0];
-    my $qlen = cigar_length($cigar);
+    #my $qlen = cigar_length($cigar); // this number is already in output field
     my $qstop = $qstart + $qlen;
     while ($qname ne $id) {
         $seql = <STAB>;

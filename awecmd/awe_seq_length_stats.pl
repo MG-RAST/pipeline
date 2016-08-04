@@ -30,17 +30,14 @@ if ($help) {
     print_usage();
     exit 0;
 } elsif (length($input_file)==0) {
-    print STDERR "ERROR: An input file was not specified.\n";
-    print_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 } elsif (! -e $input_file) {
-    print STDERR "ERROR: The input sequence file [$input_file] does not exist.\n";
-    print_usage();
+    PipelineAWE::logger('error', "input sequence file [$input_file] does not exist");
     exit 1;
 }
 if ($type ne 'fasta' && $type ne 'fastq') {
-    print STDERR "ERROR: The file type must be fasta or fastq format (default is fasta).\n";
-    print_usage();
+    PipelineAWE::logger('error', "file type must be fasta or fastq format (default is fasta)");
     exit 1;
 }
 

@@ -10,6 +10,8 @@ use LWP::UserAgent;
 use Email::Simple;
 use Email::Sender::Simple;
 
+our $debug = 1;
+our $layout = '[%d] [%-5p] %m%n';
 our $default_api = "http://api.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $global_attr = "userattr.json";
@@ -19,21 +21,55 @@ $json = $json->utf8();
 $json->max_size(0);
 $json->allow_nonref;
 
+
+######### Set logging  ##########
+
+use Log::Log4perl qw(:easy);
+if ($debug) {
+    Log::Log4perl->easy_init({level => $DEBUG, layout => $layout});
+} else {
+    Log::Log4perl->easy_init({level => $INFO, layout => $layout});
+}
+our $logger = Log::Log4perl->get_logger();
+
 ######### Helper Functions ##########
+
+sub logger {
+    my ($type, $msg) = @_;
+    # replace line breaks
+    $msg =~ s/\n/, /g;
+    # find logger channel
+    if ($type eq 'debug') {
+        $logger->debug($msg);
+    } elsif ($type eq 'info') {
+        $logger->info($msg);
+    } elsif ($type eq 'warn') {
+        $logger->warn($msg);
+    } elsif ($type eq 'error') {
+        $logger->error($msg);
+    }
+}
 
 sub run_cmd {
     my ($cmd, $shell) = @_;
     my $status = undef;
     my @parts  = split(/ /, $cmd);
-    print STDOUT $cmd."\n";
-    if ($shell) {
-        $status = system($cmd);
-    } else {
-        $status = system(@parts);
-    }
-    if ($status != 0) {
-        print STDERR "ERROR: ".$parts[0]." returns value $status\n";
-        exit $status >> 8;
+    logger('info', $cmd);
+    eval {
+        if ($shell) {
+            $status = system($cmd);
+        } else {
+            $status = system(@parts);
+        }
+    };
+    if ($@) {
+        logger('error', "died running child process ".$parts[0]);
+        logger('debug', $parts[0]." throws: ".$@);
+        if (defined($status) && ($status != 0)) {
+            logger('error', $parts[0]." returns value $status");
+            exit $status >> 8;
+        }
+        exit 1;
     }
 }
 
@@ -65,17 +101,17 @@ sub obj_from_url {
         $result = $agent->get($url, @args);
     }
     if (! ref($result)) {
-        print STDERR "ERROR: Unable to connect to $url\n";
+        logger('error', "unable to connect to $url");
         exit 1;
     }
     eval {
         $content = $json->decode( $result->content );
     };
     if ($@ || (! ref($content))) {
-        print STDERR "ERROR: ".$result->content."\n";
+        logger('error', $result->content);
         exit 1;
     } elsif ($content->{'ERROR'}) {
-        print STDERR "From $url: ".$content->{'ERROR'}."\n";
+        logger('error', "from $url: ".$content->{'ERROR'});
         exit 1;
     } else {
         return $content;
@@ -149,7 +185,7 @@ sub create_attr {
         }
         print_json($name, $attr);
     } else {
-        print STDERR "missing $global_attr\n";
+        logger('error', "missing $global_attr");
     }
 }
 
@@ -175,7 +211,7 @@ sub get_seq_stats {
     my $stats = {};
     foreach my $line (@out) {
         if ($line =~ /^\[error\]/) {
-            print STDERR $line."\n";
+            logger('error', $line);
             exit 1;
         }
         my ($k, $v) = split(/\t/, $line);

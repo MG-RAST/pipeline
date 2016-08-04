@@ -37,12 +37,10 @@ if ($help){
     print get_usage();
     exit 0;
 }elsif (length($input)==0){
-    print STDERR "ERROR: An input file was not specified.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input file was not specified");
     exit 1;
 }elsif (! -e $input){
-    print STDERR "ERROR: The input similarity file [$input] does not exist.\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "input similarity file [$input] does not exist");
     exit 1;
 }
 
@@ -59,8 +57,7 @@ if ($aa) {
     $cmd .= " --out_rna $out_prefix.$type.expand.rna";
     push @out_files, "$out_prefix.$type.expand.rna";
 } else {
-    print STDERR "ERROR: one of the following modes is required: aa, rna\n";
-    print STDERR get_usage();
+    PipelineAWE::logger('error', "one of the following modes is required: --aa, --rna");
     exit 1;
 }
 $cmd .= " --out_filter $out_prefix.$type.sims.filter --out_lca $out_prefix.$type.expand.lca";
