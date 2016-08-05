@@ -132,7 +132,7 @@ sub send_mail {
     my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
     if ($user_info->{email}) {
         my $smtp = Net::SMTP->new($mg_smtp);
-        my $reciever = "\"$owner_name\" <".$user_info->{email}.">";
+        my $receiver = "\"$owner_name\" <".$user_info->{email}.">";
         $smtp->mail('mg-rast');
         if ($smtp->to($receiver)) {
             $smtp->data($body);
