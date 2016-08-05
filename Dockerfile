@@ -80,9 +80,8 @@ RUN cd /root \
 	&& mv *.pl bin/. \
 	&& install -s -m555 FragGeneScan bin/. \
 	&& make clean \
-	&& rm -rf example .git \
-	&& cd .. \
-	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
+	&& rm -rf example .git
+ENV PATH /root/FragGeneScan/bin:$PATH
 
 ### install DIAMOND
 RUN cd /root \
