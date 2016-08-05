@@ -7,13 +7,13 @@ no warnings('once');
 use JSON;
 use Data::Dumper;
 use LWP::UserAgent;
-use Email::Simple;
-use Email::Sender::Simple;
+use Net::SMTP;
 
 our $debug = 1;
 our $layout = '[%d] [%-5p] %m%n';
 our $default_api = "http://api.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
+our $mg_smtp = 'smtp.mcs.anl.gov';
 our $global_attr = "userattr.json";
 our $agent = LWP::UserAgent->new();
 our $json = JSON->new;
@@ -131,15 +131,15 @@ sub send_mail {
     my ($body, $subject, $user_info) = @_;
     my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
     if ($user_info->{email}) {
-        my $email_simple = Email::Simple->create(
-            header => [
-                To      => "\"$owner_name\" <".$user_info->{email}.">",
-                From    => $mg_email,
-                Subject => $subject,
-            ],
-            body => "Dear $owner_name,\n\n".$body
-        );
-        Email::Sender::Simple->send($email_simple);
+        my $smtp = Net::SMTP->new($mg_smtp);
+        my $reciever = "\"$owner_name\" <".$user_info->{email}.">"
+        $smtp->mail('mg-rast');
+        if ($smtp->to($receiver)) {
+            $smtp->data($body);
+        } else {
+            logger('error', $smtp->message());
+        }
+        $smtp->quit;
     }
 }
 

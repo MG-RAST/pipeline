@@ -27,8 +27,6 @@ RUN apt-get update && apt-get install -y \
 	libdigest-md5-perl \
 	libdigest-md5-file-perl \
 	libdbd-pg-perl \
-	libemail-simple-perl \
-	libemail-sender-perl \
 	libfile-slurp-perl \
 	libfilehandle-fmode-perl \
 	libgetopt-long-descriptive-perl \
