@@ -5,9 +5,11 @@ use warnings;
 no warnings('once');
 
 use JSON;
+use POSIX;
 use Data::Dumper;
 use LWP::UserAgent;
 use Net::SMTP;
+use Capture::Tiny qw(:all);
 
 our $debug = 1;
 our $layout = '[%d] [%-5p] %m%n';
@@ -53,18 +55,26 @@ sub logger {
 sub run_cmd {
     my ($cmd, $shell) = @_;
     my $status = undef;
+    my $stderr = undef;
     my @parts  = split(/ /, $cmd);
     logger('info', $cmd);
     eval {
         if ($shell) {
-            $status = system($cmd);
+            (undef, $stderr, $status) = capture {
+                system($cmd);
+            };
         } else {
-            $status = system(@parts);
+            (undef, $stderr, $status) = capture {
+                system(@parts);
+            };
         }
     };
-    if ($@) {
+    if ($@ || $status) {
         logger('error', "died running child process ".$parts[0]);
-        logger('debug', $parts[0]." throws: ".$@);
+        logger('debug', $parts[0].": ".$@);
+        if ($stderr) {
+            logger('debug', "STDERR: ".$stderr);
+        }
         if (defined($status) && ($status != 0)) {
             logger('error', $parts[0]." returns value $status");
             exit $status >> 8;
@@ -131,11 +141,19 @@ sub send_mail {
     my ($body, $subject, $user_info) = @_;
     my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
     if ($user_info->{email}) {
-        my $smtp = Net::SMTP->new($mg_smtp);
+        my $smtp = Net::SMTP->new($mg_smtp, Hello => $mg_smtp);
         my $receiver = "\"$owner_name\" <".$user_info->{email}.">";
         $smtp->mail('mg-rast');
+        my @data = (
+            "To: $receiver\n",
+            "From: $mg_email\n",
+            "Date: ".strftime("%a, %d %b %Y %H:%M:%S %z", localtime)."\n",
+            "Subject: $subject\n\n",
+            $body
+        );
+        $smtp->mail('mg-rast');
         if ($smtp->to($receiver)) {
-            $smtp->data($body);
+            $smtp->data(@data);
         } else {
             logger('error', $smtp->message());
         }
