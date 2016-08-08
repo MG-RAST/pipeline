@@ -41,6 +41,7 @@ RUN apt-get update && apt-get install -y \
 	libunicode-escape-perl \
 	libwww-perl \
 	liblog-log4perl-perl \
+	libcapture-tiny-perl \
 	make 		\
 	python-biopython \
 	python-dev \
