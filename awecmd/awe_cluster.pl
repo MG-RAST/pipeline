@@ -54,10 +54,10 @@ if ($help){
 
 my ($cmd, $word, $code, $output);
 if ($aa) {
-    ($cmd, $word, $code, $output) = ("cd-hit", word_length("aa", $pid), "aa", $out_prefix.".aa".$pid.".faa");
+    ($cmd, $word, $code, $output) = ("cdhit", word_length("aa", $pid), "aa", $out_prefix.".aa".$pid.".faa");
 } else {
     $code = $rna ? 'rna' : 'dna';
-    ($cmd, $word, $output) = ("cd-hit-est", word_length($code, $pid), $out_prefix.".".$code.$pid.".fna");
+    ($cmd, $word, $output) = ("cdhit-est", word_length($code, $pid), $out_prefix.".".$code.$pid.".fna");
 }
 my $mem = $memory * 1024;
 # run clustering

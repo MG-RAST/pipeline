@@ -31,8 +31,6 @@ RUN apt-get update && apt-get install -y \
 	libdigest-md5-perl \
 	libdigest-md5-file-perl \
 	libdbd-pg-perl \
-	libemail-simple-perl \
-	libemail-sender-perl \
 	libfile-slurp-perl \
 	libfilehandle-fmode-perl \
 	libgetopt-long-descriptive-perl \
@@ -47,7 +45,11 @@ RUN apt-get update && apt-get install -y \
 	libunicode-escape-perl \
 	libwww-perl \
 	liblog-log4perl-perl \
+<<<<<<< HEAD
 	locales \
+=======
+	libcapture-tiny-perl \
+>>>>>>> MG-RAST/master
 	make 		\
 	python-biopython \
 	python-dev \
@@ -91,9 +93,8 @@ RUN cd /root \
 	&& mv *.pl bin/. \
 	&& install -s -m555 FragGeneScan bin/. \
 	&& make clean \
-	&& rm -rf example .git \
-	&& cd .. \
-	&& echo "export PATH=/root/FragGeneScan/bin:\$PATH" >> /root/mgrast_env.sh
+	&& rm -rf example .git
+ENV PATH /root/FragGeneScan/bin:$PATH
 
 ### install DIAMOND
 RUN cd /root \

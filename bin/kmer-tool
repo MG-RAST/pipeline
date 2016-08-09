@@ -131,7 +131,7 @@ def kmer_count(input, procs, length, size, count, tmpdir):
   jf_base = os.path.join(tmpdir, random_str()+'.js.part')
   jf_cmd  = ['jellyfish', 'count', '-C', '-t', str(procs), '-m', str(length), '-c', str(count), '-s', size, '-o', jf_base, input]
   _sout, _serr = run_cmd(jf_cmd)
-  parts   = glob.glob(jf_base+'_*')
+  parts   = glob.glob(jf_base+'*')
   return merge_hash_set(parts, tmpdir)
 
 def main(args):
