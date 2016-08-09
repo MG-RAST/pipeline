@@ -123,6 +123,9 @@ sub obj_from_url {
     } elsif ($content->{'ERROR'}) {
         logger('error', "from $url: ".$content->{'ERROR'});
         exit 1;
+    } elsif ($content->{'error'}) {
+        logger('error', "from $url: ".$content->{'error'});
+        exit 1;
     } else {
         return $content;
     }
