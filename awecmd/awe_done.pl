@@ -181,8 +181,8 @@ while ($get_abund->{status} ne 'done') {
 }
 my $abundances = $get_abund->{data};
 
-# test for missing data
-if ((scalar(@{$abundances->{function}}) == 0) || (scalar(@{$abundances->{taxonomy}{species}}) == 0) || (scalar(keys %{$abundances->{ontology}}) == 0) ) {
+# minimal test for missing data
+if (scalar(@{$abundances->{taxonomy}{domain}}) == 0) {
     PipelineAWE::logger('error', "unable to compute annotation abundances, data is missing from DB.");
     exit 1;
 }
