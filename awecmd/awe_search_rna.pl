@@ -57,13 +57,14 @@ my $run_dir = getcwd;
 # exit 0;
 
 # use vsearch
-PipelineAWE::run_cmd("vsearch --strand both --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc ");
-PipelineAWE::run_cmd("seqUtil -t $run_dir -i $fasta -o $fasta.tab --fasta2tab");
+PipelineAWE::run_cmd("vsearch --strand both --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc");
+PipelineAWE::run_cmd("seqUtil -t $run_dir -i $fasta -o $fasta.sort.tab --sortbyid2tab");
+PipelineAWE::run_cmd("sort -T $run_dir -t \t -k 9,9 -o $fasta.sort.uc $fasta.uc");
 
 # uc -> fasta
 open(OUT, ">$output") || die "Can't open file $output!\n";
-open(STAB, "<$fasta.tab") || die "Can't open file $fasta.tab!\n";
-open(SUC, "<$fasta.uc") || die "Can't open file $fasta.uc!\n";
+open(STAB, "<$fasta.sort.tab") || die "Can't open file $fasta.sort.tab!\n";
+open(SUC, "<$fasta.sort.uc") || die "Can't open file $fasta.sort.uc!\n";
 
 my $seql = <STAB>;
 chomp $seql;
