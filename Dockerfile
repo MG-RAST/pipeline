@@ -51,7 +51,8 @@ RUN apt-get update && apt-get install -y \
 	python-scipy \
 	python-sphinx \
 	unzip \
-	wget
+	wget \
+	curl
 
 # ###########
 # copy files into image
