@@ -57,7 +57,7 @@ my $run_dir = getcwd;
 # exit 0;
 
 # use vsearch
-PipelineAWE::run_cmd("vsearch --strand both --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc");
+PipelineAWE::run_cmd("vsearch --quiet --strand both --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc");
 PipelineAWE::run_cmd("seqUtil -t $run_dir -i $fasta -o $fasta.sort.tab --sortbyid2tab");
 PipelineAWE::run_cmd("sort -T $run_dir -t \t -k 9,9 -o $fasta.sort.uc $fasta.uc");
 
