@@ -21,7 +21,6 @@ if ( ! GetOptions( "in_file=s"   => \$fasta_file,
 
 unless ($fasta_file && $out_file && $tmp_dir && (-d $tmp_dir)) { &usage; }
 
-my $log_text   = "";
 my $seed_seq   = "";
 my $curr_val   = 0;
 my $tmp_id     = unpack("H*", pack("Nn", time, $$));
@@ -54,19 +53,22 @@ ML: for ($i = 1; $i <= $max_iter; $i++) {
   }
 
   # get qiime-uclust score and seed seq
-  system("qiime-uclust --sort $fa_file --output $fa_file.sort --tmpdir $tmp_dir > /dev/null 2>&1");
-  $log_text .= `qiime-uclust --input $fa_file.sort --uc $uc_file --id 0 --tmpdir $tmp_dir --rev 2>&1`;
-  ($score, $seed_seq) = &get_steiner($fasta_hash, $seed_head, $seed_seq, $uc_file);
+  #system("qiime-uclust --sort $fa_file --output $fa_file.sort --tmpdir $tmp_dir > /dev/null 2>&1");
+  #$log_text .= `qiime-uclust --input $fa_file.sort --uc $uc_file --id 0 --tmpdir $tmp_dir --rev 2>&1`;
+  #($score, $seed_seq) = &get_steiner($fasta_hash, $seed_head, $seed_seq, $uc_file);
+
+  # get vsearch score and seed seq
+  system("vsearch --quiet --strand both --threads 1 --id 0.0 --cluster_fast $fa_file --uc $uc_file");
+  ($curr_val, $score, $seed_seq) = &get_steiner($fasta_hash, $seed_head, $seed_seq, $uc_file);
 
   # test if converged
-  $curr_val = &get_converge($log_text);
+  #$curr_val = &get_converge($log_text);
   foreach (@prev_val) { if ($curr_val ne $_) { next ML; } }
   last;
 }
 
 # done - print outputs / cleanup
-$log_text =~ s/\r/\n/g;
-&write_file($log_file, "$log_text\n$uc_file\n") if ($log_file);
+&write_file($log_file, "$uc_file\n") if ($log_file);
 &write_file($out_file, $score);
 
 system("rm $tmp_dir/$tmp_id.*");
@@ -78,14 +80,21 @@ sub get_steiner {
   my @ucs = &read_file($uc);
 
   # parse UC file
+  my $hcount = 0;
+  my $htotal = 0;
   foreach my $line ( @ucs ) {
     if ( $line =~ /^#/ ) { next; }
     my @r = split(/\s+/, $line);
     if ( $r[0] ne "H" ) { next; }
 
+    $hcount += 1;
+    $htotal += $r[3];
     $r[7] =~ s/([MID])/$1 /g;
     $id2pat{ $r[8] } = [ split(/ /, $r[7]) ];
   }
+  
+  # get hit average ident
+  my $avg_ident = $hcount ? sprintf("%.1f", ($htotal * 1.0) / $hcount) : 0;
 
   # parse fasta hash
   if ($s_seq) { $fasta->{$s_head} = $s_seq; }
@@ -97,16 +106,16 @@ sub get_steiner {
 
     foreach my $v ( @{$id2pat{$id}} ) {
       if ( $v =~ /^(\d*)([MID])/ ) {
-	my $num  = ($1 ne "") ? int($1) : 1;
-	my $type = $2;
-	if ($type eq "M") {
-	  $tmpseq .= substr($seq, $pos, $num);
-	  $pos += $num;
-	} elsif ($type eq "D") {
-	  $pos += $num;
-	} elsif ($type eq "I") {
-	  $tmpseq .= "X" x $num;
-	}
+	    my $num  = ($1 ne "") ? int($1) : 1;
+	    my $type = $2;
+	    if ($type eq "M") {
+	      $tmpseq .= substr($seq, $pos, $num);
+	      $pos += $num;
+	    } elsif ($type eq "D") {
+	      $pos += $num;
+	    } elsif ($type eq "I") {
+	      $tmpseq .= "X" x $num;
+	    }
       }
     }
     $tmpseq = uc $tmpseq;
@@ -128,10 +137,10 @@ sub get_steiner {
     foreach my $b (@bases) {
       my $sum = 0;
       if ( exists $stats[$i]{$b} ) {
-	$sum = $stats[$i]{$b};
-	if ( ($b =~ /[AGCTN]/i) && ($tmp[1] < int($stats[$i]{$b})) ) {
-	  @tmp = ($b, int($stats[$i]{$b}));
-	}
+	    $sum = $stats[$i]{$b};
+	    if ( ($b =~ /[AGCTN]/i) && ($tmp[1] < int($stats[$i]{$b})) ) {
+	      @tmp = ($b, int($stats[$i]{$b}));
+	    }
       }
       push @row, $sum;
     }
@@ -139,17 +148,7 @@ sub get_steiner {
     $new_score .= join("\t", @row) . "\n";
   }
 
-  return ($new_score, $new_seed);
-}
-
-sub get_converge {
-  my ($log) = @_;
-
-  my $x = 0;
-  if ($log =~ /(\S+)%\s+$/) {
-    $x = $1;
-  }
-  return $x;
+  return ($avg_ident, $new_score, $new_seed);
 }
 
 sub get_fasta_hash {
