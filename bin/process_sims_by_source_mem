@@ -17,6 +17,8 @@ my $rna_file  = '';
 my $lca_file  = '';
 my $ann_file  = '';
 my $get_rna   = 0;
+my $get_prot  = 0;
+my $get_ont   = 0;
 my $get_lca   = 0;
 my $frag_num  = 5000;
 my $usage     = qq($0
@@ -67,12 +69,13 @@ unless ($in_file && (-s $in_file) && $filt_file) {
 if ($rna_file) {
   print "Running in rna sim mode.\n" if ($verbose);
   $get_rna = 1;
-}
-elsif ($exp_file && $ont_file) {
+} elsif ($exp_file) {
   print "Running in protein sim mode.\n" if ($verbose);
+  $get_prot = 1;
 }
-else {
-  print STDERR "Output filenames required: (out_expand and out_ontology) or out_rna\n"; exit 1;
+if ($ont_file && (! $rna_file)) {
+  print "Running in ontology mode (not available in rna mode).\n" if ($verbose);
+  $get_ont = 1;
 }
 if ($lca_file) {
   print "Running in lca mode.\n" if ($verbose);
@@ -105,8 +108,11 @@ open(INFILE, "<$in_file") or die "Can't open file $in_file!\n";
 open($filt_fh, ">$filt_file") or die "Can't open file $filt_file!\n";
 if ($get_rna) {
   open($rna_fh, ">$rna_file") or die "Can't open file $rna_file!\n";
-} else {
+}
+if ($get_prot) {
   open($exp_fh, ">$exp_file") or die "Can't open file $exp_file!\n";
+}
+if ($get_ont) {
   open($ont_fh, ">$ont_file") or die "Can't open file $ont_file!\n";
 }
 if ($get_lca) {
@@ -126,7 +132,7 @@ while (my $line = <INFILE>) {
   if ($curr ne $frag) {
     if ($frags >= $frag_num) {
       #print STDERR "." if ($verbose);
-      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $get_rna, $get_lca);
+      ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data);
       print $filt_fh $filt_t if ($filt_t);
       print $exp_fh $exp_t   if ($exp_t);
       print $ont_fh $ont_t   if ($ont_t);
@@ -149,7 +155,7 @@ while (my $line = <INFILE>) {
 close(INFILE);
 
 if (scalar(keys %$data) > 0) {
-  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data, $get_rna, $get_lca);
+  ($filt_t, $exp_t, $ont_t, $rna_t, $lca_t) = &get_top_hits($src_map, $data);
   print $filt_fh $filt_t if ($filt_t);
   print $exp_fh $exp_t   if ($exp_t);
   print $ont_fh $ont_t   if ($ont_t);
@@ -160,11 +166,14 @@ if (scalar(keys %$data) > 0) {
 close($filt_fh);
 if ($get_rna) {
   close($rna_fh)
-} else {
+}
+if ($get_prot) {
   close($exp_fh);
+}
+if ($get_ont) {
   close($ont_fh);
 }
-if ($lca_file) {
+if ($get_lca) {
   close ($lca_fh);
 }
 
@@ -172,7 +181,7 @@ print "Done - $count fragments parsed\n" if ($verbose);
 exit 0;
 
 sub get_top_hits {
-  my ($src_map, $data, $get_rna, $get_lca) = @_;
+  my ($src_map, $data) = @_;
   
   my $filter_text   = '';
   my $protein_text  = '';
@@ -288,13 +297,15 @@ sub get_top_hits {
 	            if (($otype eq 'organism') && ($stype eq 'rna') && $get_rna) {
 		          $rna_text .= $expand_text . "\t1\n";
 	            }
-	            elsif (($otype eq 'organism') && ($stype eq 'protein') && (! $get_rna)) {
+	            elsif (($otype eq 'organism') && ($stype eq 'protein') && $get_prot) {
 		          $protein_text .= $expand_text . "\n";
 	            }
-	            elsif (($otype eq 'ontology') && ($stype eq 'ontology') && (! $get_rna)) {
+	            elsif (($otype eq 'ontology') && ($stype eq 'ontology') && $get_ont) {
 	              if (int($other) > 71073) { next; }
 		          $ontology_text .= $expand_text . "\n";
-		          $protein_text .= $expand_wout_fo_text . "\n";
+		          if ($get_prot) {
+		            $protein_text .= $expand_wout_fo_text . "\n";
+	              }
 	            }
 	          }
 	        }
