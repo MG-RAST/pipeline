@@ -147,22 +147,22 @@ def print_md5_stats(ohdl, data, imap):
         l_mean = stats['lsum'] / stats['abun']
         i_mean = stats['isum'] / stats['abun']
         # get indexes
-        seek, length = '', ''
+        seek, length = 0, 0
         if imap is not None:
             match = np.where(imap['md5']==md5)
             if len(match[0]) > 0:
                 row = match[0][0]
                 # length must be less than or equal to 2147483647
                 if imap[row][2] <= 2147483647:
-                    seek, length = str(imap[row][1]), str(imap[row][2])
+                    seek, length = imap[row][1], imap[row][2]
         # output
         line = [ str(md5),
                  str(stats['abun']),
                  str_round(e_mean),
                  str_round(l_mean),
                  str_round(i_mean),
-                 seek,
-                 length ]
+                 str(seek),
+                 str(length) ]
         ohdl.write("\t".join(line)+"\n")
 
 def print_lca_stats(ohdl, data, md5s):
