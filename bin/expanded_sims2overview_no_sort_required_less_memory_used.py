@@ -26,20 +26,18 @@ ev_re  = re.compile(r"^(\d(\.\d)?)e([-+])?0?(\d+)$") # .group(4) == abs(exponent
 TYPES  = ['md5', 'function', 'organism', 'ontology', 'lca', 'source']
 EVALS  = [-5 , -10 , -20 , -30 , -1000]
 IDENTS = [60 , 80 , 90 , 97 , 100]
-JOBID  = None
-DB_VER = None
 
 # numpy dtypes
 DTYPES = {
-    'md5': np.dtype([ ('abun', np.uint32), ('esum', np.float32),
-                      ('lsum', np.float32), ('isum', np.float32),
-                      ('isp', np.bool_) ]),
-    'lca': np.dtype([ ('abun', np.uint32), ('esum', np.float32),
-                      ('lsum', np.float32), ('isum', np.float32),
-                      ('lvl', np.uint8) ]),
-    'other': np.dtype([ ('source', np.uint8), ('abun', np.uint32),
-                        ('esum', np.float32), ('lsum', np.float32),
-                        ('isum', np.float32) ])
+    'md5': np.dtype([
+        ('abun', np.uint32), ('esum', np.float32), ('lsum', np.float32), ('isum', np.float32)
+    ]),
+    'lca': np.dtype([
+        ('abun', np.uint32), ('esum', np.float32), ('lsum', np.float32), ('isum', np.float32), ('lvl', np.uint8)
+    ]),
+    'other': np.dtype([
+        ('source', np.uint8), ('abun', np.uint32), ('esum', np.float32), ('lsum', np.float32), ('isum', np.float32)
+    ])
 }
 
 def memory_usage(pid):
@@ -167,9 +165,7 @@ def print_md5_stats(ohdl, data, imap):
                 if imap[row][2] <= 2147483647:
                     seek, length = str(imap[row][1]), str(imap[row][2])
         # output
-        line = [ DB_VER,
-                 JOBID,
-                 str(md5),
+        line = [ str(md5),
                  str(stats['abun']),
                  str_round(e_mean),
                  str_round(l_mean),
@@ -187,9 +183,7 @@ def print_lca_stats(ohdl, data, md5s):
         e_mean = stats['esum'] / stats['abun']
         l_mean = stats['lsum'] / stats['abun']
         i_mean = stats['isum'] / stats['abun']
-        line = [ DB_VER,
-                 JOBID,
-                 str(lca),
+        line = [ str(lca),
                  str(stats['abun']),
                  str_round(e_mean),
                  str_round(l_mean),
@@ -209,9 +203,7 @@ def print_type_stats(ohdl, data, md5s):
             e_mean = stats['esum'] / stats['abun']
             l_mean = stats['lsum'] / stats['abun']
             i_mean = stats['isum'] / stats['abun']
-            line = [ DB_VER,
-                     JOBID,
-                     str(aid),
+            line = [ str(aid),
                      str(stats['abun']),
                      str_round(e_mean),
                      str_round(l_mean),
@@ -244,14 +236,12 @@ def print_source_stats(ohdl, data):
 usage = "usage: %prog [options]\n"
 
 def main(args):
-    global SOURCES, JOBID, DB_VER
+    global SOURCES
     parser = OptionParser(usage=usage)
     parser.add_option('-i', '--input', dest="input", default=None, help="input file: expanded sims")
     parser.add_option('-o', '--output', dest="output", default=None, help="output file: summary abundace")
-    parser.add_option('-j', '--job', dest="job", default=None, help="job identifier")
     parser.add_option('-t', '--type', dest="type", default=None, help="type of summary, one of: "+",".join(TYPES))
     parser.add_option('-s', '--m5nr_sources', dest="m5nr_sources", type="int", default=18, help="number of real sources in m5nr")
-    parser.add_option('-v', '--m5nr_version', dest="m5nr_version", type="int", default=1, help="version of m5nr annotation")
     parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
     parser.add_option('--coverage', dest="coverage", default=None, help="optional input file: assembely coverage")
     parser.add_option('--cluster', dest="cluster", default=None, help="optional input file: cluster mapping")
@@ -264,15 +254,10 @@ def main(args):
     if not opts.output:
         parser.error("[error] missing required output file")
         return 1
-    if not opts.job:
-        parser.error("[error] missing required job identifier")
-        return 1
     if not (opts.type and (opts.type in TYPES)):
         parser.error("[error] missing or invalid type")
         return 1
     SOURCES = opts.m5nr_sources
-    JOBID   = opts.job
-    DB_VER  = str(opts.m5nr_version)
     
     # fork the process
     pid = None
