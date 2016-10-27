@@ -18,17 +18,13 @@ my @in_maps  = ();
 my @in_seqs  = ();
 my $output   = "";
 my $memory   = 16;
-my $achver   = "1";
-my $ann_file = "/mnt/awe/data/predata/m5nr_v1.bdb";
 my $help     = 0;
 my $options  = GetOptions (
 		"in_sims=s"  => \@in_sims,
 		"in_maps=s"  => \@in_maps,
 		"in_seqs=s"  => \@in_seqs,
-		"ann_file=s" => \$ann_file,
 		"output=s"   => \$output,
 		"memory=i"   => \$memory,
-		"ach_ver=s"  => \$achver,
 		"help!"      => \$help
 );
 
@@ -105,7 +101,7 @@ PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 2,2 -o $sim_file.fina
 PipelineAWE::run_cmd("rm $sim_file.seq");
 
 # index file
-PipelineAWE::run_cmd("index_sims_file_md5 --verbose --ann_file $ann_file --in_file $sim_file.final --out_file $sim_file.index");
+PipelineAWE::run_cmd("index_sims_file_md5 --verbose --in_file $sim_file.final --out_file $sim_file.index");
 
 # final output
 PipelineAWE::run_cmd("mv $sim_file.final $output");
@@ -129,5 +125,5 @@ PipelineAWE::create_attr($output.'.index.json', undef, {data_type => "index", fi
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16> -ach_host=<ach mongodb host> -ach_ver=<ach db ver>]\noutputs: \${output} and \${output}.index\n";
+    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16>\noutputs: \${output} and \${output}.index\n";
 }
