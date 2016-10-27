@@ -14,8 +14,6 @@ umask 000;
 
 # options
 my $job_id    = "";
-my $psql      = "";
-my $mysql     = "";
 my $nr_ver    = "";
 my $ann_ver   = "";
 my $api_url   = "";
@@ -36,8 +34,6 @@ my $filter    = "";
 my $help      = 0;
 my $options   = GetOptions (
 		"job=s"       => \$job_id,
-		"psql=s"      => \$psql,
-		"mysql=s"     => \$mysql,
 		"nr_ver=s"    => \$nr_ver,
 		"ann_ver=s"   => \$ann_ver,
 		"api_url=s"   => \$api_url,
