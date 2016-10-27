@@ -50,10 +50,12 @@ my $type = "";
 
 if ($aa) {
     $type = 'aa';
-    $cmd .= " --out_ontology $out_prefix.$type.expand.ontology";
-    push @out_files, "$out_prefix.$type.expand.ontology";
+    $cmd .= " --out_expand $out_prefix.$type.expand.protein --out_ontology $out_prefix.$type.expand.ontology";
+    push @out_files, ("$out_prefix.$type.expand.protein", "$out_prefix.$type.expand.ontology");
 } elsif ($rna) {
     $type = 'rna';
+    $cmd .= " --out_rna $out_prefix.$type.expand.rna";
+    push @out_files, "$out_prefix.$type.expand.rna";
 } else {
     PipelineAWE::logger('error', "one of the following modes is required: --aa, --rna");
     exit 1;
@@ -103,7 +105,7 @@ exit 0;
 
 sub get_usage {
     return "USAGE: awe_annotate_sims.pl -input=<input sims> <-aa|-rna> -ann_file <m5nr annotations, .bdb> [-out_prefix=<output prefix> -ach_ver=<ach db ver>]\n".
-           "outputs: \${out_prefix}.aa.sims.filter, \${out_prefix}.aa.expand.lca, \${out_prefix}.aa.expand.ontology\n".
+           "outputs: \${out_prefix}.aa.sims.filter, \${out_prefix}.aa.expand.protein, \${out_prefix}.aa.expand.lca, \${out_prefix}.aa.expand.ontology\n".
            "           OR\n".
-           "         \${out_prefix}.rna.sims.filter, \${out_prefix}.rna.expand.lca\n";
+           "         \${out_prefix}.rna.sims.filter, \${out_prefix}.rna.expand.rna, \${out_prefix}.rna.expand.lca\n";
 }
