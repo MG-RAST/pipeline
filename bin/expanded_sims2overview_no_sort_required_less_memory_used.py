@@ -31,15 +31,15 @@ DB_VER = None
 
 # numpy dtypes
 DTYPES = {
-    'md5': np.dtype([ ('abun', np.uint32), ('esum', np.float32), ('esos', np.float32),
-                      ('lsum', np.float32), ('lsos', np.float32), ('isum', np.float32),
-                      ('isos', np.float32), ('ebin', np.uint16, (5)), ('isp', np.bool_) ]),
-    'lca': np.dtype([ ('abun', np.uint32), ('esum', np.float32), ('esos', np.float32),
-                      ('lsum', np.float32), ('lsos', np.float32), ('isum', np.float32),
-                      ('isos', np.float32), ('lvl', np.uint8) ]),
-    'other': np.dtype([ ('source', np.uint8), ('abun', np.uint32), ('esum', np.float32),   
-                        ('esos', np.float32), ('lsum', np.float32), ('lsos', np.float32),
-                        ('isum', np.float32), ('isos', np.float32) ])
+    'md5': np.dtype([ ('abun', np.uint32), ('esum', np.float32),
+                      ('lsum', np.float32), ('isum', np.float32),
+                      ('isp', np.bool_) ]),
+    'lca': np.dtype([ ('abun', np.uint32), ('esum', np.float32),
+                      ('lsum', np.float32), ('isum', np.float32),
+                      ('lvl', np.uint8) ]),
+    'other': np.dtype([ ('source', np.uint8), ('abun', np.uint32),
+                        ('esum', np.float32), ('lsum', np.float32),
+                        ('isum', np.float32) ])
 }
 
 def memory_usage(pid):
@@ -120,15 +120,6 @@ def get_i_bin(val):
             return i
     return IDENTS[0]
 
-def update_e_bin(exp, abun, bins):
-    if exp == 0:
-        bins[-1] += abun
-    else:
-        for i, e in enumerate(EVALS):
-            if exp >= e:
-                bins[i] += abun
-                break
-
 def get_abundance(frag, amap):
     return amap[frag] if frag in amap else 1
 
@@ -158,10 +149,6 @@ def str_round(val):
     else:
         return "%.3f"%(math.ceil(val * 1000) / 1000)
 
-def stddev(mean, sos, n):
-    tmp = (sos / n) - (mean * mean)
-    return math.sqrt(tmp) if tmp > 0 else 0
-
 def print_md5_stats(ohdl, data, imap):
     if len(data) == 0:
         return
@@ -184,13 +171,9 @@ def print_md5_stats(ohdl, data, imap):
                  JOBID,
                  str(md5),
                  str(stats['abun']),
-                 "{"+",".join(map(str, stats['ebin']))+"}",
                  str_round(e_mean),
-                 str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                  str_round(l_mean),
-                 str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                  str_round(i_mean),
-                 str_round(stddev(l_mean, stats['isos'], stats['abun'])),
                  seek,
                  length,
                  "1" if stats['isp'] else "0" ]
@@ -209,11 +192,8 @@ def print_lca_stats(ohdl, data, md5s):
                  str(lca),
                  str(stats['abun']),
                  str_round(e_mean),
-                 str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                  str_round(l_mean),
-                 str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                  str_round(i_mean),
-                 str_round(stddev(l_mean, stats['isos'], stats['abun'])),
                  str(len(md5s[lca])),
                  str(stats['lvl']) ]
         ohdl.write("\t".join(line)+"\n")
@@ -234,11 +214,8 @@ def print_type_stats(ohdl, data, md5s):
                      str(aid),
                      str(stats['abun']),
                      str_round(e_mean),
-                     str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                      str_round(l_mean),
-                     str_round(stddev(e_mean, stats['esos'], stats['abun'])),
                      str_round(i_mean),
-                     str_round(stddev(l_mean, stats['isos'], stats['abun'])),
                      "{"+",".join(map(str, md5s[aid][stats['source']]))+"}",
                      str(stats['source']) ]
             ohdl.write("\t".join(line)+"\n")
@@ -363,13 +340,9 @@ def main(args):
                         continue
                     data[md5][0]['abun'] += abun
                     data[md5][0]['esum'] += abun * eval_exp
-                    data[md5][0]['esos'] += abun * eval_exp * eval_exp
                     data[md5][0]['lsum'] += abun * length
-                    data[md5][0]['lsos'] += abun * length * length
                     data[md5][0]['isum'] += abun * ident
-                    data[md5][0]['isos'] += abun * ident * ident
                     data[md5][0]['isp']  = is_protein
-                    update_e_bin(eval_exp, abun, data[md5][0]['ebin'])
                     frag_keys.add(md5)
             elif opts.type == 'lca':
                 if not fid:
@@ -394,11 +367,8 @@ def main(args):
                 i_avg = i_line_sum / md5_count
                 data[lca][0]['abun'] += abun
                 data[lca][0]['esum'] += abun * e_avg
-                data[lca][0]['esos'] += abun * e_avg * e_avg
                 data[lca][0]['lsum'] += abun * l_avg
-                data[lca][0]['lsos'] += abun * l_avg * l_avg
                 data[lca][0]['isum'] += abun * i_avg
-                data[lca][0]['isos'] += abun * i_avg * i_avg
                 data[lca][0]['lvl']  = level
             elif opts.type in ['function', 'organism', 'ontology']:
                 if fid and (opts.type == 'function'):
@@ -424,11 +394,8 @@ def main(args):
                     data[aid][source-1]['source'] = source
                     data[aid][source-1]['abun'] += abun
                     data[aid][source-1]['esum'] += abun * eval_exp
-                    data[aid][source-1]['esos'] += abun * eval_exp * eval_exp
                     data[aid][source-1]['lsum'] += abun * length
-                    data[aid][source-1]['lsos'] += abun * length * length
                     data[aid][source-1]['isum'] += abun * ident
-                    data[aid][source-1]['isos'] += abun * ident * ident
                     md5s[aid][source].add(md5)
                     frag_keys.add(akey)                
                     if opts.type == 'organism':
@@ -437,11 +404,8 @@ def main(args):
                         data[aid][merge-1]['source'] = merge
                         data[aid][merge-1]['abun'] += abun
                         data[aid][merge-1]['esum'] += abun * eval_exp
-                        data[aid][merge-1]['esos'] += abun * eval_exp * eval_exp
                         data[aid][merge-1]['lsum'] += abun * length
-                        data[aid][merge-1]['lsos'] += abun * length * length
                         data[aid][merge-1]['isum'] += abun * ident
-                        data[aid][merge-1]['isos'] += abun * ident * ident
                         md5s[aid][merge].add(md5)
                         frag_keys.add(akey)                
             elif opts.type == 'source':
