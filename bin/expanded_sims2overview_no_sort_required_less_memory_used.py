@@ -274,7 +274,7 @@ def main(args):
             if opts.type == 'md5':
                 if len(parts) < 12:
                     continue
-                (frag, md5, ident, length, _miss, _gap, _qs, _qe, _hs, _he, e_val, _bs) = parts
+                (frag, md5, ident, length, _miss, _gap, _qs, _qe, _hs, _he, e_val, _bs) = parts[:12]
                 if not (frag and md5):
                     continue
                 (ident, length, e_val) = (float(ident), int(length), float(e_val))
@@ -295,7 +295,7 @@ def main(args):
             elif opts.type == 'lca':
                 if len(parts) < 7:
                     continue
-                (md5, frag, ident, length, e_val, lca, level) = parts
+                (md5, frag, ident, length, e_val, lca, level) = parts[:7]
                 if not (frag and md5 and lca):
                     continue
                 if lca not in data:
@@ -322,7 +322,7 @@ def main(args):
             elif opts.type == 'source':
                 if len(parts) < 8:
                     continue
-                (_md5, frag, ident, _length, e_val, _fid, _oid, source) = parts
+                (_md5, frag, ident, _length, e_val, _fid, _oid, source) = parts[:8]
                 if not (frag and source):
                     continue
                 (ident, e_val, source) = (float(ident), float(e_val), int(source))
