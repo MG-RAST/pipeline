@@ -117,3 +117,6 @@ sub toFloat {
     return $x * 1.0;
 }
 
+sub get_usage {
+    return "USAGE: awe_load_cass.pl -job=<job identifier> -md5=<md5 abundance file> -lca=<lca abundance file> -api_url <mgrast api url> -ann_ver <m5nr annotation version #>\n";
+}
