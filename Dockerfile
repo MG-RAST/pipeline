@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
 	bowtie2 	\
 	cdbfasta 	\
 	cd-hit		\
+	cmake \
 	dh-autoreconf \
 	git 		\
 	jellyfish 	\
@@ -92,7 +93,7 @@ RUN cd /root \
 	# && cat build_simple.sh | sed s/-static//g > build_simple.sh \
 	&& sh ./build_simple.sh \
 	&& install -s -m555 diamond /usr/local/bin \
-	&& rm -rf /root/diamond
+	&& cd /root ; rm -rf /root/diamond
 	
 ### install vsearch 2.02
 RUN cd /root \
@@ -104,6 +105,27 @@ RUN cd /root \
 	&& make \
 	&& make install \
 	&& make clean \
-	&& cd .. \
-    && rm -rf /root/vsearch-2.02 /root/v2.0.2.tar.gz
+	&& cd /root ; rm -rf /root/vsearch-2.02* 
 
+### install swarm 2.1.9
+RUN cd /root \
+	&& git clone https://github.com/torognes/swarm.git \
+	&& cd swarm/src/ \
+	&& make \
+	&& install -m755 -s bin/* /usr/local/bin \
+	&& install -m755 scripts/* /usr/local/bin \
+	&& cd /root ; rm -rf swarm
+
+### install fastqjoin from  ea-utils
+RUN cd /root \
+	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
+	&& cd ea-utils/clipper \
+	&& make fastq-join \
+	&& install -m755 -s fastq-join /usr/local/bin/ \
+	&& cd /root ; rm -rf /root/ea-utils
+
+### install simka
+#RUN cd /root \
+#	&& git clone https://github.com/GATB/simka.git \
+#	&& cd simka \
+#	&& sh INSTALL \
