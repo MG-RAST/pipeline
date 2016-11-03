@@ -137,7 +137,7 @@ sub post_data {
     if ($token) {
         $req->header('authorization' => "mgrast $token");
     }
-    $req->content($json->encode($post_data));
+    $req->content($json->encode($data));
     
     my $resp = $agent->request($req);
     
