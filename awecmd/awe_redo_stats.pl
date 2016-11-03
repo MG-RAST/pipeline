@@ -81,7 +81,7 @@ $mgstats->{ontology} = $abundances->{ontology};
 $mgstats->{rarefaction} = $alpha_rare->{rarefaction};
 $mgstats->{sequence_stats}{alpha_diversity_shannon} = $alpha_rare->{alphadiversity};
 
-PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => {alpha_diversity_shannon => $alpha_rare->{alphadiversity}}});
+PipelineAWE::post_data($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => {alpha_diversity_shannon => $alpha_rare->{alphadiversity}}});
 
 # output stats object
 PipelineAWE::logger('info', "Outputing statistics file");
@@ -95,12 +95,12 @@ my $solrdata = {
     function => [ map {$_->[0]} @{$mgstats->{function}} ],
     organism => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ]
 };
-PipelineAWE::obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
+PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
 # done done !!
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
-PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
+PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
+PipelineAWE::post_data($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
 
 sub get_usage {
     return "USAGE: awe_done.pl -job=<job identifier> -stats=<old stats file> -source=<source abundance file> -ann_ver=<m5nr annotation version>\n";

@@ -157,8 +157,8 @@ my $m5nr_vers = {
 
 # update DB
 PipelineAWE::logger('info', "Updating Job DB with new stats / info");
-PipelineAWE::obj_from_url($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => $job_stats});
-PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => $m5nr_vers});
+PipelineAWE::post_data($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => $job_stats});
+PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => $m5nr_vers});
 PipelineAWE::obj_from_url($api_url."/metagenome/$mgid/changesequencetype/$seq_type", $api_key);
 
 ### create metagenome statistics node
@@ -216,12 +216,12 @@ my $solrdata = {
     function => [ map {$_->[0]} @{$mgstats->{function}} ],
     organism => [ map {$_->[0]} @{$mgstats->{taxonomy}{species}} ]
 };
-PipelineAWE::obj_from_url($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
+PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
 # done done !!
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-PipelineAWE::obj_from_url($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
-PipelineAWE::obj_from_url($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
+PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
+PipelineAWE::post_data($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
 
 exit 0;
 

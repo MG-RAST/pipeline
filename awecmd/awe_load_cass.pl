@@ -82,7 +82,7 @@ foreach my $type (("md5", "lca")) {
     $end->{count} = 0;
     
     PipelineAWE::logger('info', "Set job $type table as loading");
-    PipelineAWE::obj_from_url($api_url."/job/abundance", $api_key, $start);
+    PipelineAWE::post_data($api_url."/job/abundance", $api_key, $start);
     
     my $count = 0;
     my $total = 0;
@@ -95,19 +95,19 @@ foreach my $type (("md5", "lca")) {
         $total += 1;
         push @{$load->{data}}, [ $parts[0], int($parts[1]), toFloat($parts[2]), toFloat($parts[3]), toFloat($parts[4]), int($parts[5]), int($parts[6]) ];
         if ($count == $chunk) {
-            PipelineAWE::obj_from_url($api_url."/job/abundance", $api_key, $load);
+            PipelineAWE::post_data($api_url."/job/abundance", $api_key, $load);
             $count = 0;
             $load->{data} = [];
         }
     }
     close(INFILE);
     if ($count > 0) {
-        PipelineAWE::obj_from_url($api_url."/job/abundance", $api_key, $load);
+        PipelineAWE::post_data($api_url."/job/abundance", $api_key, $load);
     }
     
     $end->{count} = $total;
     PipelineAWE::logger('info', "Set job $type table as done: $total rows loaded");
-    PipelineAWE::obj_from_url($api_url."/job/abundance", $api_key, $end);
+    PipelineAWE::post_data($api_url."/job/abundance", $api_key, $end);
 }
 
 exit 0;
