@@ -84,8 +84,8 @@ foreach my $type (("md5", "lca")) {
     
     PipelineAWE::logger('info', "Set job $type table as loading");
     $status = PipelineAWE::post_data($api_url."/job/abundance", $api_key, $start);
-    unless ($status->{status} eq "empty $type") {
-        logger('error', "unable to set $type table as loading");
+    unless (defined($status->{status}) && ($status->{status} eq "empty $type")) {
+        PipelineAWE::logger('error', "unable to set $type table as loading");
         exit 1;
     }
     
@@ -101,8 +101,8 @@ foreach my $type (("md5", "lca")) {
         push @{$load->{data}}, [ $parts[0], int($parts[1]), toFloat($parts[2]), toFloat($parts[3]), toFloat($parts[4]), int($parts[5]), int($parts[6]) ];
         if ($count == $chunk) {
             $status = PipelineAWE::post_data($api_url."/job/abundance", $api_key, $load);
-            unless ($status->{loaded} == $total) {
-                logger('error', "$type table has ".$status->{loaded}." rows. $total were sent");
+            unless (defined($status->{loaded}) && ($status->{loaded} == $total)) {
+                PipelineAWE::logger('error', "$type table has ".$status->{loaded}." rows. $total were sent");
                 exit 1;
             }
             $count = 0;
@@ -117,8 +117,8 @@ foreach my $type (("md5", "lca")) {
     $end->{count} = $total;
     PipelineAWE::logger('info', "Set job $type table as done: $total rows loaded");
     $status = PipelineAWE::post_data($api_url."/job/abundance", $api_key, $end);
-    unless ($status->{status} eq "done $type") {
-        logger('error', "unable to set $type table as completed");
+    unless (defined($status->{status}) && ($status->{status} eq "done $type")) {
+        PipelineAWE::logger('error', "unable to set $type table as completed");
         exit 1;
     }
 }
