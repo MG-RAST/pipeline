@@ -8,9 +8,11 @@ use JSON;
 use POSIX;
 use Data::Dumper;
 use LWP::UserAgent;
+use HTTP::Request;
 use Net::SMTP;
 use Capture::Tiny qw(:all);
 
+our $post_attempt = 0;
 our $debug = 1;
 our $layout = '[%d] [%-5p] %m%n';
 our $default_api = "http://api.metagenomics.anl.gov";
@@ -100,25 +102,59 @@ sub file_to_array {
 }
 
 sub obj_from_url {
-    my ($url, $key, $data) = @_;
-    my $content = undef;
-    my $result  = undef;
-    my @args    = $key ? ('Auth', $key) : ();
-    if ($data && ref($data)) {
-        push @args, ('Content-Type', 'application/json');
-        $result = $agent->post($url, @args, 'Content' => $json->encode($data));
-    } else {
-        $result = $agent->get($url, @args);
-    }
-    if (! ref($result)) {
+    my ($url, $token) = @_;
+    
+    my @args = $token ? ('authorization', "mgrast $token") : ();
+    my $result = $agent->get($url, @args);
+    unless ($result) {
         logger('error', "unable to connect to $url");
         exit 1;
     }
+    
+    my $content = undef;
     eval {
         $content = $json->decode( $result->content );
     };
     if ($@ || (! ref($content))) {
         logger('error', $result->content);
+        exit 1;
+    } elsif ($content->{'ERROR'}) {
+        logger('error', "from $url: ".$content->{'ERROR'});
+        exit 1;
+    } elsif ($content->{'error'}) {
+        logger('error', "from $url: ".$content->{'error'});
+        exit 1;
+    } else {
+        return $content;
+    }
+}
+
+sub post_data {
+    my ($url, $token, $data) = @_;
+    
+    my $req = HTTP::Request->new(POST => $url);
+    $req->header('content-type' => 'application/json');
+    if ($token) {
+        $req->header('authorization' => "mgrast $token");
+    }
+    $req->content($json->encode($data));
+    
+    my $resp = $agent->request($req);
+    
+    # try 3 times
+    if (($post_attempt < 3) && (! $resp->is_success)) {
+        $post_attempt += 1;
+        post_data($url, $token, $data);
+    }
+    
+    # success or gave up
+    $post_attempt = 0;    
+    my $content = undef;
+    eval {
+        $content = $json->decode( $resp->decoded_content );
+    };
+    if ($@ || (! ref($content))) {
+        logger('error', $resp->decoded_content);
         exit 1;
     } elsif ($content->{'ERROR'}) {
         logger('error', "from $url: ".$content->{'ERROR'});

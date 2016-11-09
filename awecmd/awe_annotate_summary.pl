@@ -22,9 +22,7 @@ my @in_maps   = ();
 my $in_index  = "";
 my $in_assemb = "";
 my $output  = "";
-my $job_id  = "";
 my $type    = "";
-my $ver_db  = 1;
 my $help    = 0;
 my $options = GetOptions (
 		"in_expand=s"  => \@in_expand,
@@ -32,9 +30,7 @@ my $options = GetOptions (
 		"in_index=s"   => \$in_index,
 		"in_assemb=s"  => \$in_assemb,
 		"output=s"     => \$output,
-		"job=s"        => \$job_id,
 		"type=s"       => \$type,
-		"nr_ver=s"     => \$ver_db,
 		"help!"        => \$help
 );
 
@@ -46,9 +42,6 @@ if ($help){
     exit 1;
 }elsif (scalar(@in_maps)==0){
     PipelineAWE::logger('error', "at least one input expand file is required");
-    exit 1;
-}elsif (length($job_id)==0){
-    PipelineAWE::logger('error', "job ID is required");
     exit 1;
 }elsif (length($type)==0){
     PipelineAWE::logger('error', "summary type is required");
@@ -83,7 +76,7 @@ if (@in_maps > 1) {
 }
 
 # summary for type
-my $cmd = "expanded_sims2overview_no_sort_required_less_memory_used.py -i $expand_file -o $output -j $job_id -v $ver_db -t $type --cluster $map_file";
+my $cmd = "expanded_sims2overview_no_sort_required_less_memory_used.py -i $expand_file -o $output -t $type --cluster $map_file";
 if ($in_index && (-s $in_index)) {
     $cmd .= " --md5_index $in_index";
 }
@@ -114,7 +107,7 @@ if ($type eq 'source') {
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_annotate_summary.pl -in_expand=<one or more input expand files> -in_maps=<one or more input mapping files> -in_index=<md5 index file> -in_assemb=<assembly coverage file> -output=<output summary file> -job=<job identifier> -type=<summary types> [-nr_ver=<nr db version>]\n";
+    return "USAGE: awe_annotate_summary.pl -in_expand=<one or more input expand files> -in_maps=<one or more input mapping files> -in_index=<md5 index file> -in_assemb=<assembly coverage file> -output=<output summary file> -type=<summary types>\n";
 }
 
 sub get_source_stats {

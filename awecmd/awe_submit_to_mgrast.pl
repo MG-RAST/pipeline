@@ -143,17 +143,17 @@ FILES: foreach my $fname (keys %$to_submit) {
         }
     }
     # reserve and create job
-    my $reserve_job = PipelineAWE::obj_from_url($api."/job/reserve", $auth, {name => $to_submit->{$fname}, input_id => $info->{id}});
+    my $reserve_job = PipelineAWE::post_data($api."/job/reserve", $auth, {name => $to_submit->{$fname}, input_id => $info->{id}});
     my $mg_id = $reserve_job->{metagenome_id};
     my $create_data = $params->{parameters};
     $create_data->{metagenome_id} = $mg_id;
     $create_data->{input_id}      = $info->{id};
     $create_data->{submission}    = $params->{submission};
-    my $create_job = PipelineAWE::obj_from_url($api."/job/create", $auth, $create_data);
+    my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data);
     # project
-    PipelineAWE::obj_from_url($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
+    PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
     # submit it
-    my $submit_job = PipelineAWE::obj_from_url($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
+    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
     $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
     print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
     push @$mgids, $mg_id;
@@ -167,7 +167,7 @@ if (@$mgids == 0) {
 # apply metadata
 if ($mdata && $params->{metadata}) {
     my $import = {node_id => $params->{metadata}, metagenome => $mgids};
-    my $result = PipelineAWE::obj_from_url($api."/metadata/import", $auth, $import);
+    my $result = PipelineAWE::post_data($api."/metadata/import", $auth, $import);
     # no success
     if (scalar(@{$result->{added}}) == 0) {
         if ($result->{errors} && (@{$result->{errors}} > 0)) {

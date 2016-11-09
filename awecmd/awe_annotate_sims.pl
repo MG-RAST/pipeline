@@ -104,7 +104,7 @@ foreach my $out (@out_files) {
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_annotate_sims.pl -input=<input sims> <-aa|-rna> -ann_file <m5nr annotations, .bdb> [-out_prefix=<output prefix> -ach_host=<ach mongodb host> -ach_ver=<ach db ver>]\n".
+    return "USAGE: awe_annotate_sims.pl -input=<input sims> <-aa|-rna> -ann_file <m5nr annotations, .bdb> [-out_prefix=<output prefix> -ach_ver=<ach db ver>]\n".
            "outputs: \${out_prefix}.aa.sims.filter, \${out_prefix}.aa.expand.protein, \${out_prefix}.aa.expand.lca, \${out_prefix}.aa.expand.ontology\n".
            "           OR\n".
            "         \${out_prefix}.rna.sims.filter, \${out_prefix}.rna.expand.rna, \${out_prefix}.rna.expand.lca\n";
