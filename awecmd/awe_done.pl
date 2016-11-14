@@ -148,7 +148,8 @@ my $job_attrs = PipelineAWE::obj_from_url($api_url."/job/attributes/".$mgid, $ap
 my $seq_type  = seq_type($job_attrs, $rna_ratio);
 
 # get versions
-my $m5nr_vers = {
+my $versions = {
+    pipeline_version => $done_attr->{pipeline_version} || '4.0',
     m5rna_sims_version => $nr_ver,
     m5nr_sims_version  => $nr_ver,
     m5rna_annotation_version => $ann_ver,
@@ -158,7 +159,7 @@ my $m5nr_vers = {
 # update DB
 PipelineAWE::logger('info', "Updating Job DB with new stats / info");
 PipelineAWE::post_data($api_url."/job/statistics", $api_key, {metagenome_id => $mgid, statistics => $job_stats});
-PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => $m5nr_vers});
+PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => $versions});
 PipelineAWE::obj_from_url($api_url."/metagenome/$mgid/changesequencetype/$seq_type", $api_key);
 
 ### create metagenome statistics node
