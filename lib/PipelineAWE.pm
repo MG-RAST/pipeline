@@ -20,6 +20,7 @@ our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $mg_smtp = 'smtp.mcs.anl.gov';
 our $global_attr = "userattr.json";
 our $agent = LWP::UserAgent->new();
+$agent->timeout(3600);
 our $json = JSON->new;
 $json = $json->utf8();
 $json->max_size(0);
