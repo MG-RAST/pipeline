@@ -115,10 +115,15 @@ $job_stats->{read_count_processed_rna} = $sr_attr->{statistics}{sequence_count} 
 $job_stats->{read_count_processed_aa}  = $gc_attr->{statistics}{sequence_count} || '0';      # pre-cluster / genecall
 $job_stats->{sequence_count_processed_rna} = $rc_attr->{statistics}{sequence_count} || '0';  # post-cluster / rna clust
 $job_stats->{sequence_count_processed_aa}  = $ac_attr->{statistics}{sequence_count} || '0';  # post-cluster / aa clust
-map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};        # qc stats
+
+if ($up_attr->{statistics}) {
+    map { $job_stats->{$_.'_raw'} = $up_attr->{statistics}{$_} } keys %{$up_attr->{statistics}}; # raw seq stats
+}
+if ($qc_attr->{statistics}) {
+    map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};        # qc stats
+}
 map { $job_stats->{$_} = $fl_attr->{statistics}{$_} } keys %{$fl_attr->{statistics}};        # sims filter stats
 map { $job_stats->{$_} = $on_attr->{statistics}{$_} } keys %{$on_attr->{statistics}};        # annotate ontology stats
-map { $job_stats->{$_.'_raw'} = $up_attr->{statistics}{$_} } keys %{$up_attr->{statistics}}; # raw seq stats
 map { $job_stats->{$_.'_preprocessed_rna'} = $pp_attr->{statistics}{$_} } keys %{$pp_attr->{statistics}};  # preprocess seq stats
 map { $job_stats->{$_.'_preprocessed'}     = $pq_attr->{statistics}{$_} } keys %{$pq_attr->{statistics}};  # screen seq stats
 map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %{$rm_attr->{statistics}};  # rna clust stats
@@ -186,17 +191,31 @@ if (scalar(@{$abundances->{taxonomy}{domain}}) == 0) {
     exit 1;
 }
 
+# get qc stats - input stats may be from done stage if this is a rerun job
+my $up_gc_hist  = undef;
+my $up_len_hist = undef;
+my $qc_all_stat = undef;
+if ($q_stats->{sequence_stats}) {
+    $up_gc_hist  = $q_stats->{gc_histogram}{upload};
+    $up_len_hist = $q_stats->{length_histogram}{upload};
+    $qc_all_stat = $q_stats->{qc};
+} else {
+    $up_gc_hist  = $u_stats->{gc_histogram};
+    $up_len_hist = $u_stats->{length_histogram};
+    $qc_all_stat = $q_stats;
+}
+
 # build stats obj
 my $mgstats = {
     gc_histogram => {
-        upload  => $u_stats->{gc_histogram},
+        upload  => $up_gc_hist,
         post_qc => PipelineAWE::file_to_array("$post_qc.stats.gcs")
     },
     length_histogram => {
-        upload  => $u_stats->{length_histogram},
+        upload  => $up_len_hist,
         post_qc => PipelineAWE::file_to_array("$post_qc.stats.lens")
     },
-    qc => $q_stats,
+    qc => $qc_all_stat,
     source => \%s_data,
     taxonomy => $abundances->{taxonomy},
     function => $abundances->{function},
