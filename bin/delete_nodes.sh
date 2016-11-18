@@ -23,12 +23,19 @@ if [ $HELP -eq 1 ]; then
     echo $USAGE
     exit
 fi
-if [ -z $NODES ] || [ -z $TOKEN ]; then
+if [ -z $NODES ]; then
     echo $USAGE
     exit
 fi
 if [ -z $SHOCK ]; then
     SHOCK='http://shock.metagenomics.anl.gov'
+fi
+if [ -z $TOKEN ]; then
+    if [ -z $MGRAST_WEBKEY ]; then
+        echo "[error] missing required MGRAST_WEBKEY enviroment variable"
+        exit 1
+    fi
+    TOKEN=${MGRAST_WEBKEY}
 fi
 
 # do it
