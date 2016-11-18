@@ -21,11 +21,11 @@ done
 # check options
 if [ $HELP -eq 1 ]; then
     echo $USAGE
-    exit
+    exit 0
 fi
 if [ -z $NODES ]; then
     echo $USAGE
-    exit
+    exit 1
 fi
 if [ -z $SHOCK ]; then
     SHOCK='http://shock.metagenomics.anl.gov'
