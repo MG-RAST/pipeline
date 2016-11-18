@@ -33,3 +33,4 @@ fi
 
 # do it
 curl -s -X DELETE -H "authorization: mgrast $TOKEN" ${SHOCK}/node/${NODE}
+echo
