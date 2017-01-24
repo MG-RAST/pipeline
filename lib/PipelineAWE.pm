@@ -174,7 +174,7 @@ sub shock_time {
     my $dt = undef;
     eval {
         my $result  = $agent->get($shock_api);
-        my $content = $json->decode($content->content);
+        my $content = $json->decode($result->content);
         $dt = DateTime::Format::ISO8601->parse_datetime($content->{server_time});
     };
     return $dt;

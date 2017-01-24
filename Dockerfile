@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
 	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
 	libdatetime-perl \
+	libdatetime-format-iso8601-perl \
 	libdbi-perl 	\
 	libdigest-md5-perl \
 	libdigest-md5-file-perl \
