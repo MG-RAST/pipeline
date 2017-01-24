@@ -130,13 +130,10 @@ map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %
 map { $job_stats->{$_.'_processed_aa'}     = $am_attr->{statistics}{$_} } keys %{$am_attr->{statistics}};  # aa clust stats
 
 # diversity computation from API, this is an asynchronous call
-PipelineAWE::logger('info', "Computing alpha diversity and species rarefaction");
-my $get_diversity = PipelineAWE::obj_from_url($api_url."/compute/rarefaction/".$mgid."?asynchronous=1&alpha=1&level=species&ann_ver=".$ann_ver."&seq_num=".$job_stats->{sequence_count_raw}, $api_key);
-while ($get_diversity->{status} ne 'done') {
-    sleep 30;
-    $get_diversity = PipelineAWE::obj_from_url($get_diversity->{url});
-}
-my $alpha_rare = $get_diversity->{data};
+PipelineAWE::logger('info', "Starting alpha diversity and species rarefaction");
+my $compute_url = $api_url."/compute/rarefaction/".$mgid."?asynchronous=1&alpha=1&level=species&ann_ver=".$ann_ver."&seq_num=".$job_stats->{sequence_count_raw};
+my $alpha_rare  = PipelineAWE::async_obj_from_url($compute_url, $api_key, 0)->{data};
+PipelineAWE::logger('info', "Completed alpha diversity and species rarefaction");
 if ($alpha_rare->{alphadiversity} == 0) {
     PipelineAWE::logger('error', "unable to compute alpha diversity, organism abundance data is missing");
     exit 1;
@@ -177,13 +174,10 @@ my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url(
 my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
 
 # get abundance stats from API, this is an asynchronous call
-PipelineAWE::logger('info', "Computing abundance profiles");
-my $get_abund = PipelineAWE::obj_from_url($api_url."/job/abundance/".$mgid."?type=all&ann_ver=".$ann_ver, $api_key);
-while ($get_abund->{status} ne 'done') {
-    sleep 30;
-    $get_abund = PipelineAWE::obj_from_url($get_abund->{url});
-}
-my $abundances = $get_abund->{data};
+PipelineAWE::logger('info', "Starting abundance profiles");
+my $abund_url  = $api_url."/job/abundance/".$mgid."?type=all&ann_ver=".$ann_ver;
+my $abundances = PipelineAWE::async_obj_from_url($abund_url, $api_key, 0)->{data};
+PipelineAWE::logger('info', "Completed abundance profiles");
 
 # minimal test for missing data
 if (scalar(@{$abundances->{taxonomy}{domain}}) == 0) {

@@ -6,6 +6,8 @@ no warnings('once');
 
 use JSON;
 use POSIX;
+use DateTime;
+use DateTime::Format::ISO8601;
 use Data::Dumper;
 use LWP::UserAgent;
 use HTTP::Request;
@@ -15,6 +17,7 @@ use Capture::Tiny qw(:all);
 our $post_attempt = 0;
 our $debug = 1;
 our $layout = '[%d] [%-5p] %m%n';
+our $shock_api = "http://shock.metagenomics.anl.gov";
 our $default_api = "http://api.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $mg_smtp = 'smtp.mcs.anl.gov';
@@ -60,7 +63,8 @@ sub run_cmd {
     my $status = undef;
     my $stderr = undef;
     my @parts  = split(/ /, $cmd);
-    logger('info', $cmd);
+    my $start  = time;
+    logger('info', "exec: ".$cmd);
     eval {
         if ($shell) {
             (undef, $stderr, $status) = capture {
@@ -72,6 +76,8 @@ sub run_cmd {
             };
         }
     };
+    my $done = time;
+    logger('info', "time: ".($done - $start)." secs");
     if ($@ || $status) {
         logger('error', "died running child process ".$parts[0]);
         logger('debug', $parts[0].": ".$@);
@@ -128,6 +134,50 @@ sub obj_from_url {
     } else {
         return $content;
     }
+}
+
+sub async_obj_from_url {
+    my ($url, $token, $try) = @_;
+    if ($try > 3) {
+        logger('error', "async process for $url failed $try times");
+        exit 1;
+    }
+    my @args = $token ? ('authorization', "mgrast $token") : ();
+    my $content = undef;
+    eval {
+        my $result = $agent->get( $url."&retry=".$try, @args );
+        $content = $json->decode( $result->content );
+        if ($content->{ERROR}) {
+            logger('error', "from $url: ".$content->{'ERROR'}." - trying again");
+            $try += 1;
+            return async_obj_from_url($url, $token, $try);
+        }
+        logger('info', "status: ".$content->{url});
+        while ($content->{status} ne 'done') {
+            sleep 120;
+            $result = $agent->get( $content->{url} );
+            $content = $json->decode( $result->content );
+            my $last = DateTime::Format::ISO8601->parse_datetime($content->{updated});
+            my $now  = shock_time();
+            my $diff = $now->subtract_datetime_absolute($last);
+            if ($diff->seconds > 1800) {
+                logger('error', "async process for $url died - trying again");
+                $try += 1;
+                return async_obj_from_url($url, $token, $try);
+            }
+        }
+    };
+    return $content;
+}
+
+sub shock_time {
+    my $dt = undef;
+    eval {
+        my $result  = $agent->get($shock_api);
+        my $content = $json->decode($content->content);
+        $dt = DateTime::Format::ISO8601->parse_datetime($content->{server_time});
+    };
+    return $dt;
 }
 
 sub post_data {
