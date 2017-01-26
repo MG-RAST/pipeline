@@ -150,20 +150,26 @@ sub async_obj_from_url {
         if ($content->{ERROR}) {
             logger('error', "from $url: ".$content->{'ERROR'}." - trying again");
             $try += 1;
-            return async_obj_from_url($url, $token, $try);
+            $content = async_obj_from_url($url, $token, $try);
         }
         logger('info', "status: ".$content->{url});
         while ($content->{status} ne 'done') {
             sleep 120;
             $result = $agent->get( $content->{url} );
             $content = $json->decode( $result->content );
-            my $last = DateTime::Format::ISO8601->parse_datetime($content->{updated});
-            my $now  = shock_time();
-            my $diff = $now->subtract_datetime_absolute($last);
-            if ($diff->seconds > 1800) {
-                logger('error', "async process for $url died - trying again");
+            if ($content->{ERROR}) {
+                logger('error', "from $url: ".$content->{'ERROR'}." - trying again");
                 $try += 1;
-                return async_obj_from_url($url, $token, $try);
+                $content = async_obj_from_url($url, $token, $try);
+            } else {
+                my $last = DateTime::Format::ISO8601->parse_datetime($content->{updated});
+                my $now  = shock_time();
+                my $diff = $now->subtract_datetime_absolute($last);
+                if ($diff->seconds > 1800) {
+                    logger('error', "async process for $url died - trying again");
+                    $try += 1;
+                    $content = async_obj_from_url($url, $token, $try);
+                }
             }
         }
     };
