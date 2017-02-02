@@ -97,11 +97,13 @@ if ($build) {
     while (my $md5 = <$fh>) {
         $count += 1;
         chomp $md5;
-        my $ann = $json->decode( $dbh{$md5} );
-        if (exists $srcs->{$ann->{source}}) {
-            $srcs->{$ann->{source}} += 1;
-        } else {
-            $srcs->{$ann->{source}} = 1;
+        my $data = $json->decode( $dbh{$md5} );
+        foreach my $ann (@$data) {
+            if (exists $srcs->{$ann->{source}}) {
+                $srcs->{$ann->{source}} += 1;
+            } else {
+                $srcs->{$ann->{source}} = 1;
+            }
         }
     }
     print Dumper($srcs);
