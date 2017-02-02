@@ -59,14 +59,14 @@ unless (%dbh) {
 
 my $count = 0;
 my $start = time;
-open(INPUT, "<$input");
+open(my $fh, "<$input");
 if ($build) {
     ### must be ordered by md5
     ### each md5-source combo is unique
     my $prev = "";
     my $md5  = "";
     my @data = ();
-    while (my $row = $csv->getline(<INPUT>)) {
+    while (my $row = $csv->getline($fh)) {
         $count += 1;
         $md5 = $row->[0];
         unless ($prev) {
@@ -93,7 +93,7 @@ if ($build) {
     }
 } else {
     my $srcs = {};
-    while (my $md5 = <INPUT>) {
+    while (my $md5 = <$fh>) {
         $count += 1;
         chomp $md5;
         my $ann = $json->decode( $dbh{$md5} );
@@ -105,7 +105,7 @@ if ($build) {
     }
     print Dumper($srcs);
 }
-close(INPUT);
+close($fh);
 my $end = time;
 
 print "Processed $count lines in ".($end-$start)."seconds\n";
