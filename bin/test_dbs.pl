@@ -29,7 +29,7 @@ if ( ! GetOptions(
     print STDERR $usage; exit 1;
 }
 
-unless ($file && (-s $file) && $input && (-s $input)) {
+unless ($file && $input && (-s $input)) {
     print STDERR $usage; exit 1;
 }
 
@@ -46,15 +46,16 @@ if ($type eq 'leveldb') {
     tie %dbh, 'Tie::LevelDB', $file;
 } elsif ($type eq 'berkeleydb') {
     use BerkeleyDB;
-    tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_RDONLY;
+    if ($build) {
+        tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_CREATE;
+    } else {
+        tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_RDONLY;
+    }
 } elsif ($type eq 'lmdb') {
     use LMDB_File;
     tie %dbh, 'LMDB_File', $file;
 } else {
     print STDERR $usage; exit 1;
-}
-unless (%dbh) {
-    print STDERR "Unable to open $file with %type library\n"; exit 1;
 }
 
 my $count = 0;
@@ -81,10 +82,10 @@ if ($build) {
             source     => $row->[1],
             is_protein => ($row->[2] eq 'true') ? 1 : 0,
             single     => $row->[3],
-            lca        => $json->decode($row->[4]),
-            accession  => $json->decode($row->[5]),
-            function   => $json->decode($row->[6]),
-            organism   => $json->decode($row->[7])
+            lca        => str_to_array($row->[4]),
+            accession  => str_to_array($row->[5]),
+            function   => str_to_array($row->[6]),
+            organism   => str_to_array($row->[7])
         };
         push @data, $ann;
     }
@@ -108,4 +109,12 @@ if ($build) {
 close($fh);
 my $end = time;
 
-print "Processed $count lines in ".($end-$start)."seconds\n";
+print "Processed $count lines in ".($end-$start)." seconds\n";
+
+sub str_to_array {
+    my ($str) = @_;
+    $str =~ s/^\['//;
+    $str =~ s/'\]$//;
+    my @items = split(/','/, $str);
+    return \@items;
+}
