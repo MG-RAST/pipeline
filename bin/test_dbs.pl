@@ -66,7 +66,7 @@ if ($build) {
     my $prev = "";
     my $md5  = "";
     my @data = ();
-    while (my $row = $csv->getline(INPUT)) {
+    while (my $row = $csv->getline(<INPUT>)) {
         $count += 1;
         $md5 = $row->[0];
         unless ($prev) {
@@ -92,15 +92,15 @@ if ($build) {
         $dbh{$md5} = $json->encode(\@data);
     }
 } else {
-    my $srcs = {}
+    my $srcs = {};
     while (my $md5 = <INPUT>) {
         $count += 1;
         chomp $md5;
         my $ann = $json->decode( $dbh{$md5} );
-        if (exists $src->{$ann->{source}}) {
-            $src->{$ann->{source}} += 1;
+        if (exists $srcs->{$ann->{source}}) {
+            $srcs->{$ann->{source}} += 1;
         } else {
-            $src->{$ann->{source}} = 1;
+            $srcs->{$ann->{source}} = 1;
         }
     }
     print Dumper($srcs);
