@@ -69,6 +69,9 @@ if ($build) {
     my @data = ();
     while (my $row = $csv->getline($fh)) {
         $count += 1;
+        if (($count % 100000) == 0) {
+            print STDERR ".";
+        }
         $md5 = $row->[0];
         unless ($prev) {
             $prev = $md5; # for first line only
@@ -92,10 +95,14 @@ if ($build) {
     if (scalar(@data) > 0) {
         $dbh{$md5} = $json->encode(\@data);
     }
+    print STDERR "\nlast md5 = ".$md5."\n";
 } else {
     my $srcs = {};
     while (my $md5 = <$fh>) {
         $count += 1;
+        if (($count % 100000) == 0) {
+            print STDERR ".";
+        }
         chomp $md5;
         my $data = $json->decode( $dbh{$md5} );
         foreach my $ann (@$data) {
@@ -106,7 +113,7 @@ if ($build) {
             }
         }
     }
-    print Dumper($srcs);
+    print STDERR "\n".Dumper($srcs);
 }
 close($fh);
 my $end = time;
