@@ -33,7 +33,7 @@ unless ($file && $input && (-s $input)) {
     print STDERR $usage; exit 1;
 }
 
-my $csv  = Text::CSV->new;
+my $csv  = Text::CSV->new({binary => 1, allow_loose_quotes => 1, allow_loose_escapes => 1});
 my $json = JSON->new;
 $json = $json->utf8();
 $json->max_size(0);
@@ -125,5 +125,9 @@ sub str_to_array {
     $str =~ s/^\['//;
     $str =~ s/'\]$//;
     my @items = split(/','/, $str);
+    for (@items) {
+        s/^["'\\]*//;
+        s/["'\\]*$//;
+    }
     return \@items;
 }
