@@ -7,6 +7,7 @@ use Text::CSV;
 use JSON;
 use Getopt::Long;
 use Data::Dumper;
+use File::Basename;
 
 my $type  = "";
 my $file  = "";
@@ -41,6 +42,7 @@ $json->allow_nonref;
 
 # create db hash
 my %dbh;
+my $lmdb;
 if ($type eq 'leveldb') {
     use Tie::LevelDB;
     tie %dbh, 'Tie::LevelDB', $file;
@@ -52,8 +54,21 @@ if ($type eq 'leveldb') {
         tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_RDONLY;
     }
 } elsif ($type eq 'lmdb') {
-    use LMDB_File;
-    tie %dbh, 'LMDB_File', $file;
+    use LMDB_File qw(:flags :cursor_op);
+    if ($build) {
+        my ($dir, $name) = fileparse($file);
+        my $env = LMDB::Env->new($file, {
+            mapsize => 100 * 1024 * 1024 * 1024,
+            mode   => 0600
+        });
+        my $txn = $env->BeginTxn();
+        $lmdb = $txn->OpenDB({
+            dbname => $name,
+            flags => MDB_CREATE
+        });
+    } else {
+        tie %dbh, 'LMDB_File', $file;
+    }
 } else {
     print STDERR $usage; exit 1;
 }
@@ -77,7 +92,11 @@ if ($build) {
             $prev = $md5; # for first line only
         }
         if ($prev ne $md5) {
-            $dbh{$prev} = $json->encode(\@data);
+            if ($type eq 'lmdb') {
+                $lmdb->put($prev, $json->encode(\@data));
+            } else {
+                $dbh{$prev} = $json->encode(\@data);
+            }
             $prev = $md5;
             @data = ();
         }
@@ -93,7 +112,11 @@ if ($build) {
         push @data, $ann;
     }
     if (scalar(@data) > 0) {
-        $dbh{$md5} = $json->encode(\@data);
+        if ($type eq 'lmdb') {
+            $lmdb->put($prev, $json->encode(\@data));
+        } else {
+            $dbh{$prev} = $json->encode(\@data);
+        }
     }
     print STDERR "\nlast md5 = ".$md5."\n";
 } else {
@@ -122,8 +145,8 @@ print "Processed $count lines in ".($end-$start)." seconds\n";
 
 sub str_to_array {
     my ($str) = @_;
-    $str =~ s/^\['//;
-    $str =~ s/'\]$//;
+    $str =~ s/^\['?//;
+    $str =~ s/'?\]$//;
     my @items = split(/','/, $str);
     for (@items) {
         s/^["'\\]*//;
