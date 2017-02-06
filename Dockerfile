@@ -53,9 +53,7 @@ RUN apt-get update && apt-get install -y \
 	python-sphinx \
 	unzip \
 	wget \
-	curl \
-	cpanminus \
-	liblmdb-dev
+	curl
 
 # ###########
 # copy files into image
@@ -63,9 +61,6 @@ COPY awecmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
 COPY superblat /usr/local/bin/
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
-
-#### instal perl libs from cpanminus
-RUN cpanm Tie::LevelDB && cpanm LMDB_File
 
 #### install BLAT from src
 RUN cd /root \

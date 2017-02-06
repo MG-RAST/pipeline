@@ -5,16 +5,14 @@ use warnings;
 
 use Text::CSV;
 use JSON;
+use BerkeleyDB;
 use Getopt::Long;
 use Data::Dumper;
-use File::Basename;
 
-my $type  = "";
 my $file  = "";
 my $input = "";
 my $build = 0;
 my $usage = qq($0
-  --type   one of: leveldb, berkeleydb, lmdb
   --file   path to db file
   --input  file with list of test md5s or input data
   --build  build db file
@@ -22,7 +20,6 @@ my $usage = qq($0
 
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
 if ( ! GetOptions(
-	'type:s'  => \$type,
 	'file:s'  => \$file,
 	'input:s' => \$input,
 	'build!'  => \$build
@@ -42,35 +39,10 @@ $json->allow_nonref;
 
 # create db hash
 my %dbh;
-my $lmdb;
-if ($type eq 'leveldb') {
-    use Tie::LevelDB;
-    tie %dbh, 'Tie::LevelDB', $file;
-} elsif ($type eq 'berkeleydb') {
-    use BerkeleyDB;
-    if ($build) {
-        tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_CREATE;
-    } else {
-        tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_RDONLY;
-    }
-} elsif ($type eq 'lmdb') {
-    use LMDB_File qw(:flags :cursor_op);
-    if ($build) {
-        my ($name, $dir) = fileparse($file);
-        my $env = LMDB::Env->new($dir, {
-            mapsize => 100 * 1024 * 1024 * 1024,
-            mode   => 0600
-        });
-        my $txn = $env->BeginTxn();
-        $lmdb = $txn->OpenDB({
-            dbname => $name,
-            flags => MDB_CREATE
-        });
-    } else {
-        tie %dbh, 'LMDB_File', $file;
-    }
+if ($build) {
+    tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_CREATE;
 } else {
-    print STDERR $usage; exit 1;
+    tie %dbh, "BerkeleyDB::Hash", -Filename => $file, -Flags => DB_RDONLY;
 }
 
 my $count = 0;
@@ -92,11 +64,7 @@ if ($build) {
             $prev = $md5; # for first line only
         }
         if ($prev ne $md5) {
-            if ($type eq 'lmdb') {
-                $lmdb->put($prev, $json->encode(\@data));
-            } else {
-                $dbh{$prev} = $json->encode(\@data);
-            }
+            $dbh{$prev} = $json->encode(\@data);
             $prev = $md5;
             @data = ();
         }
@@ -112,11 +80,7 @@ if ($build) {
         push @data, $ann;
     }
     if (scalar(@data) > 0) {
-        if ($type eq 'lmdb') {
-            $lmdb->put($prev, $json->encode(\@data));
-        } else {
-            $dbh{$prev} = $json->encode(\@data);
-        }
+        $dbh{$md5} = $json->encode(\@data);
     }
     print STDERR "\nlast md5 = ".$md5."\n";
 } else {
@@ -127,7 +91,7 @@ if ($build) {
             print STDERR ".";
         }
         chomp $md5;
-        my $data = $json->decode( $dbh{$md5} );
+        $data = $json->decode( $dbh{$md5} );
         foreach my $ann (@$data) {
             if (exists $srcs->{$ann->{source}}) {
                 $srcs->{$ann->{source}} += 1;
