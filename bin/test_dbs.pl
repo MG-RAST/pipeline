@@ -56,8 +56,8 @@ if ($type eq 'leveldb') {
 } elsif ($type eq 'lmdb') {
     use LMDB_File qw(:flags :cursor_op);
     if ($build) {
-        my ($dir, $name) = fileparse($file);
-        my $env = LMDB::Env->new($file, {
+        my ($name, $dir) = fileparse($file);
+        my $env = LMDB::Env->new($dir, {
             mapsize => 100 * 1024 * 1024 * 1024,
             mode   => 0600
         });
