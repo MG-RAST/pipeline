@@ -91,7 +91,7 @@ if ($build) {
             print STDERR ".";
         }
         chomp $md5;
-        $data = $json->decode( $dbh{$md5} );
+        my $data = $json->decode( $dbh{$md5} );
         foreach my $ann (@$data) {
             if (exists $srcs->{$ann->{source}}) {
                 $srcs->{$ann->{source}} += 1;
