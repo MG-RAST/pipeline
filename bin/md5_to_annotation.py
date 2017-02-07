@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
 import time
 import json
 import bsddb
 import logging
 from collections import defaultdict
+from optparse import OptionParser
 
 TAXA = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 SKIP_RE = re.compile('other|unknown|unclassified')
@@ -53,6 +55,7 @@ def output_for_type(atype, obj=None):
                 temp[name] = [ [k, v] for k, v in level.iteritems() ]
     return temp
 
+usage = "usage: %prog [options]\n"
 
 def main(args):
     global TMP_DIR
@@ -61,14 +64,14 @@ def main(args):
     parser.add_option("-o", "--output", dest="output", default=None, help="output filename")
     parser.add_option("-i", "--input", dest="input", default=None, help="input filename")
     parser.add_option("-d", "--database", dest="database", default=None, help="m5nr berkeleydb file")
-    parser.add_option("-h", "--hierarchy", dest="hierarchy", default=None, help="hierarchy mapping file, for organism or ontology")
+    parser.add_option("-y", "--hierarchy", dest="hierarchy", default=None, help="hierarchy mapping file, for organism or ontology")
     parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
     
     (opts, args) = parser.parse_args()
     if opts.type not in ['function', 'organism', 'ontology']:
         logger.error("incorrect annotation type")
         return 1
-    if (not opts.hierarchy) and (opts.type != 'function')
+    if (not opts.hierarchy) and (opts.type != 'function'):
         logger.error("missing hierarchy file")
         return 1
     if not (opts.input and opts.database):
