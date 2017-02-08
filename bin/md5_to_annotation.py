@@ -10,7 +10,8 @@ import logging
 from collections import defaultdict
 from optparse import OptionParser
 
-TAXA = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+TYPES = ['function', 'organism', 'ontology']
+TAXA  = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 SKIP_RE = re.compile('other|unknown|unclassified')
 
 # logging
@@ -68,7 +69,7 @@ def main(args):
     parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
     
     (opts, args) = parser.parse_args()
-    if opts.type not in ['function', 'organism', 'ontology']:
+    if not (opts.type and (opts.type in TYPES)):
         logger.error("incorrect annotation type")
         return 1
     if (not opts.hierarchy) and (opts.type != 'function'):
@@ -146,7 +147,12 @@ def main(args):
         newoutput = output_for_type(opts.type, obj=output)
         json.dump(newoutput, open(opts.output, 'w'))
     
-    return 0
+    # exit if child fork
+    if pid == 0:
+        os._exit(0)
+    else:
+        return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

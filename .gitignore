@@ -1,4 +1,6 @@
 # git ignore file 
+*.pyc
+.ipynb_checkpoints
 
 # ignore all generated files
 conf/Pipeline_Conf.pm
