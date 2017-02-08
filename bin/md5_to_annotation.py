@@ -59,10 +59,10 @@ def main(args):
     if opts.accession and (not opts.ont_map):
         logger.error("missing ontology mapping file")
         return 1
-    if not opts.input:
+    if not (opts.input and os.path.isfile(opts.input)):
         logger.error("missing input md5 file")
         return 1
-    if not opts.database:
+    if not (opts.database and os.path.isfile(opts.database)):
         logger.error("missing m5nr database file")
         return 1
     
@@ -74,7 +74,7 @@ def main(args):
     # we are the parent
     if pid:
         info = os.waitpid(pid, os.WNOHANG)
-        mhdl = open(opts.output+'.mem.log', 'w')
+        mhdl = open(opts.input+'.mem.log', 'w')
         mhdl.write("start %d\n"%time.time())
         while(info[0] == 0):
             mem = memory_usage(pid)['rss']
