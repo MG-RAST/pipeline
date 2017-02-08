@@ -61,7 +61,7 @@ usage = "usage: %prog [options]\n"
 def main(args):
     global TMP_DIR
     parser = OptionParser(usage=usage)
-    parser.add_option("-t", "--type", dest="type", default=None, help="annotation type, one of: organism, ontology, function")
+    parser.add_option("-t", "--type", dest="type", default=None, help="annotation type, one of: "+",".join(TYPES))
     parser.add_option("-o", "--output", dest="output", default=None, help="output filename")
     parser.add_option("-i", "--input", dest="input", default=None, help="input filename")
     parser.add_option("-d", "--database", dest="database", default=None, help="m5nr berkeleydb file")
@@ -106,7 +106,7 @@ def main(args):
     
     # we are child or no forking
     else:
-        hier_map = json.load(open(opts.hierarchy, 'rU'))
+        hier_map = json.load(open(opts.hierarchy, 'rU')) if (opts.type != 'function') else {}
         m5nr_map = bsddb.hashopen(opts.database, 'r')
         file_hdl = open(opts.input, 'rU')
     
@@ -130,7 +130,7 @@ def main(args):
                             continue
                         skip_m = SKIP_RE.match(o)
                         for i, t in enumerate(TAXA):
-                            if (t == 'domain') and skip_m:
+                            if ((t == 'domain') and skip_m) or (not hier_map[o][i]):
                                 continue
                             output[t][hier_map[o][i]] += abund
                 elif (opts.type == 'ontology') and (rec['source'] in hier_map) and rec['accession']:
