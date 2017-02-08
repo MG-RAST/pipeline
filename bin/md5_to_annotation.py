@@ -118,12 +118,15 @@ def main(args):
             total += 1
             parts = line.strip().split("\t")
             md5, abund = parts[0], int(parts[1])
+            if md5 not in m5nr_map:
+                continue
+            has_ann = 0
             data = json.loads(m5nr_map[md5])
             for rec in data:
-                found += 1
                 if (opts.type == 'function') and rec['function']:
                     for f in rec['function']:
                         output[f] += abund
+                        has_ann = 1
                 elif (opts.type == 'organism') and rec['organism']:
                     for o in rec['organism']:
                         if o not in hier_map:
@@ -133,6 +136,7 @@ def main(args):
                             if ((t == 'domain') and skip_m) or (not hier_map[o][i]):
                                 continue
                             output[t][hier_map[o][i]] += abund
+                            has_ann = 1
                 elif (opts.type == 'ontology') and (rec['source'] in hier_map) and rec['accession']:
                     if rec['source'] not in output:
                         output[rec['source']] = defaultdict(int)
@@ -140,6 +144,9 @@ def main(args):
                         if a in hier_map[rec['source']]:
                             level = hier_map[rec['source']][a]
                             output[rec['source']][level] += abund
+                            has_ann = 1
+            if has_ann:
+                found += 1
         
         logger.info("completed - annotated %d out of %d md5s"%(found, total))
     
