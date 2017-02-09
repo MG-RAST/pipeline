@@ -31,7 +31,9 @@ RUN apt-get update && apt-get install -y \
 	libfile-slurp-perl \
 	libfilehandle-fmode-perl \
 	libgetopt-long-descriptive-perl \
-	libjson-perl \
+	libjson-perl 
+	
+RUN apt-get update && apt-get install -y \
 	liblist-allutils-perl \
 	libpq-dev \
 	libpng-dev \
@@ -96,12 +98,12 @@ RUN cd /root \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root ; rm -rf /root/diamond
 	
-### install vsearch 2.02
+### install vsearch 2.40
 RUN cd /root \
-	&& wget https://github.com/torognes/vsearch/archive/v2.0.2.tar.gz \
-	&& tar xzf v2.0.2.tar.gz \
-	&& cd vsearch-2.0.2 \
-	&& ./autogen.sh \
+	&& wget https://github.com/torognes/vsearch/archive/v2.4.0.tar.gz \
+	&& tar xzf v2.4.0.tar.gz \
+	&& cd vsearch-2.4.0 \
+	&& sh ./autogen.sh \
 	&& ./configure --prefix=/usr/local/ \
 	&& make \
 	&& make install \
@@ -125,8 +127,17 @@ RUN cd /root \
 	&& install -m755 -s fastq-join /usr/local/bin/ \
 	&& cd /root ; rm -rf /root/ea-utils
 
+### install 
+RUN cd /root \
+	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
+	&& tar xvf 2.1b.tar.gz \
+	&& cd sortmerna-2.1b \
+	&& ./configure &&  make install && make clean
+
 ### install simka
 #RUN cd /root \
 #	&& git clone https://github.com/GATB/simka.git \
 #	&& cd simka \
 #	&& sh INSTALL \
+
+
