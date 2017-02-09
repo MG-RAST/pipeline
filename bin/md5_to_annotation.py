@@ -43,11 +43,12 @@ def main(args):
     parser.add_option("-f", "--function", dest="function", default=None, help="output function filename")
     parser.add_option("-t", "--taxonomy", dest="organism", default=None, help="output taxonomy filename")
     parser.add_option("-o", "--ontology", dest="accession", default=None, help="output ontology (functional category) filename")
+    parser.add_option("-m", "--md5", dest="md5", default=None, help="output md5 list")
     parser.add_option("-i", "--input", dest="input", default=None, help="input filename")
     parser.add_option("-d", "--database", dest="database", default=None, help="m5nr berkeleydb file")
     parser.add_option("--tax_map", dest="tax_map", default=None, help="taxonomy (organism hierarchy) mapping file")
     parser.add_option("--ont_map", dest="ont_map", default=None, help="ontology (functional category) mapping file")
-    parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
+    parser.add_option('--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
     
     (opts, args) = parser.parse_args()
     if not (opts.function or opts.organism or opts.accession):
@@ -91,6 +92,7 @@ def main(args):
         func_map = defaultdict(int)
         org_map  = dict([ (t, defaultdict(int)) for t in TAXA ])
         acc_map  = {}
+        md5_list = []
         
         # get handles
         tax_hier = json.load(open(opts.tax_map, 'rU')) if opts.organism else {}
@@ -108,6 +110,8 @@ def main(args):
             md5, abund = parts[0], int(parts[1])
             if md5 not in m5nr_map:
                 continue
+            if opts.md5:
+                md5_list.append(md5)
             has_ann = 0
             data = json.loads(m5nr_map[md5])
             for rec in data:
@@ -152,6 +156,8 @@ def main(args):
             for name, level in acc_map.iteritems():
                 temp[name] = [ [k, v] for k, v in level.iteritems() ]
             json.dump(temp, open(opts.accession, 'w'))
+        if opts.md5:
+            json.dump(md5_list, open(opts.md5, 'w'))
     
     # exit if child fork
     if pid == 0:
