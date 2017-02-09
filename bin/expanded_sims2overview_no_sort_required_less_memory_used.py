@@ -15,6 +15,7 @@ import re
 import sys
 import time
 import math
+import logging
 import numpy as np
 import subprocess
 from collections import defaultdict
@@ -26,6 +27,11 @@ ev_re  = re.compile(r"^(\d(\.\d)?)e([-+])?0?(\d+)$") # .group(4) == abs(exponent
 TYPES  = ['md5', 'lca', 'source']
 EVALS  = [-5 , -10 , -20 , -30 , -1000]
 IDENTS = [60 , 80 , 90 , 97 , 100]
+
+# logging
+LOG_FORMAT = '[%(asctime)-15s] [%(levelname)-5s] %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+logger = logging.getLogger()
 
 # numpy dtypes
 MD5_DT = np.dtype([('abun', np.uint32), ('esum', np.float32), ('lsum', np.float32), ('isum', np.float32)])
@@ -121,7 +127,7 @@ def get_exponent(e_val):
             (i, f) = str(e_val).split('.')
             return len(f) * -1
         except:
-            sys.stderr.write("[warning] bad e-value: "+str(e_val))
+            logger.error("bad e-value: "+str(e_val))
             os._exit(1)
         return len(f) * -1
     if ev_match.group(3) and (ev_match.group(3) == '-'):
@@ -219,13 +225,13 @@ def main(args):
     
     (opts, args) = parser.parse_args()
     if not (opts.input and os.path.isfile(opts.input)):
-        parser.error("[error] missing required input file")
+        logger.error("missing required input file")
         return 1
     if not opts.output:
-        parser.error("[error] missing required output file")
+        logger.error("missing required output file")
         return 1
     if not (opts.type and (opts.type in TYPES)):
-        parser.error("[error] missing or invalid type")
+        logger.error("missing or invalid type")
         return 1
     SOURCES = opts.m5nr_sources
     
