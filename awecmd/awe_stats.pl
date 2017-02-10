@@ -186,7 +186,7 @@ if (scalar(@{$taxa_abund_obj->{domain}}) == 0) {
 
 # diversity computation
 PipelineAWE::logger('info', "Computing alpha diversity and species rarefaction");
-my @species_abund = map {@_->[1]} @{$taxa_abund_obj->{species}};
+my @species_abund = map {$_->[1]} @{$taxa_abund_obj->{species}};
 my $rarefaction   = get_rarefaction_xy(\@species_abund, $job_stats->{sequence_count_raw});
 $job_stats->{alpha_diversity_shannon} = get_alpha_diversity(\@species_abund);
 
@@ -256,7 +256,7 @@ my $solrdata = {
     sequence_stats => $mgstats->{sequence_stats},
     function => [ map {$_->[0]} @$func_abund_obj ],
     organism => [ map {$_->[0]} @{$taxa_abund_obj->{species}} ],
-    md5 => md5_list_obj
+    md5 => $md5_list_obj
 };
 PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
@@ -304,11 +304,11 @@ sub get_alpha_diversity {
     my ($values) = @_;
     my $alpha = 0;
     my $h1    = 0;
-    my $sum   = sum @values;
+    my $sum   = sum @$values;
     unless ($sum) {
         return $alpha;
     }
-    foreach my $num (@values) {
+    foreach my $num (@$values) {
         my $p = $num / $sum;
         if ($p > 0) { $h1 += ($p * log(1/$p)) / log(2); }
     }
@@ -320,7 +320,7 @@ sub get_rarefaction_xy {
     my ($values, $nseq) = @_;
     my $rare = [];
     my $size = ($nseq > 1000) ? int($nseq / 1000) : 1;
-    my @nums = sort {$a <=> $b} @values;
+    my @nums = sort {$a <=> $b} @$values;
     my $k    = scalar @nums;
     for (my $n = 0; $n < $nseq; $n += $size) {
         my $coeff = nCr2ln($nseq, $n);
