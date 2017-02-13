@@ -31,9 +31,7 @@ RUN apt-get update && apt-get install -y \
 	libfile-slurp-perl \
 	libfilehandle-fmode-perl \
 	libgetopt-long-descriptive-perl \
-	libjson-perl 
-	
-RUN apt-get update && apt-get install -y \
+	libjson-perl \
 	liblist-allutils-perl \
 	libpq-dev \
 	libpng-dev \
@@ -132,12 +130,10 @@ RUN cd /root \
 	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
 	&& tar xvf 2.1b.tar.gz \
 	&& cd sortmerna-2.1b \
-	&& ./configure &&  make install && make clean
+	&& ./configure && make install && make clean
 
 ### install simka
 #RUN cd /root \
 #	&& git clone https://github.com/GATB/simka.git \
 #	&& cd simka \
 #	&& sh INSTALL \
-
-
