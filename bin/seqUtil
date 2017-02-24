@@ -27,6 +27,7 @@ group.add_option('--remove_seqs', dest="remove_seqs", action="store_true", defau
 group.add_option('--subset_seqs', dest="subset_seqs", action="store_true", default=False, help="return a subset of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
 group.add_option('--fastq_random_subset', dest="fastq_random_subset", type="int", default=0, help="return a random subset of sequences from a fastq file.")
 group.add_option('--fasta_random_subset', dest="fasta_random_subset", type="int", default=0, help="return a random subset of sequences from a fasta file.")
+group.add_option('-s', '--seq_count', dest="seq_count", type="int", default=0, help="number of sequences in file, used for *_random_subset.")
 group.add_option('-t', '--tmp_dir', dest="tmp_dir", default="/tmp", help="sort temp dir, default is '/tmp'")
 group.add_option('-l', '--list', dest="list", help="list of sequences sorted")
 group.add_option('-c', '--check_sort', dest="check", action="store_true", default=False, help="checks each fasta id / list id when doing --remove_seqs or --subset_seqs to see if it sorted.      NOTE: this uses python sort algorithm, results may be inconsistant if fasta file and list are sorted by unix or other sort algorithm.")
@@ -174,12 +175,12 @@ def subset_seqs(fasta_input, list, output, check):
     list_handle.close()
     output_handle.close()
 
-def random_subset(input, output, seqmax, seqtype):
+def random_subset(input, output, seqmax, seqnum, seqtype):
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
-    seqnum = 0
-    for record in SeqIO.parse(input_handle, seqtype):
-        seqnum += 1
+    if seqnum == 0:
+        for record in SeqIO.parse(input_handle, seqtype):
+            seqnum += 1
     seqper = float(seqmax) / seqnum
     count  = 0
     for record in SeqIO.parse(input_handle, seqtype):
@@ -267,9 +268,9 @@ if __name__ == '__main__':
     elif options.subset_seqs:
         subset_seqs(options.input, options.list, options.out, options.check)
     elif options.fastq_random_subset > 0:
-        random_subset(options.input, options.out, options.fastq_random_subset, 'fastq')
+        random_subset(options.input, options.out, options.fastq_random_subset, options.seq_count, 'fastq')
     elif options.fasta_random_subset > 0:
-        random_subset(options.input, options.out, options.fasta_random_subset, 'fasta')
+        random_subset(options.input, options.out, options.fasta_random_subset, options.seq_count, 'fasta')
     else:
         parser.print_help()
         sys.stderr.write("[error] must give valid command\n")
