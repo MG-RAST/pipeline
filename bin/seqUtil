@@ -189,7 +189,10 @@ def random_subset(input, output, seqmax, seqnum, seqtype):
         rnd_num = random.random()
         if seqper >= rnd_num:
             count += 1
-            output_handle.write(record.format(seqtype))
+            if seqtype == 'fasta':
+                output_handle.write(">%s\n%s\n" % (record.id, record.seq.ungap("-").ungap(".")))
+            else:
+                output_handle.write(record.format(seqtype))
     input_handle.close()
     output_handle.close()
 
