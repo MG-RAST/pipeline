@@ -2,31 +2,6 @@ cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: awe_annotate_summary.pl
 
-my %types = (
-    md5      => 1,
-    ontology => 1,
-    function => 1,
-    organism => 1,
-    source   => 1,
-    lca      => 1
-);
-my @in_expand = ();
-my @in_maps   = ();
-my $in_index  = "";
-my $in_assemb = "";
-my $output  = "";
-my $type    = "";
-my $help    = 0;
-my $options = GetOptions (
-                "in_expand=s"  => \@in_expand,
-                "in_maps=s"    => \@in_maps,
-                "in_index=s"   => \$in_index,
-                "in_assemb=s"  => \$in_assemb,
-                "output=s"     => \$output,
-                "type=s"       => \$type,
-                "help!"        => \$help
-);
-
 inputs:
   in_expand:
     type: File[]
