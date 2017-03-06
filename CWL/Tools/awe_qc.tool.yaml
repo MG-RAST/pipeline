@@ -2,18 +2,9 @@ cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: awe_qc.pl
 
-
-my $options = GetOptions (
-                "input=s"  => \$infile,
-                "format=s" => \$format,
-                "name=s"   => \$name,
-                "proc=i"   => \$proc,
-                "kmers=s"  => \$kmers,
-                "out_prefix=s" => \$out_prefix,
-        "assembled=i"  => \$assembled,
-        "filter_options=s" => \$filter_options,
-                "help!" => \$help,
-);
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/qc:1.0
 
 inputs:
   input:
@@ -21,7 +12,7 @@ inputs:
     inputBinding:
       prefix: -input
   format:
-    type: string
+    type: string?
     inputBinding:
       prefix: -format
   name: 
@@ -30,7 +21,7 @@ inputs:
     inputBinding:
       prefix: -name
   proc:
-    type: integer
+    type: int
     default: 8
     inputBinding:
       prefix: -proc
@@ -45,22 +36,36 @@ inputs:
     inputBinding:
       prefix: -out_prefix
   assembled:
-    type: integer
-    default: 0
+    type: int
+    default: "0"
     inputBinding:
       prefix: -assembled
   filter_options:
-    type: string
+    type: string?
     inputBinding:
       prefix: -filter_options
-  help:
-    type: boolean
-    default: false
-    inputBinding:
-      prefix: -help                                    
+                        
   
   
 outputs:
-  qc:
-    type: File
-    glob: $(inputs.out_prefix).*
+  # qc:
+#     type: File[]
+#     outputBinding:
+#       glob: $(inputs.out_prefix).*
+      
+  drisee:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).drisee.*
+  consensus:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).consensus.stats
+  kmer:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).kmer.*.stats
+  assembly:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).assembly.*         
