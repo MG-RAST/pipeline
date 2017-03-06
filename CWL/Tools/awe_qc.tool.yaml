@@ -1,0 +1,66 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_qc.pl
+
+
+my $options = GetOptions (
+                "input=s"  => \$infile,
+                "format=s" => \$format,
+                "name=s"   => \$name,
+                "proc=i"   => \$proc,
+                "kmers=s"  => \$kmers,
+                "out_prefix=s" => \$out_prefix,
+        "assembled=i"  => \$assembled,
+        "filter_options=s" => \$filter_options,
+                "help!" => \$help,
+);
+
+inputs:
+  input:
+    type: File
+    inputBinding:
+      prefix: -input
+  format:
+    type: string
+    inputBinding:
+      prefix: -format
+  name: 
+    type: string
+    default: raw
+    inputBinding:
+      prefix: -name
+  proc:
+    type: integer
+    default: 8
+    inputBinding:
+      prefix: -proc
+  kmers:
+    type: string
+    default: 15,6
+    inputBinding:
+      prefix: -kmers
+  out_prefix:
+    type: string
+    default: qc
+    inputBinding:
+      prefix: -out_prefix
+  assembled:
+    type: integer
+    default: 0
+    inputBinding:
+      prefix: -assembled
+  filter_options:
+    type: string
+    inputBinding:
+      prefix: -filter_options
+  help:
+    type: boolean
+    default: false
+    inputBinding:
+      prefix: -help                                    
+  
+  
+outputs:
+  qc:
+    type: File
+    glob: $(inputs.out_prefix).*
