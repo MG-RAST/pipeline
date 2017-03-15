@@ -51,6 +51,7 @@ RUN apt-get update && apt-get install -y \
 	python-leveldb \
 	perl-modules \
    	python-numpy \
+	python-pika \
 	python-scipy \
 	python-sphinx \
 	unzip \
@@ -108,7 +109,7 @@ RUN cd /root \
 	&& make \
 	&& make install \
 	&& make clean \
-	&& cd /root ; rm -rf /root/vsearch-2.02* 
+	&& cd /root ; rm -rf /root/vsearch-2* 
 
 ### install swarm 2.1.9
 RUN cd /root \
