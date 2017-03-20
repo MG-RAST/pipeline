@@ -1,0 +1,57 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: [ls , -l , .]
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+
+
+requirements:
+  - class: InitialWorkDirRequirement
+    listing: 
+      - entry: $(inputs.in.listing)
+      - entry: $(inputs.fasta)
+
+  
+stdout: ls.log
+stderr: error.log
+
+inputs:
+  in:
+    type: Directory
+  fasta:
+    type: File                      
+    
+outputs:
+  output:
+    type: stdout
+  error: 
+    type: stderr  
+    
+
+# requirements:
+#   - class: InitialWorkDirRequirement
+#     listing:
+#        - $(inputs.input)
+#        - $(inputs.in.listing)
+#
+# stdout: ls.log
+#
+# inputs:
+#   in:
+#     type: Directory
+#   input:
+#     type: File
+#
+# outputs:
+#   output:
+#     type: stdout
+#
+    
+    
+    # input:
+    #   type: File
+      # inputBinding:
+#         valueFrom: $(self.basename)
+#  prefix: -l    
