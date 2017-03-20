@@ -1,0 +1,30 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_search_rna.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+label: rna detection
+
+inputs:
+  input:
+    type: File
+    inputBinding:
+      prefix: -input
+  output:
+    type: string
+  rna_nr:
+    type: File      
+  
+                        
+outputs:
+  fasta:
+    type: File
+    outputBinding:
+      glob: $(inputs.output)
+  userattr:
+    type: File
+    outputBinding:
+      glob: userattr.json         
