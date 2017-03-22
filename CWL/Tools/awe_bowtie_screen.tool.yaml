@@ -8,10 +8,14 @@ hints:
 
 
 requirements:
+  - class: InlineJavascriptRequirement
   - class: InitialWorkDirRequirement
-    listing:
-      - $(inputs.input)
-      - $(inputs.indexFiles)
+    listing: |
+      ${
+        var listing = inputs.indexDir.listing;
+        listing.push(inputs.input);
+        return listing;
+       }
   
 
 inputs:
@@ -38,8 +42,8 @@ inputs:
       default: 1
       inputBinding:
         prefix: -bowtie
-    indexFiles:
-      type: File[]                      
+    indexDir:
+      type: Directory                      
   
 outputs:
   output:
