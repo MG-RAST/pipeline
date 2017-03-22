@@ -135,6 +135,22 @@ FILES: foreach my $fname (keys %$to_submit) {
             next if ($mg->{status} =~ /deleted/);
             if ($mg->{submission} && ($mg->{submission} eq $params->{submission})) {
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
+                # not in pipeline
+                if (! $awe_id) {
+                    # not properly created, redo
+                    if (! $mg->{project}) {
+                        my $create_data = $params->{parameters};
+                        $create_data->{metagenome_id} = $mg->{id};
+                        $create_data->{input_id}      = $info->{id};
+                        $create_data->{submission}    = $params->{submission};
+                        my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data);
+                        PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg->{id}, project_id => $project});
+                    }
+                    # fully created but not in pipeline, submit it
+                    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg->{id}, input_id => $info->{id}});
+                    $awe_id = $submit_job->{awe_id};
+                }
+                # submitted: add to set and process next
                 $submitted->{$fname} = [$mg->{name}, $awe_id, $mg->{id}];
                 print STDOUT join("\t", ("submitted", $fname, $mg->{name}, $awe_id, $mg->{id}))."\n";
                 push @$mgids, $mg->{id};
