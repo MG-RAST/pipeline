@@ -74,12 +74,8 @@ else {
         $index_dir = "$ENV{'REFDBPATH'}";
     }
 
-    # truncate input to 1000 bp
-    my $input_file = $fasta.'.trunc';
-    PipelineAWE::run_cmd("seqUtil --truncateuniqueid 1000 -i $fasta -o $input_file");
-
     # run bowtie2
-    my $tmp_input_var = $input_file;
+    my $tmp_input_var = $fasta;
     for my $index_name (@indexes) {
         my $unaligned = $index_ids->{$index_name}.".".$index_name.".passed.fna";
         # 'reorder' option outputs sequences in same order as input file
@@ -90,7 +86,7 @@ else {
 
     # create subset record list
     # note: parent and child files in same order
-    PipelineAWE::run_cmd("index_subset_seq.py -p $input_file -c $output -s -m 20");
+    PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -s -m 20");
     PipelineAWE::run_cmd("mv $output.index $output");
 }
 
