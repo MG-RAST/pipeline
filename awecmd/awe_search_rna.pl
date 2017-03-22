@@ -52,12 +52,6 @@ unless (-s $rna_nr_path) {
 }
 
 my $run_dir = getcwd;
-### use usearch - depricated
-# PipelineAWE::run_cmd("parallel_search.py -v -p $proc -s $size -i 0.$ident -d $run_dir $rna_nr_path $fasta $output");
-# exit 0;
-
-# truncate
-
 
 # use vsearch
 PipelineAWE::run_cmd("vsearch --threads 0 --quiet --strand both --usearch_global $fasta --id 0.$ident --db $rna_nr_path --uc $fasta.uc");
@@ -72,6 +66,7 @@ open(SUC, "<$fasta.sort.uc") || die "Can't open file $fasta.sort.uc!\n";
 my $seql = <STAB>;
 chomp $seql;
 my ($id, $seq) = split(/\t/, $seql);
+$id =~ s/^\s+|\s+$//g;
 
 while (my $ucl = <SUC>) {
     chomp $ucl;
@@ -82,11 +77,13 @@ while (my $ucl = <SUC>) {
     my ($strand, $qstart, $cigar, $qname) = ($parts[4], $parts[5], $parts[7], $parts[8]);
     my @qname_fields = split(/ /, $qname);
     $qname = $qname_fields[0];
+    $qname =~ s/^\s+|\s+$//g;
     while ($qname ne $id) {
         $seql = <STAB>;
         unless (defined($seql)) { last; }
         chomp $seql;
         ($id, $seq) = split(/\t/, $seql);
+        $id =~ s/^\s+|\s+$//g;
     }
     my ($cstart, $cstop, $clen) = parse_cigar($cigar, $qstart);
     my $seq_match = substr($seq, $cstart, $clen);
