@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: ["awe_search_rna.pl" , "-rna" ]
+baseCommand: ["awe_search_rna.pl"]
 
 hints:
   DockerRequirement:
@@ -8,24 +8,44 @@ hints:
 
 label: "rna detection"
 
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+                "stage_id": "425",
+                "stage_name": "rna.filter",
+                "data_type": "sequence",
+                "file_format": "fasta",
+                "seq_format": "bp" ,
+          }
+      - entry: $(inputs.input)
+
 inputs:
   input:
     type: File
     inputBinding:
       prefix: -input
-  out_prefix:
+      valueFrom: $(inputs.input.basename)
+  output:
     type: string
     inputBinding:
-      prefix: -out_prefix
-  pid:
-    type: string
+      prefix: -output 
+  rna_nr:
+    type: File
     inputBinding:
-      prefix: -pid
-  memory:
+      prefix: -rna_nr
+  size:
     type: int
-    default: 20
+    default: 100
     inputBinding:
-      prefix: -memory      
+      prefix: -size
+  proc:
+    type: int
+    default: 8
+    inputBinding:
+      prefix: -proc          
   
                         
 outputs:
