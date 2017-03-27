@@ -1,30 +1,76 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_search_rna.pl
+baseCommand: awe_cluster.pl
 
 hints:
   DockerRequirement:
     dockerPull: mgrast/pipeline:cwl
 
-label: rna detection
+label: "rna clustering"
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "440",
+            "stage_name": "rna.cluster",
+            "seq_format": "aa",
+            "cluster_percent": "$(inputs.pid)"
+          }
+
 
 inputs:
   input:
     type: File
     inputBinding:
       prefix: -input
-  output:
+  out_prefix:
     type: string
-  rna_nr:
-    type: File      
+    inputBinding:
+      prefix: -out_prefix
+  pid:
+    type: int
+    inputBinding:
+      prefix: -pid
+  memory:
+    type: int
+    inputBinding:
+      prefix: -memory
+  exclusive_parameters:
+    type:
+        - type: record
+          name: RNA
+          fields:
+            rna:
+              type: boolean
+              inputBinding:
+                prefix: -rna
+        - type: record
+          name: DNA
+          fields:
+            dna:
+              type: boolean
+              inputBinding:
+                prefix: -dna                 
   
                         
 outputs:
   fasta:
     type: File
     outputBinding:
-      glob: $(inputs.output)
-  userattr:
+      glob: $(inputs.out_prefix).*.fna
+  fasta_userattr:
     type: File
     outputBinding:
-      glob: userattr.json         
+      glob: $(inputs.out_prefix).*.fna.json
+  mapping:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).*.mapping
+  mapping_userattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).*.mapping.json
+        
