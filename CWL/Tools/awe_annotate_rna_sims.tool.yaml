@@ -1,0 +1,105 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_annotate_sims.pl
+
+label: "aa sims annotatio"
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+              "stage_id": "650",
+              "stage_name": "protein.sims",
+              "m5nr_sims_version": "$(inputs.ach_sequence_version)",
+              "m5nr_annotation_version": "$(inputs.ach_ver)"
+          }
+          
+inputs:
+  
+  out_prefix:
+   type: string
+   default: annotate_sims
+   inputBinding: 
+     position: 1
+     prefix: -out_prefix
+     
+  input:
+    type: File
+    inputBinding:
+      prefix: -input
+      position: 2
+      
+  ach_ver:
+    type: string
+    default: "1"
+    inputBinding:
+      prefix: -ach_ver
+  ach_sequence_ver:
+    type: string
+    default: "1"        
+         
+  ann_file:
+    type: File
+    default: /mnt/awe/data/predata/m5nr_v1.bdb
+    inputBinding:
+      prefix: -ann_file
+    
+  tool_help:
+    type: boolean    
+    default: false
+    inputBinding:
+      prefix: -help
+  
+  exclusive_parameters:
+    type:
+        - type: record
+          name: RNA
+          fields:
+            rna:
+              type: boolean
+              inputBinding:
+                prefix: -rna
+        - type: record
+          name: AA
+          fields:
+            aa:
+              type: boolean
+              inputBinding:
+                prefix: -aa    
+
+        
+outputs: 
+  filter:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.sims.filter
+  filterattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.sims.filter.json
+  protein:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.expand.protein
+  proteinattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.expand.protein.json  
+  lca:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.expand.lca
+  lcarattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.expand.lca.json  
+  ontology:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.expand.ontology
+  ontologyattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).aa.expand.ontology.json

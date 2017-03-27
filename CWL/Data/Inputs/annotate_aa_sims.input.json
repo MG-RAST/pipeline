@@ -1,16 +1,12 @@
 { 
   "input": { 
     "class": "File" ,
-    "path": "/pipeline/CWL/Data/Inputs/mySims.sims"
+    "path": "/pipeline/CWL/Data/Inputs/rna.search.fna"
   },
-  "ann_file": { 
-    "class": "File" ,
-    "path": "/pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb"
-  },
-  "ach_ver": "1" ,
-  "ach_sequence_version" : "1" ,
-  "out_prefix": "annotate_sims",
+  "pid": 97 ,
+  "memory": 2 ,
+  "out_prefix": "myCluster",
   "exclusive_parameters": {
-    "aa": true
+    "rna": true
   }  
 } 
