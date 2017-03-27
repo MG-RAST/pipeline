@@ -1,0 +1,63 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_genecalling.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+label: "genecalling"
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+             "stage_id": "350",
+             "stage_name": "genecalling",
+             "data_type": "sequence",
+             "file_format": "fasta",
+             "seq_format": "aa",
+             "fgs_type": "$(inputs.type)"
+          }
+
+inputs:
+  input:
+    type: File
+    inputBinding:
+      prefix: -input
+  type:
+    type: string
+    inputBinding:
+      prefix: -type
+  out_prefix:
+    type: string
+    inputBinding:
+      prefix: -out_prefix
+  size:
+    type: int
+    default: 100
+    inputBinding:
+      prefix: -size
+  proc:
+    type: int
+    default: 8
+    inputBinding:
+      prefix: -proc
+                                            
+outputs:
+  fna:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).fna
+  faa:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).faa    
+  userattr:
+    type: File
+    outputBinding:
+      glob: userattr.json
+ 
+        
