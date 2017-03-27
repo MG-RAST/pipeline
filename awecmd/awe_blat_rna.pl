@@ -36,11 +36,19 @@ if ($help){
     exit 1;
 }
 
-my $refdb_dir = ".";
-if ($ENV{'REFDBPATH'}) {
-  $refdb_dir = $ENV{'REFDBPATH'};
+my $rna_nr_path = undef ;
+
+if (-s $rna_nr) {
+  $rna_nr_path = $rna_nr;
 }
-my $rna_nr_path = $refdb_dir."/".$rna_nr;
+else{
+  my $refdb_dir = ".";
+  if ($ENV{'REFDBPATH'}) {
+    $refdb_dir = $ENV{'REFDBPATH'};
+  }
+  $rna_nr_path = $refdb_dir."/".$rna_nr;
+}
+
 unless (-s $rna_nr_path) {
     PipelineAWE::logger('error', "rna_nr not exist: $rna_nr_path");
     exit 1;
