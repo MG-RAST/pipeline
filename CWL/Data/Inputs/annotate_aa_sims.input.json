@@ -7,7 +7,8 @@
     "class": "File" ,
     "path": "/pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb"
   },
-  "ach_ver": 1 ,
+  "ach_ver": "1" ,
+  "ach_sequence_version" : "1" ,
   "out_prefix": "annotate_sims",
   "exclusive_parameters": {
     "aa": true
