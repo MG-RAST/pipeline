@@ -1,0 +1,15 @@
+{ 
+  "input": { 
+    "class": "File" ,
+    "path": "/pipeline/CWL/Data/Inputs/mySims.sims"
+  },
+  "ann_file": { 
+    "class": "File" ,
+    "path": "/pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb"
+  },
+  "ach_ver": 1 ,
+  "out_prefix": "annotate_sims",
+  "exclusive_parameters": {
+    "aa": true
+  }  
+} 
