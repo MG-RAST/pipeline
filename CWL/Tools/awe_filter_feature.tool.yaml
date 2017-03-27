@@ -19,7 +19,7 @@ requirements:
             "data_type": "sequence",
             "file_format": "fasta",
             "seq_format": "aa",
-            "overlap": "[% overlap %]"
+            "overlap": "$(inputs.overlap)"
           }
 
 inputs:
@@ -44,6 +44,11 @@ inputs:
     default: 10
     inputBinding:
       prefix: -memory
+  overlap:
+    type: int?
+    default: 10
+    inputBinding:
+      prefix: -overlap
   tool_help:
     type: boolean?
     inputBinding:
