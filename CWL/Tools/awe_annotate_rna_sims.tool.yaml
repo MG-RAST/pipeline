@@ -1,8 +1,8 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_annotate_sims.pl
+baseCommand: [awe_annotate_sims.pl , --rna]
 
-label: "aa sims annotatio"
+label: "rna sims annotation"
 
 requirements:
   InitialWorkDirRequirement:
@@ -10,11 +10,14 @@ requirements:
       - entryname: userattr.json
         entry: |
           {
-              "stage_id": "650",
-              "stage_name": "protein.sims",
-              "m5nr_sims_version": "$(inputs.ach_sequence_version)",
-              "m5nr_annotation_version": "$(inputs.ach_ver)"
+              "stage_id": "450",
+              "stage_name": "rna.sims",
+              "m5rna_sims_version": "$(inputs.ach_sequence_version)",
+              "m5rna_annotation_version": "$(inputs.ach_ver)"
           }
+
+
+
           
 inputs:
   
@@ -42,7 +45,7 @@ inputs:
          
   ann_file:
     type: File
-    default: /mnt/awe/data/predata/m5nr_v1.bdb
+    default: ./m5nr_v1.bdb
     inputBinding:
       prefix: -ann_file
     
@@ -52,54 +55,54 @@ inputs:
     inputBinding:
       prefix: -help
   
-  exclusive_parameters:
-    type:
-        - type: record
-          name: RNA
-          fields:
-            rna:
-              type: boolean
-              inputBinding:
-                prefix: -rna
-        - type: record
-          name: AA
-          fields:
-            aa:
-              type: boolean
-              inputBinding:
-                prefix: -aa    
+  # exclusive_parameters:
+#     type:
+#         - type: record
+#           name: RNA
+#           fields:
+#             rna:
+#               type: boolean
+#               inputBinding:
+#                 prefix: -rna
+#         - type: record
+#           name: AA
+#           fields:
+#             aa:
+#               type: boolean
+#               inputBinding:
+#                 prefix: -aa 
 
         
 outputs: 
   filter:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).aa.sims.filter
+      glob: $(inputs.out_prefix).*.sims.filter
   filterattr:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).aa.sims.filter.json
-  protein:
+      glob: $(inputs.out_prefix).*.sims.filter.json
+  feature:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).aa.expand.protein
-  proteinattr:
+      glob: $(inputs.out_prefix).rna.expand.rna
+  featureattr:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).aa.expand.protein.json  
+      glob: $(inputs.out_prefix).*.expand.rna.json  
   lca:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).aa.expand.lca
+      glob: $(inputs.out_prefix).*.expand.lca
   lcarattr:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).aa.expand.lca.json  
-  ontology:
-    type: File
-    outputBinding:
-      glob: $(inputs.out_prefix).aa.expand.ontology
-  ontologyattr:
-    type: File
-    outputBinding:
-      glob: $(inputs.out_prefix).aa.expand.ontology.json
+      glob: $(inputs.out_prefix).*.expand.lca.json  
+  # ontology:
+#     type: File
+#     outputBinding:
+#       glob: $(inputs.out_prefix).*.expand.ontology
+#   ontologyattr:
+#     type: File
+#     outputBinding:
+#       glob: $(inputs.out_prefix).aa.expand.ontology.json
