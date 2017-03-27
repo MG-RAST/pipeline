@@ -1,0 +1,62 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_filter_feature.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+label: "aa filtering"
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "375",
+            "stage_name": "filtering",
+            "data_type": "sequence",
+            "file_format": "fasta",
+            "seq_format": "aa",
+            "overlap": "[% overlap %]"
+          }
+
+inputs:
+  in_clust:
+    type: File
+    inputBinding:
+      prefix: -in_clust
+  in_sim:
+    type: File
+    inputBinding:
+      prefix: -in_sim
+  in_seq:
+    type: File
+    inputBinding:
+      prefix: -in_seq
+  output:
+    type: string
+    inputBinding:
+      prefix: -output
+  memory:
+    type: int
+    default: 10
+    inputBinding:
+      prefix: -memory
+  tool_help:
+    type: boolean?
+    inputBinding:
+      prefix: -help    
+                                            
+outputs:
+  output:
+    type: File
+    outputBinding:
+      glob: $(inputs.output)
+  userattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.output).json
+ 
+        
