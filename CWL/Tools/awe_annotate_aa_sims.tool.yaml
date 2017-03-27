@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: awe_annotate_sims.pl
 
-label: "aa sims annotatio"
+label: "aa sims annotation"
 
 requirements:
   InitialWorkDirRequirement:
@@ -33,12 +33,12 @@ inputs:
       
   ach_ver:
     type: string
-    default: 1
+    default: "1"
     inputBinding:
       prefix: -ach_ver
   ach_sequence_ver:
     type: string
-    default: 1        
+    default: "1"        
          
   ann_file:
     type: File
@@ -46,19 +46,6 @@ inputs:
     inputBinding:
       prefix: -ann_file
     
-  aa:
-    type: boolean
-    default: false    
-    inputBinding:
-      prefix: -aa
-  
-  rna:      
-    type: boolean
-    default: false
-    inputBinding:
-      prefix: -rna
-      
-
   tool_help:
     type: boolean    
     default: false
@@ -77,7 +64,7 @@ inputs:
         - type: record
           name: AA
           fields:
-            dna:
+            aa:
               type: boolean
               inputBinding:
                 prefix: -aa    
@@ -87,32 +74,32 @@ outputs:
   filter:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.sims.filter
+      glob: $(inputs.out_prefix).aa.sims.filter
   filterattr:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.sims.filter.json
+      glob: $(inputs.out_prefix).aa.sims.filter.json
   protein:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.expand.protein
+      glob: $(inputs.out_prefix).aa.expand.protein
   proteinattr:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.expand.protein.json  
+      glob: $(inputs.out_prefix).aa.expand.protein.json  
   lca:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.expand.lca
+      glob: $(inputs.out_prefix).aa.expand.lca
   lcarattr:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.expand.lca.json  
+      glob: $(inputs.out_prefix).aa.expand.lca.json  
   ontology:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.expand.ontology
+      glob: $(inputs.out_prefix).aa.expand.ontology
   ontologyattr:
     type: File
     outputBinding:
-      glob: $(self.inputs.out_prefix).aa.expand.ontology.json
+      glob: $(inputs.out_prefix).aa.expand.ontology.json
