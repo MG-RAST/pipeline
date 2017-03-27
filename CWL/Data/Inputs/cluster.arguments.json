@@ -1,0 +1,12 @@
+{ 
+  "input": { 
+    "class": "File" ,
+    "path": "/pipeline/CWL/Data/Inputs/rna.search.fna"
+  },
+  "pid": 97 ,
+  "memory": 2 ,
+  "out_prefix": "myCluster",
+  "exclusive_parameters": {
+    "rna": true
+  }  
+} 
