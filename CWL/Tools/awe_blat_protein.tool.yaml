@@ -6,26 +6,27 @@ hints:
   DockerRequirement:
     dockerPull: mgrast/pipeline:cwl
 
-label: "aa sims blat"
-
 requirements:
   - class: InlineJavascriptRequirement
   - class: InitialWorkDirRequirement
-    listing:
-      -     $(inputs.nr_dir.listing)
-      # - entryname: userattr.json
- #        entry: |
- #         {
- #           "stage_id": "650",
- #           "stage_name": "protein.sims",
- #           "m5nr_sims_version": $(inputs.nr_version)",
- #           "data_type": "similarity",
- #           "file_format": "blast m8",
- #           "sim_type": "protein"
- #         }
-      
-     
-
+    listing: 
+      - $(inputs.nr_part_1)
+      - $(inputs.nr_part_2)
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "650",
+            "stage_name": "protein.sims",
+            "m5nr_sims_version": $(inputs.nr_version)",
+            "data_type": "similarity",
+            "file_format": "blast m8",
+            "sim_type": "protein"
+          }
+    
+label: "aa sims blat"
+    
+stdout: out.log
+stderr: error.log
 
 inputs:
   input:
@@ -49,7 +50,12 @@ inputs:
       prefix: -d  
   nr_version:
     type: string
-        
+  nr_part_1:
+    type: File
+    doc: Filename prefix has to match nr_prefix    
+  nr_part_2:
+    type: File
+    doc: Filename prefix has to match nr_prefix           
                  
   
                         
@@ -58,9 +64,9 @@ outputs:
     type: File
     outputBinding:
       glob: $(inputs.output)
-  userattr:
-    type: File
-    outputBinding:
-      glob: userattr.json
+  stdout:
+    type: stdout
+  error: 
+    type: stderr    
  
         
