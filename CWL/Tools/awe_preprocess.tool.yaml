@@ -37,7 +37,13 @@ inputs:
       type: string?
       default: "dynamic_trim:min_qual=15:max_lqb=5"
       inputBinding:
-        prefix: -filter_options        
+        prefix: -filter_options
+    no-shock:
+      type: boolean?
+      default: false
+      inputBinding:
+        prefix: -no-shock
+                  
   
 outputs:
   passed:
