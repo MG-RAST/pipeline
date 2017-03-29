@@ -43,11 +43,13 @@ inputs:
       prefix: -out_prefix
   assembled:
     type: int
-    default: "0"
+    doc: <0 or 1, default 0>
+    default: 0
     inputBinding:
       prefix: -assembled
   filter_options:
     type: string?
+    doc: "Default: <filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5>"
     inputBinding:
       prefix: -filter_options
                         
