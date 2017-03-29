@@ -10,6 +10,12 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - $(inputs.input)
+      - entryname: userattr.json
+        entry: |
+                {
+                  "stage_id": "075",
+                  "stage_name": "qc"
+                }
   
 inputs:
     input:
