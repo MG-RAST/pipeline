@@ -23,6 +23,7 @@ inputs:
       prefix: -input
   format:
     type: string?
+    doc: <fasta|fastq>
     inputBinding:
       prefix: -format
   name: 
@@ -84,11 +85,11 @@ outputs:
     outputBinding:
       glob: $(inputs.out_prefix).consensus.stats.json   
   kmer:
-    type: File
+    type: File[]
     outputBinding:
       glob: $(inputs.out_prefix).kmer.*.stats
   kmerattr:
-    type: File
+    type: File[]
     outputBinding:
       glob: $(inputs.out_prefix).kmer.*.stats.json    
   assembly:
@@ -99,11 +100,20 @@ outputs:
     type: File?
     outputBinding:
       glob: $(inputs.out_prefix).assembly.coverage.json    
-  stats:
+  qcstats:
     type: File
     outputBinding:
       glob: $(inputs.out_prefix).qc.stats
-  statsattr:
+  qcstatsattr:
     type: File?
     outputBinding:
-      glob: $(inputs.out_prefix).qc.stats.json                 
+      glob: $(inputs.out_prefix).qc.stats.json
+  uploadstats:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).upload.stats
+  uploadstatsattr:
+    type: File?
+    outputBinding:
+      glob: $(inputs.out_prefix).upload.stats.json           
+      
