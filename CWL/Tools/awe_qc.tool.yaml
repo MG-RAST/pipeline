@@ -26,11 +26,6 @@ inputs:
     doc: <fasta|fastq>
     inputBinding:
       prefix: -format
-  name: 
-    type: string
-    default: raw
-    inputBinding:
-      prefix: -name
   proc:
     type: int
     default: 8
