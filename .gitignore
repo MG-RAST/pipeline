@@ -5,6 +5,7 @@
 # ignore all generated files
 conf/Pipeline_Conf.pm
 conf/env.sh
+CWL/tmp/*
 
 # binaries
 superblat
