@@ -6,9 +6,17 @@ hints:
   DockerRequirement:
     dockerPull: mgrast/preprocess:1.0
 
-# requirements:
-#   - class: InitialWorkDirRequirement
-#     listing: userattr.json
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "100",
+            "stage_name": "preprocess",
+            "file_format": "fasta",
+            "seq_format": "bp"
+          }
   
 inputs:
     input:
