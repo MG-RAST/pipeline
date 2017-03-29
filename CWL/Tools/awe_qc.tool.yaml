@@ -6,8 +6,18 @@ hints:
   DockerRequirement:
     dockerPull: mgrast/qc:1.0
 
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "075",
+            "stage_name": "qc"
+          }
+
 inputs:
-  input:
+  seqfile:
     type: File
     inputBinding:
       prefix: -input
@@ -48,24 +58,52 @@ inputs:
   
   
 outputs:
-  # qc:
-#     type: File[]
-#     outputBinding:
-#       glob: $(inputs.out_prefix).*
       
   drisee:
     type: File[]
     outputBinding:
-      glob: $(inputs.out_prefix).drisee.*
+      glob: $(inputs.out_prefix).drisee.stats
+  driseeattr:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).drisee.stats.json  
+  driseeinfo:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).drisee.info
+  driseeinfoattr:
+    type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).drisee.info.json      
   consensus:
     type: File[]
     outputBinding:
       glob: $(inputs.out_prefix).consensus.stats
-  kmer:
+  consensusattr:
     type: File[]
+    outputBinding:
+      glob: $(inputs.out_prefix).consensus.stats.json   
+  kmer:
+    type: File
     outputBinding:
       glob: $(inputs.out_prefix).kmer.*.stats
-  assembly:
-    type: File[]
+  kmerattr:
+    type: File
     outputBinding:
-      glob: $(inputs.out_prefix).assembly.*         
+      glob: $(inputs.out_prefix).kmer.*.stats.json    
+  assembly:
+    type: File?
+    outputBinding:
+      glob: $(inputs.out_prefix).assembly.coverage
+  assemblyattr:
+    type: File?
+    outputBinding:
+      glob: $(inputs.out_prefix).assembly.coverage.json    
+  stats:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).qc.stats
+  statsattr:
+    type: File?
+    outputBinding:
+      glob: $(inputs.out_prefix).qc.stats.json                 
