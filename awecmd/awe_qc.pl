@@ -5,6 +5,7 @@
 #         ${out_prefix}.consensus.stats, ${out_prefix}.kmer.$len.stats,
 #         ${out_prefix}.assembly.coverage
 #         ${out_prefix}.qc.stats
+#	  ${out_prefix}.upload.stats	
 
 use strict;
 use warnings;
