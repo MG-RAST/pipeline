@@ -7,6 +7,9 @@ requirements:
 inputs:
   jobid : int
   api_key: string?
+  no-shock:
+    type: boolean?
+    default: true
   sequences: File
   seqformat: string
   qc_proc:  

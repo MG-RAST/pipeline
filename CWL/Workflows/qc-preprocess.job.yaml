@@ -1,4 +1,5 @@
 jobid : 123
+no-shock: true
 sequences: 
   class: File
   path: /pipeline/CWL/Data/Inputs/saa.fna
