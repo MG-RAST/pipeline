@@ -13,18 +13,21 @@ use Cwd;
 umask 000;
 
 # options
-my $input = "";
+my $input       = "";
 my $out_prefix  = "derep";
 my $prefix_size = 50;
-my $memory    = 16;
-my $run_derep = 1;
-my $help    = 0;
+my $memory      = 16;
+my $run_derep   = 1;
+my $do_not_create_index_files = 0 ;
+my $help        = 0;
+
 my $options = GetOptions (
-        "input=s"         => \$input,
+    "input=s"         => \$input,
 		"out_prefix=s"    => \$out_prefix,
 		"prefix_length=i" => \$prefix_size,
 		"memory=i"        => \$memory,
 		"dereplicate=i"   => \$run_derep,
+    "no-shock"        => \$do_not_create_index_files,
 		"help!"           => \$help
 );
 
@@ -63,7 +66,7 @@ PipelineAWE::create_attr($removed_seq.'.json', $fail_stats, {data_type => "remov
 
 # create subset record list
 # note: parent and child files NOT in same order
-if ($run_derep != 0) {
+if ( ($run_derep != 0) and not ($do_not_create_index_files) ){
     PipelineAWE::run_cmd("index_subset_seq.py -p $input -c $passed_seq -c $removed_seq -m $memory -t $run_dir");
     PipelineAWE::run_cmd("mv $passed_seq.index $passed_seq");
     PipelineAWE::run_cmd("mv $removed_seq.index $removed_seq");
