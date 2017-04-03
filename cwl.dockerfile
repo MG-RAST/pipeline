@@ -45,6 +45,7 @@ RUN apt-get update && apt-get install -y \
   liburi-encode-perl \
   libwww-perl \
   make 		\
+  node.js \
   perl-modules \
   python-biopython \
   python-dev \
@@ -145,6 +146,5 @@ RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"  \
 COPY awecmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
 # COPY superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* 
-# && strip /usr/local/bin/superblat
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
 
