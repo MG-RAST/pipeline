@@ -43,10 +43,19 @@ inputs:
       inputBinding:
         prefix: -bowtie
     indexDir:
-      type: Directory                      
+      type: Directory
+    no-shock:
+      type: boolean?
+      default: false
+      inputBinding:
+        prefix: -no-shock                      
   
 outputs:
-  output:
+  passed:
     type: File
     outputBinding:
-      glob: $(inputs.output)             
+      glob: $(inputs.output)
+  passedAttr:
+    type: File?
+    outputBinding:
+      glob: userattr.json                 
