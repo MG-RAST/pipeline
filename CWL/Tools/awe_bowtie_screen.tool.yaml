@@ -46,7 +46,7 @@ inputs:
       type: Directory                      
   
 outputs:
-  output:
+  out:
     type: File
     outputBinding:
       glob: $(inputs.output)             
