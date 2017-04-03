@@ -54,10 +54,11 @@ steps:
     out: [assembly,qcstats,uploadstats]
 
   preprocess:
+    # run: awe_preprocess.tool.yaml
     run: ../Tools/awe_preprocess.tool.yaml
     requirements:
       - class: EnvVarRequirement
-      # No option to mask env virables as private
+      # No option to mask/mark env virables as private
       # private env variables are not supposed to show up in a completed job/workflow/recipe document  
         envDef:
           MGRAST_WEBKEY: api_key
@@ -68,6 +69,7 @@ steps:
         source: jobid
         valueFrom: $(self).075
       filter_options: filter_options
+      no-shock: no-shock
     out: [removed,passed]
     
   dereplication:
