@@ -49,7 +49,7 @@ inputs:
   
                         
 outputs:
- fasta:
+ rna:
    type: File
    outputBinding:
      glob: $(inputs.output)
