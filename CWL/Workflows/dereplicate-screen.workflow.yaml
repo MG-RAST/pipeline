@@ -26,12 +26,6 @@ inputs:
     
 
 outputs:
-  out:
-    type: File
-    outputSource: preprocess/passed
-  removed: 
-    type: File
-    outputSource: preprocess/removed  
   attributes:
     type: File[]
     outputSource: dereplication/attributes  
@@ -68,30 +62,30 @@ steps:
       memory: derep_memory
     out: [passed , removed , attributes]
     
-    screen:
-      run: ../Tools/awe_qc.tool.yaml
-      requirements:
-        - class: InitialWorkDirRequirement
-          listing:
-            - entryname: userattr.json
-              entry: |
-                      {
-                        "stage_id": "299",
-                        "stage_name": "screen",
-                        "data_type": "sequence",
-                        "file_format": "fasta",
-                        "seq_format": "bp"
-                      }
-      in:
-        input: dereplication/passed
-        index: screen_index
-        indexDir: db_dir 
-        bowtie:  screen_bowtie
-        proc: qc_proc
-        output:
-          source: jobid
-          valueFrom: $(self).299.screen.passed.fna 
-        
-       
-      out: [passed , passedAttr]
+  screen:
+    run: ../Tools/awe_bowtie_screen.tool.yaml
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: userattr.json
+            entry: |
+                    {
+                      "stage_id": "299",
+                      "stage_name": "screen",
+                      "data_type": "sequence",
+                      "file_format": "fasta",
+                      "seq_format": "bp"
+                    }
+    in:
+      input: dereplication/passed
+      index: screen_index
+      indexDir: db_dir 
+      bowtie:  screen_bowtie
+      proc: qc_proc
+      output:
+        source: jobid
+        valueFrom: $(self).299.screen.passed.fna 
+      
+     
+    out: [passed , passedAttr]
        
