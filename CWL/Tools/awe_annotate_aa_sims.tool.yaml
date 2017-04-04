@@ -36,7 +36,7 @@ inputs:
     default: "1"
     inputBinding:
       prefix: -ach_ver
-  ach_sequence_ver:
+  ach_sequence_version:
     type: string
     default: "1"        
          
@@ -44,8 +44,8 @@ inputs:
     type: File
     default: /mnt/awe/data/predata/m5nr_v1.bdb
     inputBinding:
-      prefix: -ann_file
-    
+      prefix: -ann_file            
+  
   tool_help:
     type: boolean    
     default: false
