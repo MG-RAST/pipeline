@@ -55,7 +55,7 @@ inputs:
       prefix: -help    
                                             
 outputs:
-  output:
+  filtered:
     type: File
     outputBinding:
       glob: $(inputs.output)
