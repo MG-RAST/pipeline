@@ -1,0 +1,13 @@
+{
+  "mydir": {
+    "class": "Directory",
+    "path": "/pipeline/CWL/Data/Inputs"
+  },
+  "myfile": {
+    "class": "File" ,
+    "path": "/pipeline/CWL/Tools/ls.tool.yaml"
+  },
+  "exclusive_parameters": {
+    "longlisting": true
+  }
+}
