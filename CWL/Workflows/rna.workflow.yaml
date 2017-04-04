@@ -1,0 +1,72 @@
+cwlVersion: v1.0
+class: Workflow
+
+requirements:
+  - class: StepInputExpressionRequirement
+
+inputs:
+  jobid : int
+  api_key: string?
+  db_dir: Directory
+  no-shock:
+    type: boolean?
+    default: true
+  sequences: File
+  rna:
+    type: boolean?
+    default: true
+  rna_nr_clust: File  
+  rna_nr: File
+  rna_pid: int
+  rna_assembled: boolean
+    
+      
+
+outputs:
+  rnaFile:
+    type: File
+    outputSource: searchRNA/rna
+  sims: 
+    type: File
+    outputSource: simsRNA/sims
+  
+      
+
+steps:
+  searchRNA:
+    run: ../Tools/awe_search_rna.tool.yaml
+    in:
+      input: sequences
+      output: 
+        source: jobid
+        valueFrom: $(self).425.search.rna.fna
+      rna_nr: rna_nr_clust
+      no-shock: no-shock
+       
+    out: [rna]
+
+  clusterRNA:
+    run: ../Tools/awe_cluster.tool.yaml
+    in:
+      input: searchRNA/rna 
+      out_prefix: 
+        source: jobid
+        valueFrom: $(self).440.cluster
+      pid: rna_pid
+      no-shock: no-shock  
+      exclusive_parameters: 
+        rna: rna 
+    out: [fasta,mapping]
+    
+  simsRNA:
+    run: ../Tools/awe_blat_rna.tool.yaml 
+    in:      
+      input: clusterRNA/fasta 
+      output:
+        source: jobid
+        valueFrom: $(self).450.rna.sims
+      rna_nr: rna_nr
+      assembled: rna_assembled
+      no-shock: no-shock
+    out: [sims]
+       

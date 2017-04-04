@@ -1,0 +1,16 @@
+jobid : 123
+no-shock: true
+db_dir:
+  class: Directory
+  path: /pipeline/CWL/Data/Inputs/DBs
+rna_nr_clust:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5rna.clust  
+rna_nr:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5rna
+sequences: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/saa.fna
+rna_pid: 97
+rna_assembled: false
