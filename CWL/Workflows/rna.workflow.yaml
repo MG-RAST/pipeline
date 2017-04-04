@@ -2,6 +2,7 @@ cwlVersion: v1.0
 class: Workflow
 
 requirements:
+  - class: InlineJavascriptRequirement
   - class: StepInputExpressionRequirement
 
 inputs:
@@ -17,8 +18,12 @@ inputs:
     default: true
   rna_nr_clust: File  
   rna_nr: File
+  rna_nr_version: string
   rna_pid: int
   rna_assembled: boolean
+  rna_clust_memory:
+    type: int
+    default: 20
     
       
 
@@ -26,12 +31,15 @@ outputs:
   rnaFile:
     type: File
     outputSource: searchRNA/rna
+  clusterFile:
+    type: File
+    outputSource: clusterRNA/fasta  
   sims: 
     type: File
     outputSource: simsRNA/sims
+ 
   
-      
-
+        
 steps:
   searchRNA:
     run: ../Tools/awe_search_rna.tool.yaml
@@ -53,9 +61,13 @@ steps:
         source: jobid
         valueFrom: $(self).440.cluster
       pid: rna_pid
+      memory: rna_clust_memory
       no-shock: no-shock  
       exclusive_parameters: 
-        rna: rna 
+        source: rna
+        valueFrom: |
+            ${ return { "rna": self }; }
+         
     out: [fasta,mapping]
     
   simsRNA:
@@ -66,6 +78,7 @@ steps:
         source: jobid
         valueFrom: $(self).450.rna.sims
       rna_nr: rna_nr
+      rna_nr_version: rna_nr_version
       assembled: rna_assembled
       no-shock: no-shock
     out: [sims]
