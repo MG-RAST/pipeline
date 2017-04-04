@@ -41,7 +41,7 @@ inputs:
       prefix: -output
   memory:
     type: int
-    default: 10
+    default: 8
     inputBinding:
       prefix: -memory
   overlap:
