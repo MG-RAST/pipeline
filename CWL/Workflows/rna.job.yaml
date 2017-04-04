@@ -9,8 +9,11 @@ rna_nr_clust:
 rna_nr:
   class: File
   path: /pipeline/CWL/Data/Inputs/DBs/md5rna
+rna_nr_version: "dev"  
 sequences: 
   class: File
-  path: /pipeline/CWL/Data/Inputs/saa.fna
+  path: /pipeline/CWL/Data/Inputs/rna.fna
 rna_pid: 97
 rna_assembled: false
+exclusive_parameters:
+  rna: true
