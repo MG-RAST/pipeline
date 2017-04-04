@@ -29,6 +29,7 @@ inputs:
       prefix: -input
   type:
     type: string
+    doc: <sanger|454|illumina|complete>
     inputBinding:
       prefix: -type
   out_prefix:
