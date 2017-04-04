@@ -93,5 +93,6 @@ steps:
       prefix_length: derep_prefix_length 
       dereplicate: dereplicate
       memory: derep_memory
+      no-shock: no-shock
     out: [passed , removed , attributes]
        
