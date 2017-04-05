@@ -52,7 +52,6 @@ steps:
         source: jobid
         valueFrom: $(self).425.search.rna.fna
       rna_nr: rna_nr_clust
-      no-shock: no-shock
        
     out: [rna]
 
@@ -65,7 +64,6 @@ steps:
         valueFrom: $(self).440.cluster
       pid: rna_pid
       memory: rna_clust_memory
-      no-shock: no-shock  
       exclusive_parameters: 
         source: rna
         valueFrom: |
@@ -83,6 +81,5 @@ steps:
       rna_nr: rna_nr
       rna_nr_version: rna_nr_version
       assembled: rna_assembled
-      no-shock: no-shock
     out: [sims]
        
