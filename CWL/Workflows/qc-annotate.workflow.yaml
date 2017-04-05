@@ -77,6 +77,19 @@ outputs:
   rnaSimsFile:
     type: File
     outputSource: simsRNA/sims
+  # AA
+  simsAAFile:
+    type: File
+    outputSource: simsAA/sims
+  clusterAAFile:
+    type: File
+    outputSource: clusterAA/fasta
+  clusterMappingFile:
+    type: File
+    outputSource: clusterAA/mapping
+  filterRNAFile:
+    type: File
+    outputSource: filterRNA/filtered      
 
 steps:
   qc:
@@ -204,3 +217,57 @@ steps:
       rna_nr_version: rna_nr_version
       assembled: rna_assembled
     out: [sims]
+    
+  # AA
+  genecalling:
+    run: ../Tools/awe_genecalling.tool.yaml
+    in:
+      input: screen/passed
+      out_prefix: 
+        source: jobid
+        valueFrom: $(self).350.genecalling.coding
+      type: sequencing_method
+      # Using defaults:
+      # size: 100
+      # proc: 8 
+               
+    out: [fna,faa]
+
+  filterRNA:
+    run: ../Tools/awe_filter_feature.tool.yaml
+    in:
+      in_clust: clusterRNA/mapping
+      in_sim: simsRNA/sims
+      in_seq: genecalling/faa
+      output: 
+        source: jobid
+        valueFrom: $(self).375.filtering.faa
+      memory: ff_memory
+      overlap: ff_overlap
+    out: [filtered]
+    
+  clusterAA:
+    run: ../Tools/awe_cluster_aa.tool.yaml     
+    in:      
+      input: filterRNA/filtered 
+      out_prefix:
+        source: jobid
+        valueFrom: $(self).550.cluster
+      pid: aa_cluster_pid
+      memory: aa_cluster_memory
+    out: [fasta , mapping]
+  
+  simsAA:
+    run: ../Tools/awe_blat_protein.tool.yaml
+    in:
+      input: clusterAA/fasta
+      output: 
+        source: jobid
+        valueFrom: $(self).650.superblat.sims
+      nr_dir: nr_dir  
+      nr_prefix:  nr_prefix
+      nr_part_1: nr_part_1
+      nr_part_2: nr_part_2
+      nr_version: nr_version
+       
+    out: [sims]  
