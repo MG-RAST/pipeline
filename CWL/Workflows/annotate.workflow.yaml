@@ -1,0 +1,120 @@
+cwlVersion: v1.0
+class: Workflow
+
+requirements:
+  - class: InlineJavascriptRequirement
+  - class: StepInputExpressionRequirement
+
+inputs:
+  jobid : int
+  api_key: string?
+  db_dir: Directory
+  no-shock:
+    type: boolean?
+    default: true
+  sequences: File
+  sequencing_method: 
+    type: string
+    doc: <sanger|454|illumina|complete>
+    default: illumina
+  
+  genecall_file: File  
+  
+  sims_rna: File
+  sims_aa: File     
+  
+  nr_dir: Directory
+  nr_prefix: string
+  nr_version: string
+  nr_part_1: File
+  nr_part_2: File
+  nr_aa_annotation_version: string
+  nr_aa_sequence_version: string
+  nr_aa_ann_file: File  
+  nr_rna_annotation_version: string 
+  nr_rna_sequence_version: string 
+  nr_rna_ann_file: File
+    
+      
+
+outputs:
+  proteinFilterFile:
+    type: File
+    outputSource: aa/filter
+  proteinFile:
+    type: File
+    outputSource: aa/protein  
+  proteinLcaFile:
+   type: File
+   outputSource: aa/lca
+  proteinOntologyFile:
+   type: File
+   outputSource: aa/ontology
+  rnaFilterFile:
+   type: File
+   outputSource: rna/filter
+  rnaLcaFile:
+    type: File
+    outputSource: rna/lca
+  rnaFeatureFile:
+    type: File
+    outputSource: rna/feature  
+     
+  
+        
+steps:
+  aa:
+    run: ../Tools/awe_annotate_aa_sims.tool.yaml
+    in:
+      input: sims_aa 
+      # input: simsAA/sims
+      out_prefix: 
+        source: jobid
+        valueFrom: $(self).650
+      ach_ver: nr_aa_annotation_version 
+      ach_sequence_ver: nr_aa_sequence_version 
+      ann_file: nr_aa_ann_file
+      exclusive_parameters: 
+        # source: nr_prefix
+        valueFrom: |
+            ${ return { "aa": true }; }  
+                          
+    out: [filter,protein,lca,ontology]
+
+  rna:
+    run: ../Tools/awe_annotate_rna_sims.tool.yaml
+    in:
+      # input: simsRNA/sims
+      input: sims_rna
+      out_prefix: 
+        source: jobid
+        valueFrom: $(self).450
+      ach_ver: nr_rna_annotation_version 
+      ach_sequence_ver: nr_rna_sequence_version 
+      ann_file: nr_rna_ann_file 
+    out: [filter, feature, lca]
+  
+  index:
+    run: ../Tools/awe_index_sim_seq.tool.yaml
+    requirements:
+      - class: EnvVarRequirement
+      # No option to mask/mark env virables as private
+      # private env variables are not supposed to show up in a completed job/workflow/recipe document  
+        envDef:
+          MGRAST_WEBKEY: api_key
+    # -in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -memory=10",
+    in:
+      in_seq: [genecall_file , rnacall_file]
+      # in_seq: [genecalling/fna , searchRNA/rna]
+      in_maps: []
+      in_sims: []
+      memory: 10
+      output: 
+        source: jobid
+        valueFrom: $(self).700.annotation.sims.filter.seq
+      
+      
+      
+         
+      
+
