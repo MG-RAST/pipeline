@@ -12,7 +12,7 @@ requirements:
           {
               "stage_id": "450",
               "stage_name": "rna.sims",
-              "m5rna_sims_version": "$(inputs.ach_sequence_version)",
+              "m5rna_sims_version": "$(inputs.ach_sequence_ver)",
               "m5rna_annotation_version": "$(inputs.ach_ver)"
           }
 
