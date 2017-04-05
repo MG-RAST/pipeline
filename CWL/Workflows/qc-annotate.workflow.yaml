@@ -48,17 +48,17 @@ inputs:
     default: 20  
     
     
-  nr_dir: Directory
-  nr_prefix: string
-  nr_version: string
-  nr_part_1: File
-  nr_part_2: File
-  nr_aa_annotation_version: string
-  nr_aa_sequence_version: string
-  nr_aa_ann_file: File  
-  nr_rna_annotation_version: string 
-  nr_rna_sequence_version: string 
-  nr_rna_ann_file: File
+  # nr_dir: Directory
+  # nr_prefix: string
+  # nr_version: string
+  # nr_part_1: File
+  # nr_part_2: File
+  # nr_aa_annotation_version: string
+  # nr_aa_sequence_version: string
+  # nr_aa_ann_file: File
+  # nr_rna_annotation_version: string
+  # nr_rna_sequence_version: string
+  # nr_rna_ann_file: File
   
   ff_memory:
     type: int?
