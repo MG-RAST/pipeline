@@ -16,3 +16,15 @@ derep_memory: 4
 
 screen_index: "e_coli"
 screen_bowtie: 1 
+
+rna_nr_clust:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5rna.clust  
+rna_nr:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5rna
+rna_nr_version: "dev"  
+rna_pid: 97
+rna_assembled: false
+exclusive_parameters:
+  rna: true
