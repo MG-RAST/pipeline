@@ -1,0 +1,18 @@
+jobid : 100
+no-shock: true
+db_dir:
+  class: Directory
+  path: /pipeline/CWL/Data/Inputs/DBs
+sequences: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/seq.fna
+seqformat: fasta
+assembled: 0
+qc_proc:  8
+qc_kmers: 15,6
+dereplicate: 1
+derep_prefix_length: 50
+derep_memory: 4
+
+screen_index: "e_coli"
+screen_bowtie: 1 

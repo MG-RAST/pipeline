@@ -1,0 +1,221 @@
+cwlVersion: v1.0
+class: Workflow
+
+requirements:
+  - class: StepInputExpressionRequirement
+
+inputs:
+  jobid : int
+  api_key: string?
+  no-shock:
+    type: boolean?
+    default: true
+  # Predata  
+  db_dir: Directory     
+  # Parameters  
+  sequences: File
+  seqformat: string
+  qc_proc:  
+    type: int?
+    default: 8
+  qc_kmers: 
+    type: string?
+    default: 6,15
+  assembled: int
+  filter_options: string?
+  dereplicate: int
+  derep_prefix_length: int
+  derep_memory:
+    type: int?
+    default: 10  
+  screen_index: string
+  screen_bowtie: int  
+
+outputs:
+  # qc
+  qcPassedFile:
+    type: File
+    outputSource: preprocess/passed
+  qcRemovedFile: 
+    type: File
+    outputSource: preprocess/removed
+  qcAttributesFile:
+    type: File[]
+    outputSource: dereplication/attributes 
+  # dereplicate - screen
+  derepAttr:
+    type: File[]
+    outputSource: dereplication/attributes  
+  screenPassedFile:
+    type: File
+    outputSource: screen/passed
+  screenPassedAttr:
+    type: File    
+    outputSource: screen/passedAttr   
+  # # rna
+  # rnaFile:
+  #   type: File
+  #   outputSource: searchRNA/rna
+  # rnaClusterFile:
+  #   type: File
+  #   outputSource: clusterRNA/fasta
+  # rnaMappingFile:
+  #   type: File
+  #   outputSource: clusterRNA/mapping
+  # rnaSimsFile:
+  #   type: File
+  #   outputSource: simsRNA/sims
+
+steps:
+  qc:
+    run: ../Tools/awe_qc.tool.yaml
+    in:
+      seqfile: sequences
+      format: seqformat
+      out_prefix:
+        source: jobid
+        valueFrom: $(self).075
+      proc: qc_proc
+      filter_options: filter_options
+       
+    out: [assembly,qcstats,uploadstats]
+
+  preprocess:
+    # run: awe_preprocess.tool.yaml
+    run: ../Tools/awe_preprocess.tool.yaml
+    requirements:
+      - class: EnvVarRequirement
+      # No option to mask/mark env virables as private
+      # private env variables are not supposed to show up in a completed job/workflow/recipe document  
+        envDef:
+          MGRAST_WEBKEY: api_key
+    in:
+      input: sequences
+      format: seqformat
+      out_prefix:
+        source: jobid
+        valueFrom: $(self).100.preprocess
+      filter_options: filter_options
+      no-shock: no-shock
+    out: [removed,passed]
+ 
+ 
+  # dereplicate-screen
+  dereplication:
+    run: ../Tools/awe_dereplicate.tool.yaml 
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: userattr.json
+            entry: |
+                    {
+                      "stage_id": "150",
+                      "stage_name": "dereplication workflow",
+                      "file_format": "fasta",
+                      "seq_format": "bp"
+                    } 
+    in:      
+      input: preprocess/passed 
+      out_prefix:
+        source: jobid
+        valueFrom: $(self).150.dereplication
+      prefix_length: derep_prefix_length 
+      dereplicate: dereplicate
+      memory: derep_memory
+      no-shock: no-shock
+    out: [passed , removed , attributes]
+
+  # dereplication:
+  #   run: ../Tools/awe_dereplicate.tool.yaml
+  #   requirements:
+  #     - class: InitialWorkDirRequirement
+  #       listing:
+  #         - entryname: userattr.json
+  #           entry: |
+  #                   {
+  #                     "stage_id": "150",
+  #                     "stage_name": "dereplication workflow",
+  #                     "file_format": "fasta",
+  #                     "seq_format": "bp"
+  #                   }
+  #   in:
+  #     input: dereplication/passed
+  #     out_prefix:
+  #       source: jobid
+  #       valueFrom: $(self).150.dereplication
+  #     prefix_length: derep_prefix_length
+  #     dereplicate: dereplicate
+  #     memory: derep_memory
+  #   out: [passed , removed , attributes]
+    
+  screen:
+    run: ../Tools/awe_bowtie_screen.tool.yaml
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: userattr.json
+            entry: |
+                    {
+                      "stage_id": "299",
+                      "stage_name": "screen",
+                      "data_type": "sequence",
+                      "file_format": "fasta",
+                      "seq_format": "bp"
+                    }
+    in:
+      input: dereplication/passed
+      index: screen_index
+      indexDir: db_dir 
+      bowtie:  screen_bowtie
+      proc: qc_proc
+      output:
+        source: jobid
+        valueFrom: $(self).299.screen.passed.fna 
+      
+     
+    out: [passed , passedAttr]
+    
+    
+    
+  # searchRNA:
+#     run: ../Tools/awe_search_rna.tool.yaml
+#     in:
+#       input: sequences
+#       output:
+#         source: jobid
+#         valueFrom: $(self).425.search.rna.fna
+#       rna_nr: rna_nr_clust
+#       no-shock: no-shock
+#
+#     out: [rna]
+#
+#   clusterRNA:
+#     run: ../Tools/awe_cluster.tool.yaml
+#     in:
+#       input: searchRNA/rna
+#       out_prefix:
+#         source: jobid
+#         valueFrom: $(self).440.cluster
+#       pid: rna_pid
+#       memory: rna_clust_memory
+#       no-shock: no-shock
+#       exclusive_parameters:
+#         source: rna
+#         valueFrom: |
+#             ${ return { "rna": self }; }
+#
+#     out: [fasta,mapping]
+#
+#   simsRNA:
+#     run: ../Tools/awe_blat_rna.tool.yaml
+#     in:
+#       input: clusterRNA/fasta
+#       output:
+#         source: jobid
+#         valueFrom: $(self).450.rna.sims
+#       rna_nr: rna_nr
+#       rna_nr_version: rna_nr_version
+#       assembled: rna_assembled
+#       no-shock: no-shock
+#     out: [sims]
+       
