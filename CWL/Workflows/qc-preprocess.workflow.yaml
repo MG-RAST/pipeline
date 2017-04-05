@@ -67,7 +67,7 @@ steps:
       format: seqformat
       out_prefix:
         source: jobid
-        valueFrom: $(self).075
+        valueFrom: $(self).100.preprocess
       filter_options: filter_options
       no-shock: no-shock
     out: [removed,passed]
