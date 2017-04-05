@@ -2,6 +2,7 @@ cwlVersion: v1.0
 class: Workflow
 
 requirements:
+  - class: InlineJavascriptRequirement
   - class: StepInputExpressionRequirement
 
 inputs:
@@ -173,7 +174,6 @@ steps:
         source: jobid
         valueFrom: $(self).425.search.rna.fna
       rna_nr: rna_nr_clust
-      no-shock: no-shock
 
     out: [rna]
 
@@ -203,5 +203,4 @@ steps:
       rna_nr: rna_nr
       rna_nr_version: rna_nr_version
       assembled: rna_assembled
-      no-shock: no-shock
     out: [sims]
