@@ -44,7 +44,12 @@ inputs:
       type: int
       default: 1
       inputBinding:
-        prefix: -dereplicate            
+        prefix: -dereplicate
+    no-shock:
+      type: boolean?
+      default: false
+      inputBinding:
+        prefix: -no-shock                
   
 outputs:
   passed:
