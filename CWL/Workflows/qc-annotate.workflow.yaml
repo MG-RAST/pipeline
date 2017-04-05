@@ -16,6 +16,10 @@ inputs:
   # Parameters  
   sequences: File
   seqformat: string
+  sequencing_method: 
+    type: string
+    doc: <sanger|454|illumina|complete>
+    default: illumina
   qc_proc:  
     type: int?
     default: 8
@@ -42,6 +46,41 @@ inputs:
   rna_clust_memory:
     type: int
     default: 20  
+    
+    
+  nr_dir: Directory
+  nr_prefix: string
+  nr_version: string
+  nr_part_1: File
+  nr_part_2: File
+  nr_aa_annotation_version: string
+  nr_aa_sequence_version: string
+  nr_aa_ann_file: File  
+  nr_rna_annotation_version: string 
+  nr_rna_sequence_version: string 
+  nr_rna_ann_file: File
+  
+  ff_memory:
+    type: int?
+    default: 8
+  ff_overlap:
+    type: int?
+    default: 10  
+  # aa cluster  
+  aa_cluster_memory:
+    type: int?
+    default: 20 
+  aa_cluster_pid: 
+     type: int?
+     default: 90
+     
+  
+  nr_dir: Directory
+  nr_prefix: string
+  nr_version: string
+  nr_part_1: File
+  nr_part_2: File
+    
 
 outputs:
   # qc
