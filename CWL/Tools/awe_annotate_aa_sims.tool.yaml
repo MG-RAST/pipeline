@@ -12,7 +12,7 @@ requirements:
           {
               "stage_id": "650",
               "stage_name": "protein.sims",
-              "m5nr_sims_version": "$(inputs.ach_sequence_version)",
+              "m5nr_sims_version": "$(inputs.ach_sequence_ver)",
               "m5nr_annotation_version": "$(inputs.ach_ver)"
           }
           
@@ -36,7 +36,7 @@ inputs:
     default: "1"
     inputBinding:
       prefix: -ach_ver
-  ach_sequence_version:
+  ach_sequence_ver:
     type: string
     default: "1"        
          
