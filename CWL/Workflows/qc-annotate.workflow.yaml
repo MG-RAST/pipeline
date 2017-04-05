@@ -29,7 +29,18 @@ inputs:
     type: int?
     default: 10  
   screen_index: string
-  screen_bowtie: int  
+  screen_bowtie: int
+  rna:
+    type: boolean?
+    default: true
+  rna_nr_clust: File  
+  rna_nr: File
+  rna_nr_version: string
+  rna_pid: int
+  rna_assembled: boolean
+  rna_clust_memory:
+    type: int
+    default: 20  
 
 outputs:
   # qc
@@ -177,9 +188,8 @@ steps:
       memory: rna_clust_memory
       no-shock: no-shock
       exclusive_parameters:
-        source: rna
         valueFrom: |
-            ${ return { "rna": self }; }
+            ${ return { "rna": true }; }
 
     out: [fasta,mapping]
 
