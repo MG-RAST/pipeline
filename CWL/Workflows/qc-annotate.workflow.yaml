@@ -212,6 +212,7 @@ steps:
       indexDir: db_dir 
       bowtie:  screen_bowtie
       proc: qc_proc
+      no-shock: no-shock
       output:
         source: jobid
         valueFrom: $(self).299.screen.passed.fna 
