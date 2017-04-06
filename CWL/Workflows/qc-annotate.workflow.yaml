@@ -89,10 +89,7 @@ outputs:
     outputSource: preprocess/passed
   qcRemovedFile: 
     type: File
-    outputSource: preprocess/removed
-  qcAttributesFile:
-    type: File[]
-    outputSource: dereplication/attributes 
+    outputSource: preprocess/removed 
   # dereplicate - screen
   derepAttr:
     type: File[]
@@ -128,7 +125,13 @@ outputs:
     outputSource: clusterAA/mapping
   filterRNAFile:
     type: File
-    outputSource: filterRNA/filtered      
+    outputSource: filterRNA/filtered
+  genecallsFaaFile:
+    type: File
+    outputSource: genecalling/faa 
+  genecallsFnaFile:
+    type: File
+    outputSource: genecalling/fna         
 
 steps:
   qc:
