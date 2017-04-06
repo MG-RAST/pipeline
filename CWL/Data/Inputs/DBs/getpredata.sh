@@ -2,7 +2,11 @@
 
 DBDIR=$1
 
+
+  
 if [ -n $DBDIR ]  && [ ! -d $DBDIR ] ; then 
+  DBDIR="./"
+elif [ ! -n $DBDIR] ; then
   DBDIR="./"
 fi  
 
