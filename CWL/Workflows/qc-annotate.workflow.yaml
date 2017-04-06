@@ -287,6 +287,7 @@ steps:
         valueFrom: $(self).375.filtering.faa
       memory: ff_memory
       overlap: ff_overlap
+      no-shock: no-shock
     out: [filtered]
     
   clusterAA:

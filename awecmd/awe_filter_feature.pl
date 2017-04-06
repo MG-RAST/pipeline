@@ -20,6 +20,8 @@ my $output  = "";
 my $memory  = 8;
 my $overlap = 10;
 my $help    = 0;
+my $do_not_create_index_files = 0 ;
+
 my $options = GetOptions (
     "in_clust=s" => \$in_clust,
     "in_sim=s"   => \$in_sim,
@@ -27,8 +29,10 @@ my $options = GetOptions (
     "output=s"   => \$output,
     "memory=i"   => \$memory,
     "overlap=i"  => \$overlap,
+    "no-shock"   => \$do_not_create_index_files,
     "help!"      => \$help
 );
+
 
 if ($help){
     print get_usage();
@@ -108,7 +112,7 @@ PipelineAWE::create_attr($output.'.json', $filter_stats);
 
 # create subset record list
 # note: parent and child files NOT in same order
-if (-s $output) {
+if (-s $output and not $do_not_create_index_files) {
     PipelineAWE::run_cmd("index_subset_seq.py -p $in_seq -c $output -m $memory -t $run_dir");
     PipelineAWE::run_cmd("mv $output.index $output");
 }
