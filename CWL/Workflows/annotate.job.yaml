@@ -1,4 +1,4 @@
-jobid : 123
+jobid : 100
 no-shock: true
 db_dir: 
   class: Directory
@@ -10,11 +10,11 @@ sequencing_method: illumina
 
 sims_aa: 
   class: File
-  path: /pipeline/CWL/Data/Inputs/mySims.sims
+  path: /pipeline/CWL/Data/Inputs/100.650.superblat.sims
 
 sims_rna: 
   class: File
-  path: /pipeline/CWL/Data/Inputs/mySims.sims
+  path: /pipeline/CWL/Data/Inputs/100.450.rna.sims
     
 nr_prefix: md5nr
 nr_version: "dev"
@@ -38,9 +38,20 @@ nr_rna_ann_file:
   class: File
   path: /pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb
   
-genecall_file:
-  class: File
-  # path: "output from gencalling"
-rnacall_file:
-  class: File
-  # path: "output from rna search"
+in_seqs:
+  - class: File
+    path:  /pipeline/CWL/Data/Inputs/100.350.genecalling.coding.fna
+  - class: File
+    path:  /pipeline/CWL/Data/Inputs/100.425.search.rna.fna
+in_sims:
+  - class: File
+    path: /pipeline/CWL/Data/Inputs/100.650.aa.sims.filter
+  - class: File
+    path: /pipeline/CWL/Data/Inputs/100.450.rna.sims.filter
+in_maps:
+  - class: File
+    path: /pipeline/CWL/Data/Inputs/100.550.cluster.aa90.mapping
+  - class: File
+    path: /pipeline/CWL/Data/Inputs/100.440.cluster.rna97.mapping
+
+memory_index_sims: 10         

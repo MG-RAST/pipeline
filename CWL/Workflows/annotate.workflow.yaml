@@ -18,8 +18,6 @@ inputs:
     doc: <sanger|454|illumina|complete>
     default: illumina
   
-  genecall_file: File  
-  
   sims_rna: File
   sims_aa: File     
   
@@ -35,7 +33,11 @@ inputs:
   nr_rna_sequence_version: string 
   nr_rna_ann_file: File
     
-      
+  in_seqs: File[]
+  in_sims: File[]
+  in_maps: File[]
+  
+  memory_index_sims: int    
 
 outputs:
   proteinFilterFile:
@@ -58,7 +60,10 @@ outputs:
     outputSource: rna/lca
   rnaFeatureFile:
     type: File
-    outputSource: rna/feature  
+    outputSource: rna/feature
+  indexedSimsFile:
+    type: File
+    outputSource: index/index    
      
   
         
@@ -99,19 +104,21 @@ steps:
     requirements:
       - class: EnvVarRequirement
       # No option to mask/mark env virables as private
-      # private env variables are not supposed to show up in a completed job/workflow/recipe document  
+      # private env variables are not supposed to show up in a completed job/workflow/recipe document
         envDef:
           MGRAST_WEBKEY: api_key
     # -in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -memory=10",
     in:
-      in_seq: [genecall_file , rnacall_file]
+      in_seqs: in_seqs
       # in_seq: [genecalling/fna , searchRNA/rna]
-      in_maps: []
-      in_sims: []
-      memory: 10
-      output: 
+      in_maps: in_maps
+      in_sims: in_sims
+      memory: memory_index_sims
+      m5nr_version: nr_aa_annotation_version
+      output:
         source: jobid
         valueFrom: $(self).700.annotation.sims.filter.seq
+    out: [index]    
       
       
       
