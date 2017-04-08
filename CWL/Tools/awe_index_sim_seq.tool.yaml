@@ -8,56 +8,63 @@ requirements:
   - class: InitialWorkDirRequirement
     listing: |
       ${
-        var listing = inputs.mydir.listing;
-        listing.push(inputs.myfile);
+        var listing = inputs.in_seqs;
+        listing.concat(inputs.in_maps);
+        listing.concat(inputs.in_sims);
         return listing;
        }
-    # - entryname: userattr.json
-#       entry: |
-#         {
-#           "stage_id": "075",
-#           "stage_name": "qc"
-#         }
-
-requirements:
-  - class: InlineJavascriptRequirement
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: userattr.json
-        entry: |
-          {
-             "stage_id": "700",
-             "stage_name": "filter.sims",
-             "m5nr_annotation_version": "$(inputs.m5nr_version)",
-             "m5rna_annotation_version": "$(inputs.m5nr_version)"
-          }
+       
+#      # - entryname: userattr.json
+#         entry: |
+#           {
+#              "stage_id": "700",
+#              "stage_name": "filter.sims",
+#              "m5nr_annotation_version": "$(inputs.m5nr_version)",
+#              "m5rna_annotation_version": "$(inputs.m5nr_version)"
+#           }
+          
   
-stdout: ls.log
-stderr: error.log
+stdout: index_sim.out.log
+stderr: index_sim.error.log
 
 inputs:
-  in_seq: File[]
-  in_maps: File[]
-  in_sims: File[]
+  in_seqs: 
+    type: File[]
+    inputBinding: 
+      prefix: -in_seqs
+  in_maps: 
+    type: File[]
+    inputBinding: 
+      prefix: -in_maps
+  in_sims: 
+    type: File[]
+    inputBinding: 
+      prefix: -in_sims
   memory: 
     type: int?
     default: 10
-  output: string
+    inputBinding:
+      prefix: -memory
+  output: 
+    type: string
+    inputBinding:
+      prefix: -output
   m5nr_version: string
                             
     
 outputs:
+  stdout:
+    type: stdout
+  error: 
+    type: stderr
   sims:
     type: File
     outputBinding:
       glob: $(inputs.output)
   index:
-    type: File
+    type: File?
     outputBinding:
-      glob: $(inputs.output).index.json    
-  stdout:
-    type: stdout
-  error: 
-    type: stderr  
+      glob: $(inputs.output).index    
+ 
     
 
