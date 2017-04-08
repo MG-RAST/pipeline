@@ -6,6 +6,7 @@
 conf/Pipeline_Conf.pm
 conf/env.sh
 CWL/tmp/*
+CWL/Data/Inputs/DBs/*
 
 # binaries
 superblat
