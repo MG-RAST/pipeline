@@ -1,0 +1,44 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_notify.pl
+
+label: notify job completion
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/notify:1.0
+
+requirements:
+  - class: EnvVarRequirement
+  # No option to mask/mark env virables as private
+  # private env variables are not supposed to show up in a completed job/workflow/recipe document
+    envDef:
+      MGRAST_WEBKEY: $(inputs.api_key)
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "999",
+            "stage_name": "done"
+          }    
+  
+inputs:  
+  api_key: 
+    type: string?
+    default: ''
+  api_url:
+    type: string
+    inputBinding:
+      prefix: -api_url  
+  mgid:
+    type: int
+    inputBinding:
+      prefix: -mgid
+  user:
+    type: string
+    inputBinding:
+      prefix: -user
+      
+# No outputs
+outputs:
