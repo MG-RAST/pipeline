@@ -4,6 +4,7 @@ class: Workflow
 requirements:
   - class: InlineJavascriptRequirement
   - class: StepInputExpressionRequirement
+  - class: MultipleInputFeatureRequirement
 
 inputs:
   jobid : int
@@ -36,6 +37,10 @@ inputs:
   in_seqs: File[]
   in_sims: File[]
   in_maps: File[]
+  in_index: File
+  in_assemb: File
+  
+  
   
   memory_index_sims: int    
 
@@ -63,7 +68,16 @@ outputs:
     outputSource: rna/feature
   indexedSimsFile:
     type: File
-    outputSource: index/index    
+    outputSource: index/index
+  summaryMD5File:
+    type: File
+    outputSource: summaryMD5/abundance
+  summaryLCAFile:
+    type: File
+    outputSource: summaryLCA/abundance
+  summarySourceFile:
+    type: File
+    outputSource: summarySource/abundance          
      
   
         
@@ -107,7 +121,6 @@ steps:
       # private env variables are not supposed to show up in a completed job/workflow/recipe document
         envDef:
           MGRAST_WEBKEY: api_key
-    # -in_seqs=@[% job_id %].350.genecalling.coding.fna -in_seqs=@[% job_id %].425.search.rna.fna -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping -in_sims=@[% job_id %].650.aa.sims.filter -in_sims=@[% job_id %].450.rna.sims.filter -output=[% job_id %].700.annotation.sims.filter.seq -memory=10",
     in:
       in_seqs: in_seqs
       # in_seq: [genecalling/fna , searchRNA/rna]
@@ -118,9 +131,67 @@ steps:
       output:
         source: jobid
         valueFrom: $(self).700.annotation.sims.filter.seq
-    out: [index]    
+    out: [index]
+  summaryMD5:
+    label: md5 abundance
+    run: ../Tools/awe_annotate_summary.tool.yaml
+    in:
+      in_expand: [ aa/filter , rna/filter ]
+      in_maps: in_maps
+      in_assemb: in_assemb
+      in_index: in_index
+      abundanceType: 
+        default: "md5"
+      nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.md5.abundance 
+    out: [abundance]                     
+  summaryLCA:
+    label: lca abundance
+    run: ../Tools/awe_annotate_summary.tool.yaml
+    # -in_expand=@[% job_id %].650.aa.expand.lca 
+    # -in_expand=@[% job_id %].450.rna.expand.lca
+    # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
+    # -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping
+    # -in_assemb=@[% job_id %].075.assembly.coverage 
+    # -output=[% job_id %].700.annotation.lca.abundance 
+    # -type=lca",
+    
+    in:
+      in_expand: [ aa/lca , rna/lca ]
+      in_maps: in_maps
+      in_assemb: in_assemb
+      abundanceType: 
+        default: "lca"
+      nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.lca.abundance 
+    out: [abundance]  
       
-      
+  summarySource:
+    label: source abundance
+    run: ../Tools/awe_annotate_summary.tool.yaml
+    # -in_expand=@[% job_id %].650.aa.expand.protein 
+    # -in_expand=@[% job_id %].450.rna.expand.rna 
+    # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
+    # -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping 
+    # -in_assemb=@[% job_id %].075.assembly.coverage 
+    # -output=[% job_id %].700.annotation.source.stats 
+    # -type=source",
+    
+    in:
+      in_expand: [ aa/protein , rna/feature ]
+      in_maps: in_maps
+      in_assemb: in_assemb
+      abundanceType: 
+        default: "source"
+      nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.source.stats 
+    out: [abundance]  
       
          
       
