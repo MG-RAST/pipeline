@@ -10,11 +10,11 @@ sequencing_method: illumina
 
 sims_aa: 
   class: File
-  path: /pipeline/CWL/Data/Inputs/100.650.superblat.sims
+  path: /pipeline/CWL/Data/Inputs/100/100.650.superblat.sims
 
 sims_rna: 
   class: File
-  path: /pipeline/CWL/Data/Inputs/100.450.rna.sims
+  path: /pipeline/CWL/Data/Inputs/100/100.450.rna.sims
     
 nr_prefix: md5nr
 nr_version: "dev"
@@ -40,18 +40,25 @@ nr_rna_ann_file:
   
 in_seqs:
   - class: File
-    path:  /pipeline/CWL/Data/Inputs/100.350.genecalling.coding.fna
+    path:  /pipeline/CWL/Data/Inputs/100/100.350.genecalling.coding.fna
   - class: File
-    path:  /pipeline/CWL/Data/Inputs/100.425.search.rna.fna
+    path:  /pipeline/CWL/Data/Inputs/100/100.425.search.rna.fna
 in_sims:
   - class: File
-    path: /pipeline/CWL/Data/Inputs/100.650.aa.sims.filter
+    path: /pipeline/CWL/Data/Inputs/100/100.650.aa.sims.filter
   - class: File
-    path: /pipeline/CWL/Data/Inputs/100.450.rna.sims.filter
+    path: /pipeline/CWL/Data/Inputs/100/100.450.rna.sims.filter
 in_maps:
   - class: File
-    path: /pipeline/CWL/Data/Inputs/100.550.cluster.aa90.mapping
+    path: /pipeline/CWL/Data/Inputs/100/100.550.cluster.aa90.mapping
   - class: File
-    path: /pipeline/CWL/Data/Inputs/100.440.cluster.rna97.mapping
+    path: /pipeline/CWL/Data/Inputs/100/100.440.cluster.rna97.mapping
+in_assemb:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.075.assembly.coverage
+in_index:   
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.700.annotation.sims.filter.seq.index   
 
+  
 memory_index_sims: 10         
