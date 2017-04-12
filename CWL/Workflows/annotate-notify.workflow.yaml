@@ -194,11 +194,22 @@ steps:
     out: [abundance]
     
   loadCass:
-   label: abundance cassandra load
-   run: ../Tools/awe_load_cass.tool.yaml
-   in:
-   out: []   
-      
+    label: abundance cassandra load
+    run: ../Tools/awe_load_cass.tool.yaml
+    in:
+    out: []   
+    
+    
+  finalStats:    
+    label: done stage
+    run: ../Tools/awe_stats.tool.yaml
+    in:
+    out: []   
          
+  notif:    
+    label: notify job completion
+    run: ../Tools/awe_stats.tool.yaml
+    in:
+    out: []   
       
 
