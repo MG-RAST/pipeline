@@ -13,6 +13,8 @@ requirements:
     envDef:
       MGRAST_WEBKEY: $(inputs.api_key)
   
+stderr: cassandra_load.error
+stdout: cassandra_load.log
 
 inputs: 
   job:
@@ -41,3 +43,7 @@ inputs:
 
 # No outputs
 outputs:
+  error:
+    type: stderr
+  log:
+    type: stdout  
