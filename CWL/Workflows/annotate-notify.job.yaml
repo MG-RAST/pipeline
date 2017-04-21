@@ -1,8 +1,19 @@
-jobid : 100
+
+
+# metadatd
+jobid : 222340
+mgid: "mgm4654707.3"
+mgname: hans_dieter
+project_id: mgp14628
+project_name: Klaus
+
+# parameter
 no-shock: true
 db_dir: 
   class: Directory
   path: /pipeline/CWL/Data/Inputs/DBs
+api_url: http://api.metagenomics.anl.gov   
+api_key:  
 sequences: 
   class: File
   path: /pipeline/CWL/Data/Inputs/seq.fna
@@ -17,11 +28,11 @@ sims_rna:
   path: /pipeline/CWL/Data/Inputs/100/100.450.rna.sims
     
 nr_prefix: md5nr
-nr_version: "dev"
-nr_aa_annotation_version: "dev"
-nr_aa_sequence_version: "dev"
-nr_rna_annotation_version: "dev" 
-nr_rna_sequence_version: "dev" 
+nr_version: "0"
+nr_aa_annotation_version: "0"
+nr_aa_sequence_version: "0"
+nr_rna_annotation_version: "0" 
+nr_rna_sequence_version: "0" 
 nr_dir: 
   class: Directory
   path: /pipeline/CWL/Data/Inputs/DBs
@@ -37,6 +48,12 @@ nr_aa_ann_file:
 nr_rna_ann_file: 
   class: File
   path: /pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb
+nr_taxa_hierarchy: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/m5nr_v1.taxonomy.map.json
+nr_ontology_hierachy:     
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/m5nr_v1.ontology.map.json
   
 in_seqs:
   - class: File
@@ -59,6 +76,48 @@ in_assemb:
 in_index:   
   class: File
   path: /pipeline/CWL/Data/Inputs/100/100.700.annotation.sims.filter.seq.index   
+
+
+# Files from previous steps / replace with step outputs in complete workflow
+upload: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.075.upload.stats 
+qc:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.075.qc.stats 
+preproc:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.100.preprocess.passed.fna
+derep:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.dereplication.removed.fna 
+post_qc:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.299.screen.passed.fna
+source:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.700.annotation.source.stats  
+search: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.425.search.rna.fna 
+rna_clust:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.440.cluster.rna97.fna            
+rna_map:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100..440.cluster.rna97.mapping
+genecall:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.350.genecalling.coding.faa
+aa_clust:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.550.cluster.aa90.faa
+aa_map:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.550.cluster.aa90.mapping          
+ontol:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.650.aa.expand.ontology
 
   
 memory_index_sims: 10         
