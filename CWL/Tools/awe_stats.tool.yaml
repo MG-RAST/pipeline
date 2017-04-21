@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_load_cass.pl
+baseCommand: awe_stats.pl
 
 hints:
   DockerRequirement:
@@ -20,9 +20,13 @@ requirements:
             "stage_id": "999",
             "stage_name": "done"
           }
-      - m5nr_v1.annotation.bdb
-      - m5nr_v1.taxonomy.map.json
-      - m5nr_v1.ontology.map.json 
+      - $(inputs.m5nr_db)
+      - $(inputs.taxa_hier)
+      - $(inputs.ont_hier)
+  
+      # - m5nr_v1.annotation.bdb
+      # - m5nr_v1.taxonomy.map.json
+      # - m5nr_v1.ontology.map.json
       
 inputs: 
   # -job=[% job_id %] 
@@ -119,7 +123,7 @@ inputs:
    type: File
    inputBinding:
      prefix: -ontol
-  filter:
+  c :
    type: File
    inputBinding:
      prefix: -filter
@@ -167,16 +171,7 @@ outputs:
   searchAttr:
     type: File
     outputBinding:
-      glob: $(inputs.search).json      
-                   
-  searchFile:
-    type: File
-    outputBinding:
-      glob: $(inputs.search)
-  searchAttr:
-    type: File
-    outputBinding:
-      glob: $(inputs.search).json      
+      glob: $(inputs.search).json          
            
   rnaClustFile:
     type: File
@@ -186,15 +181,6 @@ outputs:
     type: File
     outputBinding:
       glob: $(inputs.rna_clust).json               
-
-  rnaMapFile:
-    type: File
-    outputBinding:
-      glob: $(inputs.rna_map)
-  rnaMapAttr:
-    type: File
-    outputBinding:
-      glob: $(inputs.rna_map).json 
       
   rnaMapFile:
     type: File
