@@ -24,4 +24,7 @@ echo "Downloading DB data to $DBDIR"
 `curl "$SHOCK/e5dc6081-e289-4445-9617-b53fdc4023a8?download" > $DBDIR/m5nr_v1.bdb`
 `curl "$SHOCK/4406405c-526c-4a63-be22-04b7c2d18434?download" > $DBDIR/md5nr.1`
 `curl "$SHOCK/65d644a8-55a5-439f-a8b5-af1440472d8d?download" > $DBDIR/md5nr.2`
+`curl "$SHOCK/edd8ef09-d746-4736-a6a0-6a83208df7a1?download" > $DBDIR/m5nr_v1.taxonomy.map.json`
+`curl "$SHOCK/2a7e0d4d-a581-40ab-a989-53eca51e24a9?download" > $DBDIR/m5nr_v1.ontology.map.json`
+
 echo "Done"
