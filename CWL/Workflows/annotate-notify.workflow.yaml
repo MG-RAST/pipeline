@@ -5,9 +5,19 @@ requirements:
   - class: InlineJavascriptRequirement
   - class: StepInputExpressionRequirement
   - class: MultipleInputFeatureRequirement
+ 
+        
+        
+ 
+
 
 inputs:
   jobid : int
+  mgid: string
+  mgname: string
+  project_id: string
+  project_name: string 
+  api_url: string?
   api_key: string?
   db_dir: Directory
   no-shock:
@@ -33,6 +43,8 @@ inputs:
   nr_rna_annotation_version: string 
   nr_rna_sequence_version: string 
   nr_rna_ann_file: File
+  nr_ontology_hierachy: File
+  nr_taxa_hierarchy: File
     
   in_seqs: File[]
   in_sims: File[]
@@ -40,9 +52,22 @@ inputs:
   in_index: File
   in_assemb: File
   
-  
-  
   memory_index_sims: int    
+
+  # stats input
+  upload:  File
+  qc: File
+  preproc: File
+  derep: File
+  post_qc: File
+  source: File
+  search: File
+  rna_clust: File
+  rna_map: File
+  genecall: File
+  aa_clust: File
+  aa_map: File
+  ontol: File
 
 outputs:
   proteinFilterFile:
@@ -78,8 +103,12 @@ outputs:
   summarySourceFile:
     type: File
     outputSource: summarySource/abundance          
-     
-  
+  cassLoadFile:
+    type: File
+    outputSource: loadCass/log     
+  cassErrorFile:
+    type: File
+    outputSource: loadCass/error
         
 steps:
   aa:
@@ -132,6 +161,7 @@ steps:
         source: jobid
         valueFrom: $(self).700.annotation.sims.filter.seq
     out: [index]
+    
   summaryMD5:
     label: md5 abundance
     run: ../Tools/awe_annotate_summary.tool.yaml
@@ -196,20 +226,107 @@ steps:
   loadCass:
     label: abundance cassandra load
     run: ../Tools/awe_load_cass.tool.yaml
+    requirements:
+      - class: InitialWorkDirRequirement
+        listing:
+          - entryname: userattr.json
+            entry: |
+                {
+                  "id": "$(inputs.mgid)"
+                }
+    
     in:
-    out: []   
-    
-    
-  finalStats:    
+      mgid: mgid
+      job: jobid
+      api_url: api_url
+      api_key: api_key
+      ann_ver: nr_aa_annotation_version
+      md5: summaryMD5/abundance
+      lca: summaryLCA/abundance
+    out: [log, error]
+
+
+  finalStats:
     label: done stage
     run: ../Tools/awe_stats.tool.yaml
+    # -job=[% job_id %] 
+    # -nr_ver=[% ach_sequence_ver %] 
+    # -ann_ver=[% ach_annotation_ver %] 
+    # -api_url=[% mgrast_api %] 
+    # -upload=@[% job_id %].075.upload.stats 
+    # -qc=@[% job_id %].075.qc.stats 
+    # -preproc=@[% job_id %].100.preprocess.passed.fna 
+    # -derep=@[% job_id %].150.dereplication.removed.fna 
+    # -post_qc=@[% job_id %].299.screen.passed.fna 
+    # -source=@[% job_id %].700.annotation.source.stats 
+    # -search=@[% job_id %].425.search.rna.fna 
+    # -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna 
+    # -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping 
+    # -genecall=@[% job_id %].350.genecalling.coding.faa 
+    # -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa 
+    # -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
+    # -ontol=[% job_id %].650.aa.expand.ontology 
+    # -filter=[% job_id %].700.annotation.sims.filter.seq 
+    # -md5_abund=@[% job_id %].700.annotation.md5.abundance
+    # -m5nr_db=m5nr_v1.annotation.bdb 
+    # -taxa_hier=m5nr_v1.taxonomy.map.json 
+    # -ont_hier=m5nr_v1.ontology.map.json",
+    
     in:
-    out: []   
-         
-  notif:    
-    label: notify job completion
-    run: ../Tools/awe_stats.tool.yaml
-    in:
-    out: []   
+      job: jobid
+      nr_ver: nr_aa_sequence_version
+      ann_ver: nr_aa_annotation_version
+      api_url: api_url
+      # file inputs, replace with step inputs in combined workflow
+      upload: upload
+      qc: qc
+      preproc: preproc
+      derep: derep
+      post_qc: post_qc
+      source: source
+      search: search
+      rna_clust: rna_clust
+      rna_map: rna_map
+      genecall: genecall
+      aa_clust: aa_clust
+      aa_map: aa_map
+      ontol: ontol
+      # step input within this workflow
+      filter: aa/filter
+      md5_abund: summaryMD5/abundance
+      # DB/Predata 
+      m5nr_db: nr_aa_ann_file
+      taxa_hier: nr_taxa_hierarchy
+      ont_hier: nr_ontology_hierachy    
       
+    out: [
+            statisticsFile ,
+            statisticsAttr ,
+            screenFile ,
+            screenAttr ,
+            searchFile ,
+            searchAttr ,
+            searchFile ,
+            searchAttr ,
+            rnaClustFile ,
+            rnaClustAttr ,
+            rnaMapFile ,
+            rnaMapAttr ,
+            rnaMapFile ,
+            rnaMapAttr ,
+            genecallFile ,
+            genecallAttr ,
+            aaClustFile ,
+            aaClustAttr ,
+            aaMapFile ,
+            aaMapAttr
+    ]
+    
+ #
+ #  notif:
+ #    label: notify job completion
+ #    run: ../Tools/awe_stats.tool.yaml
+ #    in:
+ #    out: []
+ #
 
