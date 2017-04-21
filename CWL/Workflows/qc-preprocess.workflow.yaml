@@ -34,10 +34,15 @@ outputs:
   removed: 
     type: File
     outputSource: preprocess/removed
-  attributes:
+  derepPassed:
+    type: File
+    outputSource: dereplication/passed  
+  derepRemoved:
+    type: File
+    outputSource: dereplication/removed    
+  derepAttr:
     type: File[]
     outputSource: dereplication/attributes  
-      
 
 steps:
   qc:
