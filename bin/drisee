@@ -218,14 +218,21 @@ def create_output(bps, match, error, per):
                 total += error[i][b]
                 errs[b] += error[i][b]
         if per:
-            row = map(lambda x: "%f"%(((x * 1.0) / rsum) * 100), row)
+            if rsum == 0:
+                row = len(row) * [0]
+            else:
+                row = map(lambda x: "%f"%(((x * 1.0) / rsum) * 100), row)
         else:
             row = map(lambda x: str(x), row)
         stext.append( "%d\t"%(i+1) + "\t".join(row) )
 
     err_head = map(lambda x: "%s_err"%x, bps)
-    err_nums = map(lambda x: "%f"%(((errs[x] * 1.0) / total) * 100), bps)
-    err_sum  = ((sum(errs.values()) * 1.0) / total) * 100
+    if total == 0:
+        err_nums = len(bps) * [0]
+        err_sum  = 0
+    else:
+        err_nums = map(lambda x: "%f"%(((errs[x] * 1.0) / total) * 100), bps)
+        err_sum  = ((sum(errs.values()) * 1.0) / total) * 100
     err_head.append('bp_err')
     err_nums.append("%f"%err_sum)
 
@@ -290,7 +297,7 @@ def main(args):
     # seq stats
     stats  = seq_stats(in_seq, opts.seq_type, opts.verbose)
     seqnum = int(stats['sequence_count'])
-    seqper = float(opts.seq_max) / seqnum
+    seqper = 0 if seqnum == 0 else float(opts.seq_max) / seqnum
     seqmax = 0
     if opts.verbose: sys.stdout.write("DRISEE will be ran on %d of %d sequences\n"%(min(opts.seq_max, seqnum),seqnum))
 
