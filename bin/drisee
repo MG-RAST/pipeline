@@ -228,7 +228,7 @@ def create_output(bps, match, error, per):
 
     err_head = map(lambda x: "%s_err"%x, bps)
     if total == 0:
-        err_nums = len(bps) * [0]
+        err_nums = len(bps) * ["0"]
         err_sum  = 0
     else:
         err_nums = map(lambda x: "%f"%(((errs[x] * 1.0) / total) * 100), bps)
