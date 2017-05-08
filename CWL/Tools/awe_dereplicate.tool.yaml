@@ -27,7 +27,7 @@ inputs:
         prefix: -input
     memory:
       type: int
-      default: 16
+      default: $(runtime.ram)
       inputBinding:
         prefix: -memory
     out_prefix:
