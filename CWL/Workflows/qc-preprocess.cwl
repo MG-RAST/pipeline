@@ -9,7 +9,7 @@
                         "prefix": "-dereplicate"
                     }, 
                     "type": "int", 
-                    "id": "#awe_dereplicate.tool.yaml/dereplicate"
+                    "id": "#mg_dereplicate.tool.yaml/dereplicate"
                 }, 
                 {
                     "inputBinding": {
@@ -17,7 +17,7 @@
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_dereplicate.tool.yaml/input"
+                    "id": "#mg_dereplicate.tool.yaml/input"
                 }, 
                 {
                     "default": "$(runtime.ram)", 
@@ -25,7 +25,7 @@
                         "prefix": "-memory"
                     }, 
                     "type": "int", 
-                    "id": "#awe_dereplicate.tool.yaml/memory"
+                    "id": "#mg_dereplicate.tool.yaml/memory"
                 }, 
                 {
                     "default": false, 
@@ -36,7 +36,7 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_dereplicate.tool.yaml/no-shock"
+                    "id": "#mg_dereplicate.tool.yaml/no-shock"
                 }, 
                 {
                     "default": "derep", 
@@ -44,7 +44,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_dereplicate.tool.yaml/out_prefix"
+                    "id": "#mg_dereplicate.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": 50, 
@@ -52,7 +52,7 @@
                         "prefix": "-prefix_length"
                     }, 
                     "type": "int", 
-                    "id": "#awe_dereplicate.tool.yaml/prefix_length"
+                    "id": "#mg_dereplicate.tool.yaml/prefix_length"
                 }
             ], 
             "requirements": [
@@ -79,26 +79,26 @@
                             "type": "array"
                         }
                     ], 
-                    "id": "#awe_dereplicate.tool.yaml/attributes"
+                    "id": "#mg_dereplicate.tool.yaml/attributes"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).passed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_dereplicate.tool.yaml/passed"
+                    "id": "#mg_dereplicate.tool.yaml/passed"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).removed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_dereplicate.tool.yaml/removed"
+                    "id": "#mg_dereplicate.tool.yaml/removed"
                 }
             ], 
-            "baseCommand": "awe_dereplicate.pl", 
+            "baseCommand": "mg_dereplicate.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_dereplicate.tool.yaml", 
+            "id": "#mg_dereplicate.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/dereplicate:1.0", 
@@ -117,7 +117,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/filter_options"
+                    "id": "#mg_preprocess.tool.yaml/filter_options"
                 }, 
                 {
                     "doc": "fasta or fastq", 
@@ -128,14 +128,14 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/format"
+                    "id": "#mg_preprocess.tool.yaml/format"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_preprocess.tool.yaml/input"
+                    "id": "#mg_preprocess.tool.yaml/input"
                 }, 
                 {
                     "default": false, 
@@ -146,7 +146,7 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/no-shock"
+                    "id": "#mg_preprocess.tool.yaml/no-shock"
                 }, 
                 {
                     "default": "prep", 
@@ -154,7 +154,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_preprocess.tool.yaml/out_prefix"
+                    "id": "#mg_preprocess.tool.yaml/out_prefix"
                 }
             ], 
             "requirements": [
@@ -180,26 +180,26 @@
                             "type": "array"
                         }
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/attributes"
+                    "id": "#mg_preprocess.tool.yaml/attributes"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).passed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_preprocess.tool.yaml/passed"
+                    "id": "#mg_preprocess.tool.yaml/passed"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).removed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_preprocess.tool.yaml/removed"
+                    "id": "#mg_preprocess.tool.yaml/removed"
                 }
             ], 
-            "baseCommand": "awe_preprocess.pl", 
+            "baseCommand": "mg_preprocess.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_preprocess.tool.yaml", 
+            "id": "#mg_preprocess.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/preprocess:1.0", 
@@ -216,7 +216,7 @@
                         "prefix": "-assembled"
                     }, 
                     "type": "int", 
-                    "id": "#awe_qc.tool.yaml/assembled"
+                    "id": "#mg_qc.tool.yaml/assembled"
                 }, 
                 {
                     "doc": "Default: <filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5>", 
@@ -227,7 +227,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_qc.tool.yaml/filter_options"
+                    "id": "#mg_qc.tool.yaml/filter_options"
                 }, 
                 {
                     "doc": "<fasta|fastq>", 
@@ -238,7 +238,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_qc.tool.yaml/format"
+                    "id": "#mg_qc.tool.yaml/format"
                 }, 
                 {
                     "default": "15,6", 
@@ -246,7 +246,7 @@
                         "prefix": "-kmers"
                     }, 
                     "type": "string", 
-                    "id": "#awe_qc.tool.yaml/kmers"
+                    "id": "#mg_qc.tool.yaml/kmers"
                 }, 
                 {
                     "default": "qc", 
@@ -254,7 +254,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_qc.tool.yaml/out_prefix"
+                    "id": "#mg_qc.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": 8, 
@@ -262,14 +262,14 @@
                         "prefix": "-proc"
                     }, 
                     "type": "int", 
-                    "id": "#awe_qc.tool.yaml/proc"
+                    "id": "#mg_qc.tool.yaml/proc"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_qc.tool.yaml/seqfile"
+                    "id": "#mg_qc.tool.yaml/seqfile"
                 }
             ], 
             "requirements": [
@@ -292,7 +292,7 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/assembly"
+                    "id": "#mg_qc.tool.yaml/assembly"
                 }, 
                 {
                     "outputBinding": {
@@ -302,7 +302,7 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/assemblyattr"
+                    "id": "#mg_qc.tool.yaml/assemblyattr"
                 }, 
                 {
                     "outputBinding": {
@@ -312,7 +312,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/consensus"
+                    "id": "#mg_qc.tool.yaml/consensus"
                 }, 
                 {
                     "outputBinding": {
@@ -322,7 +322,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/consensusattr"
+                    "id": "#mg_qc.tool.yaml/consensusattr"
                 }, 
                 {
                     "outputBinding": {
@@ -332,7 +332,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/drisee"
+                    "id": "#mg_qc.tool.yaml/drisee"
                 }, 
                 {
                     "outputBinding": {
@@ -342,7 +342,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/driseeattr"
+                    "id": "#mg_qc.tool.yaml/driseeattr"
                 }, 
                 {
                     "outputBinding": {
@@ -352,7 +352,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/driseeinfo"
+                    "id": "#mg_qc.tool.yaml/driseeinfo"
                 }, 
                 {
                     "outputBinding": {
@@ -362,7 +362,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/driseeinfoattr"
+                    "id": "#mg_qc.tool.yaml/driseeinfoattr"
                 }, 
                 {
                     "outputBinding": {
@@ -372,7 +372,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/kmer"
+                    "id": "#mg_qc.tool.yaml/kmer"
                 }, 
                 {
                     "outputBinding": {
@@ -382,14 +382,14 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/kmerattr"
+                    "id": "#mg_qc.tool.yaml/kmerattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).qc.stats"
                     }, 
                     "type": "File", 
-                    "id": "#awe_qc.tool.yaml/qcstats"
+                    "id": "#mg_qc.tool.yaml/qcstats"
                 }, 
                 {
                     "outputBinding": {
@@ -399,14 +399,14 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/qcstatsattr"
+                    "id": "#mg_qc.tool.yaml/qcstatsattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).upload.stats"
                     }, 
                     "type": "File", 
-                    "id": "#awe_qc.tool.yaml/uploadstats"
+                    "id": "#mg_qc.tool.yaml/uploadstats"
                 }, 
                 {
                     "outputBinding": {
@@ -416,12 +416,12 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/uploadstatsattr"
+                    "id": "#mg_qc.tool.yaml/uploadstatsattr"
                 }
             ], 
-            "baseCommand": "awe_qc.pl", 
+            "baseCommand": "mg_qc.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_qc.tool.yaml", 
+            "id": "#mg_qc.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/qc:1.0", 
@@ -556,7 +556,7 @@
                         "#main/dereplication/removed", 
                         "#main/dereplication/attributes"
                     ], 
-                    "run": "#awe_dereplicate.tool.yaml", 
+                    "run": "#mg_dereplicate.tool.yaml", 
                     "id": "#main/dereplication", 
                     "in": [
                         {
@@ -602,7 +602,7 @@
                         "#main/preprocess/removed", 
                         "#main/preprocess/passed"
                     ], 
-                    "run": "#awe_preprocess.tool.yaml", 
+                    "run": "#mg_preprocess.tool.yaml", 
                     "id": "#main/preprocess", 
                     "in": [
                         {
@@ -634,7 +634,7 @@
                         "#main/qc/qcstats", 
                         "#main/qc/uploadstats"
                     ], 
-                    "run": "#awe_qc.tool.yaml", 
+                    "run": "#mg_qc.tool.yaml", 
                     "id": "#main/qc", 
                     "in": [
                         {

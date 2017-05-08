@@ -45,7 +45,7 @@ outputs:
         
 steps:
   searchRNA:
-    run: ../Tools/awe_search_rna.tool.yaml
+    run: ../Tools/mg_search_rna.tool.yaml
     in:
       input: sequences
       output: 
@@ -56,7 +56,7 @@ steps:
     out: [rna]
 
   clusterRNA:
-    run: ../Tools/awe_cluster.tool.yaml
+    run: ../Tools/mg_cluster.tool.yaml
     in:
       input: searchRNA/rna 
       out_prefix: 
@@ -72,7 +72,7 @@ steps:
     out: [fasta,mapping]
     
   simsRNA:
-    run: ../Tools/awe_blat_rna.tool.yaml 
+    run: ../Tools/mg_blat_rna.tool.yaml 
     in:      
       input: clusterRNA/fasta 
       output:

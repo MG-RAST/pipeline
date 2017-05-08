@@ -6,7 +6,7 @@
                 {
                     "default": "1", 
                     "type": "string", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/ach_sequence_ver"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/ach_sequence_ver"
                 }, 
                 {
                     "default": "1", 
@@ -14,7 +14,7 @@
                         "prefix": "-ach_ver"
                     }, 
                     "type": "string", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/ach_ver"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/ach_ver"
                 }, 
                 {
                     "default": "/mnt/awe/data/predata/m5nr_v1.bdb", 
@@ -22,7 +22,7 @@
                         "prefix": "-ann_file"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/ann_file"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/ann_file"
                 }, 
                 {
                     "type": [
@@ -33,11 +33,11 @@
                                         "prefix": "-rna"
                                     }, 
                                     "type": "boolean", 
-                                    "name": "#awe_annotate_aa_sims.tool.yaml/exclusive_parameters/RNA/rna"
+                                    "name": "#mg_annotate_aa_sims.tool.yaml/exclusive_parameters/RNA/rna"
                                 }
                             ], 
                             "type": "record", 
-                            "name": "#awe_annotate_aa_sims.tool.yaml/exclusive_parameters/RNA"
+                            "name": "#mg_annotate_aa_sims.tool.yaml/exclusive_parameters/RNA"
                         }, 
                         {
                             "fields": [
@@ -46,14 +46,14 @@
                                         "prefix": "-aa"
                                     }, 
                                     "type": "boolean", 
-                                    "name": "#awe_annotate_aa_sims.tool.yaml/exclusive_parameters/AA/aa"
+                                    "name": "#mg_annotate_aa_sims.tool.yaml/exclusive_parameters/AA/aa"
                                 }
                             ], 
                             "type": "record", 
-                            "name": "#awe_annotate_aa_sims.tool.yaml/exclusive_parameters/AA"
+                            "name": "#mg_annotate_aa_sims.tool.yaml/exclusive_parameters/AA"
                         }
                     ], 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/exclusive_parameters"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/exclusive_parameters"
                 }, 
                 {
                     "inputBinding": {
@@ -61,7 +61,7 @@
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/input"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/input"
                 }, 
                 {
                     "default": "annotate_sims", 
@@ -70,7 +70,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/out_prefix"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": false, 
@@ -78,7 +78,7 @@
                         "prefix": "-help"
                     }, 
                     "type": "boolean", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/tool_help"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/tool_help"
                 }
             ], 
             "requirements": [
@@ -98,69 +98,69 @@
                         "glob": "$(inputs.out_prefix).aa.sims.filter"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/filter"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/filter"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.sims.filter.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/filterattr"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/filterattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.expand.lca"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/lca"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/lca"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.expand.lca.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/lcarattr"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/lcarattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.expand.ontology"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/ontology"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/ontology"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.expand.ontology.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/ontologyattr"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/ontologyattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.expand.protein"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/protein"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/protein"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).aa.expand.protein.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_aa_sims.tool.yaml/proteinattr"
+                    "id": "#mg_annotate_aa_sims.tool.yaml/proteinattr"
                 }
             ], 
-            "baseCommand": "awe_annotate_sims.pl", 
+            "baseCommand": "mg_annotate_sims.pl", 
             "class": "CommandLineTool", 
             "label": "aa sims annotation", 
-            "id": "#awe_annotate_aa_sims.tool.yaml"
+            "id": "#mg_annotate_aa_sims.tool.yaml"
         }, 
         {
             "inputs": [
                 {
                     "default": "1", 
                     "type": "string", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/ach_sequence_ver"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/ach_sequence_ver"
                 }, 
                 {
                     "default": "1", 
@@ -168,7 +168,7 @@
                         "prefix": "-ach_ver"
                     }, 
                     "type": "string", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/ach_ver"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/ach_ver"
                 }, 
                 {
                     "default": "./m5nr_v1.bdb", 
@@ -176,7 +176,7 @@
                         "prefix": "-ann_file"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/ann_file"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/ann_file"
                 }, 
                 {
                     "inputBinding": {
@@ -184,7 +184,7 @@
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/input"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/input"
                 }, 
                 {
                     "default": "annotate_sims", 
@@ -193,7 +193,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/out_prefix"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": false, 
@@ -201,7 +201,7 @@
                         "prefix": "-help"
                     }, 
                     "type": "boolean", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/tool_help"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/tool_help"
                 }
             ], 
             "requirements": [
@@ -221,51 +221,51 @@
                         "glob": "$(inputs.out_prefix).rna.expand.rna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/feature"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/feature"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.expand.rna.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/featureattr"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/featureattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.sims.filter"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/filter"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/filter"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.sims.filter.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/filterattr"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/filterattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.expand.lca"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/lca"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/lca"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.expand.lca.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_rna_sims.tool.yaml/lcarattr"
+                    "id": "#mg_annotate_rna_sims.tool.yaml/lcarattr"
                 }
             ], 
             "baseCommand": [
-                "awe_annotate_sims.pl", 
+                "mg_annotate_sims.pl", 
                 "--rna"
             ], 
             "class": "CommandLineTool", 
             "label": "rna sims annotation", 
-            "id": "#awe_annotate_rna_sims.tool.yaml"
+            "id": "#mg_annotate_rna_sims.tool.yaml"
         }, 
         {
             "inputs": [
@@ -275,7 +275,7 @@
                         "prefix": "-type"
                     }, 
                     "type": "string", 
-                    "id": "#awe_annotate_summary.tool.yaml/abundanceType"
+                    "id": "#mg_annotate_summary.tool.yaml/abundanceType"
                 }, 
                 {
                     "inputBinding": {
@@ -285,7 +285,7 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_annotate_summary.tool.yaml/in_assemb"
+                    "id": "#mg_annotate_summary.tool.yaml/in_assemb"
                 }, 
                 {
                     "inputBinding": {
@@ -295,7 +295,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_annotate_summary.tool.yaml/in_expand"
+                    "id": "#mg_annotate_summary.tool.yaml/in_expand"
                 }, 
                 {
                     "inputBinding": {
@@ -305,7 +305,7 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_annotate_summary.tool.yaml/in_index"
+                    "id": "#mg_annotate_summary.tool.yaml/in_index"
                 }, 
                 {
                     "inputBinding": {
@@ -315,18 +315,18 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_annotate_summary.tool.yaml/in_maps"
+                    "id": "#mg_annotate_summary.tool.yaml/in_maps"
                 }, 
                 {
                     "type": "string", 
-                    "id": "#awe_annotate_summary.tool.yaml/nr_version"
+                    "id": "#mg_annotate_summary.tool.yaml/nr_version"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-output"
                     }, 
                     "type": "string", 
-                    "id": "#awe_annotate_summary.tool.yaml/output"
+                    "id": "#mg_annotate_summary.tool.yaml/output"
                 }
             ], 
             "requirements": [
@@ -346,20 +346,20 @@
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_summary.tool.yaml/abundance"
+                    "id": "#mg_annotate_summary.tool.yaml/abundance"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "userattr.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_annotate_summary.tool.yaml/abundanceattr"
+                    "id": "#mg_annotate_summary.tool.yaml/abundanceattr"
                 }
             ], 
             "class": "CommandLineTool", 
-            "baseCommand": "awe_annotate_summary.pl", 
+            "baseCommand": "mg_annotate_summary.pl", 
             "label": "abundance files", 
-            "id": "#awe_annotate_summary.tool.yaml", 
+            "id": "#mg_annotate_summary.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/annotate:1.0", 
@@ -374,39 +374,39 @@
                         "prefix": "-i"
                     }, 
                     "type": "File", 
-                    "id": "#awe_blat_protein.tool.yaml/input"
+                    "id": "#mg_blat_protein.tool.yaml/input"
                 }, 
                 {
                     "doc": "Directory containing the db with prefix nr_prefix", 
                     "type": "Directory", 
-                    "id": "#awe_blat_protein.tool.yaml/nr_dir"
+                    "id": "#mg_blat_protein.tool.yaml/nr_dir"
                 }, 
                 {
                     "doc": "Filename prefix has to match nr_prefix", 
                     "type": "File", 
-                    "id": "#awe_blat_protein.tool.yaml/nr_part_1"
+                    "id": "#mg_blat_protein.tool.yaml/nr_part_1"
                 }, 
                 {
                     "doc": "Filename prefix has to match nr_prefix", 
                     "type": "File", 
-                    "id": "#awe_blat_protein.tool.yaml/nr_part_2"
+                    "id": "#mg_blat_protein.tool.yaml/nr_part_2"
                 }, 
                 {
                     "default": "md5nr", 
                     "doc": "prefix for nr, expects *.1 and *.2", 
                     "type": "string", 
-                    "id": "#awe_blat_protein.tool.yaml/nr_prefix"
+                    "id": "#mg_blat_protein.tool.yaml/nr_prefix"
                 }, 
                 {
                     "type": "string", 
-                    "id": "#awe_blat_protein.tool.yaml/nr_version"
+                    "id": "#mg_blat_protein.tool.yaml/nr_version"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-o"
                     }, 
                     "type": "string", 
-                    "id": "#awe_blat_protein.tool.yaml/output"
+                    "id": "#mg_blat_protein.tool.yaml/output"
                 }, 
                 {
                     "inputBinding": {
@@ -416,7 +416,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_blat_protein.tool.yaml/sort_dir"
+                    "id": "#mg_blat_protein.tool.yaml/sort_dir"
                 }
             ], 
             "requirements": [
@@ -439,25 +439,25 @@
             "outputs": [
                 {
                     "type": "stderr", 
-                    "id": "#awe_blat_protein.tool.yaml/error"
+                    "id": "#mg_blat_protein.tool.yaml/error"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_blat_protein.tool.yaml/sims"
+                    "id": "#mg_blat_protein.tool.yaml/sims"
                 }, 
                 {
                     "type": "stdout", 
-                    "id": "#awe_blat_protein.tool.yaml/stdout"
+                    "id": "#mg_blat_protein.tool.yaml/stdout"
                 }
             ], 
             "class": "CommandLineTool", 
-            "baseCommand": "awe_blat_prot.py", 
+            "baseCommand": "mg_blat_prot.py", 
             "label": "aa sims blat", 
             "stderr": "error.log", 
-            "id": "#awe_blat_protein.tool.yaml", 
+            "id": "#mg_blat_protein.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -476,32 +476,32 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_blat_rna.tool.yaml/assembled"
+                    "id": "#mg_blat_rna.tool.yaml/assembled"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_blat_rna.tool.yaml/input"
+                    "id": "#mg_blat_rna.tool.yaml/input"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-output"
                     }, 
                     "type": "string", 
-                    "id": "#awe_blat_rna.tool.yaml/output"
+                    "id": "#mg_blat_rna.tool.yaml/output"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-rna_nr"
                     }, 
                     "type": "File", 
-                    "id": "#awe_blat_rna.tool.yaml/rna_nr"
+                    "id": "#mg_blat_rna.tool.yaml/rna_nr"
                 }, 
                 {
                     "type": "string", 
-                    "id": "#awe_blat_rna.tool.yaml/rna_nr_version"
+                    "id": "#mg_blat_rna.tool.yaml/rna_nr_version"
                 }
             ], 
             "requirements": [
@@ -521,20 +521,20 @@
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_blat_rna.tool.yaml/sims"
+                    "id": "#mg_blat_rna.tool.yaml/sims"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "userattr.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_blat_rna.tool.yaml/userattr"
+                    "id": "#mg_blat_rna.tool.yaml/userattr"
                 }
             ], 
             "class": "CommandLineTool", 
-            "baseCommand": "awe_blat_rna.pl", 
+            "baseCommand": "mg_blat_rna.pl", 
             "label": "rna sims blat", 
-            "id": "#awe_blat_rna.tool.yaml", 
+            "id": "#mg_blat_rna.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -550,25 +550,25 @@
                         "prefix": "-bowtie"
                     }, 
                     "type": "int", 
-                    "id": "#awe_bowtie_screen.tool.yaml/bowtie"
+                    "id": "#mg_bowtie_screen.tool.yaml/bowtie"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-index"
                     }, 
                     "type": "string", 
-                    "id": "#awe_bowtie_screen.tool.yaml/index"
+                    "id": "#mg_bowtie_screen.tool.yaml/index"
                 }, 
                 {
                     "type": "Directory", 
-                    "id": "#awe_bowtie_screen.tool.yaml/indexDir"
+                    "id": "#mg_bowtie_screen.tool.yaml/indexDir"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_bowtie_screen.tool.yaml/input"
+                    "id": "#mg_bowtie_screen.tool.yaml/input"
                 }, 
                 {
                     "default": false, 
@@ -579,14 +579,14 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_bowtie_screen.tool.yaml/no-shock"
+                    "id": "#mg_bowtie_screen.tool.yaml/no-shock"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-output"
                     }, 
                     "type": "string", 
-                    "id": "#awe_bowtie_screen.tool.yaml/output"
+                    "id": "#mg_bowtie_screen.tool.yaml/output"
                 }, 
                 {
                     "default": 8, 
@@ -594,7 +594,7 @@
                         "prefix": "-proc"
                     }, 
                     "type": "int", 
-                    "id": "#awe_bowtie_screen.tool.yaml/proc"
+                    "id": "#mg_bowtie_screen.tool.yaml/proc"
                 }
             ], 
             "requirements": [
@@ -612,7 +612,7 @@
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_bowtie_screen.tool.yaml/passed"
+                    "id": "#mg_bowtie_screen.tool.yaml/passed"
                 }, 
                 {
                     "outputBinding": {
@@ -622,12 +622,12 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_bowtie_screen.tool.yaml/passedAttr"
+                    "id": "#mg_bowtie_screen.tool.yaml/passedAttr"
                 }
             ], 
-            "baseCommand": "awe_bowtie_screen.pl", 
+            "baseCommand": "mg_bowtie_screen.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_bowtie_screen.tool.yaml", 
+            "id": "#mg_bowtie_screen.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/bowtie_screen:1.0", 
@@ -646,11 +646,11 @@
                                         "prefix": "-rna"
                                     }, 
                                     "type": "boolean", 
-                                    "name": "#awe_cluster.tool.yaml/exclusive_parameters/RNA/rna"
+                                    "name": "#mg_cluster.tool.yaml/exclusive_parameters/RNA/rna"
                                 }
                             ], 
                             "type": "record", 
-                            "name": "#awe_cluster.tool.yaml/exclusive_parameters/RNA"
+                            "name": "#mg_cluster.tool.yaml/exclusive_parameters/RNA"
                         }, 
                         {
                             "fields": [
@@ -659,42 +659,42 @@
                                         "prefix": "-dna"
                                     }, 
                                     "type": "boolean", 
-                                    "name": "#awe_cluster.tool.yaml/exclusive_parameters/DNA/dna"
+                                    "name": "#mg_cluster.tool.yaml/exclusive_parameters/DNA/dna"
                                 }
                             ], 
                             "type": "record", 
-                            "name": "#awe_cluster.tool.yaml/exclusive_parameters/DNA"
+                            "name": "#mg_cluster.tool.yaml/exclusive_parameters/DNA"
                         }
                     ], 
-                    "id": "#awe_cluster.tool.yaml/exclusive_parameters"
+                    "id": "#mg_cluster.tool.yaml/exclusive_parameters"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster.tool.yaml/input"
+                    "id": "#mg_cluster.tool.yaml/input"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-memory"
                     }, 
                     "type": "int", 
-                    "id": "#awe_cluster.tool.yaml/memory"
+                    "id": "#mg_cluster.tool.yaml/memory"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_cluster.tool.yaml/out_prefix"
+                    "id": "#mg_cluster.tool.yaml/out_prefix"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-pid"
                     }, 
                     "type": "int", 
-                    "id": "#awe_cluster.tool.yaml/pid"
+                    "id": "#mg_cluster.tool.yaml/pid"
                 }
             ], 
             "requirements": [
@@ -714,34 +714,34 @@
                         "glob": "$(inputs.out_prefix).*.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster.tool.yaml/fasta"
+                    "id": "#mg_cluster.tool.yaml/fasta"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.fna.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster.tool.yaml/fasta_userattr"
+                    "id": "#mg_cluster.tool.yaml/fasta_userattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.mapping"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster.tool.yaml/mapping"
+                    "id": "#mg_cluster.tool.yaml/mapping"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.mapping.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster.tool.yaml/mapping_userattr"
+                    "id": "#mg_cluster.tool.yaml/mapping_userattr"
                 }
             ], 
             "class": "CommandLineTool", 
-            "baseCommand": "awe_cluster.pl", 
+            "baseCommand": "mg_cluster.pl", 
             "label": "rna clustering", 
-            "id": "#awe_cluster.tool.yaml", 
+            "id": "#mg_cluster.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -756,7 +756,7 @@
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster_aa.tool.yaml/input"
+                    "id": "#mg_cluster_aa.tool.yaml/input"
                 }, 
                 {
                     "default": 20, 
@@ -764,21 +764,21 @@
                         "prefix": "-memory"
                     }, 
                     "type": "int", 
-                    "id": "#awe_cluster_aa.tool.yaml/memory"
+                    "id": "#mg_cluster_aa.tool.yaml/memory"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_cluster_aa.tool.yaml/out_prefix"
+                    "id": "#mg_cluster_aa.tool.yaml/out_prefix"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-pid"
                     }, 
                     "type": "int", 
-                    "id": "#awe_cluster_aa.tool.yaml/pid"
+                    "id": "#mg_cluster_aa.tool.yaml/pid"
                 }
             ], 
             "requirements": [
@@ -798,37 +798,37 @@
                         "glob": "$(inputs.out_prefix).*.faa"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster_aa.tool.yaml/fasta"
+                    "id": "#mg_cluster_aa.tool.yaml/fasta"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.faa.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster_aa.tool.yaml/fasta_userattr"
+                    "id": "#mg_cluster_aa.tool.yaml/fasta_userattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.mapping"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster_aa.tool.yaml/mapping"
+                    "id": "#mg_cluster_aa.tool.yaml/mapping"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).*.mapping.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_cluster_aa.tool.yaml/mapping_userattr"
+                    "id": "#mg_cluster_aa.tool.yaml/mapping_userattr"
                 }
             ], 
             "class": "CommandLineTool", 
             "baseCommand": [
-                "awe_cluster.pl", 
+                "mg_cluster.pl", 
                 "-aa"
             ], 
             "label": "aa clustering", 
-            "id": "#awe_cluster_aa.tool.yaml", 
+            "id": "#mg_cluster_aa.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -844,7 +844,7 @@
                         "prefix": "-dereplicate"
                     }, 
                     "type": "int", 
-                    "id": "#awe_dereplicate.tool.yaml/dereplicate"
+                    "id": "#mg_dereplicate.tool.yaml/dereplicate"
                 }, 
                 {
                     "inputBinding": {
@@ -852,7 +852,7 @@
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_dereplicate.tool.yaml/input"
+                    "id": "#mg_dereplicate.tool.yaml/input"
                 }, 
                 {
                     "default": 16, 
@@ -860,7 +860,7 @@
                         "prefix": "-memory"
                     }, 
                     "type": "int", 
-                    "id": "#awe_dereplicate.tool.yaml/memory"
+                    "id": "#mg_dereplicate.tool.yaml/memory"
                 }, 
                 {
                     "default": false, 
@@ -871,7 +871,7 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_dereplicate.tool.yaml/no-shock"
+                    "id": "#mg_dereplicate.tool.yaml/no-shock"
                 }, 
                 {
                     "default": "derep", 
@@ -879,7 +879,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_dereplicate.tool.yaml/out_prefix"
+                    "id": "#mg_dereplicate.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": 50, 
@@ -887,7 +887,7 @@
                         "prefix": "-prefix_length"
                     }, 
                     "type": "int", 
-                    "id": "#awe_dereplicate.tool.yaml/prefix_length"
+                    "id": "#mg_dereplicate.tool.yaml/prefix_length"
                 }
             ], 
             "requirements": [
@@ -914,26 +914,26 @@
                             "type": "array"
                         }
                     ], 
-                    "id": "#awe_dereplicate.tool.yaml/attributes"
+                    "id": "#mg_dereplicate.tool.yaml/attributes"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).passed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_dereplicate.tool.yaml/passed"
+                    "id": "#mg_dereplicate.tool.yaml/passed"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).removed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_dereplicate.tool.yaml/removed"
+                    "id": "#mg_dereplicate.tool.yaml/removed"
                 }
             ], 
-            "baseCommand": "awe_dereplicate.pl", 
+            "baseCommand": "mg_dereplicate.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_dereplicate.tool.yaml", 
+            "id": "#mg_dereplicate.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/dereplicate:1.0", 
@@ -948,21 +948,21 @@
                         "prefix": "-in_clust"
                     }, 
                     "type": "File", 
-                    "id": "#awe_filter_feature.tool.yaml/in_clust"
+                    "id": "#mg_filter_feature.tool.yaml/in_clust"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-in_seq"
                     }, 
                     "type": "File", 
-                    "id": "#awe_filter_feature.tool.yaml/in_seq"
+                    "id": "#mg_filter_feature.tool.yaml/in_seq"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-in_sim"
                     }, 
                     "type": "File", 
-                    "id": "#awe_filter_feature.tool.yaml/in_sim"
+                    "id": "#mg_filter_feature.tool.yaml/in_sim"
                 }, 
                 {
                     "default": 8, 
@@ -970,7 +970,7 @@
                         "prefix": "-memory"
                     }, 
                     "type": "int", 
-                    "id": "#awe_filter_feature.tool.yaml/memory"
+                    "id": "#mg_filter_feature.tool.yaml/memory"
                 }, 
                 {
                     "default": false, 
@@ -981,14 +981,14 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_filter_feature.tool.yaml/no-shock"
+                    "id": "#mg_filter_feature.tool.yaml/no-shock"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-output"
                     }, 
                     "type": "string", 
-                    "id": "#awe_filter_feature.tool.yaml/output"
+                    "id": "#mg_filter_feature.tool.yaml/output"
                 }, 
                 {
                     "default": 10, 
@@ -999,7 +999,7 @@
                         "null", 
                         "int"
                     ], 
-                    "id": "#awe_filter_feature.tool.yaml/overlap"
+                    "id": "#mg_filter_feature.tool.yaml/overlap"
                 }, 
                 {
                     "inputBinding": {
@@ -1009,7 +1009,7 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_filter_feature.tool.yaml/tool_help"
+                    "id": "#mg_filter_feature.tool.yaml/tool_help"
                 }
             ], 
             "requirements": [
@@ -1029,20 +1029,20 @@
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_filter_feature.tool.yaml/filtered"
+                    "id": "#mg_filter_feature.tool.yaml/filtered"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.output).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_filter_feature.tool.yaml/userattr"
+                    "id": "#mg_filter_feature.tool.yaml/userattr"
                 }
             ], 
             "class": "CommandLineTool", 
-            "baseCommand": "awe_filter_feature.pl", 
+            "baseCommand": "mg_filter_feature.pl", 
             "label": "aa filtering", 
-            "id": "#awe_filter_feature.tool.yaml", 
+            "id": "#mg_filter_feature.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -1057,14 +1057,14 @@
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_genecalling.tool.yaml/input"
+                    "id": "#mg_genecalling.tool.yaml/input"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_genecalling.tool.yaml/out_prefix"
+                    "id": "#mg_genecalling.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": 8, 
@@ -1072,7 +1072,7 @@
                         "prefix": "-proc"
                     }, 
                     "type": "int", 
-                    "id": "#awe_genecalling.tool.yaml/proc"
+                    "id": "#mg_genecalling.tool.yaml/proc"
                 }, 
                 {
                     "default": 100, 
@@ -1080,7 +1080,7 @@
                         "prefix": "-size"
                     }, 
                     "type": "int", 
-                    "id": "#awe_genecalling.tool.yaml/size"
+                    "id": "#mg_genecalling.tool.yaml/size"
                 }, 
                 {
                     "doc": "<sanger|454|illumina|complete>", 
@@ -1088,7 +1088,7 @@
                         "prefix": "-type"
                     }, 
                     "type": "string", 
-                    "id": "#awe_genecalling.tool.yaml/type"
+                    "id": "#mg_genecalling.tool.yaml/type"
                 }
             ], 
             "requirements": [
@@ -1108,27 +1108,27 @@
                         "glob": "$(inputs.out_prefix).faa"
                     }, 
                     "type": "File", 
-                    "id": "#awe_genecalling.tool.yaml/faa"
+                    "id": "#mg_genecalling.tool.yaml/faa"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_genecalling.tool.yaml/fna"
+                    "id": "#mg_genecalling.tool.yaml/fna"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "userattr.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_genecalling.tool.yaml/userattr"
+                    "id": "#mg_genecalling.tool.yaml/userattr"
                 }
             ], 
             "class": "CommandLineTool", 
-            "baseCommand": "awe_genecalling.pl", 
+            "baseCommand": "mg_genecalling.pl", 
             "label": "genecalling", 
-            "id": "#awe_genecalling.tool.yaml", 
+            "id": "#mg_genecalling.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -1146,7 +1146,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_index_sim_seq.tool.yaml/in_maps"
+                    "id": "#mg_index_sim_seq.tool.yaml/in_maps"
                 }, 
                 {
                     "inputBinding": {
@@ -1156,7 +1156,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_index_sim_seq.tool.yaml/in_seqs"
+                    "id": "#mg_index_sim_seq.tool.yaml/in_seqs"
                 }, 
                 {
                     "inputBinding": {
@@ -1166,11 +1166,11 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_index_sim_seq.tool.yaml/in_sims"
+                    "id": "#mg_index_sim_seq.tool.yaml/in_sims"
                 }, 
                 {
                     "type": "string", 
-                    "id": "#awe_index_sim_seq.tool.yaml/m5nr_version"
+                    "id": "#mg_index_sim_seq.tool.yaml/m5nr_version"
                 }, 
                 {
                     "default": 10, 
@@ -1181,14 +1181,14 @@
                         "null", 
                         "int"
                     ], 
-                    "id": "#awe_index_sim_seq.tool.yaml/memory"
+                    "id": "#mg_index_sim_seq.tool.yaml/memory"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-output"
                     }, 
                     "type": "string", 
-                    "id": "#awe_index_sim_seq.tool.yaml/output"
+                    "id": "#mg_index_sim_seq.tool.yaml/output"
                 }
             ], 
             "requirements": [
@@ -1204,7 +1204,7 @@
             "outputs": [
                 {
                     "type": "stderr", 
-                    "id": "#awe_index_sim_seq.tool.yaml/error"
+                    "id": "#mg_index_sim_seq.tool.yaml/error"
                 }, 
                 {
                     "outputBinding": {
@@ -1214,24 +1214,24 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_index_sim_seq.tool.yaml/index"
+                    "id": "#mg_index_sim_seq.tool.yaml/index"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_index_sim_seq.tool.yaml/sims"
+                    "id": "#mg_index_sim_seq.tool.yaml/sims"
                 }, 
                 {
                     "type": "stdout", 
-                    "id": "#awe_index_sim_seq.tool.yaml/stdout"
+                    "id": "#mg_index_sim_seq.tool.yaml/stdout"
                 }
             ], 
-            "baseCommand": "awe_index_sim_seq.pl", 
+            "baseCommand": "mg_index_sim_seq.pl", 
             "class": "CommandLineTool", 
             "stderr": "index_sim.error.log", 
-            "id": "#awe_index_sim_seq.tool.yaml"
+            "id": "#mg_index_sim_seq.tool.yaml"
         }, 
         {
             "inputs": [
@@ -1240,7 +1240,7 @@
                         "prefix": "-ann_ver"
                     }, 
                     "type": "string", 
-                    "id": "#awe_load_cass.tool.yaml/ann_ver"
+                    "id": "#mg_load_cass.tool.yaml/ann_ver"
                 }, 
                 {
                     "default": "", 
@@ -1248,35 +1248,35 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_load_cass.tool.yaml/api_key"
+                    "id": "#mg_load_cass.tool.yaml/api_key"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-api_url"
                     }, 
                     "type": "string", 
-                    "id": "#awe_load_cass.tool.yaml/api_url"
+                    "id": "#mg_load_cass.tool.yaml/api_url"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-job"
                     }, 
                     "type": "int", 
-                    "id": "#awe_load_cass.tool.yaml/job"
+                    "id": "#mg_load_cass.tool.yaml/job"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-lca"
                     }, 
                     "type": "File", 
-                    "id": "#awe_load_cass.tool.yaml/lca"
+                    "id": "#mg_load_cass.tool.yaml/lca"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-md5"
                     }, 
                     "type": "File", 
-                    "id": "#awe_load_cass.tool.yaml/md5"
+                    "id": "#mg_load_cass.tool.yaml/md5"
                 }
             ], 
             "requirements": [
@@ -1294,17 +1294,17 @@
             "outputs": [
                 {
                     "type": "stderr", 
-                    "id": "#awe_load_cass.tool.yaml/error"
+                    "id": "#mg_load_cass.tool.yaml/error"
                 }, 
                 {
                     "type": "stdout", 
-                    "id": "#awe_load_cass.tool.yaml/log"
+                    "id": "#mg_load_cass.tool.yaml/log"
                 }
             ], 
-            "baseCommand": "awe_load_cass.pl", 
+            "baseCommand": "mg_load_cass.pl", 
             "class": "CommandLineTool", 
             "stderr": "cassandra_load.error", 
-            "id": "#awe_load_cass.tool.yaml", 
+            "id": "#mg_load_cass.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/dbload:1.0", 
@@ -1323,7 +1323,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/filter_options"
+                    "id": "#mg_preprocess.tool.yaml/filter_options"
                 }, 
                 {
                     "doc": "fasta or fastq", 
@@ -1334,14 +1334,14 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/format"
+                    "id": "#mg_preprocess.tool.yaml/format"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_preprocess.tool.yaml/input"
+                    "id": "#mg_preprocess.tool.yaml/input"
                 }, 
                 {
                     "default": false, 
@@ -1352,7 +1352,7 @@
                         "null", 
                         "boolean"
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/no-shock"
+                    "id": "#mg_preprocess.tool.yaml/no-shock"
                 }, 
                 {
                     "default": "prep", 
@@ -1360,7 +1360,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_preprocess.tool.yaml/out_prefix"
+                    "id": "#mg_preprocess.tool.yaml/out_prefix"
                 }
             ], 
             "requirements": [
@@ -1386,26 +1386,26 @@
                             "type": "array"
                         }
                     ], 
-                    "id": "#awe_preprocess.tool.yaml/attributes"
+                    "id": "#mg_preprocess.tool.yaml/attributes"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).passed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_preprocess.tool.yaml/passed"
+                    "id": "#mg_preprocess.tool.yaml/passed"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).removed.fna"
                     }, 
                     "type": "File", 
-                    "id": "#awe_preprocess.tool.yaml/removed"
+                    "id": "#mg_preprocess.tool.yaml/removed"
                 }
             ], 
-            "baseCommand": "awe_preprocess.pl", 
+            "baseCommand": "mg_preprocess.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_preprocess.tool.yaml", 
+            "id": "#mg_preprocess.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/preprocess:1.0", 
@@ -1422,7 +1422,7 @@
                         "prefix": "-assembled"
                     }, 
                     "type": "int", 
-                    "id": "#awe_qc.tool.yaml/assembled"
+                    "id": "#mg_qc.tool.yaml/assembled"
                 }, 
                 {
                     "doc": "Default: <filter_ln:min_ln=<MIN>:max_ln=<MAX>:filter_ambig:max_ambig=5:dynamic_trim:min_qual=15:max_lqb=5>", 
@@ -1433,7 +1433,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_qc.tool.yaml/filter_options"
+                    "id": "#mg_qc.tool.yaml/filter_options"
                 }, 
                 {
                     "doc": "<fasta|fastq>", 
@@ -1444,7 +1444,7 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_qc.tool.yaml/format"
+                    "id": "#mg_qc.tool.yaml/format"
                 }, 
                 {
                     "default": "15,6", 
@@ -1452,7 +1452,7 @@
                         "prefix": "-kmers"
                     }, 
                     "type": "string", 
-                    "id": "#awe_qc.tool.yaml/kmers"
+                    "id": "#mg_qc.tool.yaml/kmers"
                 }, 
                 {
                     "default": "qc", 
@@ -1460,7 +1460,7 @@
                         "prefix": "-out_prefix"
                     }, 
                     "type": "string", 
-                    "id": "#awe_qc.tool.yaml/out_prefix"
+                    "id": "#mg_qc.tool.yaml/out_prefix"
                 }, 
                 {
                     "default": 8, 
@@ -1468,14 +1468,14 @@
                         "prefix": "-proc"
                     }, 
                     "type": "int", 
-                    "id": "#awe_qc.tool.yaml/proc"
+                    "id": "#mg_qc.tool.yaml/proc"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-input"
                     }, 
                     "type": "File", 
-                    "id": "#awe_qc.tool.yaml/seqfile"
+                    "id": "#mg_qc.tool.yaml/seqfile"
                 }
             ], 
             "requirements": [
@@ -1498,7 +1498,7 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/assembly"
+                    "id": "#mg_qc.tool.yaml/assembly"
                 }, 
                 {
                     "outputBinding": {
@@ -1508,7 +1508,7 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/assemblyattr"
+                    "id": "#mg_qc.tool.yaml/assemblyattr"
                 }, 
                 {
                     "outputBinding": {
@@ -1518,7 +1518,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/consensus"
+                    "id": "#mg_qc.tool.yaml/consensus"
                 }, 
                 {
                     "outputBinding": {
@@ -1528,7 +1528,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/consensusattr"
+                    "id": "#mg_qc.tool.yaml/consensusattr"
                 }, 
                 {
                     "outputBinding": {
@@ -1538,7 +1538,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/drisee"
+                    "id": "#mg_qc.tool.yaml/drisee"
                 }, 
                 {
                     "outputBinding": {
@@ -1548,7 +1548,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/driseeattr"
+                    "id": "#mg_qc.tool.yaml/driseeattr"
                 }, 
                 {
                     "outputBinding": {
@@ -1558,7 +1558,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/driseeinfo"
+                    "id": "#mg_qc.tool.yaml/driseeinfo"
                 }, 
                 {
                     "outputBinding": {
@@ -1568,7 +1568,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/driseeinfoattr"
+                    "id": "#mg_qc.tool.yaml/driseeinfoattr"
                 }, 
                 {
                     "outputBinding": {
@@ -1578,7 +1578,7 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/kmer"
+                    "id": "#mg_qc.tool.yaml/kmer"
                 }, 
                 {
                     "outputBinding": {
@@ -1588,14 +1588,14 @@
                         "items": "File", 
                         "type": "array"
                     }, 
-                    "id": "#awe_qc.tool.yaml/kmerattr"
+                    "id": "#mg_qc.tool.yaml/kmerattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).qc.stats"
                     }, 
                     "type": "File", 
-                    "id": "#awe_qc.tool.yaml/qcstats"
+                    "id": "#mg_qc.tool.yaml/qcstats"
                 }, 
                 {
                     "outputBinding": {
@@ -1605,14 +1605,14 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/qcstatsattr"
+                    "id": "#mg_qc.tool.yaml/qcstatsattr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.out_prefix).upload.stats"
                     }, 
                     "type": "File", 
-                    "id": "#awe_qc.tool.yaml/uploadstats"
+                    "id": "#mg_qc.tool.yaml/uploadstats"
                 }, 
                 {
                     "outputBinding": {
@@ -1622,12 +1622,12 @@
                         "null", 
                         "File"
                     ], 
-                    "id": "#awe_qc.tool.yaml/uploadstatsattr"
+                    "id": "#mg_qc.tool.yaml/uploadstatsattr"
                 }
             ], 
-            "baseCommand": "awe_qc.pl", 
+            "baseCommand": "mg_qc.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_qc.tool.yaml", 
+            "id": "#mg_qc.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/qc:1.0", 
@@ -1643,14 +1643,14 @@
                         "valueFrom": "$(inputs.input.basename)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_search_rna.tool.yaml/input"
+                    "id": "#mg_search_rna.tool.yaml/input"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-output"
                     }, 
                     "type": "string", 
-                    "id": "#awe_search_rna.tool.yaml/output"
+                    "id": "#mg_search_rna.tool.yaml/output"
                 }, 
                 {
                     "default": 8, 
@@ -1658,14 +1658,14 @@
                         "prefix": "-proc"
                     }, 
                     "type": "int", 
-                    "id": "#awe_search_rna.tool.yaml/proc"
+                    "id": "#mg_search_rna.tool.yaml/proc"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-rna_nr"
                     }, 
                     "type": "File", 
-                    "id": "#awe_search_rna.tool.yaml/rna_nr"
+                    "id": "#mg_search_rna.tool.yaml/rna_nr"
                 }, 
                 {
                     "default": 100, 
@@ -1673,7 +1673,7 @@
                         "prefix": "-size"
                     }, 
                     "type": "int", 
-                    "id": "#awe_search_rna.tool.yaml/size"
+                    "id": "#mg_search_rna.tool.yaml/size"
                 }
             ], 
             "requirements": [
@@ -1696,22 +1696,22 @@
                         "glob": "$(inputs.output)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_search_rna.tool.yaml/rna"
+                    "id": "#mg_search_rna.tool.yaml/rna"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "userattr.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_search_rna.tool.yaml/userattr"
+                    "id": "#mg_search_rna.tool.yaml/userattr"
                 }
             ], 
             "class": "CommandLineTool", 
             "baseCommand": [
-                "awe_search_rna.pl"
+                "mg_search_rna.pl"
             ], 
             "label": "rna detection", 
-            "id": "#awe_search_rna.tool.yaml", 
+            "id": "#mg_search_rna.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:cwl", 
@@ -1726,14 +1726,14 @@
                         "prefix": "-aa_clust"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/aa_clust"
+                    "id": "#mg_stats.tool.yaml/aa_clust"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-aa_map"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/aa_map"
+                    "id": "#mg_stats.tool.yaml/aa_map"
                 }, 
                 {
                     "default": "", 
@@ -1741,147 +1741,147 @@
                         "null", 
                         "string"
                     ], 
-                    "id": "#awe_stats.tool.yaml/api_key"
+                    "id": "#mg_stats.tool.yaml/api_key"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-api_url"
                     }, 
                     "type": "string", 
-                    "id": "#awe_stats.tool.yaml/api_url"
+                    "id": "#mg_stats.tool.yaml/api_url"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-filter"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/c"
+                    "id": "#mg_stats.tool.yaml/c"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-derep"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/derep"
+                    "id": "#mg_stats.tool.yaml/derep"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-genecall"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/genecall"
+                    "id": "#mg_stats.tool.yaml/genecall"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-job"
                     }, 
                     "type": "int", 
-                    "id": "#awe_stats.tool.yaml/job"
+                    "id": "#mg_stats.tool.yaml/job"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-m5nr_db"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/m5nr_db"
+                    "id": "#mg_stats.tool.yaml/m5nr_db"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-md5_abund"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/md5_abund"
+                    "id": "#mg_stats.tool.yaml/md5_abund"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-ann_ver"
                     }, 
                     "type": "string", 
-                    "id": "#awe_stats.tool.yaml/nr_aa_annotation_version"
+                    "id": "#mg_stats.tool.yaml/nr_aa_annotation_version"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-nr_ver"
                     }, 
                     "type": "string", 
-                    "id": "#awe_stats.tool.yaml/nr_aa_sequence_version"
+                    "id": "#mg_stats.tool.yaml/nr_aa_sequence_version"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-ont_hier"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/ont_hier"
+                    "id": "#mg_stats.tool.yaml/ont_hier"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-ontol"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/ontol"
+                    "id": "#mg_stats.tool.yaml/ontol"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-post_qc"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/post_qc"
+                    "id": "#mg_stats.tool.yaml/post_qc"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-preproc"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/preproc"
+                    "id": "#mg_stats.tool.yaml/preproc"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-qc"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/qc"
+                    "id": "#mg_stats.tool.yaml/qc"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-rna_clust"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/rna_clust"
+                    "id": "#mg_stats.tool.yaml/rna_clust"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-rna_map"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/rna_map"
+                    "id": "#mg_stats.tool.yaml/rna_map"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-search"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/search"
+                    "id": "#mg_stats.tool.yaml/search"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-source"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/source"
+                    "id": "#mg_stats.tool.yaml/source"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-taxa_hier"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/taxa_hier"
+                    "id": "#mg_stats.tool.yaml/taxa_hier"
                 }, 
                 {
                     "inputBinding": {
                         "prefix": "-upload"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/upload"
+                    "id": "#mg_stats.tool.yaml/upload"
                 }
             ], 
             "requirements": [
@@ -1913,117 +1913,117 @@
                         "glob": "$(inputs.aa_clust).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/aaClustAttr"
+                    "id": "#mg_stats.tool.yaml/aaClustAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.aa_clust)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/aaClustFile"
+                    "id": "#mg_stats.tool.yaml/aaClustFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.aa_map).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/aaMapAttr"
+                    "id": "#mg_stats.tool.yaml/aaMapAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.aa_map)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/aaMapFile"
+                    "id": "#mg_stats.tool.yaml/aaMapFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.genecall).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/genecallAttr"
+                    "id": "#mg_stats.tool.yaml/genecallAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.genecall)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/genecallFile"
+                    "id": "#mg_stats.tool.yaml/genecallFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.rna_clust).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/rnaClustAttr"
+                    "id": "#mg_stats.tool.yaml/rnaClustAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.rna_clust)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/rnaClustFile"
+                    "id": "#mg_stats.tool.yaml/rnaClustFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.rna_map).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/rnaMapAttr"
+                    "id": "#mg_stats.tool.yaml/rnaMapAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.rna_map)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/rnaMapFile"
+                    "id": "#mg_stats.tool.yaml/rnaMapFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.post_qc).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/screenAttr"
+                    "id": "#mg_stats.tool.yaml/screenAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.post_qc)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/screenFile"
+                    "id": "#mg_stats.tool.yaml/screenFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.search).json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/searchAttr"
+                    "id": "#mg_stats.tool.yaml/searchAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.search)"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/searchFile"
+                    "id": "#mg_stats.tool.yaml/searchFile"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.job).statistics.json.attr"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/statisticsAttr"
+                    "id": "#mg_stats.tool.yaml/statisticsAttr"
                 }, 
                 {
                     "outputBinding": {
                         "glob": "$(inputs.job).statistics.json"
                     }, 
                     "type": "File", 
-                    "id": "#awe_stats.tool.yaml/statisticsFile"
+                    "id": "#mg_stats.tool.yaml/statisticsFile"
                 }
             ], 
-            "baseCommand": "awe_stats.pl", 
+            "baseCommand": "mg_stats.pl", 
             "class": "CommandLineTool", 
-            "id": "#awe_stats.tool.yaml", 
+            "id": "#mg_stats.tool.yaml", 
             "hints": [
                 {
                     "dockerPull": "mgrast/dbload:1.0", 
@@ -2391,7 +2391,7 @@
                         "#main/annotateAA/lca", 
                         "#main/annotateAA/ontology"
                     ], 
-                    "run": "#awe_annotate_aa_sims.tool.yaml", 
+                    "run": "#mg_annotate_aa_sims.tool.yaml", 
                     "id": "#main/annotateAA", 
                     "in": [
                         {
@@ -2427,7 +2427,7 @@
                         "#main/annotateRNA/feature", 
                         "#main/annotateRNA/lca"
                     ], 
-                    "run": "#awe_annotate_rna_sims.tool.yaml", 
+                    "run": "#mg_annotate_rna_sims.tool.yaml", 
                     "id": "#main/annotateRNA", 
                     "in": [
                         {
@@ -2458,7 +2458,7 @@
                         "#main/clusterAA/fasta", 
                         "#main/clusterAA/mapping"
                     ], 
-                    "run": "#awe_cluster_aa.tool.yaml", 
+                    "run": "#mg_cluster_aa.tool.yaml", 
                     "id": "#main/clusterAA", 
                     "in": [
                         {
@@ -2485,7 +2485,7 @@
                         "#main/clusterRNA/fasta", 
                         "#main/clusterRNA/mapping"
                     ], 
-                    "run": "#awe_cluster.tool.yaml", 
+                    "run": "#mg_cluster.tool.yaml", 
                     "id": "#main/clusterRNA", 
                     "in": [
                         {
@@ -2532,7 +2532,7 @@
                         "#main/dereplication/removed", 
                         "#main/dereplication/attributes"
                     ], 
-                    "run": "#awe_dereplicate.tool.yaml", 
+                    "run": "#mg_dereplicate.tool.yaml", 
                     "id": "#main/dereplication", 
                     "in": [
                         {
@@ -2566,7 +2566,7 @@
                     "out": [
                         "#main/filterRNA/filtered"
                     ], 
-                    "run": "#awe_filter_feature.tool.yaml", 
+                    "run": "#mg_filter_feature.tool.yaml", 
                     "id": "#main/filterRNA", 
                     "in": [
                         {
@@ -2620,7 +2620,7 @@
                         "#main/finalStats/aaMapAttr"
                     ], 
                     "label": "done stage", 
-                    "run": "#awe_stats.tool.yaml", 
+                    "run": "#mg_stats.tool.yaml", 
                     "id": "#main/finalStats", 
                     "in": [
                         {
@@ -2718,7 +2718,7 @@
                         "#main/genecalling/fna", 
                         "#main/genecalling/faa"
                     ], 
-                    "run": "#awe_genecalling.tool.yaml", 
+                    "run": "#mg_genecalling.tool.yaml", 
                     "id": "#main/genecalling", 
                     "in": [
                         {
@@ -2751,7 +2751,7 @@
                     "out": [
                         "#main/indexSims/index"
                     ], 
-                    "run": "#awe_index_sim_seq.tool.yaml", 
+                    "run": "#mg_index_sim_seq.tool.yaml", 
                     "id": "#main/indexSims", 
                     "in": [
                         {
@@ -2833,7 +2833,7 @@
                             "id": "#main/loadCass/mgid"
                         }
                     ], 
-                    "run": "#awe_load_cass.tool.yaml", 
+                    "run": "#mg_load_cass.tool.yaml", 
                     "id": "#main/loadCass", 
                     "out": [
                         "#main/loadCass/log", 
@@ -2856,7 +2856,7 @@
                         "#main/preprocess/removed", 
                         "#main/preprocess/passed"
                     ], 
-                    "run": "#awe_preprocess.tool.yaml", 
+                    "run": "#mg_preprocess.tool.yaml", 
                     "id": "#main/preprocess", 
                     "in": [
                         {
@@ -2888,7 +2888,7 @@
                         "#main/qc/qcstats", 
                         "#main/qc/uploadstats"
                     ], 
-                    "run": "#awe_qc.tool.yaml", 
+                    "run": "#mg_qc.tool.yaml", 
                     "id": "#main/qc", 
                     "in": [
                         {
@@ -2930,7 +2930,7 @@
                         "#main/screen/passed", 
                         "#main/screen/passedAttr"
                     ], 
-                    "run": "#awe_bowtie_screen.tool.yaml", 
+                    "run": "#mg_bowtie_screen.tool.yaml", 
                     "id": "#main/screen", 
                     "in": [
                         {
@@ -2968,7 +2968,7 @@
                     "out": [
                         "#main/searchRNA/rna"
                     ], 
-                    "run": "#awe_search_rna.tool.yaml", 
+                    "run": "#mg_search_rna.tool.yaml", 
                     "id": "#main/searchRNA", 
                     "in": [
                         {
@@ -2990,7 +2990,7 @@
                     "out": [
                         "#main/simsAA/sims"
                     ], 
-                    "run": "#awe_blat_protein.tool.yaml", 
+                    "run": "#mg_blat_protein.tool.yaml", 
                     "id": "#main/simsAA", 
                     "in": [
                         {
@@ -3028,7 +3028,7 @@
                     "out": [
                         "#main/simsRNA/sims"
                     ], 
-                    "run": "#awe_blat_rna.tool.yaml", 
+                    "run": "#mg_blat_rna.tool.yaml", 
                     "id": "#main/simsRNA", 
                     "in": [
                         {
@@ -3059,7 +3059,7 @@
                         "#main/summaryLCA/abundance"
                     ], 
                     "label": "lca abundance", 
-                    "run": "#awe_annotate_summary.tool.yaml", 
+                    "run": "#mg_annotate_summary.tool.yaml", 
                     "id": "#main/summaryLCA", 
                     "in": [
                         {
@@ -3100,7 +3100,7 @@
                         "#main/summaryMD5/abundance"
                     ], 
                     "label": "md5 abundance", 
-                    "run": "#awe_annotate_summary.tool.yaml", 
+                    "run": "#mg_annotate_summary.tool.yaml", 
                     "id": "#main/summaryMD5", 
                     "in": [
                         {
@@ -3145,7 +3145,7 @@
                         "#main/summarySource/abundance"
                     ], 
                     "label": "source abundance", 
-                    "run": "#awe_annotate_summary.tool.yaml", 
+                    "run": "#mg_annotate_summary.tool.yaml", 
                     "id": "#main/summarySource", 
                     "in": [
                         {

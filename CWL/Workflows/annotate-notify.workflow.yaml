@@ -112,7 +112,7 @@ outputs:
         
 steps:
   aa:
-    run: ../Tools/awe_annotate_aa_sims.tool.yaml
+    run: ../Tools/mg_annotate_aa_sims.tool.yaml
     in:
       input: sims_aa 
       # input: simsAA/sims
@@ -130,7 +130,7 @@ steps:
     out: [filter,protein,lca,ontology]
 
   rna:
-    run: ../Tools/awe_annotate_rna_sims.tool.yaml
+    run: ../Tools/mg_annotate_rna_sims.tool.yaml
     in:
       # input: simsRNA/sims
       input: sims_rna
@@ -143,7 +143,7 @@ steps:
     out: [filter, feature, lca]
   
   index:
-    run: ../Tools/awe_index_sim_seq.tool.yaml
+    run: ../Tools/mg_index_sim_seq.tool.yaml
     requirements:
       - class: EnvVarRequirement
       # No option to mask/mark env virables as private
@@ -164,7 +164,7 @@ steps:
     
   summaryMD5:
     label: md5 abundance
-    run: ../Tools/awe_annotate_summary.tool.yaml
+    run: ../Tools/mg_annotate_summary.tool.yaml
     in:
       in_expand: [ aa/filter , rna/filter ]
       in_maps: in_maps
@@ -179,7 +179,7 @@ steps:
     out: [abundance]                     
   summaryLCA:
     label: lca abundance
-    run: ../Tools/awe_annotate_summary.tool.yaml
+    run: ../Tools/mg_annotate_summary.tool.yaml
     # -in_expand=@[% job_id %].650.aa.expand.lca 
     # -in_expand=@[% job_id %].450.rna.expand.lca
     # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
@@ -202,7 +202,7 @@ steps:
       
   summarySource:
     label: source abundance
-    run: ../Tools/awe_annotate_summary.tool.yaml
+    run: ../Tools/mg_annotate_summary.tool.yaml
     # -in_expand=@[% job_id %].650.aa.expand.protein 
     # -in_expand=@[% job_id %].450.rna.expand.rna 
     # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
@@ -225,7 +225,7 @@ steps:
     
   loadCass:
     label: abundance cassandra load
-    run: ../Tools/awe_load_cass.tool.yaml
+    run: ../Tools/mg_load_cass.tool.yaml
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -248,7 +248,7 @@ steps:
 
   finalStats:
     label: done stage
-    run: ../Tools/awe_stats.tool.yaml
+    run: ../Tools/mg_stats.tool.yaml
     # -job=[% job_id %] 
     # -nr_ver=[% ach_sequence_ver %] 
     # -ann_ver=[% ach_annotation_ver %] 
@@ -325,7 +325,7 @@ steps:
  #
  #  notif:
  #    label: notify job completion
- #    run: ../Tools/awe_stats.tool.yaml
+ #    run: ../Tools/mg_stats.tool.yaml
  #    in:
  #    out: []
  #
