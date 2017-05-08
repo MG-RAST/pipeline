@@ -1,0 +1,61 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mg_bowtie_screen.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/bowtie_screen:1.0
+
+
+requirements:
+  - class: InlineJavascriptRequirement
+  - class: InitialWorkDirRequirement
+    listing: |
+      ${
+        var listing = inputs.indexDir.listing;
+        listing.push(inputs.input);
+        return listing;
+       }
+  
+
+inputs:
+    input:
+      type: File
+      inputBinding:
+        # valueFrom: $(self.basename)
+        prefix: -input
+    output:
+      type: string
+      inputBinding:
+        prefix: -output
+    index:
+      type: string
+      inputBinding:
+        prefix: -index
+    proc:
+      type: int
+      default: 8
+      inputBinding:
+        prefix: -proc
+    bowtie:
+      type: int
+      default: 1
+      inputBinding:
+        prefix: -bowtie
+    indexDir:
+      type: Directory
+    no-shock:
+      type: boolean?
+      default: false
+      inputBinding:
+        prefix: -no-shock                      
+  
+outputs:
+  passed:
+    type: File
+    outputBinding:
+      glob: $(inputs.output)
+  passedAttr:
+    type: File?
+    outputBinding:
+      glob: userattr.json                 

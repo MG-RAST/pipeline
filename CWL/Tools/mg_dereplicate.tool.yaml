@@ -1,0 +1,66 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mg_dereplicate.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/dereplicate:1.0
+
+requirements:
+  - class: InitialWorkDirRequirement
+    listing:
+      - $(inputs.input)
+      - entryname: userattr.json
+        entry: |
+                {
+                  "stage_id": "150",
+                  "stage_name": "dereplication",
+                  "file_format": "fasta",
+                  "seq_format": "bp"
+                }
+  
+inputs:
+    input:
+      type: File
+      inputBinding:
+        valueFrom: $(self.basename)
+        prefix: -input
+    memory:
+      type: int
+      default: $(runtime.ram)
+      inputBinding:
+        prefix: -memory
+    out_prefix:
+      type: string
+      default: derep
+      inputBinding:
+        prefix: -out_prefix
+    prefix_length:
+      type: int
+      default: 50
+      inputBinding:
+        prefix: -prefix_length
+    dereplicate:
+      type: int
+      default: 1
+      inputBinding:
+        prefix: -dereplicate
+    no-shock:
+      type: boolean?
+      default: false
+      inputBinding:
+        prefix: -no-shock                
+  
+outputs:
+  passed:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).passed.fna
+  removed:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).removed.fna
+  attributes:
+    type: File[]?
+    outputBinding:
+      glob: "*.json"              

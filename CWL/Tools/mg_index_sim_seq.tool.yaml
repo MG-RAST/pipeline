@@ -1,0 +1,70 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mg_index_sim_seq.pl
+
+
+requirements:
+  - class: InlineJavascriptRequirement
+  - class: InitialWorkDirRequirement
+    listing: |
+      ${
+        var listing = inputs.in_seqs;
+        listing.concat(inputs.in_maps);
+        listing.concat(inputs.in_sims);
+        return listing;
+       }
+       
+#      # - entryname: userattr.json
+#         entry: |
+#           {
+#              "stage_id": "700",
+#              "stage_name": "filter.sims",
+#              "m5nr_annotation_version": "$(inputs.m5nr_version)",
+#              "m5rna_annotation_version": "$(inputs.m5nr_version)"
+#           }
+          
+  
+stdout: index_sim.out.log
+stderr: index_sim.error.log
+
+inputs:
+  in_seqs: 
+    type: File[]
+    inputBinding: 
+      prefix: -in_seqs
+  in_maps: 
+    type: File[]
+    inputBinding: 
+      prefix: -in_maps
+  in_sims: 
+    type: File[]
+    inputBinding: 
+      prefix: -in_sims
+  memory: 
+    type: int?
+    default: $(runtime.ram)
+    inputBinding:
+      prefix: -memory
+  output: 
+    type: string
+    inputBinding:
+      prefix: -output
+  m5nr_version: string
+                            
+    
+outputs:
+  stdout:
+    type: stdout
+  error: 
+    type: stderr
+  sims:
+    type: File
+    outputBinding:
+      glob: $(inputs.output)
+  index:
+    type: File?
+    outputBinding:
+      glob: $(inputs.output).index    
+ 
+    
+
