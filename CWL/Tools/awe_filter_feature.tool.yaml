@@ -41,7 +41,7 @@ inputs:
       prefix: -output
   memory:
     type: int
-    default: 8
+    default: $(runtime.ram)
     inputBinding:
       prefix: -memory
   overlap:
