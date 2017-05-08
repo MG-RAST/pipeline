@@ -42,7 +42,7 @@ inputs:
       prefix: -in_sims
   memory: 
     type: int?
-    default: 10
+    default: $(runtime.ram)
     inputBinding:
       prefix: -memory
   output: 
