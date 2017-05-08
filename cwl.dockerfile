@@ -143,8 +143,9 @@ RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"  \
   && rm get-pip.py
 
 # copy files into image
-COPY awecmd/* bin/* /usr/local/bin/
+COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
+RUN for i in /usr/local/bin/mg_* ; do awe=`echo $i | sed -e "s/mg_/awe_/g"` ; ln -s $i $awe ; done
 # COPY superblat /usr/local/bin/
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
 
