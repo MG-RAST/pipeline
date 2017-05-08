@@ -20,18 +20,21 @@ my $index_ids = {
 };
 
 # options
-my $fasta  = "";
-my $output = "";
-my $run_bowtie = 1;
-my $index   = "";
-my $proc    = 8;
-my $help    = 0;
+my $fasta       = "";
+my $output      = "";
+my $run_bowtie  = 1;
+my $index       = "";
+my $proc        = 8;
+my $help        = 0;
+my $do_not_create_index_files = 0 ;
+
 my $options = GetOptions (
-        "input=s"  => \$fasta,
+    "input=s"  => \$fasta,
 		"output=s" => \$output,
 		"index=s"  => \$index,
 		"proc=i"   => \$proc,
 		"bowtie=i" => \$run_bowtie,
+    "no-shock" => \$do_not_create_index_files,
 		"help!"    => \$help
 );
 
@@ -84,11 +87,14 @@ else {
     }
     PipelineAWE::run_cmd("mv $tmp_input_var $output");
 
+    
     # create subset record list
     # note: parent and child files in same order
-    PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -s -m 20");
-    PipelineAWE::run_cmd("mv $output.index $output");
-}
+    if (not $do_not_create_index_files ) {
+      PipelineAWE::run_cmd("index_subset_seq.py -p $fasta -c $output -s -m 20");
+      PipelineAWE::run_cmd("mv $output.index $output");
+    }
+  }
 
 exit 0;
 

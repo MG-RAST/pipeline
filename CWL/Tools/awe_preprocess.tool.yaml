@@ -1,0 +1,60 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: awe_preprocess.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/preprocess:1.0
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "100",
+            "stage_name": "preprocess",
+            "file_format": "fasta",
+            "seq_format": "bp"
+          }
+  
+inputs:
+    input:
+      type: File
+      inputBinding:
+        prefix: -input
+    format:
+      doc: "fasta or fastq"
+      type: string?
+      inputBinding:
+        prefix: -format
+    out_prefix:
+      type: string
+      default: prep
+      inputBinding:
+        prefix: -out_prefix
+    filter_options:
+      type: string?
+      default: "dynamic_trim:min_qual=15:max_lqb=5"
+      inputBinding:
+        prefix: -filter_options
+    no-shock:
+      type: boolean?
+      default: false
+      inputBinding:
+        prefix: -no-shock
+                  
+  
+outputs:
+  passed:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).passed.fna
+  removed:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).removed.fna
+  attributes:
+    type: File[]?
+    outputBinding:
+      glob: "*.json"              

@@ -2,55 +2,62 @@ cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: awe_annotate_summary.pl
 
-my %types = (
-    md5      => 1,
-    ontology => 1,
-    function => 1,
-    organism => 1,
-    source   => 1,
-    lca      => 1
-);
-my @in_expand = ();
-my @in_maps   = ();
-my $in_index  = "";
-my $in_assemb = "";
-my $output  = "";
-my $type    = "";
-my $help    = 0;
-my $options = GetOptions (
-                "in_expand=s"  => \@in_expand,
-                "in_maps=s"    => \@in_maps,
-                "in_index=s"   => \$in_index,
-                "in_assemb=s"  => \$in_assemb,
-                "output=s"     => \$output,
-                "type=s"       => \$type,
-                "help!"        => \$help
-);
+label:  abundance files
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/annotate:1.0
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "700",
+            "stage_name": "annotation.summary",
+            "m5nr_annotation_version": $(inputs.nr_version),
+            "m5rna_annotation_version": $(inputs.nr_version),
+            "file_format": "abundance table",
+            "data_type": $(inputs.abundanceType)
+          }
 
 inputs:
   in_expand:
     type: File[]
+    inputBinding:
+      prefix: -in_expand
   in_maps:
     type: File[]
-  in_index:
-    doc: "Required with type: md5"
-    type: File[]?
+    inputBinding:
+      prefix: -in_maps
   in_assemb:
-    doc: "Coverage file for assembly"
     type: File?
+    inputBinding:
+      prefix: -in_assemb
+  in_index:
+    type: File?
+    inputBinding:
+      prefix: -in_index
+  abundanceType:
+    type: string
+    doc: <md5|ontology|function|organism|source|lca>
+    inputBinding:
+      prefix: -type
+  nr_version:
+    type: string    
   output:
-    doc: "Name of output file"
     type: string
-  type:
-    doc: "Accepted values: md5,ontology,function,organism,source,lca"
-    type: string
-  help:
-    type: boolean
-    default: false    
+    inputBinding:
+      prefix: -output
       
-   
-  
 outputs:
-  summary:
+  abundance:
     type: File
-    glob: $(self.inputs.output)
+    outputBinding:
+      glob: $(inputs.output)
+  abundanceattr:
+    type: File
+    outputBinding:
+      glob: userattr.json  
+  

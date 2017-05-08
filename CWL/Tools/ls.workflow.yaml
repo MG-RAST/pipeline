@@ -1,0 +1,30 @@
+cwlVersion: v1.0
+class: Workflow
+
+  
+inputs:
+ myFile: File
+ myDir: Directory
+ sortBySize: 
+   type: boolean?
+   default: true
+    
+      
+
+outputs:
+  summary:
+    type: File
+    outputSource: getSummary/output
+  
+  
+        
+steps:
+  getSummary:
+    run: ../Tools/ls.tool.yaml
+    in:
+      myfile: myFile
+      mydir: myDir
+      exclusive_parameters:
+        bysize: sortBySize
+       
+    out: [output,error]  

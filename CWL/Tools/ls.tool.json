@@ -1,0 +1,33 @@
+{
+  "cwlVersion": "v1.0",
+  "class": "CommandLineTool",
+  "baseCommand": [
+    "ls",
+    "-l",
+    "."
+  ],
+  "hints": {
+    "DockerRequirement": {
+      "dockerPull": "mgrast/pipeline:cwl"
+    }
+  },
+  "requirements": [
+    {
+      "class": "InitialWorkDirRequirement",
+      "listing": [
+        "$(inputs.in.listing)" ,
+        "$(inputs.fasta)"
+      ]
+    }
+  ],
+  "stdout": "ls.log",
+  "stderr": "error.log",
+  "inputs": {
+    "in": "Directory",
+    "fasta": "File"
+  },
+  "outputs": {
+    "output": "stdout",
+    "error": "stderr"
+  }
+}

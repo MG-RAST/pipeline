@@ -1,0 +1,63 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: [awe_cluster.pl , "-aa"]
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+label: "aa clustering"
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+           "stage_id": "550",
+            "stage_name": "protein.cluster",
+            "seq_format": "aa",
+            "cluster_percent": "$(inputs.pid)"
+          }
+
+
+inputs:
+  input:
+    type: File
+    inputBinding:
+      prefix: -input
+  out_prefix:
+    type: string
+    inputBinding:
+      prefix: -out_prefix
+  pid:
+    type: int
+    inputBinding:
+      prefix: -pid
+  memory:
+    type: int
+    default: $(runtime.ram)
+    default: 20
+    inputBinding:
+      prefix: -memory
+               
+  
+                        
+outputs:
+  fasta:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).*.faa
+  fasta_userattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).*.faa.json
+  mapping:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).*.mapping
+  mapping_userattr:
+    type: File
+    outputBinding:
+      glob: $(inputs.out_prefix).*.mapping.json
+        
