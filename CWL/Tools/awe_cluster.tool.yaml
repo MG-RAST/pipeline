@@ -36,6 +36,7 @@ inputs:
       prefix: -pid
   memory:
     type: int
+    default: $(runtime.ram)
     inputBinding:
       prefix: -memory
   exclusive_parameters:
