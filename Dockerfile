@@ -51,6 +51,7 @@ RUN apt-get update && apt-get install -y \
 	perl-modules \
    	python-numpy \
 	python-pika \
+  python-pip \
 	python-scipy \
 	python-sphinx \
 	unzip \
@@ -133,8 +134,5 @@ RUN cd /root \
 	&& cd sortmerna-2.1b \
 	&& ./configure && make install && make clean
 
-### install simka
-#RUN cd /root \
-#	&& git clone https://github.com/GATB/simka.git \
-#	&& cd simka \
-#	&& sh INSTALL \
+### install CWL runner
+RUN pip install cwlref-runner
