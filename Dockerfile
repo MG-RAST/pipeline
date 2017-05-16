@@ -1,5 +1,4 @@
 # MG-RAST dockerfiles
-# docker build -t mgrast/pipeline-base -f Dockerfile_base . && docker push mgrast/pipeline-base
 
 FROM	debian
 MAINTAINER The MG-RAST team
