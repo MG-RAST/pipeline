@@ -97,17 +97,6 @@ RUN cd /root \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root ; rm -rf /root/diamond
 	
-### install vsearch 2.40
-RUN cd /root \
-	&& wget https://github.com/torognes/vsearch/archive/v2.4.0.tar.gz \
-	&& tar xzf v2.4.0.tar.gz \
-	&& cd vsearch-2.4.0 \
-	&& sh ./autogen.sh \
-	&& ./configure --prefix=/usr/local/ \
-	&& make \
-	&& make install \
-	&& make clean \
-	&& cd /root ; rm -rf /root/vsearch-2* 
 
 ### install swarm 2.1.9
 RUN cd /root \
@@ -133,5 +122,16 @@ RUN cd /root \
 	&& cd sortmerna-2.1b \
 	&& ./configure && make install && make clean
 
+### install vsearch 2.43
+RUN cd /root \
+        && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
+	&& tar xzf v2*.tar.gz \
+	&& cd vsearch-2* \
+	&& sh ./autogen.sh \
+	&& ./configure --prefix=/usr/local/ \
+	&& make \
+	&& make install \
+	&& make clean \
+	&& cd /root ; rm -rf /root/vsearch-2* 
 ### install CWL runner
 RUN pip install cwlref-runner
