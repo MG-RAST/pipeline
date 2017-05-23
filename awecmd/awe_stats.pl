@@ -260,6 +260,9 @@ my $solrdata = {
 };
 PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
+# ES metadata update
+PipelineAWE::obj_from_url($api_url."/search/$mgid", $api_key);
+
 # done done !!
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
 PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
