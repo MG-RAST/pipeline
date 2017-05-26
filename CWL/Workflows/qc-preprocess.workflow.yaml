@@ -46,7 +46,7 @@ outputs:
 
 steps:
   qc:
-    run: ../Tools/mg_qc.tool.yaml
+    run: ../Tools/mgrast_qc.tool.yaml
     in:
       seqfile: sequences
       format: seqformat
@@ -59,8 +59,8 @@ steps:
     out: [assembly,qcstats,uploadstats]
 
   preprocess:
-    # run: mg_preprocess.tool.yaml
-    run: ../Tools/mg_preprocess.tool.yaml
+    # run: mgrast_preprocess.tool.yaml
+    run: ../Tools/mgrast_preprocess.tool.yaml
     requirements:
       - class: EnvVarRequirement
       # No option to mask/mark env virables as private
@@ -78,7 +78,7 @@ steps:
     out: [removed,passed]
     
   dereplication:
-    run: ../Tools/mg_dereplicate.tool.yaml 
+    run: ../Tools/mgrast_dereplicate.tool.yaml 
     requirements:
       - class: InitialWorkDirRequirement
         listing:

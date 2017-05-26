@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: mg_filter_feature.pl
+baseCommand: mgrast_filter_feature.pl
 
 hints:
   DockerRequirement:

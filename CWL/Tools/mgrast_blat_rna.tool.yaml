@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: mg_blat_rna.pl
+baseCommand: mgrast_blat_rna.pl
 
 hints:
   DockerRequirement:

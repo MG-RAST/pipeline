@@ -163,7 +163,7 @@ outputs:
 
 steps:
   qc:
-    run: ../Tools/mg_qc.tool.yaml
+    run: ../Tools/mgrast_qc.tool.yaml
     in:
       seqfile: sequences
       format: seqformat
@@ -176,8 +176,8 @@ steps:
     out: [assembly,qcstats,uploadstats]
 
   preprocess:
-    # run: mg_preprocess.tool.yaml
-    run: ../Tools/mg_preprocess.tool.yaml
+    # run: mgrast_preprocess.tool.yaml
+    run: ../Tools/mgrast_preprocess.tool.yaml
     requirements:
       - class: EnvVarRequirement
       # No option to mask/mark env virables as private
@@ -197,7 +197,7 @@ steps:
  
   # dereplicate-screen
   dereplication:
-    run: ../Tools/mg_dereplicate.tool.yaml 
+    run: ../Tools/mgrast_dereplicate.tool.yaml 
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -221,7 +221,7 @@ steps:
     out: [passed , removed , attributes]
     
   screen:
-    run: ../Tools/mg_bowtie_screen.tool.yaml
+    run: ../Tools/mgrast_bowtie_screen.tool.yaml
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -251,7 +251,7 @@ steps:
     
   # RNA
   searchRNA:
-    run: ../Tools/mg_search_rna.tool.yaml
+    run: ../Tools/mgrast_search_rna.tool.yaml
     in:
       input: preprocess/passed
       output:
@@ -262,7 +262,7 @@ steps:
     out: [rna]
 
   clusterRNA:
-    run: ../Tools/mg_cluster.tool.yaml
+    run: ../Tools/mgrast_cluster.tool.yaml
     in:
       input: searchRNA/rna
       out_prefix:
@@ -278,7 +278,7 @@ steps:
     out: [fasta,mapping]
 
   simsRNA:
-    run: ../Tools/mg_blat_rna.tool.yaml
+    run: ../Tools/mgrast_blat_rna.tool.yaml
     in:
       input: clusterRNA/fasta
       output:
@@ -291,7 +291,7 @@ steps:
     
   # AA
   genecalling:
-    run: ../Tools/mg_genecalling.tool.yaml
+    run: ../Tools/mgrast_genecalling.tool.yaml
     in:
       input: screen/passed
       out_prefix: 
@@ -305,7 +305,7 @@ steps:
     out: [fna,faa]
 
   filterRNA:
-    run: ../Tools/mg_filter_feature.tool.yaml
+    run: ../Tools/mgrast_filter_feature.tool.yaml
     in:
       in_clust: clusterRNA/mapping
       in_sim: simsRNA/sims
@@ -319,7 +319,7 @@ steps:
     out: [filtered]
     
   clusterAA:
-    run: ../Tools/mg_cluster_aa.tool.yaml     
+    run: ../Tools/mgrast_cluster_aa.tool.yaml     
     in:      
       input: filterRNA/filtered 
       out_prefix:
@@ -330,7 +330,7 @@ steps:
     out: [fasta , mapping]
   
   simsAA:
-    run: ../Tools/mg_blat_protein.tool.yaml
+    run: ../Tools/mgrast_blat_protein.tool.yaml
     in:
       input: clusterAA/fasta
       output: 
@@ -346,7 +346,7 @@ steps:
     
   # annotate
   annotateAA:
-    run: ../Tools/mg_annotate_aa_sims.tool.yaml
+    run: ../Tools/mgrast_annotate_aa_sims.tool.yaml
     in:
       input: simsAA/sims
       out_prefix: 
@@ -363,7 +363,7 @@ steps:
     out: [filter,protein,lca,ontology]
 
   annotateRNA:
-    run: ../Tools/mg_annotate_rna_sims.tool.yaml
+    run: ../Tools/mgrast_annotate_rna_sims.tool.yaml
     in:
       input: simsRNA/sims
       out_prefix: 
@@ -375,7 +375,7 @@ steps:
     out: [filter, feature, lca]    
     
   indexSims:
-    run: ../Tools/mg_index_sim_seq.tool.yaml
+    run: ../Tools/mgrast_index_sim_seq.tool.yaml
     requirements:
       - class: EnvVarRequirement
       # No option to mask/mark env virables as private
@@ -396,7 +396,7 @@ steps:
 
   summaryMD5:
     label: md5 abundance
-    run: ../Tools/mg_annotate_summary.tool.yaml
+    run: ../Tools/mgrast_annotate_summary.tool.yaml
     in:
       in_expand: [ annotateAA/filter , annotateRNA/filter ]
       in_maps: [ clusterAA/mapping  , clusterRNA/mapping  ]
@@ -412,7 +412,7 @@ steps:
                          
   summaryLCA:
     label: lca abundance
-    run: ../Tools/mg_annotate_summary.tool.yaml
+    run: ../Tools/mgrast_annotate_summary.tool.yaml
     # -in_expand=@[% job_id %].650.aa.expand.lca 
     # -in_expand=@[% job_id %].450.rna.expand.lca
     # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
@@ -435,7 +435,7 @@ steps:
       
   summarySource:
     label: source abundance
-    run: ../Tools/mg_annotate_summary.tool.yaml
+    run: ../Tools/mgrast_annotate_summary.tool.yaml
     # -in_expand=@[% job_id %].650.aa.expand.protein 
     # -in_expand=@[% job_id %].450.rna.expand.rna 
     # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
@@ -458,7 +458,7 @@ steps:
     
   loadCass:
     label: abundance cassandra load
-    run: ../Tools/mg_load_cass.tool.yaml
+    run: ../Tools/mgrast_load_cass.tool.yaml
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -481,7 +481,7 @@ steps:
 
   finalStats:
     label: done stage
-    run: ../Tools/mg_stats.tool.yaml
+    run: ../Tools/mgrast_stats.tool.yaml
     # -job=[% job_id %] 
     # -nr_ver=[% ach_sequence_ver %] 
     # -ann_ver=[% ach_annotation_ver %] 

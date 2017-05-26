@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: mg_annotate_sims.pl
+baseCommand: mgrast_annotate_sims.pl
 
 label: "aa sims annotation"
 
