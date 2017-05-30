@@ -40,7 +40,7 @@ outputs:
 steps:
     
   dereplication:
-    run: ../Tools/awe_dereplicate.tool.yaml 
+    run: ../Tools/mgrast_dereplicate.tool.yaml 
     requirements:
       - class: InitialWorkDirRequirement
         listing:
@@ -63,7 +63,7 @@ steps:
     out: [passed , removed , attributes]
     
   screen:
-    run: ../Tools/awe_bowtie_screen.tool.yaml
+    run: ../Tools/mgrast_bowtie_screen.tool.yaml
     requirements:
       - class: InitialWorkDirRequirement
         listing:

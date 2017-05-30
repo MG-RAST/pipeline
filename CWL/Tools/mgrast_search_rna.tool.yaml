@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: ["awe_search_rna.pl"]
+baseCommand: ["mgrast_search_rna.pl"]
 
 hints:
   DockerRequirement:

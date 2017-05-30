@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_seq_length_stats.pl
+baseCommand: mgrast_seq_length_stats.pl
 
 inputs:
   input:

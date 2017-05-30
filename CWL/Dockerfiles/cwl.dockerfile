@@ -12,58 +12,51 @@ ENV LC_ALL C.UTF-8
 RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
 
 RUN apt-get update && apt-get install -y \
-	bowtie2 	\
-	cdbfasta 	\
-	cd-hit		\
-	cmake \
-	dh-autoreconf \
-	git 		\
-	jellyfish 	\
-	libcwd-guard-perl \
-	libberkeleydb-perl \
-	libdata-dump-streamer-perl \
-	libdatetime-perl \
-	libdatetime-format-iso8601-perl \
-	libdbi-perl 	\
-	libdigest-md5-perl \
-	libdigest-md5-file-perl \
-	libdbd-pg-perl \
-	libfile-slurp-perl \
-	libfilehandle-fmode-perl \
-	libgetopt-long-descriptive-perl \
-	libjson-perl \
-	liblist-allutils-perl \
-	libpq-dev \
-	libpng-dev \
-	libposix-strptime-perl \
-	libstring-random-perl \
-	libtemplate-perl \
-	liburi-encode-perl \
-	libunicode-escape-perl \
-	libwww-perl \
-	liblog-log4perl-perl \
-	libcapture-tiny-perl \
-	make 		\
-	python-biopython \
-	python-dev \
-	python-leveldb \
-	perl-modules \
-   	python-numpy \
-	python-pika \
-  python-pip \
-	python-scipy \
-	python-sphinx \
-	unzip \
-	wget \
-	curl
-
-
-# copy files into image
-COPY mgcmd/* bin/* /usr/local/bin/
-COPY lib/* /usr/local/lib/site_perl/
-COPY superblat /usr/local/bin/
-RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
+  bowtie2 	\
+  cd-hit		\
+  cdbfasta 	\
+  cmake \
+  curl \
+  dh-autoreconf \
+  git 		\
+  jellyfish 	\
+  libberkeleydb-perl \
+  libcapture-tiny-perl \
+  libcwd-guard-perl \
+  libdata-dump-streamer-perl \
+  libdatetime-format-iso8601-perl \
+  libdatetime-perl \
+  libdbd-pg-perl \
+  libdbi-perl 	\
+  libdigest-md5-file-perl \
+  libdigest-md5-perl \
+  libfile-slurp-perl \
+  libfilehandle-fmode-perl \
+  libgetopt-long-descriptive-perl \
+  libjson-perl \
+  liblist-allutils-perl \
+  liblog-log4perl-perl \
+  libpng-dev \
+  libposix-strptime-perl \
+  libpq-dev \
+  libstring-random-perl \
+  libtemplate-perl \
+  libunicode-escape-perl \
+  liburi-encode-perl \
+  libwww-perl \
+  make 		\
+  node.js \
+  perl-modules \
+  python-biopython \
+  python-dev \
+  python-leveldb \
+  python-numpy \
+  python-pika \
+  python-scipy \
+  python-sphinx \
+  unzip \
+  wget 
+	
 
 
 #### install BLAT from src
@@ -100,6 +93,17 @@ RUN cd /root \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root ; rm -rf /root/diamond
 	
+### install vsearch 2.40
+RUN cd /root \
+	&& wget https://github.com/torognes/vsearch/archive/v2.4.0.tar.gz \
+	&& tar xzf v2.4.0.tar.gz \
+	&& cd vsearch-2.4.0 \
+	&& sh ./autogen.sh \
+	&& ./configure --prefix=/usr/local/ \
+	&& make \
+	&& make install \
+	&& make clean \
+	&& cd /root ; rm -rf /root/vsearch-2* 
 
 ### install swarm 2.1.9
 RUN cd /root \
@@ -123,18 +127,25 @@ RUN cd /root \
 	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
 	&& tar xvf 2.1b.tar.gz \
 	&& cd sortmerna-2.1b \
-	&& ./configure && make install && make clean
+	&& ./configure &&  make install && make clean
 
-### install vsearch 2.43
-RUN cd /root \
-        && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
-	&& tar xzf v2*.tar.gz \
-	&& cd vsearch-2* \
-	&& sh ./autogen.sh \
-	&& ./configure --prefix=/usr/local/ \
-	&& make \
-	&& make install \
-	&& make clean \
-	&& cd /root ; rm -rf /root/vsearch-2* 
-### install CWL runner
-RUN pip install cwlref-runner
+### install simka
+#RUN cd /root \
+#	&& git clone https://github.com/GATB/simka.git \
+#	&& cd simka \
+#	&& sh INSTALL \
+
+# Install CWL
+RUN apt-get install -y curl
+RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"  \
+  && python get-pip.py  \
+  && pip install cwlref-runner \
+  && rm get-pip.py
+
+# copy files into image
+COPY mgcmd/* bin/* /usr/local/bin/
+COPY lib/* /usr/local/lib/site_perl/
+RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
+# COPY superblat /usr/local/bin/
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
+

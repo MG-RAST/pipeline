@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_notify.pl
+baseCommand: mgrast_notify.pl
 
 label: notify job completion
 

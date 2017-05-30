@@ -69,7 +69,7 @@ outputs:
         
 steps:
   genecalling:
-    run: ../Tools/awe_genecalling.tool.yaml
+    run: ../Tools/mgrast_genecalling.tool.yaml
     in:
       input: sequences 
       # input: screen/passed
@@ -84,7 +84,7 @@ steps:
     out: [fna,faa]
 
   filter:
-    run: ../Tools/awe_filter_feature.tool.yaml
+    run: ../Tools/mgrast_filter_feature.tool.yaml
     in:
       in_clust: rna_mapping
       # in_clust: clusterRNA/mapping
@@ -99,7 +99,7 @@ steps:
     out: [filtered]
     
   clusterAA:
-    run: ../Tools/awe_cluster_aa.tool.yaml     
+    run: ../Tools/mgrast_cluster_aa.tool.yaml     
     in:      
       input: filter/filtered 
       out_prefix:
@@ -110,7 +110,7 @@ steps:
     out: [fasta , mapping]
   
   simsAA:
-    run: ../Tools/awe_blat_protein.tool.yaml
+    run: ../Tools/mgrast_blat_protein.tool.yaml
     in:
       input: clusterAA/fasta
       output: 

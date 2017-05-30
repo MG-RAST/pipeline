@@ -1,24 +1,24 @@
 in_expand: 
   - class: File
-    path: /pipeline/CWL/Data/Inputs/100/100.650.aa.expand.lca
+    path: /pipeline/CWL/Data/Inputs/100/100.650.aa.sims.filter
   - class: File
-    path: /pipeline/CWL/Data/Inputs/100/100.450.rna.expand.lca
+    path: /pipeline/CWL/Data/Inputs/100/100.450.rna.sims.filter 
 in_maps:
   - class: File
     path: /pipeline/CWL/Data/Inputs/100/100.550.cluster.aa90.mapping 
   - class: File
     path: /pipeline/CWL/Data/Inputs/100/100.440.cluster.rna97.mapping     
-in_assemb:
-  class: File
-  path: /pipeline/CWL/Data/Inputs/100/100.075.assembly.coverage
+# in_assemb:
+#   class: File
+#   path: /pipeline/CWL/Data/Inputs/100/100.075.assembly.coverage
 in_index:   
   class: File
   path: /pipeline/CWL/Data/Inputs/100/100.700.annotation.sims.filter.seq.index 
-abundanceType: lca
+abundanceType: md5
 nr_version: dev
-output: 100.700.annotation.lca.abundance
+output: 100.700.annotation.md5.abundance 
 
-# Example command line options: md5 
+# Example command line options: md5
 # -in_expand=@[% job_id %].650.aa.sims.filter
 # -in_expand=@[% job_id %].450.rna.sims.filter 
 # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
@@ -27,13 +27,4 @@ output: 100.700.annotation.lca.abundance
 # -in_index=@[% job_id %].700.annotation.sims.filter.seq.index
 # -output=[% job_id %].700.annotation.md5.abundance
 # -type=md5",
-
-
-# Example command line options: lca
-# -in_expand=@[% job_id %].650.aa.expand.lca 
-# -in_expand=@[% job_id %].450.rna.expand.lca
-# -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping
-# -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping
-# -in_assemb=@[% job_id %].075.assembly.coverage 
-# -output=[% job_id %].700.annotation.lca.abundance 
-# -type=lca",
+                              

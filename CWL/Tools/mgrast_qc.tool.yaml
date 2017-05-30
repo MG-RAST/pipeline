@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_qc.pl
+baseCommand: mgrast_qc.pl
 
 hints:
   DockerRequirement:
