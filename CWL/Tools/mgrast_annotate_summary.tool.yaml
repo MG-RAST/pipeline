@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_annotate_summary.pl
+baseCommand: mgrast_annotate_summary.pl
 
 label:  abundance files
 

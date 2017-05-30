@@ -1,12 +1,12 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: [awe_cluster.pl , "-aa"]
+baseCommand: mgrast_cluster.pl
 
 hints:
   DockerRequirement:
     dockerPull: mgrast/pipeline:cwl
 
-label: "aa clustering"
+label: "rna clustering"
 
 requirements:
   InitialWorkDirRequirement:
@@ -14,8 +14,8 @@ requirements:
       - entryname: userattr.json
         entry: |
           {
-           "stage_id": "550",
-            "stage_name": "protein.cluster",
+            "stage_id": "440",
+            "stage_name": "rna.cluster",
             "seq_format": "aa",
             "cluster_percent": "$(inputs.pid)"
           }
@@ -37,21 +37,35 @@ inputs:
   memory:
     type: int
     default: $(runtime.ram)
-    default: 20
     inputBinding:
       prefix: -memory
-               
+  exclusive_parameters:
+    type:
+        - type: record
+          name: RNA
+          fields:
+            rna:
+              type: boolean
+              inputBinding:
+                prefix: -rna
+        - type: record
+          name: DNA
+          fields:
+            dna:
+              type: boolean
+              inputBinding:
+                prefix: -dna                 
   
                         
 outputs:
   fasta:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).*.faa
+      glob: $(inputs.out_prefix).*.fna
   fasta_userattr:
     type: File
     outputBinding:
-      glob: $(inputs.out_prefix).*.faa.json
+      glob: $(inputs.out_prefix).*.fna.json
   mapping:
     type: File
     outputBinding:

@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: awe_dereplicate.pl
+baseCommand: mgrast_dereplicate.pl
 
 hints:
   DockerRequirement:
