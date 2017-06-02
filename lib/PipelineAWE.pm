@@ -238,6 +238,9 @@ sub send_mail {
     my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
     if ($user_info->{email}) {
         my $smtp = Net::SMTP->new($mg_smtp, Hello => $mg_smtp);
+        if (! $smtp) {
+            logger('error', "net::smtp failed to create object ($!; $@)");
+        }
         my $receiver = "\"$owner_name\" <".$user_info->{email}.">";
         $smtp->mail('mg-rast');
         my @data = (
