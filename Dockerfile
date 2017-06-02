@@ -50,21 +50,12 @@ RUN apt-get update && apt-get install -y \
 	perl-modules \
    	python-numpy \
 	python-pika \
-  python-pip \
+    python-pip \
 	python-scipy \
 	python-sphinx \
 	unzip \
 	wget \
 	curl
-
-
-# copy files into image
-COPY mgcmd/* bin/* /usr/local/bin/
-COPY lib/* /usr/local/lib/site_perl/
-COPY superblat /usr/local/bin/
-RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
-
 
 #### install BLAT from src
 RUN cd /root \
@@ -110,15 +101,16 @@ RUN cd /root \
 	&& install -m755 scripts/* /usr/local/bin \
 	&& cd /root ; rm -rf swarm
 
-### install fastqjoin from  ea-utils
+### install fastqjoin from ea-utils
 RUN cd /root \
 	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
 	&& cd ea-utils/clipper \
-	&& make fastq-join \
+	&& make \
 	&& install -m755 -s fastq-join /usr/local/bin/ \
+	&& install -m755 -s fastq-multx /usr/local/bin/ \
 	&& cd /root ; rm -rf /root/ea-utils
 
-### install 
+### install sortmerna
 RUN cd /root \
 	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
 	&& tar xvf 2.1b.tar.gz \
@@ -127,7 +119,7 @@ RUN cd /root \
 
 ### install vsearch 2.43
 RUN cd /root \
-        && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
+    && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
 	&& tar xzf v2*.tar.gz \
 	&& cd vsearch-2* \
 	&& sh ./autogen.sh \
@@ -136,5 +128,13 @@ RUN cd /root \
 	&& make install \
 	&& make clean \
 	&& cd /root ; rm -rf /root/vsearch-2* 
+
 ### install CWL runner
 RUN pip install cwlref-runner
+
+# copy files into image
+COPY mgcmd/* bin/* /usr/local/bin/
+COPY lib/* /usr/local/lib/site_perl/
+COPY superblat /usr/local/bin/
+RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
+RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
