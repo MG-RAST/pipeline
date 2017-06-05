@@ -115,7 +115,7 @@ RUN cd /root \
 	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
 	&& tar xvf 2.1b.tar.gz \
 	&& cd sortmerna-2.1b \
-	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp
+	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
 	&& ./configure && make install && make clean
 
 ### install vsearch 2.43
