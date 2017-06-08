@@ -131,6 +131,7 @@ RUN cd /root \
 	&& make clean \
 	&& cd /root ; rm -rf /root/vsearch-2* 
 
+
 ### install CWL runner
 RUN pip install cwlref-runner
 
@@ -138,5 +139,4 @@ RUN pip install cwlref-runner
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
 COPY superblat /usr/local/bin/
-RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
