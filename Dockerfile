@@ -105,9 +105,10 @@ RUN cd /root \
 RUN cd /root \
 	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
 	&& cd ea-utils/clipper \
-	&& make \
-	&& install -m755 -s fastq-join /usr/local/bin/ \
-	&& install -m755 -s fastq-multx /usr/local/bin/ \
+	&& make fastq-join \
+	&& make fastq-multx \
+	&& install -m755 -s fastq-join /usr/local/bin \
+	&& install -m755 -s fastq-multx /usr/local/bin \
 	&& cd /root ; rm -rf /root/ea-utils
 
 ### install sortmerna
