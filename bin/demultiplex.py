@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
 from collections import defaultdict
 from optparse import OptionParser
@@ -14,8 +15,8 @@ Demultiplex fasta or fastq file with given barcode list. Barcode is trimmed from
 List may contain only barcodes (output filename is barcode) or barcode \\t name (output filename is name).
 Allows multiple barcodes to write to one file and mutliple files to get seqs from one barcode.
 """
-
-BLEN = 0
+BCRE = re.compile(r'^[ATGCatgc]+$')
+BCLEN = 0
 
 def seq_iter(file_hdl, stype):
     if stype == 'fastq':
@@ -36,32 +37,27 @@ def write_rec(out_hdl, head, seq, qual):
         out_hdl.write("@%s\n%s\n+\n%s\n" %(head, seq, qual))
 
 def barcode_files(bfile, odir, stype, prefix, rc_bar):
-    global BLEN
-    bar_name = []
+    global BCLEN
+    bar_name = [] # set of (barcode_seq, sample_name)
     with open(bfile, 'rU') as x:
         blines = x.readlines()
-    # QIIME barcode file
-    if blines[0].startswith("#SampleID"):
+    # skip header: Illumina or Qiime style
+    if blines[0].startswith("#SampleID") or blines[0].startswith("SampleID"):
         blines.pop(0)
-        for b in blines:
-            if not b:
-                continue
-            bset = b.strip().split("\t")
-            if not bset[0]:
-                continue
+    for i, b in enumerate(blines):
+        if not b:
+            continue
+        bset = b.strip().split("\t")
+        if not (bset[0] and bset[1]):
+            continue
+        # find which column has barcodes
+        if BCRE.match(bset[1]):
             bar_name.append([bset[1], bset[0]])
-    # simple barcode format
-    else:
-        for b in blines:
-            if not b:
-                continue
-            bset = b.strip().split("\t")
-            if not bset[0]:
-                continue
-            if len(bset) == 1:
-                bar_name.append([bset[0], bset[0]])
-            else:
-                bar_name.append([bset[0], bset[1]])
+        elif BCRE.match(bset[0]):
+            bar_name.append([bset[0], bset[1]])
+        else:
+            sys.stderr.write("[error] row %d missing valid barcode\n"%i)
+            os._exit(1)
     # set files
     uniq_fname = {}
     barc_fname = defaultdict(list)
@@ -73,9 +69,9 @@ def barcode_files(bfile, odir, stype, prefix, rc_bar):
             barc = str(rcb.reverse_complement()).upper()
         name = os.path.join(odir, "%s.%s"%(bn[1], stype))
         clen = len(barc)
-        if BLEN == 0:
-            BLEN = clen
-        elif BLEN != clen:
+        if BCLEN == 0:
+            BCLEN = clen
+        elif BCLEN != clen:
             sys.stderr.write("[error] barcode lengths are not the same\n")
             os._exit(1)
         barc_fname[barc].append(name)
@@ -90,7 +86,7 @@ def match_barcode(barcodemap, seqbar):
         # match may be off by 1 bp
         for bar in barcodemap.iterkeys():
             mismatch = 0
-            for i in range(BLEN):
+            for i in range(BCLEN):
                 if seqbar[i] != bar[i]:
                     mismatch += 1
             if mismatch < 2:
@@ -103,7 +99,7 @@ def main(args):
     parser.add_option("-i", "--input", dest="input", default=None, help="Input sequence file.")
     parser.add_option("-o", "--output", dest="output", default=".", help="Output dir (default cwd), filenames will be 'barcode.type' or 'name.type'")
     parser.add_option("-f", "--format", dest="format", default='fasta', help="File format: fasta, fastq [default 'fasta']")
-    parser.add_option("-b", "--barcode", dest="barcode", default=None, help="File with list of barcodes or list of barcode name pairs")
+    parser.add_option("-b", "--barcode", dest="barcode", default=None, help="File with list of name / barcode pairs")
     parser.add_option("-r", "--rc_bar", dest="rc_bar", action="store_true", default=False, help="Barcodes in sequences file are reverse complement of barcodes file [default is same].")
     parser.add_option("-p", "--prefix", dest="prefix", default="", help="Optional sequence to prepend to barcodes")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default off]")
@@ -119,7 +115,7 @@ def main(args):
     # open filehandles
     for f in uniq_fname.iterkeys():
         uniq_fname[f] = open(f, 'w')
-    missing = open(os.path.join(opts.output, 'nobarcode.'+os.path.basename(opts.input)), 'w')
+    missing = open(os.path.join(opts.output, 'unmatched.'+os.path.basename(opts.input)), 'w')
 
     # parse sequence file
     # allows multiple barcodes to write to one file and mutliple files to get seqs from one barcode
@@ -128,9 +124,9 @@ def main(args):
     input_hdl  = open(opts.input, 'rU')
     for rec in seq_iter(input_hdl, opts.format):
         head, seq, qual = split_rec(rec, opts.format)
-        seqbar = seq[:BLEN]
-        seq  = seq[BLEN:]
-        qual = qual[BLEN:] if qual is not None else None
+        seqbar = seq[:BCLEN]
+        seq  = seq[BCLEN:]
+        qual = qual[BCLEN:] if qual is not None else None
         match, mbar = match_barcode(barc_fname, seqbar)
         if match:
             bar_count[mbar] += 1
