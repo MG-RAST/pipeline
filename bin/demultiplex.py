@@ -61,7 +61,6 @@ def barcode_files(bfile, odir, stype, prefix, rc_bar):
     # set files
     uniq_fname = {}
     barc_fname = defaultdict(list)
-    stype = 'fna' if stype == 'fasta' else stype
     for bn in bar_name:
         barc = prefix.upper() + bn[0].upper()
         if rc_bar:
@@ -115,7 +114,7 @@ def main(args):
     # open filehandles
     for f in uniq_fname.iterkeys():
         uniq_fname[f] = open(f, 'w')
-    missing = open(os.path.join(opts.output, 'unmatched.'+os.path.basename(opts.input)), 'w')
+    missing = open(os.path.join(opts.output, 'unmatched.'+opts.format), 'w')
 
     # parse sequence file
     # allows multiple barcodes to write to one file and mutliple files to get seqs from one barcode
