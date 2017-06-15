@@ -15,7 +15,7 @@ Demultiplex fasta or fastq file with given barcode list. Barcode is trimmed from
 List may contain only barcodes (output filename is barcode) or barcode \\t name (output filename is name).
 Allows multiple barcodes to write to one file and mutliple files to get seqs from one barcode.
 """
-BCRE = re.compile(r'^[ATGCatgc]+$')
+BCRE = re.compile(r'^[ATGCatgc-]+$')
 BCLEN = 0
 
 def seq_iter(file_hdl, stype):
