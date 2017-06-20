@@ -1,0 +1,6 @@
+sequences:
+  class: File
+  format: "fasta"
+  path: ../Data/Inputs/sequences.all.fasta
+length: 6
+prefix: kmer-tool  
