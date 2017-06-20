@@ -1,0 +1,29 @@
+{
+    "summary": {
+        "checksum": "sha1$e1f54b727983be4d5f28136fdd5a0f9a02cb6b30", 
+        "basename": "drisee.log", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/drisee.log", 
+        "path": "/pipeline/CWL/Data/Outputs/drisee.log", 
+        "class": "File", 
+        "size": 436
+    }, 
+    "stats": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "drisee.stats", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/drisee.stats", 
+        "path": "/pipeline/CWL/Data/Outputs/drisee.stats", 
+        "class": "File", 
+        "size": 0
+    }, 
+    "error": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "drisee.error", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/drisee.error", 
+        "path": "/pipeline/CWL/Data/Outputs/drisee.error", 
+        "class": "File", 
+        "size": 0
+    }
+}
