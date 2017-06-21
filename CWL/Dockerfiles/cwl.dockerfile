@@ -49,6 +49,7 @@ RUN apt-get update && apt-get install -y \
   perl-modules \
   python-biopython \
   python-dev \
+  python-html5lib \
   python-leveldb \
   python-numpy \
   python-pika \
@@ -145,7 +146,7 @@ RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"  \
 # copy files into image
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
-RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
+# RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
 # COPY superblat /usr/local/bin/
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
 
