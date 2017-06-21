@@ -1,8 +1,10 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-
-#PipelineAWE::run_cmd("kmer-tool -l $len -p $proc -i $infile -t $format -o $out_prefix.kmer.$len.stats -f histo -r -d $run_dir");
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:4.03
+    # dockerPull: mgrast/kmerTool:1.0
 
 requirements:
   InlineJavascriptRequirement: {}
@@ -12,16 +14,6 @@ requirements:
   
 stdout: kmer-tool.log
 stderr: kmer-tool.error
-
-# kmer-tool 
-  # -l $len 
-  # -p $proc 
-  # -i $infile 
-  # -t $format 
-  # -o $out_prefix.kmer.$len.stats 
-  # -f histo 
-  # -r 
-  # -d $run_dir"
 
 inputs:
   sequences:
@@ -49,16 +41,6 @@ inputs:
 baseCommand: [kmer-tool]
 
 arguments: 
-
-# kmer-tool 
-  # -l $len 
-  # -p $proc 
-  # -i $infile 
-  # -t $format 
-  # -o $out_prefix.kmer.$len.stats 
-  # -f histo 
-  # -r 
-  # -d $run_dir"
    
   - valueFrom: $(runtime.cores)
     prefix: --procs
