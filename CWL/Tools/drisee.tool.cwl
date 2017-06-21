@@ -2,8 +2,12 @@ cwlVersion: v1.0
 class: CommandLineTool
 
 
-#PipelineAWE::run_cmd("drisee -v -p $proc -t $format -d $run_dir -f $infile $d_stats > $d_info", 1);
 
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:4.03
+    # dockerPull: mgrast/drisee:1.0
+    
 requirements:
   InlineJavascriptRequirement: {}
   
@@ -19,10 +23,6 @@ inputs:
       - edam:format_1930 # FASTQ
     inputBinding:
       position: 1
-  
-      
-      
-  
   
 baseCommand: [drisee]
 
