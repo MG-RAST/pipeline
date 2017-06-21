@@ -5,10 +5,14 @@ import subprocess
 from subprocess import Popen, PIPE
 import sys
 import os
+import glob
+import re
+import json
 
 # do something get script dir  smart and set path relative to CWL dir
 
 debug = 0
+disable_docker = 1
 
 testDir = os.path.abspath( os.path.dirname( __file__ )  )
 baselineDir = testDir + "/../Data/Baseline/"
@@ -16,13 +20,114 @@ toolDir     = testDir + "/../Tools/"
 workflowDir = testDir + "/../Workflows/"
 inputDir    = testDir + "/../Data/Inputs/"
 outputDir   = testDir + "/../Data/Outputs/"
+docker      = None
+cwlTool     = "cwltool" # "cwl-runner"
+
+if disable_docker :
+  docker = "--no-container"
+
+
+def generate_check_exists_tool(tool , name, path):
+    def test(self):
+        """Does tool exists"""
+        self.assertTrue(os.path.exists(path))
+    return test
+
+def generate_check_exists_job(tool , name, path) :
+  def test(self):
+      """Does job exists"""
+      job_file = toolDir + name + ".job.yaml"
+      # self.longMessage = True
+      msg = "Missing job " + toolDir + name + ".job.yaml"
+      self.assertTrue(os.path.exists(job_file) , msg= msg)
+  return test
+
+def generate_check_tool_output(tool, name , path) :
+  def test(self):
+      """Compare baseline"""
+      
+      # set job  
+      job = toolDir + name + ".job.yaml"
+       
+      if debug :
+        print "\nDEBUG:"
+        print "ToolDir: " + toolDir
+        print "OutputDir: " + outputDir
+        print "Tool: " + tool
+        print [tool , name , path]
+        print ['cwl-runner' , '--outdir ' + outputDir, docker , toolDir + tool  , job] 
+   
+     
+   
+      # execute tool
+      session = subprocess.Popen([ cwlTool , '--outdir' , outputDir, docker , toolDir + tool , job ] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
+      stdout, stderr = session.communicate()
+     
+      if stderr and debug :
+          print 'ERROR:'
+          print stderr
+    
+      # Test here    
+      compFile = open( baselineDir + "/" + name + ".receipt" , 'r')
+      baseline = compFile.read()
+  
+      if debug :
+          print 'Baseline:'
+          print baseline
+          print 'Output:' + stdout
+      self.assertTrue( cmp_cwl_receipts(baseline , stdout) )
+    
+  return test
+
+def cmp_cwl_receipts(json_a , json_b) :
+  a = json.loads(json_a)
+  b = json.loads(json_b)
+  
+  identical = 1
+  
+  for k, v in a.iteritems():
+    if v['checksum'] != b[k]["checksum"] :
+      identical = 0
+    if v['basename'] != b[k]["basename"] :
+      identical = 0
+  
+  return identical   
+    
+    # "summary": {
+    #     "checksum": "sha1$e1f54b727983be4d5f28136fdd5a0f9a02cb6b30",
+    #     "basename": "drisee.log",
+    #     "http://commonwl.org/cwltool#generation": 0,
+    #     "location": "file:///pipeline/CWL/Data/Outputs/drisee.log",
+    #     "path": "/pipeline/CWL/Data/Outputs/drisee.log",
+    #     "class": "File",
+    #     "size": 436
+    # },
+    # "stats": {
+    #     "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    #     "basename": "drisee.stats",
+    #     "http://commonwl.org/cwltool#generation": 0,
+    #     "location": "file:///pipeline/CWL/Data/Outputs/drisee.stats",
+    #     "path": "/pipeline/CWL/Data/Outputs/drisee.stats",
+    #     "class": "File",
+    #     "size": 0
+    # },
+    # "error": {
+    #     "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    #     "basename": "drisee.error",
+    #     "http://commonwl.org/cwltool#generation": 0,
+    #     "location": "file:///pipeline/CWL/Data/Outputs/drisee.error",
+    #     "path": "/pipeline/CWL/Data/Outputs/drisee.error",
+    #     "class": "File",
+    #     "size": 0
+    # }
+
 
 class TestCWL(unittest.TestCase):
  
     def setUp(self):
         """Setup test, get path to script and version"""
-        # output = subprocess.call(['cwl-runner' , '--version'] , stdout=PIPE, stderr=PIPE)
-        session = subprocess.Popen(['cwl-runner' , '--version'] , stdout=PIPE, stderr=PIPE)
+      
+        session = subprocess.Popen([ cwlTool , '--version'] , stdout=PIPE, stderr=PIPE)
         stdout, stderr = session.communicate()
 
         if stderr:
@@ -58,9 +163,9 @@ class TestDrisee(unittest.TestCase):
         print "\nDEBUG:"
         print "ToolDir: " + toolDir
         print "OutputDir: " + outputDir
-        print ['cwl-runner' , '--outdir ' + outputDir, toolDir + 'drisee.tool.cwl' , toolDir + 'drisee.job.yaml'] 
+        print ['cwl-runner' , '--outdir ' + outputDir, docker , toolDir + 'drisee.tool.cwl' , toolDir + 'drisee.job.yaml'] 
      
-      session = subprocess.Popen(['cwl-runner' , '--outdir' , outputDir, toolDir + 'drisee.tool.cwl' , toolDir + 'drisee.job.yaml'] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
+      session = subprocess.Popen([ cwlTool , '--outdir' , outputDir, docker , toolDir + 'drisee.tool.cwl' , toolDir + 'drisee.job.yaml'] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
       stdout, stderr = session.communicate()
        
       if stderr and debug :
@@ -75,7 +180,7 @@ class TestDrisee(unittest.TestCase):
           print 'Baseline:'
           print baseline
           print 'Output:' + stdout
-      self.assertTrue( baseline == stdout )
+      self.assertTrue( cmp_cwl_receipts(baseline , stdout) )
       
 class TestKmerTool(unittest.TestCase):      
   
@@ -92,9 +197,9 @@ class TestKmerTool(unittest.TestCase):
       print "\nDEBUG:"
       print "ToolDir: " + toolDir
       print "OutputDir: " + outputDir
-      print ['cwl-runner' , '--outdir ' + outputDir, toolDir + 'kmer-tool.tool.cwl' , toolDir + 'kmer-tool.job.yaml'] 
+      print [ cwlTool , '--outdir ' + outputDir, docker , toolDir + 'kmer-tool.tool.cwl' , toolDir + 'kmer-tool.job.yaml'] 
    
-    session = subprocess.Popen(['cwl-runner' , '--outdir' , outputDir, toolDir + 'kmer-tool.tool.cwl' , toolDir + 'kmer-tool.job.yaml'] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
+    session = subprocess.Popen([ cwlTool , '--outdir' , outputDir, docker , toolDir + 'kmer-tool.tool.cwl' , toolDir + 'kmer-tool.job.yaml'] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
     stdout, stderr = session.communicate()
        
     if stderr and debug :
@@ -105,7 +210,43 @@ class TestKmerTool(unittest.TestCase):
     compFile = open( baselineDir + "/" + "kmer-tool.receipt" , 'r')
     baseline = compFile.read()
   
-    self.assertTrue( baseline == stdout )
+    self.assertTrue( cmp_cwl_receipts(baseline , stdout) )
+    
+class TestCwlTool(unittest.TestCase): pass   
+    
     
 if __name__ == '__main__':
+  
+    # Create tests for every tool in the tool directory
+    # A cwl tool has the suffix *.tool.cwl, e.g. drisee.too.cwl.
+    # A job file for testing has to be present next to the tool,
+    # the job file for the tool has the tool name as prefix 
+    # and *.job.yaml as suffix , e.g. drisee.job.yaml.
+    # Baseline file names are created from the tool name 
+    # as prefix and .receipt as suffix , eg. drisee.receipts.
+    
+    files = glob.glob(toolDir + "/*.tool.cwl")
+
+    for f in files:
+      
+        # split up file and path for later use, e.g. test name creation or inferring file name for job
+        m = re.split("/" , f)
+        tool = m.pop()
+        [name , cwl_type , suffix] = tool.split(".")
+        
+        # test tool exists - should be always true for obvious reasons
+        test_name = 'test_cwl_tool_%s' % name
+        test = generate_check_exists_tool(tool , name, f)
+        setattr(TestCwlTool, test_name, test)
+        
+        # check for job
+        test_name = 'test_cwl_job_%s' % name
+        test = generate_check_exists_job(tool , name, f)
+        setattr(TestCwlTool, test_name, test)
+        
+        # baseline test
+        test_name = 'test_cwl_baseline_%s' % name
+        test = generate_check_tool_output(tool , name, f)
+        setattr(TestCwlTool, test_name, test)
+  
     unittest.main()
