@@ -14,7 +14,7 @@ import json
 debug = 0
 disable_docker = 1
 
-testDir = os.path.abspath( os.path.dirname( __file__ )  )
+testDir     = os.path.abspath( os.path.dirname( __file__ )  )
 baselineDir = testDir + "/../Data/Baseline/"
 toolDir     = testDir + "/../Tools/"
 workflowDir = testDir + "/../Workflows/"
@@ -41,6 +41,15 @@ def generate_check_exists_job(tool , name, path) :
       msg = "Missing job " + toolDir + name + ".job.yaml"
       self.assertTrue(os.path.exists(job_file) , msg= msg)
   return test
+  
+def generate_check_exists_baseline(tool , name, path) :
+  def test(self):
+      """Does baseline data exists"""
+      baseline_file = baselineDir + name + ".receipt"
+      # self.longMessage = True
+      msg = "Missing baseline for " + name + ": " + baseline_file
+      self.assertTrue(os.path.exists(baseline_file) , msg= msg)
+  return test  
 
 def generate_check_tool_output(tool, name , path) :
   def test(self):
@@ -75,21 +84,27 @@ def generate_check_tool_output(tool, name , path) :
           print 'Baseline:'
           print baseline
           print 'Output:' + stdout
-      self.assertTrue( cmp_cwl_receipts(baseline , stdout) )
+      self.assertTrue( cmp_cwl_receipts(baseline , stdout) , msg= " ".join(['cwl-runner' , '--outdir ' + outputDir, docker , toolDir + tool  , job , "\n" , stderr ]) )
     
   return test
 
 def cmp_cwl_receipts(json_a , json_b) :
-  a = json.loads(json_a)
-  b = json.loads(json_b)
   
   identical = 1
   
-  for k, v in a.iteritems():
-    if v['checksum'] != b[k]["checksum"] :
-      identical = 0
-    if v['basename'] != b[k]["basename"] :
-      identical = 0
+  try:
+    a = json.loads(json_a)
+    b = json.loads(json_b)
+    
+    for k, v in a.iteritems():
+      if v['checksum'] != b[k]["checksum"] :
+        identical = 0
+      if v['basename'] != b[k]["basename"] :
+        identical = 0
+        
+  except:
+    sys.stderr.write("Can't parse json strings ... ") 
+    identical = 0
   
   return identical   
     
@@ -244,8 +259,13 @@ if __name__ == '__main__':
         test = generate_check_exists_job(tool , name, f)
         setattr(TestCwlTool, test_name, test)
         
-        # baseline test
+        # check baseline exists for tool
         test_name = 'test_cwl_baseline_%s' % name
+        test = generate_check_exists_baseline(tool , name, f)
+        setattr(TestCwlTool, test_name, test)
+        
+        # baseline test
+        test_name = 'test_cwl_compare_baseline_%s' % name
         test = generate_check_tool_output(tool , name, f)
         setattr(TestCwlTool, test_name, test)
   
