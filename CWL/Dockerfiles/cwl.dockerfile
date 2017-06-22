@@ -137,11 +137,20 @@ RUN cd /root \
 #	&& sh INSTALL \
 
 # Install CWL
-RUN apt-get install -y curl
+# RUN apt-get install -y curl
+# RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"  \
+#   && python get-pip.py  \
+#   && pip install cwlref-runner \
+#   && rm get-pip.py
+  
+RUN git clone https://github.com/common-workflow-language/cwltool.git
 RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"  \
-  && python get-pip.py  \
-  && pip install cwlref-runner \
-  && rm get-pip.py
+  && python get-pip.py  
+# RUN apt-get install python-setuptools
+RUN cd cwltool && python setup.py install
+RUN cd cwltool/cwlref-runner && python setup.py install
+
+  
 
 # copy files into image
 COPY mgcmd/* bin/* /usr/local/bin/
