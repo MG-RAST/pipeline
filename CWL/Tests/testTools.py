@@ -102,8 +102,8 @@ def cmp_cwl_receipts(json_a , json_b) :
       if v['basename'] != b[k]["basename"] :
         identical = 0
         
-  except:
-    sys.stderr.write("Can't parse json strings ... ") 
+  except Exception as e :
+    sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... ") 
     identical = 0
   
   return identical   
