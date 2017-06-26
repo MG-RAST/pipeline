@@ -10,7 +10,7 @@ requirements:
   InlineJavascriptRequirement: {}
   SchemaDefRequirement:
     types:
-      - $import: fileFormat.cv.yaml
+      - $import: FileFormats.cv.yaml
   
 stdout: kmer-tool.log
 stderr: kmer-tool.error
@@ -19,7 +19,11 @@ inputs:
   sequences:
     type: File
     doc: Input file, sequence (fasta/fastq) or binary count hash (hash).
-    format: [fasta , fastq , hash]
+    format: 
+      - format:fasta
+      - format:fastq
+      - format:hash
+      # [fasta , fastq , hash]
     inputBinding:
       prefix: --input
   
@@ -69,7 +73,8 @@ outputs:
       glob: $(inputs.prefix).kmer.$(inputs.length).stats
     
 
-# $namespaces:
+$namespaces:
+  format: FileFormats.cv.yaml
 #  edam: http://edamontology.org/
 #  s: http://schema.org/
 # $schemas:
