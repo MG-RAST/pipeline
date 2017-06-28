@@ -34,6 +34,19 @@ def determinetype(infile):
     sys.stderr.write("Cannot determine file type of %s\n"%(infile))
     exit(1)
 
+def bp_max_from_stats(infile):
+    fhdl = open(infile, 'r')
+    maxl = 600
+    hasmax = False
+    for line in fhdl:
+        if line.statswith('length_max'):
+            parts = line.split("\t")
+            maxl = min(maxl, int(parts[1]))
+            hasmax = True
+    if not hasmax:
+        maxl = 100
+    return maxl
+
 def countseqs(infile, stype):
   if stype == 'fasta':
     cmd = ['grep', '-c', '^>', infile]
@@ -104,12 +117,15 @@ if __name__ == '__main__':
   parser.add_option("-b", "--bp_max", dest="bp_max", default=100, type="int", help="max number of bps to process [default 100]")
   parser.add_option("-s", "--seq_max", dest="seq_max", default=100000, type="int", help="max number of seqs to process [default 100000]")
   parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default off]")
+  parser.add_option("--stats", dest="stats", default=None, help="optional: sequence stats for input file, overrides --bp_max")
   
   (opts, args) = parser.parse_args()
   if not (opts.input and os.path.isfile(opts.input) and opts.output):
     parser.error("Missing input/output files")
   if not opts.type:
     opts.type = determinetype(opts.input)
+  if opts.stats and os.path.isfile(opts.stats):
+    opts.bp_max = bp_max_from_stats(opts.stats)
   
   if opts.verbose: sys.stdout.write("Counting sequences in %s ... "%opts.input)
   seqnum = countseqs(opts.input, opts.type)
