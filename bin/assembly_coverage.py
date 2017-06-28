@@ -36,11 +36,10 @@ def determinetype(infile):
 
 
 if __name__ == '__main__':
-    usage  = "usage: %prog -i <input sequence file> -o <output file>"
+    usage  = "usage: %prog -i <input sequence file> -o <output coverage file>"
     parser = OptionParser(usage)
     parser.add_option("-i", "--input", dest="input", default=None, help="input sequence file")
-    parser.add_option("-c", "--coverage", dest="coverage", default=None, help="coverage file")
-    parser.add_option("-s", "--stats", dest="stats", default=None, help="stats file")
+    parser.add_option("-o", "--output", dest="output", default=None, help="output coverage file")
     parser.add_option("-t", "--type", dest="type", default=None, help="file type: fasta, fastq")
     
     (opts, args) = parser.parse_args()
@@ -50,22 +49,15 @@ if __name__ == '__main__':
         opts.type = determinetype(opts.input)
     
     ihdl = open(opts.input, 'rU')
-    ohdl = open(opts.coverage, 'w')
-    has_cov = 0
-    for i, rec in enumerate(seq_iter(ihdl, opts.type)):
+    ohdl = open(opts.output, 'w')
+    for rec in seq_iter(ihdl, opts.type):
         head, seq, qual = split_rec(rec, opts.type)
         covm = COVRE.match(head)
         seqm = SEQRE.match(head)
         if covm:
             ohdl.write(covm.group(1)+"\t"+covm.group(2)+"\n")
-            has_cov += 1
         elif seqm:
             ohdl.write(seqm.group(1)+"\t1\n")
     ohdl.close()
     ihdl.close()
-    
-    per_cov = ( ((has_cov / (i * 1.0)) * 10000) + 0.5 ) / 100
-    shdl = open(opts.stats, 'w')
-    shdl.write("percent_reads_with_coverage\t%.2f\n"%per_cov)
-    shdl.close()
 
