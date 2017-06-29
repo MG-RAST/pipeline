@@ -1,4 +1,4 @@
 sequences:
   class: File
-  format: "http://edamontology.org/format_1929"
+  format: fasta
   path: ../Data/Inputs/sequences.all.fasta

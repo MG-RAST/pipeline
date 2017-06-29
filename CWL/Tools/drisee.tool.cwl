@@ -19,8 +19,8 @@ inputs:
   sequences:
     type: File
     format:
-      - edam:format_1929 # FASTA
-      - edam:format_1930 # FASTQ
+      - format:fasta
+      - format:fastq
     inputBinding:
       position: 1
   
@@ -36,15 +36,16 @@ arguments:
   - valueFrom: $(runtime.tmpdir)
     prefix: --tmp_dir
   - prefix: --seq_type
-    valueFrom: |
-      ${
-        if (inputs.sequences.format == "http://edamontology.org/format_1929")
-        { return "fasta" ;}
-        else { return "fastq";}
-      }
+    valueFrom: $(inputs.sequences.format)
+      # |
+      # ${
+      #   if (inputs.sequences.format == "http://edamontology.org/format_1929")
+      #   { return "fasta" ;}
+      #   else { return "fastq";}
+      # }
  
 outputs:
-  summary:
+  info:
     type: stdout
   error: 
     type: stderr  
@@ -55,11 +56,7 @@ outputs:
     
 
 $namespaces:
- edam: http://edamontology.org/
- s: http://schema.org/
-$schemas:
- - http://edamontology.org/EDAM_1.16.owl
- - https://schema.org/docs/schema_org_rdfa.html
+  format: FileFormats.cv.yaml
 
 s:license: "https://www.apache.org/licenses/LICENSE-2.0"
 s:copyrightHolder: "MG-RAST"
