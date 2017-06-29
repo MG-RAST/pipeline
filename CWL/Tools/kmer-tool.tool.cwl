@@ -5,12 +5,22 @@ hints:
   DockerRequirement:
     dockerPull: mgrast/pipeline:4.03
     # dockerPull: mgrast/kmerTool:1.0
+  # Shock:
+#     createAttributes:
+#       input: [ToolName , $(outputs).stats , $(outpus).summary]
+#       run: createAttr.pl
+#       mapping:
+#         stats:
+#           glob: $(outputs).stats.attr
+#         summary:
+#           glob: $(outpus).summary.attr
 
 requirements:
   InlineJavascriptRequirement: {}
   SchemaDefRequirement:
     types:
       - $import: FileFormats.cv.yaml
+  
   
 stdout: kmer-tool.log
 stderr: kmer-tool.error
