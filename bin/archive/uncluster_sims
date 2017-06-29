@@ -1,0 +1,103 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+use Getopt::Long;
+
+my $verbose = 0;
+my $in_sim  = '';
+my $out_sim = '';
+my $cluster = '';
+my $usage   = qq($0
+Input:  1. m8 format blast / blat file
+        2. clustered file
+Output: inputed sims file expanded based on clustered file
+
+m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+
+  --in_sim    file name   Required. Name of input sim file.
+  --out_sim   file name   Required. Name of output sim file.
+  --cluster   file name   Optional. Will expand sim lines based on inputed cluster file.
+  --verbose               Optional. Verbose output.
+
+);
+
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) {
+    print STDERR $usage; exit 1;
+}
+if ( ! GetOptions(
+        "verbose!"  => \$verbose,
+        "in_sim=s"  => \$in_sim,
+        "out_sim=s" => \$out_sim,
+        "cluster:s" => \$cluster
+	) ) {
+    print STDERR $usage; exit 1;
+}
+unless ($in_sim && $out_sim && (-s $in_sim)) {
+    print STDERR $usage . "Missing file input.\n"; exit 1;
+}
+
+my $q_num = 0;
+my $s_num = 0;
+my $cmap  = {};
+
+# cluster file format:
+# seed_id \t comma seperated list ids \t comma seperated list percents
+if ($cluster && (-s $cluster)) {
+    print STDOUT "Reading file $cluster ... " if ($verbose);
+    open(CLUST, "<$cluster") || die "Can't open file $cluster!\n";
+    while (my $line = <CLUST>) {
+        chomp $line;
+        my @tabs = split(/\t/, $line);
+        my $seed = $tabs[0];
+        my %ids  = map { $_, 1 } split(/,/, $tabs[1]);
+        if (exists $cmap->{$seed}) {
+            map { $ids{$_} = 1 } @{$cmap->{$seed}};
+        }
+        if (exists $ids{$seed}) {
+            delete $ids{$seed};
+        }
+        $cmap->{$seed} = [ keys %ids ];
+    }
+    close CLUST;
+    print STDOUT "Done\n" if ($verbose);
+}
+
+# no clusters
+if (scalar(keys %$cmap) == 0) {
+    print STDOUT "Cluster file is empty, copying $in_sim to $out_sim ... " if ($verbose);
+    system("cp $in_sim $out_sim");
+    print STDOUT "Done\n";
+    exit 0;
+}
+
+# unroll clusters
+print STDOUT "Reading file $in_sim ... " if ($verbose);
+open(SIM, "<$in_sim")  || die "Can't open file $in_sim!\n";
+open(OUT, ">$out_sim") || die "Can't open file $out_sim!\n";
+while (my $siml = <SIM>) {
+    chomp $siml;
+    if ($siml =~ /^(.+?)\t(.+)$/) {
+        $s_num += 1;
+        my $query = $1;
+        my $rest  = $2;
+        unless ($query) { next; }
+        # print seed
+        $q_num += 1;
+        print OUT "$query\t$rest\n";
+        # print rest
+        if (exists $cmap->{$query}) {
+            foreach my $id ( @{$cmap->{$query}} ) {
+	            $q_num += 1;
+                print OUT "$id\t$rest\n";
+            }
+        }
+    }
+}
+close OUT;
+close SIM;
+
+print STDOUT "Done: $s_num sim queries expanded to $q_num queries\n" if ($verbose);
+exit 0;

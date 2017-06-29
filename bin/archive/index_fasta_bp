@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+import os, sys
+from optparse import OptionParser
+
+__doc__ = """
+Script to index a fasta file.
+Index will include a seek and length for every chunck.
+Each chunk will conatin the minimum number of inputed bps,
+and end at the end of a fasta record."""
+
+def get_seq_seeks (file):
+    seeks = []
+    byte  = 0
+    bps   = 0
+    start = 0
+    fhdl  = open(file, 'r')
+    try:
+        for line in fhdl:
+            if line[0] == '>':
+                if bps > 0:
+                    seeks.append([ start, bps ])
+                start = byte
+                bps   = 0
+            else:
+                bps += len(line) - 1
+            byte += len(line)
+        if bps > 0:
+            seeks.append([ start, bps ])
+    finally:        
+        fhdl.close()
+    return seeks
+
+def get_seek_sets (seq_seeks, min_bp):
+    count = 0
+    start = 0
+    seeks = []
+    for seq in seq_seeks:
+        seek, bps = seq
+        if count >= min_bp:
+            seeks.append([ start, seek - start ])
+            start = seek
+            count = 0
+        count += bps
+    return seeks
+
+usage = "%prog [options] FastaFile\n" + __doc__
+
+def main (args):
+    parser = OptionParser(usage=usage)
+    parser.add_option("-b", "--bps", dest="bps", metavar="INT", type="int", default=None, help="Minimum number of bps to index sequences on [Required]")
+    parser.add_option("-o", "--outfile", dest="outfile", metavar="FILE", default=None, help="Tab index file: start pos, length [default is FastaFile.index]")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Use verbose output [default is off]")
+    opts, args = parser.parse_args()
+
+    if len(args) < 1:
+        parser.error("Incorrect number of arguments.")
+    if opts.bps is None:
+        parser.error("Bp number is required.")
+    if opts.outfile is None:
+        opts.outfile = args[0] + '.index'
+
+    seq_seeks = get_seq_seeks(args[0])
+    bp_seeks  = get_seek_sets(seq_seeks, opts.bps)
+    file_hdl  = open(opts.outfile, 'w')
+
+    for chunk in bp_seeks:
+        seek, length = chunk
+        file_hdl.write("%d\t%d\n"%(seek, length))
+    file_hdl.close()
+    return 0
+    
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

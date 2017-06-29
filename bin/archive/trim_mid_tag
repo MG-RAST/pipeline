@@ -1,0 +1,80 @@
+#!/usr/bin/perl -w
+# VERSION: $Id$
+
+# author: dsouza@mcs.anl.gov
+# purpose: basic fasta splitting script 
+#
+
+use strict;
+use Data::Dumper;
+
+use lib '/home/dsouza';
+use mjd;
+
+my $usage = "
+  usage:  trim_mid_tag  fasta_filename  mid_tag
+
+";
+
+
+my $fasta;
+my $mid;
+
+($fasta   = shift) or (print $usage and exit);
+($mid     = shift) or (print $usage and exit);
+
+my $rec;
+
+my $old_eol = $/;
+$/ = "\n>";
+
+my $ln = length($mid);
+
+open(FASTA, "<$fasta") or die "could not open file: $!";
+while ( defined($rec = <FASTA>) )
+{
+    chomp $rec;
+    my($id_line, @lines) = split(/\n/, $rec);
+
+    $id_line =~ s/^>//;
+
+    my $seq = join('', @lines);
+
+    # trim off a segment same length as the MID tag, regardless of whether the tag is found or not
+    my $trimmed = substr($seq, ($ln - 1));
+    $seq = $trimmed;
+
+#     if ( $seq =~ /^$mid(\S+)/o )
+#     {
+# 	# trim tag if found, otherwise print entire sequence
+# 	$seq = $1;
+#     }
+#     else
+#     {
+# 	print STDERR "$id_line\n";
+#     }
+
+    my $formatted = &fasta_sequence($seq, 60);
+    
+    print ">$id_line\n$formatted";
+}
+close(FASTA) or die "c";
+
+sub fasta_sequence {
+    my($seq, $line_length) = @_;
+    my($seg, @seq_lines);
+
+    $line_length ||= 60;
+    my $offset     = 0;
+    my $seq_ln     = length($seq);
+
+    while ( $offset < ($seq_ln - 1) and defined($seg = substr($seq, $offset, $line_length)) )
+    {
+        push(@seq_lines, $seg);
+        $offset += $line_length;
+    }
+
+    my $fasta_sequence = join("\n", @seq_lines) . "\n";
+    return $fasta_sequence;
+}
+

@@ -1,1 +1,1 @@
-mgrast_submit_to_mgrast.pl
+mgrast_submit.pl

@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+import sys
+from Bio import SeqIO
+
+workdir = sys.argv[1]
+input_fna = sys.argv[2]
+ids_file = sys.argv[3]
+
+if __name__ == "__main__":
+    ids = {}
+    ids_fh = open(ids_file, "rU")
+    for id in ids_fh:
+        ids[id[:-1]]=1
+    ids_fh.close()
+
+    handle = open(input_fna, "rU")
+    for record in SeqIO.parse(handle, "fasta"):
+        if(ids.has_key(record.id)):
+            print '>%s\n%s' % (record.id, record.seq)
+    handle.close()

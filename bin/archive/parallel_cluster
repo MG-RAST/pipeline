@@ -1,0 +1,176 @@
+#!/usr/bin/env python
+
+import os, sys, re, shutil
+import subprocess
+from optparse import OptionParser
+from multiprocessing import Pool
+
+__doc__ = """
+Script to run clustering in parallel.
+Splits input fasta_file and runs parts on seperate cpus.
+Cluster names are: <sequence_type><%_identity>_<processes_num>.<cluster_num>
+
+Produces 3 output files based on inputed output_name and type:
+    output_name.f(a|n)a
+    output_name.mapping
+    output_name.out"""
+
+fasta_re = re.compile('^>')
+TMP_DIR  = None
+P_IDENT  = 0
+SEQ_TYPE = ''
+type_set = { 'aa': 'faa',
+             'dna': 'fna',
+             'rna': 'fna' }
+
+def run_cmd(cmd):
+    proc = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    stdout, stderr = proc.communicate()
+    if proc.returncode != 0:
+        raise IOError("%s\n%s"%(" ".join(cmd), stderr))
+    return stdout, stderr
+
+def write_file(text, file, append):
+    if append:
+        mode = 'a'
+    else:
+        mode = 'w'
+    outhdl = open(file, mode)
+    outhdl.write(text)
+    outhdl.close()
+
+def split_fasta(infile, bytes):
+    num   = 1
+    char  = 0
+    text  = ''
+    files = []
+    fname = os.path.join(TMP_DIR, os.path.basename(infile))
+    inhdl = open(infile, "rU")
+    for line in inhdl:
+        head = fasta_re.match(line)
+        if head and (char >= bytes):
+            files.append("%s.%d"%(fname, num))
+            write_file(text, "%s.%d"%(fname, num), 0)
+            num += 1
+            char = 0
+            text = ''
+        text += line
+        char += len(line)
+    if text != '':
+        files.append("%s.%d"%(fname, num))
+        write_file(text, "%s.%d"%(fname, num), 0)
+    inhdl.close()
+    return files
+
+def run_cluster(fname):
+    str_list = re.split( r'\.', fname)
+    file_count = int(str_list[len(str_list)-1])
+    runtmp = os.path.join(TMP_DIR, 'tmp.%s'%(os.path.basename(fname)))
+    os.mkdir(runtmp)
+    fExt  = type_set[SEQ_TYPE]
+    outF  = fname + '.out'
+    sortF = fname + '.sort'
+    ucF   = fname + '.uc'
+    seqF  = fname + '.uc.' + fExt
+    logO  = outF + '.log'
+    mapO  = outF + '.map'
+    seqO  = outF + '.' + fExt
+    so1, se1 = run_cmd(['qiime-uclust', '--sort', fname, '--output', sortF, '--tmpdir', runtmp])
+    write_file(so1+"\n"+se1, logO, 1)
+    so2, se2 = run_cmd(['qiime-uclust', '--input', sortF, '--uc', ucF, '--id', '0.%d'%P_IDENT, '--rev', '--tmpdir', runtmp])
+    write_file(so2+"\n"+se2, logO, 1)
+    so3, se3 = run_cmd(['qiime-uclust', '--input', sortF, '--uc2fasta', ucF, '--types', 'SH', '--output', seqF, '--tmpdir', runtmp])
+    write_file(so3+"\n"+se3, logO, 1)
+    so4, se4 = run_cmd(['process_clusters', '-u', seqF, '-p', '%s%d_%d.'%(SEQ_TYPE, P_IDENT, file_count), '-m', mapO, '-f', seqO])
+    write_file(so4+"\n"+se4, logO, 1)
+    return outF
+
+def merge_files(files, out_name):
+    fExt = type_set[SEQ_TYPE]
+    seq_files = map( lambda x: "%s.%s"%(x,fExt), files )
+    map_files = map( lambda x: "%s.map"%x, files )
+    out_files = map( lambda x: "%s.log"%x, files )
+    
+    os.system( "cat %s > %s.%s"%( " ".join(seq_files), out_name, fExt ) )
+    os.system( "cat %s > %s.mapping"%( " ".join(map_files), out_name ) )
+    os.system( "cat %s > %s.out"%( " ".join(out_files), out_name ) )
+    
+    for f in seq_files: os.remove(f)
+    for f in map_files: os.remove(f)
+    for f in out_files: os.remove(f)
+    return
+    
+usage = "usage: %prog [options] input_fasta output_name\n" + __doc__
+
+def main(args):
+    global SEQ_TYPE, P_IDENT, TMP_DIR
+    parser = OptionParser(usage=usage)
+    parser.add_option("-p", "--processes", dest="processes", metavar="NUM_PROCESSES", type="int", default=4, help="Number of processes to use [default '4']")
+    parser.add_option("-s", "--byte_size", dest="size", metavar="BYTE_SIZE", type="int", default=250, help="Size to split fasta file (MB) [default '250']")
+    parser.add_option("-t", "--type", dest="type", metavar="TYPE", default='', help="Sequence type (aa, dna, rna)")
+    parser.add_option("-i", "--ident", dest="ident", metavar="IDENTITY", type="int", default=0, help="Percent identity")
+    parser.add_option("-d", "--tmp_dir", dest="tmpdir", metavar="DIR", default="/tmp", help="DIR for intermediate files (full path) [default '/tmp']")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default is off]")
+    
+    (opts, args) = parser.parse_args()
+    if len(args) != 2:
+        parser.print_help()
+        print "[error] incorrect number of arguments"
+        return 1
+    if (opts.ident < 1) or (opts.ident > 99):
+        parser.print_help()
+        print "[error] percent identity must be greater than 0 and less than 100"
+        return 1
+    if opts.type not in type_set:
+        parser.print_help()
+        print "[error] type must be one of: aa, dna, rna"
+        return 1
+    if not os.path.isdir(opts.tmpdir):
+        parser.print_help()
+        print "[error] invalid tmpdir"
+        return 1
+
+    (in_fasta, out_name) = args
+    P_IDENT  = opts.ident
+    SEQ_TYPE = opts.type
+    TMP_DIR  = opts.tmpdir
+    
+    try:
+        file_bytes = os.path.getsize(in_fasta)
+    except os.error:
+        parser.error("Missing input fasta")
+
+    min_proc = 0
+    sfiles   = []
+    size_bytes = opts.size * 1024 * 1024
+
+    if size_bytes > file_bytes:
+        if opts.verbose: sys.stdout.write("File %s smaller than %d Mb, running with 1 processor\n"%(in_fasta, opts.size))
+        shutil.copyfile(in_fasta, in_fasta+'.tmp.1')
+        sfiles   = [in_fasta+'.tmp.1']
+        min_proc = 1
+    else:
+        if opts.verbose: sys.stdout.write("Splitting file %s ... "%in_fasta)
+        sfiles = split_fasta(in_fasta, size_bytes)
+        scount = len(sfiles)
+        if opts.verbose: sys.stdout.write("Done - %d splits\n%s\n"%(scount, "\n".join(sfiles)))
+        if scount < opts.processes:
+            min_proc = scount
+        else:
+            min_proc = opts.processes
+
+    if opts.verbose: sys.stdout.write("cluster using %d threades ... "%min_proc)
+    pool   = Pool(processes=min_proc)
+    rfiles = pool.map(run_cluster, sfiles, 1)
+    pool.close()
+    pool.join()
+    if opts.verbose: sys.stdout.write("Done\n")
+
+    if opts.verbose: sys.stdout.write("Merging %d outputs ... "%len(rfiles))
+    merge_files(rfiles, out_name)
+    for f in sfiles: os.remove(f)
+    if opts.verbose: sys.stdout.write("Done\n")
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

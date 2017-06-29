@@ -1,0 +1,229 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Getopt::Long;
+
+my $verbose = 0;
+my $version = 7;
+my $jobID   = '';
+my $reload  = 0;
+my $dbhost  = "";
+my $dbname  = "";
+my $dbuser  = "";
+my $dbpass  = "";
+my $dbcert  = "";
+my $dbtable_range = 0;
+my %filenames = ( md5s       => "",
+                  functions  => "",
+                  organisms  => "",
+                  ontologies => "",
+                  lcas       => ""
+                );
+
+my $filenames_string = "";
+foreach my $file_type (keys %filenames) {
+  $filenames_string .= "  --$file_type\_filename\t\tsource data\tOptional.\n";
+}
+
+my $usage   = qq($0
+load precomputed job data into database.
+
+$filenames_string
+  Note: At least 1 of the above filenames is Required.
+
+  --job                  job id         Required.
+  --seq-db-version       nr db version  Optional. Default is '$version'
+  --dbhost               db host        Required. Server of database
+  --dbname               db name        Required. Name of database
+  --dbuser               db user        Required. Owner of database
+  --dbpass               db password    Required. Password of database
+  --dbcert               db ssl certs   Optional. Use SSL if exists
+  --dbtable_range                       Required. Number of jobs per partition
+  --verbose                             Optional. Verbose output.
+  --reload                              Optional. Overwrite data if exists for job/version.
+
+);
+
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+
+my %options = ( 'verbose!'         => \$verbose,
+                'seq-db-version:i' => \$version,
+                'job=i'            => \$jobID,
+                'dbhost:s'         => \$dbhost,
+                'dbname:s'         => \$dbname,
+                'dbuser:s'         => \$dbuser,
+                'dbpass:s'         => \$dbpass,
+                'dbcert:s'         => \$dbcert,
+                'dbtable_range:i'  => \$dbtable_range,
+                'reload!'          => \$reload
+              );
+
+foreach my $file_type (keys %filenames) {
+  $options{$file_type."\_filename=s"} = \$filenames{$file_type};
+}
+
+if (! &GetOptions ( %options )) {
+  print STDERR $usage;
+  exit 1;
+}
+
+my $file_count = 0;
+foreach my $file_type (keys %filenames) {
+  if($filenames{$file_type} ne "") {
+    ++$file_count;
+  }
+}
+
+unless (($file_count > 0) && $jobID && $dbhost && $dbname && $dbuser && $dbpass && $dbtable_range) {
+  print STDERR $usage . "Missing parameter.\n"; exit 1;
+}
+
+my $conn_str = "DBI:Pg:dbname=$dbname;host=$dbhost";
+if ($dbcert) {
+    $conn_str .= ";".$dbcert
+}
+my $dbh = DBI->connect($conn_str, $dbuser, $dbpass, {AutoCommit => 0 , RaiseError => 1});
+unless ($dbh) { print STDERR "Error: ".DBI->errstr."\n"; exit 1; }
+
+# Check if job-version combination already exists.
+my $has_job = $dbh->selectcol_arrayref("SELECT count(*) FROM job_info WHERE job=$jobID AND version=$version");
+$has_job = ($has_job && (@$has_job > 0)) ? $has_job->[0] : 0;
+
+my $range_min = (int($jobID/$dbtable_range)*$dbtable_range);
+my $range_max = (int($jobID/$dbtable_range)*$dbtable_range) + $dbtable_range - 1;
+my $range = $range_min."_".$range_max;
+
+if ($has_job && (! $reload)) {
+  print STDERR "Entry already exists in job_info for job=$jobID and version=$version, exiting.\n";
+  exit 1;
+} elsif ($has_job && $reload) {
+  # Routine will create the appropriate child job_* tables if any of them are missing.
+  &create_child_tables_if_missing($dbh, $jobID);
+
+  # Update row in job_info to loaded = false
+  print "Updating job_info to loaded = false where job=$jobID and version=$version...\n" if ($verbose);
+  $dbh->do("UPDATE job_info SET loaded = false WHERE job=$jobID AND version=$version");
+  $dbh->commit;
+
+  # Delete entries from job_* tables with this job and version
+  foreach my $file_type (sort keys %filenames) {
+    if($filenames{$file_type} ne "") {
+      print "Deleting from job_$file_type\_$range where job=$jobID and version=$version\n" if ($verbose);
+      $dbh->do("DELETE FROM job_$file_type\_$range WHERE job=$jobID AND version=$version");
+    }
+  }
+  
+  # Load files into job_* tables
+  foreach my $file_type (sort keys %filenames) {
+    if($filenames{$file_type} ne "") {
+      &insert_job_abundances($dbh, $file_type);
+    }
+  }
+
+  # Update row in job_info to loaded = true
+  print "Updating job_info to loaded = true where job=$jobID and version=$version...\n" if ($verbose);
+  $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version");
+  # Update row in job_info with current timestamp
+  print "Updating job_info to updated_on = now() where job=$jobID and version=$version...\n" if ($verbose);
+  $dbh->do("UPDATE job_info SET updated_on = now() WHERE job=$jobID AND version=$version");
+} else {
+  # Routine will create the appropriate child job_* tables if any of them are missing.
+  &create_child_tables_if_missing($dbh, $jobID);
+
+  # Insert row in job_info with loaded = false
+  print "Inserting job=$jobID, version=$version and loaded=false into job_info table...\n" if ($verbose);
+  $dbh->do("INSERT INTO job_info (version, job, loaded) VALUES ('$version', '$jobID', false)");
+  $dbh->commit;
+    
+  # Load files into job_* tables
+  foreach my $file_type (sort keys %filenames) {
+    if($filenames{$file_type} ne "") {
+      &insert_job_abundances($dbh, $file_type);
+    }
+  }
+
+  # Update row in job_info to loaded = true
+  print "Updating job_info to loaded = true where job=$jobID and version=$version...\n" if ($verbose);
+  $dbh->do("UPDATE job_info SET loaded = true WHERE job=$jobID AND version=$version");
+}
+$dbh->commit;
+print "Done.\n" if ($verbose);
+$dbh->disconnect;
+exit 0;
+
+sub insert_job_abundances {
+  my ($dbh, $file_type) = @_;
+
+  my $table = "job_$file_type\_$range";
+  my $filename = $filenames{$file_type};
+  my ($num, $name, $end);
+  my $copy_cmd = "COPY $table FROM STDIN WITH NULL AS ''";
+
+  if ( open(DATA, "<$filename") ) {
+    my $start_time = `date`;
+    chomp $start_time;
+    print "$start_time -- Running $copy_cmd ... " if ($verbose);
+    $dbh->do($copy_cmd);
+    while (my $line = <DATA>) {
+      $dbh->pg_putcopydata($line) if $line;
+    }
+    my $res = $dbh->pg_putcopyend();
+    unless ($res) {
+      print STDERR "Error with COPY: ".DBI->errstr."\n"; exit 1;
+    }
+    close(DATA);
+    my $end_time = `date`;
+    chomp $end_time;
+    print " Done -- $end_time\n" if ($verbose);
+  } else {
+    print STDERR "Error: can not read file $filename: $!\n"; exit 1;
+  }
+}
+
+sub create_child_tables_if_missing {
+  my ($dbh, $jobID) = @_;
+
+  foreach my $file_type (sort keys %filenames) {
+    my $master_table_name = "job_$file_type";
+    my $child_table_name = $master_table_name."_".$range;
+    my $has_table = $dbh->selectcol_arrayref("SELECT count(*) FROM pg_class WHERE relname='$child_table_name'");
+    unless($has_table && @$has_table > 0 && $has_table->[0] > 0) {
+      $dbh->do("CREATE TABLE $child_table_name ( CONSTRAINT $child_table_name\_job_check CHECK ((job >= $range_min) AND (job < ".($range_max+1).")) ) INHERITS ($master_table_name);");
+      $dbh->do(&create_indexes_code($file_type, $range));
+      $dbh->commit;
+    }
+  }
+}
+
+sub create_indexes_code {
+  my ($file_type, $range) = @_;
+  my $child_table_name = "job_".$file_type."_".$range;
+
+  if($file_type eq 'functions') {
+    return "CREATE INDEX job_functions_id_$range ON $child_table_name USING btree (id); ".
+           "CREATE INDEX job_functions_lookup_$range ON $child_table_name USING btree (exp_avg, len_avg, ident_avg); ".
+           "CREATE INDEX job_functions_source_$range ON $child_table_name USING btree (source); ".
+           "CREATE INDEX job_functions_vj_$range ON $child_table_name USING btree (version, job);";
+  } elsif($file_type eq 'lcas') {
+    return "CREATE INDEX job_lcas_lookup_$range ON $child_table_name USING btree (exp_avg, len_avg, ident_avg); ".
+           "CREATE INDEX job_lcas_vj_$range ON $child_table_name USING btree (version, job);";
+  } elsif($file_type eq 'md5s') {
+    return "CREATE INDEX job_md5s_index_$range ON $child_table_name USING btree (seek, length) WHERE ((seek IS NOT NULL) AND (length IS NOT NULL)); ".
+           "CREATE INDEX job_md5s_lookup_$range ON $child_table_name USING btree (exp_avg, len_avg, ident_avg); ".
+           "CREATE INDEX job_md5s_md5_$range ON $child_table_name USING btree (md5); ".
+           "CREATE INDEX job_md5s_vj_$range ON $child_table_name USING btree (version, job);";
+  } elsif($file_type eq 'ontologies') {
+    return "CREATE INDEX job_ontologies_id_$range ON $child_table_name USING btree (id); ".
+           "CREATE INDEX job_ontologies_lookup_$range ON $child_table_name USING btree (exp_avg, len_avg, ident_avg); ".
+           "CREATE INDEX job_ontologies_source_$range ON $child_table_name USING btree (source); ".
+           "CREATE INDEX job_ontologies_vj_$range ON $child_table_name USING btree (version, job);";
+  } elsif($file_type eq 'organisms') {
+    return "CREATE INDEX job_organisms_id_$range ON $child_table_name USING btree (id); ".
+           "CREATE INDEX job_organisms_lookup_$range ON $child_table_name USING btree (exp_avg, len_avg, ident_avg); ".
+           "CREATE INDEX job_organisms_source_$range ON $child_table_name USING btree (source); ".
+           "CREATE INDEX job_organisms_vj_$range ON $child_table_name USING btree (version, job);";
+  }
+}

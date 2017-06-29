@@ -1,0 +1,269 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Data::Dumper;
+use Getopt::Long;
+
+my $verbose   = 0;
+my $in_file   = '';
+my $filt_file = '';
+my $exp_file  = '';
+my $ont_file  = '';
+my $rna_file  = '';
+my $hit_num   = 1;
+my $get_rna   = 0;
+my $frag_num  = 5000;
+my $dbname    = "";
+my $dbhost    = "";
+my $dbuser    = "";
+my $usage     = qq($0
+Input:  m8 format blast / blat file - sorted by query | top hit
+Output: top hit for eaach query (protein or rna formats)
+    1. filtered sims: same format as m8
+    2. rna expanded sims: see below
+  OR
+    1. filtered sims: same format as m8
+    2. expanded sims: see below
+    3. ontology sims: see below
+
+m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
+rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
+ontology: md5|query, fragment|subject, identity, length, evalue, function, id, source
+
+  --in_sim       file name    Required. Name of input sim file
+  --out_filter   file name    Required. Name of filtered sim file.
+  --out_expand   file name    Name of output expanded protein sim file.
+  --out_ontology file name    Name of output expanded ontology sim file.
+  --out_rna      file name    Name of output expanded rna sim file
+  --hit_num      int          Optional. Number of top hits to keep. Default is 1.
+  --frag_num     int          Optional. Number of fragment chunks to load in memory at once before processing. Default is 5000.
+  --dbhost       db user      Required. Server of database
+  --dbname       db name      Required. Name of database
+  --dbuser       db user      Required. Owner of database
+  --verbose                   Optional. Verbose output.
+
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! GetOptions( "verbose!"       => \$verbose,
+		   "in_sim=s"       => \$in_file,
+		   "out_filter=s"   => \$filt_file,
+		   "out_expand:s"   => \$exp_file,
+		   "out_ontology:s" => \$ont_file,
+		   "out_rna:s"      => \$rna_file,
+		   "hit_num:i"      => \$hit_num,
+		   "frag_num:i"     => \$frag_num,
+		   "dbhost:s"       => \$dbhost,
+		   "dbname:s"       => \$dbname,
+		   "dbuser:s"       => \$dbuser
+		 ) )
+  { print STDERR $usage; exit 1; }
+
+unless ($in_file && (-s $in_file) && $filt_file) {
+  print STDERR $usage . "Missing input and/or filter files.\n"; exit 1;
+}
+if ($rna_file) {
+  print STDOUT "Running in rna sim mode.\n" if ($verbose);
+  $get_rna = 1;
+}
+elsif ($exp_file && $ont_file) {
+  print STDOUT "Running in protein sim mode.\n" if ($verbose);
+}
+else {
+  print STDERR "Output filenames required: (out_expand and out_ontology) or out_rna"; exit 1;
+}
+
+my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, '', {AutoCommit => 0});
+unless ($dbh) { print STDERR "Error: " , DBI->error , "\n"; }
+
+my $data  = {};
+my $count = 0;
+my $hits  = 0;
+my $frags = 0;
+my $curr  = '';
+my ($filt_fh, $exp_fh, $ont_fh, $rna_fh, $filt_t, $exp_t, $ont_t, $rna_t);
+
+print STDOUT "Parsing file $in_file\n" if ($verbose);
+open(INFILE, "<$in_file") or die "Can't open file $in_file!\n";
+open($filt_fh, ">$filt_file") or die "Can't open file $filt_file!\n";
+if ($get_rna) {
+  open($rna_fh, ">$rna_file") or die "Can't open file $rna_file!\n";
+} else {
+  open($exp_fh, ">$exp_file") or die "Can't open file $exp_file!\n";
+  open($ont_fh, ">$ont_file") or die "Can't open file $ont_file!\n";
+}
+
+while (my $line = <INFILE>) {
+  chomp $line;
+  my ($frag, $md5, @rest) = split(/\t/, $line);
+  
+  if ((! $frag) || (! $line)) { next; }
+  if (($curr eq $frag) && ($hits >= $hit_num)) { next; }
+
+  if ($curr ne $frag) {
+    if ($frags >= $frag_num) {
+      ($filt_t, $exp_t, $ont_t, $rna_t) = &get_top_hits($data, $dbh, $get_rna);
+      print $filt_fh $filt_t if ($filt_t);
+      print $exp_fh $exp_t if ($exp_t);
+      print $ont_fh $ont_t if ($ont_t);
+      print $rna_fh $rna_t if ($rna_t);
+      $data  = {};
+      $frags = 0;
+    }
+    $curr = $frag;
+    $hits = 0;
+    $count += 1;
+    $frags += 1;
+  }
+  $md5 =~ s/lcl\|//;
+  if (! exists $data->{$frag}{$md5}) {
+    # only keep top hit for each md5
+    $data->{$frag}{$md5} = \@rest;
+  }
+  $hits += 1;
+}
+close(INFILE);
+
+($filt_t, $exp_t, $ont_t, $rna_t) = &get_top_hits($data, $dbh, $get_rna);
+print $filt_fh $filt_t if ($filt_t);
+print $exp_fh $exp_t if ($exp_t);
+print $ont_fh $ont_t if ($ont_t);
+print $rna_fh $rna_t if ($rna_t);
+
+close($filt_fh);
+if ($get_rna) {
+  close($rna_fh)
+} else {
+  close($exp_fh);
+  close($ont_fh);
+}
+
+print STDOUT "Done - $count fragments parsed\n" if ($verbose);
+$dbh->disconnect;
+exit 0;
+
+sub get_top_hits {
+  my ($data, $dbh, $get_rna) = @_;
+  
+  my $filter_text   = '';
+  my $expand_text   = '';
+  my $ontology_text = '';
+  my $rna_text      = '';
+  my $md5_prots     = {};
+  my $md5_onts      = {};
+  my $md5_rnas      = {};
+  my $total_md5s    = {};
+
+  foreach my $frag (keys %$data) {
+    foreach my $md5 (keys %{$data->{$frag}}) {
+      $total_md5s->{$md5} = 1;
+    }
+  }
+  unless (scalar(keys %$total_md5s) > 0) { return; }
+  
+  if ($get_rna) {
+    foreach my $row ( @{ get_md5_rna_set($dbh, [keys %$total_md5s]) } ) {
+      $md5_rnas->{$row->[0]}{$row->[3]}{$row->[2]}{$row->[1]} = $row->[4];
+    }
+  } else {
+    foreach my $row ( @{ get_md5_protein_set($dbh, [keys %$total_md5s]) } ) {
+      $md5_prots->{$row->[0]}{$row->[3]}{$row->[2]}{$row->[1]} = $row->[4];
+    }
+    foreach my $row ( @{ get_md5_ontology_set($dbh, [keys %$total_md5s]) } ) {
+      $md5_onts->{$row->[0]}{$row->[3]}{$row->[2]}{$row->[1]} = 1;
+    }
+  }
+
+  my ($frag, $md5, $src, $org, $func, $id, $top);
+  foreach $frag ( keys %$data ) {
+    foreach $md5 ( keys %{$data->{$frag}} ) {
+      # top: identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+      $top = $data->{$frag}{$md5};
+
+      # filter sim output
+      $filter_text .= join("\t", ($frag, $md5, @$top)) . "\n";
+
+      if ($get_rna) {
+	# rna sim output
+	foreach $src ( keys %{$md5_rnas->{$md5}} ) {
+	  foreach $org ( keys %{$md5_rnas->{$md5}{$src}} ) {
+	    foreach $func ( keys %{$md5_rnas->{$md5}{$src}{$org}} ) {
+	      my $tid = $md5_rnas->{$md5}{$src}{$org}{$func} || '';
+	      $rna_text .= join("\t", ($md5, $frag, $top->[0], $top->[1], $top->[8], $func, $org, $src, $tid)) . "\n";
+	    }
+	  }
+	}
+      } else {
+	# protein sim output
+	foreach $src ( keys %{$md5_prots->{$md5}} ) {
+	  foreach $org ( keys %{$md5_prots->{$md5}{$src}} ) {
+	    foreach $func ( keys %{$md5_prots->{$md5}{$src}{$org}} ) {
+	      my $tid = $md5_prots->{$md5}{$src}{$org}{$func} || '';
+	      $expand_text .= join("\t", ($md5, $frag, $top->[0], $top->[1], $top->[8], $func, $org, $src, $tid)) . "\n";
+	    }
+	  }
+	}
+	# ontology sim output
+	foreach $src ( keys %{$md5_onts->{$md5}} ) {
+	  foreach $func ( keys %{$md5_onts->{$md5}{$src}} ) {
+	    foreach $id ( keys %{$md5_onts->{$md5}{$src}{$func}} ) {
+	      $ontology_text .= join("\t", ($md5, $frag, $top->[0], $top->[1], $top->[8], $func, $id, $src)) . "\n";
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return ($filter_text, $expand_text, $ontology_text, $rna_text);
+}
+
+sub get_md5_protein_set {
+  my ($dbh, $md5s) = @_;
+
+  my $sql = qq(select p.md5, f.name, o.name, s.name, o.ncbi_tax_id
+               from md5_protein p, functions f, organisms_ncbi o, sources s
+               where p.function = f._id and p.organism = o._id and p.source = s._id);
+  if (@$md5s == 1) {
+    $sql .= " and p.md5 = '" . $md5s->[0] . "'";
+  } else {
+    $sql .= " and p.md5 in (" . join(",", map {"'$_'"} @$md5s) . ")";
+  }
+  
+  my $rows = $dbh->selectall_arrayref($sql);
+  return ($rows && ref($rows)) ? $rows : [];
+}
+
+sub get_md5_ontology_set {
+  my ($dbh, $md5s) = @_;
+
+  my $sql = qq(select o.md5, o.id, f.name, s.name
+               from md5_ontology o, functions f, sources s
+               where o.function = f._id and o.source = s._id);
+  if (@$md5s == 1) {
+    $sql .= " and o.md5 = '" . $md5s->[0] . "'";
+  } else {
+    $sql .= " and o.md5 in (" . join(",", map {"'$_'"} @$md5s) . ")";
+  }
+  
+  my $rows = $dbh->selectall_arrayref($sql);
+  return ($rows && ref($rows)) ? $rows : [];
+}
+
+sub get_md5_rna_set {
+  my ($dbh, $md5s) = @_;
+
+  my $sql = qq(select r.md5, f.name, o.name, s.name, o.ncbi_tax_id
+               from md5_rna r, functions f, organisms_ncbi o, sources s
+               where r.function = f._id and r.organism = o._id and r.source = s._id and r.tax_rank = 1);
+  if (@$md5s == 1) {
+    $sql .= " and r.md5 = '" . $md5s->[0] . "'";
+  } else {
+    $sql .= " and r.md5 in (" . join(",", map {"'$_'"} @$md5s) . ")";
+  }
+  
+  my $rows = $dbh->selectall_arrayref($sql);
+  return ($rows && ref($rows)) ? $rows : [];
+}

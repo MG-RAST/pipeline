@@ -1,0 +1,303 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Cache::Memcached;
+
+my %opts = ();
+GetOptions( \%opts, "job_id=s",
+                    "fasta=s",
+                    "aa_sims_file=s",
+                    "rna_sims_file=s",
+                    "clust_aa=s",
+                    "map_rna=s",
+                    "sort_dir=s",
+                    "run_dir=s",
+                    "prefix=s",
+                    "ver_db:s",
+                    "mem_host=s",
+                    "mem_key=s",
+                    "sort_mem=s",
+                    "procs=s",
+                    "abun_file=s",
+                    "help!" );
+
+my $mem_key       = '_ach';
+my $sort_mem      = 10;
+my $procs         = 4;
+my $max_seq       = 500000;
+
+my $usage = "Usage: $0 --job <job identifier> --fasta <raw input fasta file> --aa_sims_file <aa_sims_file> --rna_sims_file <rna_sims_file> --clust_aa <protein cluster file> --map_rna <rna mapping file> --sort_dir <sort_dir> --run_dir <run_dir> --prefix <prefix> --ver_db <m5nr db version> --mem_host <memcache_host> --mem_key <memcache_key (default $mem_key)> --sort_mem <sort memory in GB (default $sort_mem)> --procs <# processors for sort (default $procs) --abun_file <assembly abundance file (default none)>\n";
+
+if ($opts{help}) {
+  print STDERR "$usage\n";
+  exit(1);
+}
+
+my $invalid_input = 0;
+foreach my $opt ('job_id', 'fasta', 'sort_dir', 'run_dir', 'prefix', 'ver_db', 'mem_host') {
+  unless(exists $opts{$opt}) {
+    print STDERR "ERROR: Required input parameter '$opt' is not specified.\n";
+    $invalid_input = 1;
+  }
+}
+
+unless((exists $opts{'aa_sims_file'} && -s $opts{'aa_sims_file'}) ||
+       (exists $opts{'rna_sims_file'} && -s $opts{'rna_sims_file'})) {
+  print STDERR "ERROR: Must input at least one sims file that is not empty.\n";
+  $invalid_input = 1;
+}
+
+foreach my $opt ('fasta', 'aa_sims_file', 'rna_sims_file', 'clust_aa', 'map_rna') {
+  if(exists $opts{$opt}) {
+    my $file_name = $opts{$opt};
+    unless (-e $file_name) {
+      print STDERR "ERROR: Input file '$file_name' does not exist\n";
+      $invalid_input = 1;
+    }
+  }
+}
+
+if(exists $opts{sort_dir}) {
+  unless(-d $opts{sort_dir}) {
+    print STDERR "ERROR: Sort directory does not exist.\n";
+    $invalid_input = 1;
+  }
+}
+
+if(exists $opts{run_dir}) {
+  unless(-d $opts{run_dir}) {
+    print STDERR "ERROR: Run directory does not exist.\n";
+    $invalid_input = 1;
+  }
+}
+
+unless($invalid_input == 0) {
+  print "\n$usage\n";
+  exit(1);
+}
+
+my $job_id        = $opts{job_id};
+my $fasta         = $opts{fasta};
+my $aa_sims_file  = (exists $opts{aa_sims_file}) ? $opts{aa_sims_file} : "";
+my $rna_sims_file = (exists $opts{rna_sims_file}) ? $opts{rna_sims_file} : "";
+my $clust_aa      = (exists $opts{clust_aa}) ? $opts{clust_aa} : "";
+my $map_rna       = (exists $opts{map_rna}) ? $opts{map_rna} : "";
+my $sort_dir      = $opts{sort_dir};
+my $run_dir       = $opts{run_dir};
+my $prefix        = $opts{prefix};
+my $ver_db        = $opts{ver_db};
+my $mem_host      = $opts{mem_host};
+my $abun_file     = (exists $opts{abun_file}) ? $opts{abun_file} : '';
+$mem_key          = (exists $opts{mem_key}) ? $opts{mem_key} : $mem_key;
+$sort_mem         = (exists $opts{sort_mem}) ? $opts{sort_mem} : $sort_mem;
+$procs            = (exists $opts{procs}) ? $opts{procs} : $procs;
+
+my @rna_ext  = ('sims.filter', 'expand.rna', 'expand.lca');
+my $rna_prefix = $prefix.".rna";
+
+if($rna_sims_file && -s $rna_sims_file) {
+  # process_rna_sims
+  # This next step will generate 6 output files (paths and filenames assume the normal setup):
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.err
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.expand.lca
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.expand.rna
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.out
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.sims.filter
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.rna.sims.sort
+
+  &run_system_command("process_rna_sims --in_sim $rna_sims_file --sort_dir $sort_dir --run_dir $run_dir --prefix $rna_prefix --mem_host $mem_host --mem_key $mem_key --procs $procs");
+
+  for my $ext (@rna_ext) {
+    unless(-e "$run_dir/$rna_prefix.$ext") {
+      print STDERR "ERROR: File \"$run_dir/$rna_prefix.$ext\" does not exist.\n";
+      exit 1;
+    }
+  }
+}
+
+my $aa_prefix = $prefix.".aa";
+my @prot_ext = ('sims.filter', 'expand.protein', 'expand.lca', 'expand.ontology');
+
+if($aa_sims_file && -s $aa_sims_file) {
+  # process_sims_by_source_mem
+  # This next step will generate 6 output files (paths and filenames assume the normal setup):
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.err
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.expand.lca
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.expand.ontology
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.expand.protein
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.out
+  #   proc/700.sims_to_abundance/700.sims_to_abundance.aa.sims.filter
+  &run_system_command("process_sims_by_source_mem --verbose --mem_host $mem_host --mem_key $mem_key --in_sim $aa_sims_file --out_filter $run_dir/$aa_prefix.sims.filter --out_expand $run_dir/$aa_prefix.expand.protein --out_ontology $run_dir/$aa_prefix.expand.ontology --out_lca $run_dir/$aa_prefix.expand.lca >> $run_dir/$aa_prefix.out 2>> $run_dir/$aa_prefix.err");
+
+  for my $ext (@prot_ext) {
+    unless(-e "$run_dir/$aa_prefix.$ext") {
+      print STDERR "ERROR: File \"$run_dir/$aa_prefix.$ext\" does not exist.\n";
+      exit 1;
+    }
+  }
+}
+
+my $sims_filter = "$run_dir/$prefix.sims.filter";
+my $md5_expand = "$run_dir/$prefix.expand";
+my $lca_expand = "$run_dir/$prefix.lca";
+my $ontol_expand = "$run_dir/$prefix.ontology";
+my $src_expand   = "$run_dir/$prefix.source";
+my $cluster_file = "$run_dir/$prefix.mapping";
+
+if($aa_sims_file && (-s $aa_sims_file) && $rna_sims_file && (-s $rna_sims_file)) {
+  &run_system_command("cat $run_dir/$aa_prefix.$prot_ext[0] $run_dir/$rna_prefix.$rna_ext[0] > $sims_filter");
+  &run_system_command("cat $run_dir/$aa_prefix.$prot_ext[1] $run_dir/$rna_prefix.$rna_ext[1] > $md5_expand");
+  &run_system_command("cat $run_dir/$aa_prefix.$prot_ext[2] $run_dir/$rna_prefix.$rna_ext[2] > $lca_expand");
+  &run_system_command("cp $run_dir/$aa_prefix.$prot_ext[3] $ontol_expand");
+
+  if ($clust_aa && (-s $clust_aa) && $map_rna && (-s $map_rna)) {
+    &run_system_command("cat $clust_aa $map_rna > $cluster_file");
+  } elsif ($clust_aa && (-s $clust_aa)) {
+    &run_system_command("cp $clust_aa $cluster_file");
+  } elsif ($map_rna && (-s $map_rna)) {
+    &run_system_command("cp $map_rna $cluster_file");
+  }
+} elsif($aa_sims_file && (-s $aa_sims_file)) {
+  &run_system_command("cp $run_dir/$aa_prefix.$prot_ext[0] $sims_filter");
+  &run_system_command("cp $run_dir/$aa_prefix.$prot_ext[1] $md5_expand");
+  &run_system_command("cp $run_dir/$aa_prefix.$prot_ext[2] $lca_expand");
+  &run_system_command("cp $run_dir/$aa_prefix.$prot_ext[3] $ontol_expand");
+
+  if ($clust_aa && (-s $clust_aa)) {
+    &run_system_command("cp $clust_aa $cluster_file");
+  }
+} elsif($rna_sims_file && (-s $rna_sims_file)) {
+  &run_system_command("cp $run_dir/$rna_prefix.$rna_ext[0] $sims_filter");
+  &run_system_command("cp $run_dir/$rna_prefix.$rna_ext[1] $md5_expand");
+  &run_system_command("cp $run_dir/$rna_prefix.$rna_ext[2] $lca_expand");
+
+  if ($map_rna && (-s $map_rna)) {
+    &run_system_command("cp $map_rna $cluster_file");
+  }
+}
+
+unless(-e $cluster_file) {
+  &run_system_command("touch $cluster_file");
+}
+
+for my $file ($sims_filter, $md5_expand) {
+  unless(-s $file) {
+    print STDERR "ERROR: File \"$file\" is empty\n";
+    exit(1);
+  }
+}
+
+my $outf  = "$run_dir/filter_sims.out";
+$sort_mem = int($sort_mem * 1024);
+
+# get max seq size
+my $format = ($fasta =~ /\.(fq|fastq)$/) ? 'fastq' : 'fasta';
+my @out    = `seq_length_stats.py -f -t $format -i $fasta | cut -f2`;
+chomp @out;
+my $max = $out[5];
+
+my $err_file = "$run_dir/$prefix.err";
+
+# index filter seqs
+&run_system_command("uncluster_sims -v -c $cluster_file -i $sims_filter -o $sims_filter.unclust >> $run_dir/uncluster_sims.out 2> $err_file");
+if ($max < $max_seq) {
+  my $seq_opt = ($format eq 'fastq') ? '--fastq' : '';
+  &run_system_command("seqUtil -t $sort_dir -i $fasta -o $run_dir/$prefix.seq.tab --sortbyid2tab $seq_opt >> $outf 2> $err_file");
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 1,1 -o $sims_filter.sort $sims_filter.unclust", 1);
+  &run_system_command("add_seq2sims -v -i $sims_filter.sort -o $sims_filter.seq -s $run_dir/$prefix.seq.tab >> $outf 2> $err_file");
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 2,2 -o $sims_filter.seq.sort $sims_filter.seq", 1);
+  &run_system_command("mv $sims_filter.seq.sort $sims_filter.seq");
+  &run_system_command("index_sims_file_md5 --verbose --mem_host $mem_host --mem_key $mem_key --in_file $sims_filter.seq --out_file $sims_filter.seq.index >> $outf 2> $err_file");
+  &run_system_command("rm $run_dir/$prefix.seq.tab $sims_filter.sort");
+} else {
+  print "Skipping adding of sequences to index sims file, max sequence length is $max bps\n";
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 2,2 -o $sims_filter.seq $sims_filter.unclust", 1);
+}
+&run_system_command("rm $sims_filter.unclust");
+
+# checking to see if this metagenome is an assembly and thus has an abundance file
+my $assembled_opt = "";
+if($abun_file ne "") {
+  $assembled_opt = "--abundance_file $abun_file";
+}
+
+my @info_set     = ( ['md5', $md5_expand, 1],
+                     ['function', $md5_expand, 6],
+                     ['organism', $md5_expand, 7],
+                     ['ontology', $ontol_expand, 7],
+                     ['lca', $lca_expand, 6] );
+
+# sort and summarize files: md5, function, organism, ontology, lca
+my %pluralize = ( 'md5' => 'md5s', 'function' => 'functions', 'organism' => 'organisms', 'ontology' => 'ontologies', 'lca' => 'lcas' );
+foreach my $info (@info_set) {
+  my ($type, $input, $pos) = @$info;
+  my $sort_type = ($type eq 'lca') ? '' : ' -n';
+  unless ($input && (-s $input)) {
+    &run_system_command("touch $run_dir/$prefix.$type.summary");
+    next;
+  }
+  $outf = "$run_dir/run_$type.out";
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k $pos,$pos$sort_type -o $input.$type $input", 1);
+  &run_system_command("expanded_sims2overview $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --md5_index $sims_filter.seq.index --cluster $cluster_file --expanded_sims_in $input.$type --summary_sims_out $run_dir/$prefix.$type.summary >> $outf 2> $err_file");
+  # clean tmp file
+  system("rm $input.$type");
+}
+
+# process sources
+my $type = "source";
+$outf = "$run_dir/run_$type.out";
+if ($ontol_expand && (-s $ontol_expand)) {
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 8,8 -n -o $src_expand $md5_expand $ontol_expand", 1);
+} else {
+  &run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 8,8 -n -o $src_expand $md5_expand", 1);
+}
+&run_system_command("expanded_sims2overview $assembled_opt --job $job_id --m5nr-version $ver_db --verbose --option $type --cluster $cluster_file --expanded_sims_in $src_expand --summary_sims_out $run_dir/$prefix.$type.stats.tmp >> $outf 2> $err_file");
+
+my $mem_cache = new Cache::Memcached { 'servers' => [$mem_host], 'debug' => 0, 'compress_threshold' => 10_000 };
+unless ($mem_cache && ref($mem_cache)) {
+  print STDERR "Unable to connect to memcache:\n";
+  exit(1);
+}
+
+my $src_map = $mem_cache->get("source".$mem_key);
+
+open(SRCF, ">$run_dir/$prefix.$type.stats") || die "Cannot open $run_dir/$prefix.$type.stats file to print.\n";
+foreach my $line (`cat $run_dir/$prefix.$type.stats.tmp`) {
+    chomp $line;
+    my @parts = split(/\t/, $line);
+    if (exists $src_map->{$parts[0]}[0]) {
+        print SRCF $src_map->{$parts[0]}[0]."\t".join("\t", @parts[1..@parts-1])."\n";
+    }
+}
+close(SRCF);
+
+# run / load sims stats
+my $sim_stats = [ ["$run_dir/$rna_prefix.sims.filter", 1, 'sequence_count_sims_rna', 0],
+                  ["$run_dir/$aa_prefix.sims.filter", 1, 'sequence_count_sims_aa', 0],
+                  ["$run_dir/$aa_prefix.expand.ontology", 2, 'sequence_count_ontology', 0] ];
+open(SSTAT, ">$run_dir/$prefix.sims.stats") || die "Cannot open $run_dir/$prefix.sims.stats file to print.\n";
+foreach my $set (@$sim_stats) {
+  my ($sfile, $scut, $skey, $sstat) = @$set;
+  if (-s $sfile) {
+    $sstat = `cut -f$scut $sfile | uniq | wc -l`;
+    chomp $sstat;
+  }
+  print SSTAT "$skey\t$sstat\n";
+}
+close SSTAT;
+
+sub run_system_command {
+  my ($cmd, $split) = @_;
+  my $status;
+  if ($split) {
+      $status = system(split(/ /, $cmd));
+  } else {
+      $status = system($cmd);
+  }
+  unless($status == 0) {
+    print STDERR "Error status '$status' running command: $cmd\n";
+    exit(1);
+  }
+}

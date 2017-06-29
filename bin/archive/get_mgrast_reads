@@ -1,0 +1,133 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use DBI;
+use Getopt::Long;
+use Data::Dumper;
+
+my @jobs   = ();
+my @orgs   = ();
+my @funcs  = ();
+my $file   = "";
+my $jdir   = "";
+my $dbname = "";
+my $dbhost = "";
+my $dbuser = "";
+my $usage  = qq($0
+Return a fasta file of reads for inputed jobs.
+Filtered by inputed organisms and functions (all reads returned if none inputed).
+
+  --job        job id         Required. This may be multiple ids by calling the option multiple times.
+  --organism   organsim name  Optional. This may be multiple names by calling the option multiple times.
+  --function   function name  Optional. This may be multiple names by calling the option multiple times.
+  --outfile    file name      Required. Name of output fasta file.
+  --job_dir    dir name       Required. Path where jobs are located
+  --dbhost     db user        Required. Server of database
+  --dbname     db name        Required. Name of database
+  --dbuser     db user        Required. Owner of database
+
+);
+if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
+if ( ! &GetOptions ('job=i'      => \@jobs,
+		    'organism=s' => \@orgs,
+		    'function=s' => \@funcs,
+		    'outfile=s'  => \$file,
+		    'job_dir=s'  => \$jdir,
+		    'dbhost:s'   => \$dbhost,
+		    'dbname:s'   => \$dbname,
+		    'dbuser:s'   => \$dbuser
+		   ) )
+  { print STDERR $usage; exit 1; }
+
+unless (@jobs && $file) {
+  print STDERR $usage . "Missing parmater.\n"; exit 1;
+}
+
+my $dbh = DBI->connect("DBI:Pg:dbname=$dbname;host=$dbhost", $dbuser, '', {RaiseError => 1});
+unless ($dbh) { print STDERR "Error: " , DBI->error , "\n"; exit 1; }
+
+my $tbls = &get_jobs_tables($dbh, \@jobs);
+
+open(FASTA, ">$file") || die "Can not open $file: $!";
+foreach my $j (keys %$tbls) {
+  my $sim_file = "$jdir/$j/$j.sims.filter.seqs";
+  unless ( exists($tbls->{$j}{protein}) && (-s $sim_file) ) { print STDERR "no file $sim_file\n"; next; }
+
+  my @hit_md5s  = ();  
+  my $org_md5s  = exists($tbls->{$j}{organism}) ? &get_md5_hash($dbh, $tbls->{$j}{organism}, "organism", \@orgs) : {};
+  my $func_md5s = exists($tbls->{$j}{ontology}) ? &get_md5_hash($dbh, $tbls->{$j}{ontology}, "annotation", \@funcs) : {};
+
+  if ( (scalar(keys %$org_md5s) > 0) && (scalar(keys %$func_md5s) > 0) ) {
+    @hit_md5s = grep { exists $func_md5s->{$_} } keys %$org_md5s;
+  }
+  elsif ( scalar(keys %$org_md5s) > 0 ) {
+    @hit_md5s = keys %$org_md5s;
+  }
+  elsif ( scalar(keys %$func_md5s) > 0 ) {
+    @hit_md5s = keys %$func_md5s;
+  }
+
+  print STDERR "Getting reads for " . scalar(@hit_md5s) . " md5s\n";
+
+  my $where = (@hit_md5s > 0) ? " WHERE md5 IN (" . join(",", map {"'$_'"} @hit_md5s) . ")" : "";
+  my $seeks = $dbh->selectall_arrayref("SELECT seek, length FROM " . $tbls->{$j}{protein} . "$where ORDER BY seek");
+  if ($seeks && (@$seeks > 0)) {
+    open(SIM, "<$sim_file");
+    foreach my $sk (@$seeks) {
+      my $rec = '';
+      seek(SIM, $sk->[0], 0);
+      read(SIM, $rec, $sk->[1]);
+      chomp $rec;
+      foreach my $line ( split(/\n/, $rec) ) {
+	my @tabs = split(/\t/, $line);
+	if (@tabs == 13) {
+	  print FASTA ">$tabs[0]\n$tabs[12]\n";
+	}
+      }
+    }
+    close SIM;
+  }
+}
+
+$dbh->disconnect;
+exit 0;
+
+sub get_jobs_tables {
+  my ($dbh, $jobs) = @_;
+
+  my $all  = {};
+  my $tbls = {};
+  my $list = join(",", @$jobs);
+  my $rows = $dbh->selectall_arrayref("select job_id, seq_db_name, seq_db_version, table_type, table_name from job_tables where job_id in ($list)");
+  if ($rows && (@$rows > 0)) {
+    foreach (@$rows) { $all->{ $_->[0] }->{ $_->[1] }->{ $_->[2] }->{ $_->[3] } = $_->[4]; }
+  }
+  ## select 'M5NR' if multiple dbs, select highest
+  foreach my $j (keys %$all) {
+    my @dbs = keys %{$all->{$j}};
+    my $db  = (exists $all->{$j}{M5NR}) ? "M5NR" : $dbs[0];
+    my $ver = (sort {$b cmp $a} keys %{$all->{$j}{$db}})[0];
+    $tbls->{$j} = $all->{$j}{$db}{$ver};
+  }
+
+  return $tbls;
+}
+
+sub get_md5_hash {
+  my ($dbh, $tbl, $col, $vals) = @_;
+
+  unless (@$vals) { return {}; }
+  my $md5s  = {};
+  my $where = join(" OR ", map {"$col ILIKE '\%" . $_ . "\%'"} @$vals);
+  my $rows  = $dbh->selectcol_arrayref("SELECT md5s FROM $tbl WHERE $where");
+  if ($rows && (@$rows > 0)) {
+    foreach my $row (@$rows) {
+      foreach my $md5 (@$row) {
+	$md5s->{$md5} = 1;
+      }
+    }
+  }
+  return $md5s;
+}

@@ -1,4 +1,0 @@
-#!/bin/sh
-. ~mgrastprod/.zshenv
-/mcs/bio/mg-rast/prod/bin/mgrast_process_upload.pl >> /mcs/bio/mg-rast/prod/logs/cron.log
-

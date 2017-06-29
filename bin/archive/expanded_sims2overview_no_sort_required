@@ -1,0 +1,548 @@
+#!/usr/bin/env perl
+
+# NOTE: This new version of expanded_sims2overview does not require the input expand
+#       files be sorted.  However, it does rely on the read -> md5 hits being grouped
+#       together for the md5 summary.  This means, all rows with the same read and
+#       md5 pair should be grouped together in the expand file so that this pair is
+#       only counted once.
+#
+# ALSO NOTE: This script does not enforce an e-value cutoff.  Instead, it relies on
+#       bleachsims being run on the rna sims and process_sims_by_source_mem employing
+#       an e-value cutoff of 0.001 on the protein sims.
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my $verbose  = 0;
+my $version  = 7;
+my $jobID    = '';
+my $abun_file= '';
+my $in_file  = '';
+my $out_file = '';
+my $md5_file = '';
+my $cluster  = '';
+my $select   = '';
+my $options  = { md5      => 1,
+                 ontology => 1,
+                 function => 1,
+                 organism => 1,
+                 source   => 1,
+                 lca      => 1
+               };
+
+if( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) {
+    &usage();
+}
+
+if( ! GetOptions( "verbose!"           => \$verbose,
+                  "m5nr-version:i"     => \$version,
+                  "job=i"              => \$jobID,
+                  "abundance_file=s"   => \$abun_file,
+                  "expanded_sims_in=s" => \$in_file,
+                  "summary_sims_out=s" => \$out_file,
+                  "md5_index:s"        => \$md5_file,
+                  "cluster:s"          => \$cluster,
+                  "option=s"           => \$select     ) ) {
+    print &usage();
+}
+
+unless($in_file) {
+    &usage("Must supply an expanded_sims_in paramater.\n");
+} 
+unless(-s $in_file) {
+    &usage("File $in_file is empty.\n");
+}
+unless($out_file) {
+    &usage("Must supply a summary_sims_out paramater.\n");
+} 
+unless(exists $options->{$select}) {
+    &usage("Unknown option $select.\n");
+}
+unless(!$abun_file || ($abun_file && (-s $abun_file))) {
+    &usage("Abundance file: $abun_file is missing or empty and this is an assembled dataset.\n");
+}
+
+my $data  = {};
+my $amap  = {};
+my $cmap  = {};
+my $imap  = {};
+my $curr  = '';
+my $curr2 = '';
+my @thresholds_eval  = ( -5 , -10 , -20 , -30 , -1000 );
+my @thresholds_ident = ( 60 , 80 , 90 , 97 , 100 );
+
+# get hash of abundance mapping file if $abun_file exists
+if ($abun_file) {
+    print STDOUT "Reading file $abun_file ... " if ($verbose);
+    open(ABUN, "<$abun_file") || die "Can't open file $abun_file!\n";
+    while(my $line = <ABUN>) {
+	chomp $line;
+	my @tabs = split(/\t/, $line);
+	$amap->{$tabs[0]} = $tabs[1];
+    }
+    close ABUN;
+    print STDOUT "Done\n" if ($verbose);
+}
+
+# get hash of cluster mapping file: cluster_id{seq_id} => 1
+if ($cluster && (-s $cluster)) {
+    print STDOUT "Reading file $cluster ... " if ($verbose);
+    open(CLUST, "<$cluster") || die "Can't open file $cluster!\n";
+    while (my $line = <CLUST>) {
+	chomp $line;
+	my @tabs = split(/\t/, $line);
+	foreach my $seqid ($tabs[1], split(/,/, $tabs[2])) {
+	    push @{$cmap->{$tabs[0]}}, $seqid;
+	}
+    }
+    close CLUST;
+    print STDOUT "Done\n" if ($verbose);
+}
+
+# get hash of md5 index: md5 => [ seek, length ]
+if (($select eq "md5") && $md5_file && (-s $md5_file)) {
+    print STDOUT "Reading file $md5_file ... " if ($verbose);
+    open(INDEX, "<$md5_file") || die "Can't open file $md5_file!\n";
+    while (my $line = <INDEX>) {
+        chomp $line;
+        my ($m, $s, $l) = split(/\t/, $line);
+        $imap->{$m} = [$s, $l];
+    }
+    close INDEX;
+    print STDOUT "Done\n" if ($verbose);
+}
+
+print STDOUT "Parsing file $in_file ... " if ($verbose);
+open(INFILE, "<$in_file") || die "Can't open file $in_file!\n";
+open(OUTFILE, ">$out_file") || die "Can't open file $out_file!\n";
+
+# Variables used to track which entries to record.  If the fragment ID (read
+#  or cluster ID) has changed, then the frag_keys hash will be emptied.  But,
+#  as long as we're on the same read (the only thing we know the expand file
+#  to be sorted by), then we want to record all the ID's we're recording so
+#  that nothing gets recorded in duplicate.
+my $prev_frag = "";
+my %frag_keys = ();
+
+while(my $line=<INFILE>) {
+    chomp $line;
+    my ($md5, $frag, $ident, $len, $eval, $fid, $oid, $source, @rest) = split(/\t/, $line);
+    my $is_protein = (@rest && ($rest[0] == 1)) ? 0 : 1;
+    unless ($frag and $md5) { next; }
+
+    if($select eq "md5") {
+        if($frag ne $prev_frag) {
+            %frag_keys = ();
+        }
+        if(!exists $frag_keys{$md5}) {
+            my $eval_exp = &get_exponent($eval);
+            my $abun = &get_abundance($frag);
+            if($abun < 1) {
+                next;
+            }
+
+            $data->{$md5}{abun} += $abun;
+            $data->{$md5}{e_sum} += $abun * ($eval_exp);
+            $data->{$md5}{e_sos} += $abun * ($eval_exp * $eval_exp);
+            $data->{$md5}{l_sum} += $abun * ($len);
+            $data->{$md5}{l_sos} += $abun * ($len * $len);
+            $data->{$md5}{i_sum} += $abun * ($ident);
+            $data->{$md5}{i_sos} += $abun * ($ident * $ident);
+            $data->{$md5}{e_bins} = &update_e_bins($eval_exp, $abun, $data->{$md5}{e_bins} ? $data->{$md5}{e_bins} : [0,0,0,0,0]);
+            $data->{$md5}{is_protein} = $is_protein;
+            $frag_keys{$md5} = 1;
+        }
+    } elsif($select eq 'lca') {
+        unless($fid) { next; }
+        # In this case the $fid is actually the LCA, and the $oid is the level
+        my $lca = $fid;
+        my $level = $oid;
+
+        my $abun = &get_abundance($frag);
+        if($abun < 1) {
+            next;
+        }
+
+        my @evals  = split(/;/, $eval);
+        my @lens   = split(/;/, $len);
+        my @idents = split(/;/, $ident);
+        my @md5s   = split(/;/, $md5);
+        my $e_line_sum = 0;
+        my $l_line_sum = 0;
+        my $i_line_sum = 0;
+        my $md5_count = 0;
+        for(my $i=0; $i<@evals; $i++) {
+            my $eval_exp = &get_exponent($evals[$i]);
+            $e_line_sum += $eval_exp;
+            $l_line_sum += $lens[$i];
+            $i_line_sum += $idents[$i];
+            $md5_count++;
+            $data->{$lca}{md5}{$md5s[$i]} = 1;
+        }
+        my $e_avg = $e_line_sum / $md5_count;
+        my $l_avg = $l_line_sum / $md5_count;
+        my $i_avg = $i_line_sum / $md5_count;
+
+        $data->{$lca}{abun} += $abun;
+        $data->{$lca}{e_sum} += $abun * ($e_avg);
+        $data->{$lca}{e_sos} += $abun * ($e_avg * $e_avg);
+        $data->{$lca}{l_sum} += $abun * ($l_avg);
+        $data->{$lca}{l_sos} += $abun * ($l_avg * $l_avg);
+        $data->{$lca}{i_sum} += $abun * ($i_avg);
+        $data->{$lca}{i_sos} += $abun * ($i_avg * $i_avg);
+        $data->{$lca}{level} = $level;
+    } elsif($select eq 'function') {
+        unless($fid) { next; }
+        if($frag ne $prev_frag) {
+            %frag_keys = ();
+        }
+        if(!exists $frag_keys{$fid}{$source}) {
+            my $eval_exp = &get_exponent($eval);
+            my $abun = &get_abundance($frag);
+            if($abun < 1) {
+                next;
+            }
+
+            $data->{$fid}{$source}{abun} += $abun;
+            $data->{$fid}{$source}{e_sum} += $abun * ($eval_exp);
+            $data->{$fid}{$source}{e_sos} += $abun * ($eval_exp * $eval_exp);
+            $data->{$fid}{$source}{l_sum} += $abun * ($len);
+            $data->{$fid}{$source}{l_sos} += $abun * ($len * $len);
+            $data->{$fid}{$source}{i_sum} += $abun * ($ident);
+            $data->{$fid}{$source}{i_sos} += $abun * ($ident * $ident);
+            $data->{$fid}{$source}{md5s}{$md5} = 1;
+            $frag_keys{$fid}{$source} = 1;
+        }
+    } elsif(($select eq "organism") || ($select eq "ontology")) {
+        unless($oid) { next; }
+        if($frag ne $prev_frag) {
+            %frag_keys = ();
+        }
+        if(!exists $frag_keys{$oid}{$source}) {
+            my $eval_exp = &get_exponent($eval);
+            my $abun = &get_abundance($frag);
+            if($abun < 1) {
+                next;
+            }
+
+            $data->{$oid}{$source}{abun} += $abun;
+            $data->{$oid}{$source}{e_sum} += $abun * ($eval_exp);
+            $data->{$oid}{$source}{e_sos} += $abun * ($eval_exp * $eval_exp);
+            $data->{$oid}{$source}{l_sum} += $abun * ($len);
+            $data->{$oid}{$source}{l_sos} += $abun * ($len * $len);
+            $data->{$oid}{$source}{i_sum} += $abun * ($ident);
+            $data->{$oid}{$source}{i_sos} += $abun * ($ident * $ident);
+            $data->{$oid}{$source}{md5s}{$md5} = 1;
+            $frag_keys{$oid}{$source} = 1;
+            if($select eq "organism") {
+                # M5NR = 20, M5RNA = 19
+                my $merge = $is_protein ? '20' : '19';
+                $data->{$oid}{$merge}{abun} += $abun;
+                $data->{$oid}{$merge}{e_sum} += $abun * ($eval_exp);
+                $data->{$oid}{$merge}{e_sos} += $abun * ($eval_exp * $eval_exp);
+                $data->{$oid}{$merge}{l_sum} += $abun * ($len);
+                $data->{$oid}{$merge}{l_sos} += $abun * ($len * $len);
+                $data->{$oid}{$merge}{i_sum} += $abun * ($ident);
+                $data->{$oid}{$merge}{i_sos} += $abun * ($ident * $ident);
+                $data->{$oid}{$merge}{md5s}{$md5} = 1;
+                $frag_keys{$oid}{$merge} = 1;
+            }
+        }
+    } elsif($select eq 'source') {
+        unless($source) { next; }
+        my $eval_exp = &get_exponent($eval);
+        my $abun = &get_abundance($frag);
+        if($abun < 1) {
+            next;
+        }
+
+        my $e_bin = &get_e_bin($eval_exp);
+        my $i_bin = &get_i_bin($ident);
+        if($e_bin eq "error") {
+            print "ERROR, invalid e-value exponent: $eval_exp. Exiting.\n";
+            exit(1);
+        }
+        if($i_bin eq "error") {
+            print "ERROR, invalid identity e-value: $ident. Exiting.\n";
+            exit(1);
+        }
+        $data->{eval}{$source}{$e_bin} += $abun;
+        $data->{ident}{$source}{$i_bin} += $abun;
+    }
+
+    $prev_frag = $frag;
+}
+close INFILE;
+
+if ($select eq "md5") {
+    &print_md5_stats();
+}
+elsif ($select eq 'lca') {
+    &print_lca_stats();
+}
+elsif (($select eq "function") || ($select eq "organism") || ($select eq "ontology")) {
+    &print_type_stats();
+}
+elsif ($select eq "source") {
+    &print_source_stats();
+}
+close(OUTFILE);
+
+print STDOUT "Done.\n" if ($verbose);
+exit 0;
+
+sub print_md5_stats {
+    unless(scalar(keys %{$data}) > 0) {
+        return;
+    }
+
+    foreach my $md5 (sort {$a <=> $b} keys %{$data}) {
+        my $e_mean = &round($data->{$md5}{e_sum} / $data->{$md5}{abun});
+        my $e_std  = &round(&stddev($e_mean, $data->{$md5}{e_sos}, $data->{$md5}{abun}));
+        my $l_mean = &round($data->{$md5}{l_sum} / $data->{$md5}{abun});
+        my $l_std  = &round(&stddev($l_mean, $data->{$md5}{l_sos}, $data->{$md5}{abun}));
+        my $i_mean = &round($data->{$md5}{i_sum} / $data->{$md5}{abun});
+        my $i_std  = &round(&stddev($i_mean, $data->{$md5}{i_sos}, $data->{$md5}{abun}));
+
+        my ($seek, $len)     = exists($imap->{$md5}) ? @{$imap->{$md5}} : ('', '');
+
+        my @e_bins = ();
+        foreach my $val (@{$data->{$md5}{e_bins}}) {
+            push @e_bins, int($val + 0.5);
+        }
+
+        print OUTFILE join("\t", ($version,
+                                  $jobID,
+                                  $md5,
+                                  int($data->{$md5}{abun} + 0.5),
+                                  "{".join(",", @e_bins)."}",
+                                  $e_mean,
+                                  $e_std,
+                                  $l_mean,
+                                  $l_std,
+                                  $i_mean,
+                                  $i_std,
+                                  $seek,
+                                  $len,
+                                  $data->{$md5}{is_protein}
+                                 ))."\n";
+    }
+}
+
+sub print_lca_stats {
+    unless(scalar(keys %{$data}) > 0) {
+        return;
+    }
+
+    foreach my $lca (sort keys %{$data}) {
+        my $e_mean = &round($data->{$lca}{e_sum} / $data->{$lca}{abun});
+        my $e_std  = &round(&stddev($e_mean, $data->{$lca}{e_sos}, $data->{$lca}{abun}));
+        my $l_mean = &round($data->{$lca}{l_sum} / $data->{$lca}{abun});
+        my $l_std  = &round(&stddev($l_mean, $data->{$lca}{l_sos}, $data->{$lca}{abun}));
+        my $i_mean = &round($data->{$lca}{i_sum} / $data->{$lca}{abun});
+        my $i_std  = &round(&stddev($i_mean, $data->{$lca}{i_sos}, $data->{$lca}{abun}));
+
+        print OUTFILE join("\t", ($version,
+                                  $jobID,
+                                  $lca,
+                                  int($data->{$lca}{abun} + 0.5),
+                                  $e_mean,
+                                  $e_std,
+                                  $l_mean,
+                                  $l_std,
+                                  $i_mean,
+                                  $i_std,
+                                  scalar(keys %{$data->{$lca}{md5}}),
+                                  $data->{$lca}{level}
+                                 ))."\n";
+    }
+}
+
+sub print_type_stats {
+    unless(scalar(keys %{$data}) > 0) {
+        return;
+    }
+
+    foreach my $id (sort {$a <=> $b} keys %{$data}) {
+        foreach my $source (keys %{$data->{$id}}) {
+            my $e_mean = &round($data->{$id}{$source}{e_sum} / $data->{$id}{$source}{abun});
+            my $e_std  = &round(&stddev($e_mean, $data->{$id}{$source}{e_sos}, $data->{$id}{$source}{abun}));
+            my $l_mean = &round($data->{$id}{$source}{l_sum} / $data->{$id}{$source}{abun});
+            my $l_std  = &round(&stddev($l_mean, $data->{$id}{$source}{l_sos}, $data->{$id}{$source}{abun}));
+            my $i_mean = &round($data->{$id}{$source}{i_sum} / $data->{$id}{$source}{abun});
+            my $i_std  = &round(&stddev($i_mean, $data->{$id}{$source}{i_sos}, $data->{$id}{$source}{abun}));
+
+            print OUTFILE join("\t", ($version,
+                                      $jobID,
+                                      $id,
+                                      int($data->{$id}{$source}{abun} + 0.5),
+                                      $e_mean,
+                                      $e_std,
+                                      $l_mean,
+                                      $l_std,
+                                      $i_mean,
+                                      $i_std,
+                                      "{".join(",", keys %{$data->{$id}{$source}{md5s}})."}",
+                                      $source
+                                     ))."\n";
+        }
+    }
+}
+
+sub print_source_stats {
+    unless(scalar(keys %{$data}) > 0) {
+        return;
+    }
+
+    foreach my $src (sort {$a<=>$b} keys %{$data->{eval}}) {
+        print OUTFILE "$src";
+        foreach my $e_bin (@thresholds_eval) {
+            if(exists $data->{eval}{$src}{$e_bin}) {
+                print OUTFILE "\t".$data->{eval}{$src}{$e_bin};
+            } else {
+                print OUTFILE "\t0";
+            }
+        }
+        foreach my $i_bin (@thresholds_ident) {
+            if(exists $data->{ident}{$src}{$i_bin}) {
+                print OUTFILE "\t".$data->{ident}{$src}{$i_bin};
+            } else {
+                print OUTFILE "\t0";
+            }
+        }
+        print OUTFILE "\n";
+    }
+}
+
+sub get_e_bin {
+    my $val = shift;
+    if($val == 0) {
+        return $thresholds_eval[-1];
+    }
+    foreach my $eval (@thresholds_eval) {
+        if($val >= $eval) {
+            return $eval;
+        }
+    }
+    if($val < $thresholds_eval[-1]) {
+        return $thresholds_eval[-1];
+    }
+    return "error";
+}
+
+sub get_i_bin {
+    my $val = shift;
+    foreach my $ident (@thresholds_ident) {
+        if($val <= $ident) {
+            return $ident;
+        }
+    }
+    return "error";
+}
+
+# Round to nearest thousandth
+sub round {
+    my $val = shift;
+    if($val > 0) {
+        return ( int( $val * 1000 + 0.5 ) / 1000 );
+    } else {
+        return ( int( $val * 1000 - 0.5 ) / 1000 );
+    }
+}
+
+sub update_e_bins {
+    my ($exp, $abun, $bins) = @_;
+    if($exp == 0) {
+        $bins->[@{$bins}-1] += $abun;
+    } else {
+        for(my $i=0; $i<@thresholds_eval; $i++) {
+            if($exp >= $thresholds_eval[$i]) {
+                $bins->[$i] += $abun;
+                last;
+            }
+        }
+    }
+  return $bins;
+}
+
+sub stddev {
+    my ($mean, $sos, $n) = @_;
+    my $tmp = ( $sos/$n ) - ( $mean*$mean );
+    # If there's a very small negative number here, it's probably just a result
+    #  of computational overflow and the stddev is actually zero.
+    if($tmp < 0) {
+        return 0;
+    }
+    return sqrt( $tmp );
+}
+
+sub get_abundance {
+    my ($frag) = @_;
+    my $abun = 0;
+    if(exists $cmap->{$frag}) {
+        foreach my $cluster_frag (@{$cmap->{$frag}}) {
+            $cluster_frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+            if(exists $amap->{$cluster_frag}) {
+                $abun += $amap->{$cluster_frag};
+            } else {
+                $abun += 1;
+            }
+        }
+    } else {
+        $frag =~ s/^(.*)\_\d+\_\d+\_[+-]/$1/;
+        if(exists $amap->{$frag}) {
+            $abun += $amap->{$frag};
+        } else {
+            $abun += 1;
+        }
+    }
+    return $abun;
+}
+
+sub get_exponent {
+    my ($eval) = @_;
+
+    if($eval == 0) {
+        return 0;
+    }
+
+    my ($m, $e) = split(/e/, $eval);
+    unless ($e) {
+        my ($tmp) = $eval =~ /0\.(\d+)$/;
+        my @count = $tmp =~/(\d)/gc;
+        $e = scalar @count;
+        $e = $e * -1;
+    }
+    return $e * 1;
+}
+
+sub usage {
+  my ($message) = @_;
+
+  my $opt_str = join(" | ", sort keys %$options);
+  print STDERR qq($0
+Create summary statistics file from expanded sims file, for loading into ACH.
+
+expanded: md5, fragment, identity, length, evalue, function, organism, source
+ontology: md5, fragment, identity, length, evalue, function, ontology, source
+LCA:      md5_list, fragment, identity_list, length_list, evalue_list, lca_string, depth of lca (1-8)
+summary: m5nr-version, job_id, md5|function|organism|ontology|lca, abundance,
+         avg eval, stdev eval, avg len, stdev len, avg ident, stdev ident, [md5_list], source
+
+  --job               job id       Required.
+  --m5nr-version      m5nr version Optional. Default is '$version'
+  --expanded_sims_in  file name    Required. Name of input expanded sim file
+  --summary_sims_out  file name    Required. Name of output summary sim file.
+  --md5_index         file name    Optional. md5 \\t seek \\t length
+  --cluster           file name    Optional. If queries are cluster names, will increase abundance count based on cluster size.
+  --abundance_file    file name    Optional. File with contig coverage abundance for assemebeled jobs.
+  --option            option type  Required. Sorted input format and output type.
+                                             $opt_str
+  --verbose                        Optional. Verbose output.
+
+);
+  print STDERR "$message\n" if ($message);
+  exit 1;
+}

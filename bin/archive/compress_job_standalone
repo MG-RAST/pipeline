@@ -1,0 +1,64 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Getopt::Long;
+use File::Basename;
+use Data::Dumper;
+umask 000;
+
+# options
+my $job_dir = "";
+my $uncomp  = 0;
+my $help    = "";
+my $verb    = 0;
+my $options = GetOptions ("job_dir=s"   => \$job_dir,
+			  "uncompress!" => \$uncomp,
+			  "help"        => \$help,
+			  "verbose!"    => \$verb
+			 );
+
+if ($help or (! $job_dir)) {
+  print STDERR "Usage: compress_job_standalone -j <job dir> [-u (bool: uncompress job)]\n";
+  exit(1);
+}
+unless (-d $job_dir) { die "bad dir: $job_dir"; }
+my $opt = $verb ? "-v " : "";
+
+my %to_gzip = ( 'fastq'    => 1,
+		'fq'       => 1,
+		'fasta'    => 1,
+		'fna'      => 1,
+		'faa'      => 1,
+		'sims'     => 1,
+		'filter'   => 1,
+		'protein'  => 1,
+		'ontology' => 1,
+		'rna'      => 1,
+		'lca'      => 1,
+		'md5'      => 1,
+		'organism' => 1,
+		'function' => 1
+	      );
+
+# get file list
+my @to_process = ();
+push @to_process, glob "$job_dir/raw/*";
+push @to_process, glob "$job_dir/analysis/*";
+
+# process files
+foreach my $file (@to_process) {
+  my ($base, $path, $suffix) = fileparse($file, qr/\.[^.]*/);
+  $suffix =~ s/^\.//;
+
+  if ($uncomp && ($suffix eq 'gz')) {
+    system("gunzip $opt$file") == 0 or die "failed to gunzip $file";
+  }
+  elsif ((! $uncomp) && exists($to_gzip{$suffix})) {
+    system("gzip $opt$file") == 0 or die "failed to gzip $file";
+  }
+}
+exit(0);
+

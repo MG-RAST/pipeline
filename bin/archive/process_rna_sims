@@ -1,0 +1,106 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my $in_file   = '';
+my $filt_file = '';
+my $out_rna   = '';
+my $out_lca   = '';
+my $sort_dir  = '';
+my $run_dir   = '';
+my $prefix    = '';
+my $memhost   = '';
+my $memkey    = '_ach';
+my $procs     = 2;
+my $usage     = qq($0
+Input:  m8 format blast / blat file - sorted by query | top hit
+Output: top hit for each query per source (protein or rna formats)
+    1. filtered sims: same format as m8
+    2. error file: file where errors are written
+    3. expanded sims: see below
+    4. ontology sims: see below
+
+m8: query, subject, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
+rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, tax_id
+
+
+  --in_sim       file name      Required. Name of input sim file
+  --sort_dir     dir path       Required. Directory where sort can be performed.
+  --run_dir      dir path       Required. Directory where files can be read from and written to.
+  --prefix       string         Required. Partial file path to where expand files will be written to.
+  --mem_host     memcache host  Required. Server of memcache
+  --mem_key      key extension  Optional. Extension to md5sum to use as memcache key. Default is '$memkey'
+  --procs        int            Optional. Default is $procs
+
+  -h  Prints this help text.
+
+);
+
+if(@ARGV == 0 || (@ARGV > 0) && ($ARGV[0] eq "-h")) {
+  print STDERR $usage . "Missing required input parameters.\n";
+  exit 1;
+}
+
+if ( ! GetOptions( "in_sim=s"       => \$in_file,
+                   "sort_dir=s"     => \$sort_dir,
+                   "run_dir=s"      => \$run_dir,
+                   "prefix=s"       => \$prefix,
+                   'mem_host=s'     => \$memhost,
+                   'mem_key=s'      => \$memkey,
+                   "procs=s"        => \$procs
+                 ) )
+  { print STDERR $usage; exit 1; }
+
+unless(-e $in_file) {
+  print STDERR $usage . "Input sim file not specified or does not exist.\n";
+  exit 1;
+}
+
+unless(-d $sort_dir) {
+  print STDERR $usage . "Sort directory not specified or does not exist.\n";
+  exit 1;
+}
+
+unless(-d $run_dir) {
+  print STDERR $usage . "Run directory not specified or does not exist.\n";
+  exit 1;
+}
+
+unless($prefix ne "") {
+  print STDERR $usage . "Prefix not specified.\n";
+  exit 1;
+}
+
+unless($memhost ne "") {
+  print STDERR $usage . "Memcache host not specified.\n";
+  exit 1;
+}
+
+my $sort_mem = int($procs * 1024 * 2.5);
+&run_system_command("sort -T $sort_dir -S ${sort_mem}M -t \t -k 1,1 -k 12,12nr -o $run_dir/$prefix.sims.sort $in_file", 1);
+
+my $params = "--verbose --mem_host $memhost --mem_key $memkey";
+&run_system_command("process_sims_by_source_mem $params --in_sim $run_dir/$prefix.sims.sort --out_filter $run_dir/$prefix.sims.filter --out_rna $run_dir/$prefix.expand.rna --out_lca $run_dir/$prefix.expand.lca >> $run_dir/$prefix.out 2>> $run_dir/$prefix.err");
+
+chmod 0666, "$in_file.sort";
+chmod 0666, "$in_file.filter";
+chmod 0666, "$run_dir/$prefix.expand.rna";
+chmod 0666, "$run_dir/$prefix.expand.lca";
+
+sub run_system_command {
+  my ($cmd, $split) = @_;
+  my $status;
+  if ($split) {
+      $status = system(split(/ /, $cmd));
+  } else {
+      $status = system($cmd);
+  }
+  unless($status == 0) {
+    print STDERR "Error status '$status' running command: $cmd\n";
+    exit(1);
+  }
+}

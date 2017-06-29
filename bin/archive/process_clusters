@@ -1,0 +1,85 @@
+#!/usr/bin/env perl 
+
+use strict;
+use warnings;
+no warnings('once');
+
+use Getopt::Long;
+
+# options
+my $file = "";
+my $prefix = "";
+my $mapping = "";
+my $fasta = "";
+my $help = "";
+my $options = GetOptions ("uclust=s" => \$file,
+			  "prefix=s" => \$prefix,
+			  "mapping=s" => \$mapping,
+			  "fasta=s" => \$fasta,
+			  "help" => \$help,
+			 );
+
+if ( $help or !($file or $mapping or $prefix or $fasta) or !(-e $file) ){
+    print STDERR "Usage: process_clusters -u <uclust clusters/hits fna> -p <cluster prefix> -m <mapping out> -f <fasta out>\n";
+    exit(1);
+} 
+
+# This script reads the cluster output from qiime-uclust and prints out 2 files.
+# The first output file is a fasta file containing only the seed sequences.
+# The second output file is a summary of which sequences are in each cluster.
+#  Note: the second output file contains one cluster summary per line.
+
+open IN, "<".$file or die $!;
+open MAP, ">".$mapping or die $!;
+open FNA, ">".$fasta or die $!;
+
+my $prev_cluster = "";
+my $prev_seq_id = "";
+my $prev_seq = "";
+my @ids = ();
+my @pids = ();
+
+$/ = ">";
+my $junk = <IN>; # kill first line
+while (my $l = <IN>) {
+  chomp $l;
+  my @lines = split "\n", $l;
+  my $id_line = shift @lines;
+  my $seq = join "", @lines;
+
+  if ($id_line =~ /^(\d+)\|(\d+\.\d\%|\*)\|(\S+)/) {
+    my ($cid,$pid,$seq_id) = ($1,$2,$3);
+    # If this is the start of a new cluster, print the previous cluster.
+    if ($pid eq "*") {
+      # Checking if the previous cluster was a singlet or not.  Singlets do not need to be in the mapping file.
+      if (scalar @ids) {
+	print MAP $prefix.$prev_cluster."\t".$prev_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
+	print FNA ">".$prefix.$prev_cluster."\n$prev_seq\n";
+      } elsif ($prev_seq_id) {
+	print FNA ">$prev_seq_id\n$prev_seq\n";
+      }
+      $prev_cluster = $cid;
+      $prev_seq_id = $seq_id;
+      $prev_seq = $seq;
+      @ids = ();
+      @pids = ();
+    # If this is a cluster member, just add it to the list of ids.
+    } else {
+      push @ids, $seq_id;
+      push @pids, $pid;
+      next;
+    }
+  }
+}
+
+# Since the loop above prints the previous cluster, we need to print the last cluster here.
+if (scalar @ids) {
+  print MAP $prefix.$prev_cluster."\t".$prev_seq_id."\t".join(",",@ids)."\t".join(",",@pids)."\n";
+  print FNA ">".$prefix.$prev_cluster."\n$prev_seq\n";
+} elsif ($prev_seq_id) {
+  print FNA ">$prev_seq_id\n$prev_seq\n";
+}
+
+close(IN);
+close(MAP);
+close(FNA);

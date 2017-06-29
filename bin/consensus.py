@@ -24,15 +24,28 @@ def split_rec(rec, stype):
         return rec.id, str(rec.seq).upper(), None
 
 def determinetype(infile):
-  cmd = ["head", "-n", "1", infile]
-  p1 = subprocess.check_output(cmd)
-  firstchar = p1[0]
-  if firstchar == "@":
-    return "fastq"
-  elif firstchar == ">":
-    return "fasta"
-  sys.stderr.write("Cannot determine file type of %s\n"%(infile))
-  exit(1)
+    cmd = ["head", "-n", "1", infile]
+    p1 = subprocess.check_output(cmd)
+    firstchar = p1[0]
+    if firstchar == "@":
+        return "fastq"
+    elif firstchar == ">":
+        return "fasta"
+    sys.stderr.write("Cannot determine file type of %s\n"%(infile))
+    exit(1)
+
+def bp_max_from_stats(infile):
+    fhdl = open(infile, 'r')
+    maxl = 600
+    hasmax = False
+    for line in fhdl:
+        if line.statswith('length_max'):
+            parts = line.split("\t")
+            maxl = min(maxl, int(parts[1]))
+            hasmax = True
+    if not hasmax:
+        maxl = 100
+    return maxl
 
 def countseqs(infile, stype):
   if stype == 'fasta':
@@ -100,22 +113,27 @@ if __name__ == '__main__':
   parser = OptionParser(usage)
   parser.add_option("-i", "--input", dest="input", default=None, help="Input sequence file.")
   parser.add_option("-o", "--output", dest="output", default=None, help="Output file.")
-  parser.add_option("-t", "--type", dest="type", default='fasta', help="file type: fasta, fastq [ignored]")
+  parser.add_option("-t", "--type", dest="type", default=None, help="file type: fasta, fastq")
   parser.add_option("-b", "--bp_max", dest="bp_max", default=100, type="int", help="max number of bps to process [default 100]")
   parser.add_option("-s", "--seq_max", dest="seq_max", default=100000, type="int", help="max number of seqs to process [default 100000]")
   parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Wordy [default off]")
+  parser.add_option("--stats", dest="stats", default=None, help="optional: sequence stats for input file, overrides --bp_max")
   
   (opts, args) = parser.parse_args()
   if not (opts.input and os.path.isfile(opts.input) and opts.output):
     parser.error("Missing input/output files")
-  detectedtype = determinetype(opts.input)
+  if not opts.type:
+    opts.type = determinetype(opts.input)
+  if opts.stats and os.path.isfile(opts.stats):
+    opts.bp_max = bp_max_from_stats(opts.stats)
+  
   if opts.verbose: sys.stdout.write("Counting sequences in %s ... "%opts.input)
-  seqnum = countseqs(opts.input, detectedtype)
+  seqnum = countseqs(opts.input, opts.type)
   seqper = (opts.seq_max * 1.0) / seqnum
   if opts.verbose: sys.stdout.write("Done: %d seqs found, %f %% of sequences will be processed\n"%(seqnum, (seqper*100)))
-
+  
   if opts.verbose: sys.stdout.write("Populating bp matrixes ... ")
   initialize(opts.bp_max)
-  seqs = populate(opts.input, detectedtype, opts.bp_max, seqper)
+  seqs = populate(opts.input, opts.type, opts.bp_max, seqper)
   printtable(opts.output, opts.bp_max)
   if opts.verbose: sys.stdout.write("Done: %d of %d sequences processed\n"%(seqs, seqnum))
