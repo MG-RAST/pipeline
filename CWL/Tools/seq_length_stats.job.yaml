@@ -1,0 +1,4 @@
+sequences:
+  class: File
+  format: file:///pipeline/CWL/Tools//FileFormats.cv.yaml/fasta
+  path: ../Data/Inputs/sequences.all.fasta
