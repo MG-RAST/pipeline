@@ -11,7 +11,7 @@ import json
 
 # do something get script dir  smart and set path relative to CWL dir
 
-debug = 0
+debug = 1
 disable_docker = 1
 
 testDir     = os.path.abspath( os.path.dirname( __file__ )  )
