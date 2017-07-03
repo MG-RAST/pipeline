@@ -157,5 +157,6 @@ COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
 # RUN for i in /usr/local/bin/mgrast_* ; do awe=`echo $i | sed -e "s/mgrast_/awe_/g"` ; ln -s $i $awe ; done
 # COPY superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
+RUN chmod 555 /usr/local/bin/*
+# RUN strip /usr/local/bin/superblat
 
