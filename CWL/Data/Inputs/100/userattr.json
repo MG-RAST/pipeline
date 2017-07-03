@@ -1,6 +1,0 @@
-{
-  "stage_id": "150",
-  "stage_name": "dereplication",
-  "file_format": "fasta",
-  "seq_format": "bp"
-}

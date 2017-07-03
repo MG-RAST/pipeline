@@ -1,0 +1,35 @@
+{
+    "consensus": {
+        "checksum": "sha1$6e3473315159af3b8af51c0178c1fd6f8345e6a1", 
+        "basename": "consensus.txt", 
+        "nameroot": "consensus", 
+        "nameext": ".txt", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///Tools/CWL/consensus.txt", 
+        "path": "/Tools/CWL/consensus.txt", 
+        "class": "File", 
+        "size": 2130
+    }, 
+    "summary": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "consensus.log", 
+        "nameroot": "consensus", 
+        "nameext": ".log", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///Tools/CWL/consensus.log", 
+        "path": "/Tools/CWL/consensus.log", 
+        "class": "File", 
+        "size": 0
+    }, 
+    "error": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "consensus.error", 
+        "nameroot": "consensus", 
+        "nameext": ".error", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///Tools/CWL/consensus.error", 
+        "path": "/Tools/CWL/consensus.error", 
+        "class": "File", 
+        "size": 0
+    }
+}
