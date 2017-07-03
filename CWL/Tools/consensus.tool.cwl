@@ -36,7 +36,7 @@ inputs:
       prefix: --bp_max
   
   stats:
-    type: File
+    type: File?
     inputBinding:
       prefix: --stats
   
