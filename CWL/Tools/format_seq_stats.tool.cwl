@@ -39,8 +39,8 @@ requirements:
       - $import: FileFormats.cv.yaml
   
   
-stdout: seq_length_stats.stats
-stderr: seq_length_stats.error
+stdout: format_seq_stats.stats
+stderr: format_seq_stats.error
 
 inputs:
   sequence_stats:
