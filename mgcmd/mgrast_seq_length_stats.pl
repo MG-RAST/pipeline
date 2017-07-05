@@ -173,12 +173,13 @@ if (@error == 0) {
 
 # errors?
 if (@error > 0) {
-    print STDOUT join("\n", @error)."\n";
-    exit 1;
+    $data->{data_type} = "invalid";
+    $data->{error} = \@error;
+} else {
+    $data->{data_type} = "sequence";
 }
 
 # output attributes with stats
-$data->{data_type} = "sequence";
 if ($output_json_file eq "") {
     $output_json_file = "$input_file.out.json";
 }
