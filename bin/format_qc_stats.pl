@@ -5,7 +5,7 @@
 #       text drisee info      (optional)
 #       tabbed consensus stat (optional)
 #       tabbed coverage stat  (optional)
-#outputs: json ${out_prefix}.qc.summery
+#outputs: json ${out_prefix}.qc.summary
 #         json ${out_prefix}.qc.stats	
 
 use strict;
@@ -67,7 +67,7 @@ if ((@klens == 0) || (@kfiles == 0) || $bad_kmer || (scalar(@klens) != scalar(@k
     exit 1;
 }
 
-# summery stats
+# summary stats
 my $qcsum = {};
 
 # process drisee
@@ -126,12 +126,12 @@ for (my $i=0; $i<scalar(@klens); $i++) {
 
 # output stats
 print_json($out_prefix.".qc.stats", $qcstat);
-print_json($out_prefix.".qc.summery", $qcsum);
+print_json($out_prefix.".qc.summary", $qcsum);
 
 exit 0;
 
 sub get_usage {
-    return "USAGE: format_qc_stats.pl -drisee_stat=<drisee stat file> -drisee_info=<drisee info file> -kmer_lens=<kmer len list> -kmer_stats=<kmer file list> -consensus=<consensus stat file> -coverage=<coverage stat file> -out_prefix=<output prefix>\noutputs: \${out_prefix}.qc.summery, \${out_prefix}.qc.stats\n";
+    return "USAGE: format_qc_stats.pl -drisee_stat=<drisee stat file> -drisee_info=<drisee info file> -kmer_lens=<kmer len list> -kmer_stats=<kmer file list> -consensus=<consensus stat file> -coverage=<coverage stat file> -out_prefix=<output prefix>\noutputs: \${out_prefix}.qc.summary, \${out_prefix}.qc.stats\n";
 }
 
 sub get_drisee {
@@ -217,7 +217,7 @@ sub get_kmer {
     	         'reverse sum of column 3',
     		     'ratio of column 5 to total sum column 3 (not reverse)'
                ];
-    my $kmer =file_to_array($kfile);
+    my $kmer = file_to_array($kfile);
     my $data = { columns => $cols, data => undef };
     unless ($kmer && (@$kmer > 1)) {
         return $data;
