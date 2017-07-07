@@ -1,0 +1,4 @@
+sequences:
+  class: File
+  format: ../Tools/FileFormats.cv.yaml/fasta
+  path: ../Data/Inputs/sequences.all.fasta
