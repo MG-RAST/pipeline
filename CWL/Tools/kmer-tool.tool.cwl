@@ -17,9 +17,9 @@ hints:
 
 requirements:
   InlineJavascriptRequirement: {}
-  SchemaDefRequirement:
-    types:
-      - $import: FileFormats.cv.yaml
+  # SchemaDefRequirement:
+#     types:
+#       - $import: FileFormats.cv.yaml
   
   
 stdout: kmer-tool.log
@@ -30,9 +30,9 @@ inputs:
     type: File
     doc: Input file, sequence (fasta/fastq) or binary count hash (hash).
     format: 
-      - format:fasta
-      - format:fastq
-      - format:hash
+      - Formats:fasta
+      - Formats:fastq
+      - Formats:hash
       # [fasta , fastq , hash]
     inputBinding:
       prefix: --input
@@ -65,7 +65,7 @@ arguments:
         }
   - prefix: --format 
     valueFrom: histo
-  - prefix: --ranked
+  - --ranked
   - prefix: --tmpdir
     valueFrom: $(runtime.outdir)
   - prefix: --output
@@ -85,11 +85,11 @@ outputs:
 
 $namespaces:
   format: FileFormats.cv.yaml
-#  edam: http://edamontology.org/
-#  s: http://schema.org/
-# $schemas:
-#  - http://edamontology.org/EDAM_1.16.owl
-#  - https://schema.org/docs/schema_org_rdfa.html
-
-s:license: "https://www.apache.org/licenses/LICENSE-2.0"
-s:copyrightHolder: "MG-RAST"
+# #  edam: http://edamontology.org/
+# #  s: http://schema.org/
+# # $schemas:
+# #  - http://edamontology.org/EDAM_1.16.owl
+# #  - https://schema.org/docs/schema_org_rdfa.html
+#
+# s:license: "https://www.apache.org/licenses/LICENSE-2.0"
+# s:copyrightHolder: "MG-RAST"
