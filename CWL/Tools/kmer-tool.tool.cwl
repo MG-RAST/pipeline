@@ -77,11 +77,24 @@ outputs:
     type: stdout
   error: 
     type: stderr  
+  # stats:
+#     type: File
+#     outputBinding:
+#       glob: $(inputs.prefix).kmer.$(inputs.length).stats
   stats:
-    type: File
-    outputBinding: 
-      glob: $(inputs.prefix).kmer.$(inputs.length).stats
-    
+    type:       
+      type: record
+      label: none
+      fields:
+        - name: length
+          type: int
+          outputBinding:
+            outputEval: $(inputs.length)
+             
+        - name: file 
+          type: File 
+          outputBinding:
+            glob: $(inputs.prefix).kmer.$(inputs.length).stats 
 
 $namespaces:
   format: FileFormats.cv.yaml
