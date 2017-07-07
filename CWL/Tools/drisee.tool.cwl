@@ -19,8 +19,8 @@ inputs:
   sequences:
     type: File
     format:
-      - format:fasta
-      - format:fastq
+      - Formats:fasta
+      - Formats:fastq
     inputBinding:
       position: 1
   
@@ -36,13 +36,10 @@ arguments:
   - valueFrom: $(runtime.tmpdir)
     prefix: --tmp_dir
   - prefix: --seq_type
-    valueFrom: $(inputs.sequences.format)
-      # |
-      # ${
-      #   if (inputs.sequences.format == "http://edamontology.org/format_1929")
-      #   { return "fasta" ;}
-      #   else { return "fastq";}
-      # }
+    valueFrom: |
+      ${
+         return inputs.sequences.format.split("/").slice(-1)[0]
+        } 
  
 outputs:
   info:
@@ -56,7 +53,7 @@ outputs:
     
 
 $namespaces:
-  format: FileFormats.cv.yaml
-
-s:license: "https://www.apache.org/licenses/LICENSE-2.0"
-s:copyrightHolder: "MG-RAST"
+  Formats: FileFormats.cv.yaml
+#
+# s:license: "https://www.apache.org/licenses/LICENSE-2.0"
+# s:copyrightHolder: "MG-RAST"
