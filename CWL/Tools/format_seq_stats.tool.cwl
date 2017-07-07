@@ -32,11 +32,7 @@ hints:
  #
       
 
-requirements:
-  InlineJavascriptRequirement: {}
-  SchemaDefRequirement:
-    types:
-      - $import: FileFormats.cv.yaml
+
   
   
 stdout: format_seq_stats.stats
@@ -47,7 +43,7 @@ inputs:
     doc: stats tabbed file
     type: File
     inputBinding:
-      prefix: -seq_stats
+      prefix: -seq_stat
   
   sequence_lengths:
     type: File
@@ -63,8 +59,8 @@ inputs:
       
   output_prefix:
     type: string
-    doc: output prefix , 
-    inputBinding: outputs: ${output_prefix}.seq.bins, ${output_prefix}.seq.stats
+    doc: output prefix, e.g. ${output_prefix}.seq.bins, ${output_prefix}.seq.stats
+    inputBinding: 
       prefix: -out_prefix
                     
 baseCommand: [format_seq_stats.pl]
@@ -85,14 +81,14 @@ outputs:
   
 
 
-$namespaces:
-  # s: http://schema.org/
-#  edam: http://edamontology.org/
-
+# $namespaces:
+#   s: http://schema.org/
+# #  edam: http://edamontology.org/
+#
 # $schemas:
-#   - https://schema.org/docs/schema_org_rdfa.html
-# #  - http://edamontology.org/EDAM_1.16.owl
-#
-#
+#    - https://schema.org/docs/schema_org_rdfa.html
+# # #  - http://edamontology.org/EDAM_1.16.owl
+# #
+# #
 # s:license: "https://www.apache.org/licenses/LICENSE-2.0"
 # s:copyrightHolder: "MG-RAST"
