@@ -39,10 +39,17 @@ outputs:
   driseeStatsFile:
     type: File
     outputSource: drisee/stats  
-  kmerFile:
+  kmerStruct:
     type: 
       type: array
-      items: File
+      items: 
+        type: record
+        label: none
+        fields:
+          - name: length
+            type: int
+          - name: file 
+            type: File 
     outputSource: [kmer/stats]
   consensusFile:
     type: File
@@ -121,27 +128,15 @@ steps:
 
 
 
-  # formatQcStats:
-  #   run: ../Tools/format_qc_stats.tool.cwl
-  #   in:
-  #     output_prefix:
-  #       source: jobid
-  #       valueFrom: $(self).100.preprocess
-  #     drisee_stat: drisee/stats
-  #     drisee_info: drisee/info
-  #     kmer_lens:
-  #       source: kmerLength
-  #       valueFrom: |
-  #         ${
-  #           return self.join()
-  #         }
-  #     kmer_stats:
-  #       source: [kmer/stats]
-  #       valueFrom: |
-  #         ${
-  #           return self.map(
-  #               function(myFile){ return myFile.path }
-  #           ).join();
-  #         }
-  #     consensus: consensus/consensus
-  #   out: [stats, summary]
+  formatQcStats:
+    run: ../Tools/format_qc_stats.tool.cwl
+    in:
+      output_prefix:
+        source: jobid
+        valueFrom: $(self).100.preprocess
+      drisee_stat: drisee/stats
+      drisee_info: drisee/info
+      kmer: 
+        source: kmer/stats
+      consensus: consensus/consensus
+    out: [stats, summary]
