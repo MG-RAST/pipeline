@@ -56,6 +56,7 @@ RUN apt-get update && apt-get install -y \
   python-scipy \
   python-sphinx \
   unzip \
+  vim \
   wget 
 	
 
