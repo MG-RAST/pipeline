@@ -2,7 +2,6 @@ sequences:
   class: File
   format: fasta
   path: ../Data/Inputs/sequences.all.fasta
-basepairs: 100
 stats:
   class: File
   format: tsv

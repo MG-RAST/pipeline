@@ -8,24 +8,20 @@ hints:
 
 requirements:
   InlineJavascriptRequirement: {}
-  SchemaDefRequirement:
-    types:
-      - $import: FileFormats.cv.yaml
+
   
 stdout: consensus.log
 stderr: consensus.error
 
-# PipelineAWE::run_cmd("consensus.py -v -b $max_ln -t $format -i $infile -o $c_stats");
 
 inputs:
   sequences:
     type: File
     doc: Input file, sequence (fasta/fastq).
     format: 
-      - format:fasta
-      - format:fastq
+      - Formats:fasta
+      - Formats:fastq
 
-      # [fasta , fastq , hash]
     inputBinding:
       prefix: --input
   
@@ -58,9 +54,6 @@ arguments:
       ${
          return inputs.sequences.format.split("/").slice(-1)[0]
         } 
- 
-  
- 
     
  
 outputs:
@@ -73,14 +66,5 @@ outputs:
     outputBinding: 
       glob: $(inputs.output)
     
-
 $namespaces:
-  format: FileFormats.cv.yaml
-#  edam: http://edamontology.org/
-#  s: http://schema.org/
-# $schemas:
-#  - http://edamontology.org/EDAM_1.16.owl
-#  - https://schema.org/docs/schema_org_rdfa.html
-
-s:license: "https://www.apache.org/licenses/LICENSE-2.0"
-s:copyrightHolder: "MG-RAST"
+  Formats: FileFormats.cv.yaml
