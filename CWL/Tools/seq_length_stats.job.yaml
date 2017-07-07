@@ -1,4 +1,7 @@
 sequences:
   class: File
-  format: file:///pipeline/CWL/Tools//FileFormats.cv.yaml/fasta
+  format: fasta
   path: ../Data/Inputs/sequences.all.fasta
+output: seq_length_stats.stats   
+length_bin: seq_length_stats.length_bin
+gc_percent_bin: seq_length_stats.gc_bin 

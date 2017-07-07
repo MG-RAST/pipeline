@@ -34,10 +34,10 @@ hints:
 
 requirements:
   InlineJavascriptRequirement: {}
-  SchemaDefRequirement:
-    types:
-      - $import: FileFormats.cv.yaml
-  
+  # SchemaDefRequirement:
+#     types:
+#       - $import: FileFormats.cv.yaml
+#
   
 stdout: seq_length_stats.stats
 stderr: seq_length_stats.error
@@ -47,26 +47,27 @@ inputs:
     type: File
     doc: Input file, sequence (fasta/fastq) 
     format: 
-      - ff:fasta
-      - ff:fastq
+      - Formats:fasta
+      - Formats:fastq
+      
     inputBinding:
       prefix: --input
   
   output:
-    type: string?
+    type: string
     doc: Output stats file, if not called prints to STDOUT
     inputBinding:
       prefix: --output
     
   length_bin:
-    type: string?
-    doc: File to place length bins [default is no output]
+    type: string
+    doc: Filename to place length bins [default is no output]
     inputBinding:
       prefix: --length_bin
   
   gc_percent_bin:
-    type: string?
-    doc:
+    type: string
+    doc: Filename to place gc bins
     inputBinding:
       prefix: --gc_percent_bin
   
@@ -109,7 +110,7 @@ arguments:
     
  
 outputs:
-  stats:
+  stdout:
     type: stdout
   error: 
     type: stderr  
@@ -120,11 +121,15 @@ outputs:
   gc_bin:
     type: File?
     outputBinding:
-      glob: $(inputs.gc_percent_bin)    
-
+      glob: $(inputs.gc_percent_bin)
+  stats:   
+    type: File?
+    outputBinding:
+      glob: $(inputs.output)
+  
 
 $namespaces:
-  ff: FileFormats.cv.yaml
+  Formats: FileFormats.cv.yaml
   # s: http://schema.org/
 #  edam: http://edamontology.org/
 
