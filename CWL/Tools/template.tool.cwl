@@ -1,96 +1,60 @@
 cwlVersion: v1.0
 class: CommandLineTool
+baseCommand: [fgrep , '>' ]
 
 hints:
   DockerRequirement:
     dockerPull: mgrast/pipeline:4.03
-    # dockerPull: mgrast/kmerTool:1.0
 
   Shock:
     createAttributes:
-      input: [ToolName , $(outputs).stats , $(outpus).summary]
-      run: createAttr.pl
-      mapping:
-        stats:
-          glob: $(outputs).stats.attr
-        summary:
-          glob: $(outpus).summary.attr
+      - in: [ $(outputs.stats) , $(outputs.summary)]
+        run: ../createAttr.tool.cwl
+        type: none
+        requirements: none
+        out: [ summaryAttr , passedAttr]
+        out:
+          - glob: $(outputs.stats).attr
+          - glob: $(outputs.summary).attr
+        mapping:
+            - $(outputs.stats):
+              glob: $(outputs.stats).attr
+            - $(outputs.summary):
+              glob: $(outputs.summary).attr
+    createSubset:
+      - in:
+          sequences: $(inputs.sequences)
+          results:  $(outputs.summary)
+        run: ../createSubset.tool.cwl
+        type: none
+        requirements: none
+        out: $(outputs.summary)
 
-requirements:
-  InlineJavascriptRequirement: {}
-  SchemaDefRequirement:
-    types:
-      - $import: FileFormats.cv.yaml
   
-  
-stdout: kmer-tool.log
-stderr: kmer-tool.error
+stdout: template.log
+stderr: template.error
 
 inputs:
   sequences:
     type: File
-    doc: Input file, sequence (fasta/fastq) or binary count hash (hash).
-    format: 
+    format:
       - format:fasta
       - format:fastq
-      - format:hash
-      # [fasta , fastq , hash]
     inputBinding:
-      prefix: --input
-  
-  length:
-    type: int
-    doc: Length of kmer to use, eg. 6 or 15
-    default: 6
-    inputBinding:
-      prefix: --length
-  
-  prefix:
-    type: string
-    doc: Prefix for output file(s)
-    default: qc
-
-      
-  
-  
-baseCommand: [kmer-tool]
-
-arguments: 
-   
-  - valueFrom: $(runtime.cores)
-    prefix: --procs
-  - prefix: --type
-    valueFrom: |
-      ${
-         return inputs.sequences.format.split("/").slice(-1)[0]
-        }
-  - prefix: --format 
-    valueFrom: histo
-  - prefix: --ranked
-  - prefix: --tmpdir
-    valueFrom: $(runtime.outdir)
-  - prefix: --output
-    valueFrom: $(inputs.prefix).kmer.$(inputs.length).stats
+      position: 2                                
     
- 
 outputs:
-  summary:
+  output:
     type: stdout
   error: 
     type: stderr  
-  stats:
-    type: File
-    outputBinding: 
-      glob: $(inputs.prefix).kmer.$(inputs.length).stats
     
 
 $namespaces:
   format: FileFormats.cv.yaml
-#  edam: http://edamontology.org/
-#  s: http://schema.org/
-# $schemas:
-#  - http://edamontology.org/EDAM_1.16.owl
-#  - https://schema.org/docs/schema_org_rdfa.html
-
+  s: https://schema.org
+  
+$schemas:
+  - https://schema.org/docs/schema_org_rdfa.html
+  
 s:license: "https://www.apache.org/licenses/LICENSE-2.0"
-s:copyrightHolder: "MG-RAST"
