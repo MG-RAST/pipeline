@@ -310,16 +310,14 @@ def main(args):
                 abun = get_abundance(frag, amap)
                 if abun < 1:
                     continue
-                e_line_sum = sum(map(lambda x: get_exponent(float(x)), e_val.split(';')))
-                l_line_sum = sum(map(int, length.split(';')))
-                i_line_sum = sum(map(float, ident.split(';')))
-                md5_count  = 0
+                e_list = map(lambda x: get_exponent(float(x)), e_val.split(';'))
+                l_list = map(int, length.split(';'))
+                i_list = map(float, ident.split(';'))
                 for m in md5.split(';'):
-                    md5_count += 1
                     md5s[lca].add(int(m))
-                e_avg = e_line_sum / md5_count
-                l_avg = l_line_sum / md5_count
-                i_avg = i_line_sum / md5_count
+                e_avg = sum(e_list) / len(e_list)
+                l_avg = sum(l_list) / len(l_list)
+                i_avg = sum(i_list) / len(i_list)
                 data[lca][0]['abun'] += abun
                 data[lca][0]['esum'] += abun * e_avg
                 data[lca][0]['lsum'] += abun * l_avg
