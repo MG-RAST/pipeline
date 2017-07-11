@@ -62,5 +62,5 @@ PipelineAWE::run_cmd("blat -out=blast8 -t=dna -q=dna $opts$rna_nr_path $fasta st
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_blat_rna.pl -input=<input fasta> -output=<output sims> [-rna_nr=<rna nr file, default: md5rna>] \n";
+    return "USAGE: mgrast_blat_rna.pl -input=<input fasta> -output=<output sims> [-rna_nr=<rna nr file, default: md5rna>] \n";
 }

@@ -48,5 +48,5 @@ PipelineAWE::send_mail($body_txt, "MG-RAST Job Completed", $user_info);
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_notify.pl -user=<user identifier>\n";
+    return "USAGE: mgrast_notify.pl -user=<user identifier>\n";
 }
