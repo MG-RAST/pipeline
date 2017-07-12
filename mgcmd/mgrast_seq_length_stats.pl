@@ -188,6 +188,6 @@ PipelineAWE::print_json($output_json_file, $data);
 exit 0;
 
 sub print_usage {
-    print "USAGE: awe_seq_length_stats.pl -input=<input fasta or fastq> [-input_json=<attr_filename>, -output_json=<attr_filename>, -type=<fasta or fastq (default is fasta)>]\n";
+    print "USAGE: mgrast_seq_length_stats.pl -input=<input fasta or fastq> [-input_json=<attr_filename>, -output_json=<attr_filename>, -type=<fasta or fastq (default is fasta)>]\n";
 }
 

@@ -75,6 +75,6 @@ if ( ($run_derep != 0) and not ($do_not_create_index_files) ){
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n".
+    return "USAGE: mgrast_dereplicate.pl -input=<input fasta> [-out_prefix=<output prefix> --prefix_length=<INT prefix length>]\n".
            "outputs: \${out_prefix}.passed.fna and \${out_prefix}.removed.fna\n";
 }

@@ -126,7 +126,7 @@ exit 0;
 
 sub get_usage {
     return qq "
-USAGE: awe_preprocess.pl 
+USAGE: mgrast_preprocess.pl 
           -input=<input fasta or fastq>
           -format=<sequence format> 
           [-out_prefix=<output prefix> 

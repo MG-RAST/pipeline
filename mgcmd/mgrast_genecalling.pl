@@ -51,5 +51,5 @@ PipelineAWE::run_cmd("parallel_FragGeneScan.py -v -p $proc -s $size -t $types{$t
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_genecalling.pl -input=<input fasta> [-out_prefix=<output prefix> -type=<454 | sanger | illumina | complete> -proc=<number of threads, default: 8> -size=<size, default: 100>]\noutputs: \${out_prefix}.faa, \${out_prefix}.fna\n";
+    return "USAGE: mgrast_genecalling.pl -input=<input fasta> [-out_prefix=<output prefix> -type=<454 | sanger | illumina | complete> -proc=<number of threads, default: 8> -size=<size, default: 100>]\noutputs: \${out_prefix}.faa, \${out_prefix}.fna\n";
 }

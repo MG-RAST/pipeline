@@ -210,5 +210,5 @@ if ($mdata && $params->{metadata}) {
 
 
 sub get_usage {
-    return "USAGE: awe_submit_to_mgrast.pl -input=<pipeline parameter file> [-metadata=<metadata file>, -project=<project id>]\n";
+    return "USAGE: mgrast_submit.pl -input=<pipeline parameter file> [-metadata=<metadata file>, -project=<project id>]\n";
 }

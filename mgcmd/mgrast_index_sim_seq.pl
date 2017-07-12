@@ -125,5 +125,5 @@ PipelineAWE::create_attr($output.'.index.json', undef, {data_type => "index", fi
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16>\noutputs: \${output} and \${output}.index\n";
+    return "USAGE: mgrast_index_sim_seq.pl -in_sims=<one or more input sim files> -in_maps=<one or more input mapping files> -in_seqs=<one or more input fasta files> -output=<output file> [-memory=<memory usage in GB, default is 16>\noutputs: \${output} and \${output}.index\n";
 }

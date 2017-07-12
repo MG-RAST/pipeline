@@ -107,7 +107,7 @@ if ($type eq 'source') {
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_annotate_summary.pl -in_expand=<one or more input expand files> -in_maps=<one or more input mapping files> -in_index=<md5 index file> -in_assemb=<assembly coverage file> -output=<output summary file> -type=<summary types>\n";
+    return "USAGE: mgrast_annotate_summary.pl -in_expand=<one or more input expand files> -in_maps=<one or more input mapping files> -in_index=<md5 index file> -in_assemb=<assembly coverage file> -output=<output summary file> -type=<summary types>\n";
 }
 
 sub get_source_stats {
