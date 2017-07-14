@@ -69,6 +69,7 @@ baseCommand: [format_seq_stats.pl]
 outputs:
   stats:
     type: File
+    format: json
     outputBinding:
       glob: $(inputs.output_prefix).seq.stats
     
