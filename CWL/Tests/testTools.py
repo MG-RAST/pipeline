@@ -11,7 +11,10 @@ import json
 
 # do something get script dir  smart and set path relative to CWL dir
 
-debug = 1
+
+debug =  int(os.environ.get('DEBUG' , 0))
+# print "DEBUG: " + str(debug)
+
 disable_docker = 1
 
 testDir     = os.path.abspath( os.path.dirname( __file__ )  )
@@ -97,10 +100,25 @@ def cmp_cwl_receipts(json_a , json_b) :
     b = json.loads(json_b)
     
     for k, v in a.iteritems():
-      if v['checksum'] != b[k]["checksum"] :
+      if 'format' in v :
+        if debug:
+          sys.stderr.write('Found \'format\' key.\n')
+        if re.search("json" , v['format']) is  None :
+          if v['checksum'] != b[k]["checksum"] :
+            identical = 0
+            sys.stderr.write('Checksum not identical for ' + v['basename'] + "\n")
+        else:
+            if debug:
+              sys.stderr.write('Found \'json\' value. Not comparing checksum for ' + v['basename'] + "\n")
+      elif  v['checksum'] != b[k]["checksum"] :
         identical = 0
+        sys.stderr.write('Checksum not identical for ' + k + "(" + v['basename'] + ")\n")
       if v['basename'] != b[k]["basename"] :
         identical = 0
+        sys.stderr.write('Basename not identical for ' + k +  "\n")
+      if v['size'] != b[k]["size"] :
+        identical = 0 
+        sys.stderr.write('Size not identical for ' + k +  "\n") 
         
   except Exception as e :
     sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... ") 
