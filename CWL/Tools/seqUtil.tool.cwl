@@ -1,7 +1,8 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-
+label: seqUtil 
+doc:  Convert fastq into fasta and fasta into tab files.
 
 hints:
   DockerRequirement:
@@ -72,6 +73,7 @@ inputs:
     type: File
     format:
       - Formats:fastq
+      - Formats:fasta
     inputBinding:
       prefix: --input
   fastq2fasta:
@@ -85,13 +87,16 @@ inputs:
   sortbyid2tab:
     type: boolean?
     inputBinding:
-      prefix: --sortbyid2tab    
+      prefix: --sortbyid2tab
+  output: 
+    type: string
+    inputBinding:  --output      
       
 baseCommand: [seqUtil]
 
 arguments: 
-  - prefix: --output
-    valueFrom: $(inputs.sequences.nameroot).fasta
+  # - prefix: --output
+  #   valueFrom: $(inputs.sequences.nameroot).fasta
   - prefix:
     valueFrom: |
         ${
@@ -108,10 +113,10 @@ outputs:
     type: stdout
   error: 
     type: stderr  
-  fasta:
+  file:
     type: File
     outputBinding: 
-      glob: $(inputs.sequences.nameroot).fasta
+      glob: $(inputs.output)
     
 
 $namespaces:
