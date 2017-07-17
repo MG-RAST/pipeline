@@ -90,7 +90,8 @@ inputs:
       prefix: --sortbyid2tab
   output: 
     type: string
-    inputBinding:  --output      
+    inputBinding:  
+      prefix: --output      
       
 baseCommand: [seqUtil]
 

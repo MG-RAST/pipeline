@@ -5,19 +5,19 @@
         "nameroot": "seqUtil", 
         "nameext": ".log", 
         "http://commonwl.org/cwltool#generation": 0, 
-        "location": "file:///pipeline/CWL/seqUtil.log", 
-        "path": "/pipeline/CWL/seqUtil.log", 
+        "location": "file:///pipeline/CWL/Data/Outputs/seqUtil.log", 
+        "path": "/pipeline/CWL/Data/Outputs/seqUtil.log", 
         "class": "File", 
         "size": 0
     }, 
-    "fasta": {
+    "file": {
         "checksum": "sha1$ea6c49ca4112166a34de2fc3e3108f05bbe5b39c", 
         "basename": "sequences.fasta", 
         "nameroot": "sequences", 
         "nameext": ".fasta", 
         "http://commonwl.org/cwltool#generation": 0, 
-        "location": "file:///pipeline/CWL/sequences.fasta", 
-        "path": "/pipeline/CWL/sequences.fasta", 
+        "location": "file:///pipeline/CWL/Data/Outputs/sequences.fasta", 
+        "path": "/pipeline/CWL/Data/Outputs/sequences.fasta", 
         "class": "File", 
         "size": 3369354
     }, 
@@ -27,8 +27,8 @@
         "nameroot": "seqUtil", 
         "nameext": ".error", 
         "http://commonwl.org/cwltool#generation": 0, 
-        "location": "file:///pipeline/CWL/seqUtil.error", 
-        "path": "/pipeline/CWL/seqUtil.error", 
+        "location": "file:///pipeline/CWL/Data/Outputs/seqUtil.error", 
+        "path": "/pipeline/CWL/Data/Outputs/seqUtil.error", 
         "class": "File", 
         "size": 0
     }
