@@ -75,10 +75,12 @@ outputs:
     type: stderr  
   trimmed:
     type: [File]
+    format: fastq
     outputBinding: 
       glob: "*.trimmed.fastq"
   rejected:
     type: [File]
+    format: fastq
     outputBinding: 
       glob: "*.rejected.fastq"    
     
