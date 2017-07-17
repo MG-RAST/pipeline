@@ -101,7 +101,6 @@ arguments:
   - prefix:
     valueFrom: |
         ${
-          
           if ( inputs.sequences.format.split("/").slice(-1)[0] == "fastq"  ) { return "--fastq"; } else { return "" ; }
         }
     
@@ -116,6 +115,12 @@ outputs:
     type: stderr  
   file:
     type: File
+    format: |
+      ${
+        if (inputs.fasta2tab) { return "tsv"}
+        else if (inputs.sortbyid2tab) { return "tsv"}
+        else if (inputs.fastq2fasta) { return "fasta"}
+      }
     outputBinding: 
       glob: $(inputs.output)
     
