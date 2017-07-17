@@ -1,6 +1,9 @@
 cwlVersion: v1.0
 class: Workflow
 
+label: filter fasta 
+doc: ''
+
 requirements:
   - class: StepInputExpressionRequirement
   - class: InlineJavascriptRequirement
@@ -10,20 +13,18 @@ requirements:
 inputs:
   jobid: string
   sequences: File
+  stats: File
   
-  kmerLength: 
-    type: 
-      type: array
-      items: int
-    default: [6]
-  basepairs: int
-    
+ 
     
 
 outputs:
-  someFile:
+  passed:
     type: File
-    outputSource: step/output
+    outputSource: filter/passed
+  removed:
+    type: File
+    outputSource: filter/removed  
  
   
   
@@ -33,14 +34,13 @@ steps:
     run: ../Tools/filter_fasta.tool.cwl
     in:
       sequences: sequences
+      stats: stats
       output:
         source: jobid
         valueFrom: $(self).100.preprocess.length.stats
-      length_bin:
-        source: jobid
-        valueFrom: $(self).100.preprocess.length.bin
-      gc_percent_bin:
-        source: jobid
-        valueFrom: $(self).100.preprocess.gc.bin
-    out: [stats , len_bin , gc_bin]
+    out: [passed , removed]
+    
+    
+    
+   
     
