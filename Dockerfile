@@ -90,7 +90,6 @@ RUN cd /root \
 	&& sh ./build_simple.sh \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root ; rm -rf /root/diamond
-	
 
 ### install swarm 2.1.9
 RUN cd /root \
@@ -101,14 +100,16 @@ RUN cd /root \
 	&& install -m755 scripts/* /usr/local/bin \
 	&& cd /root ; rm -rf swarm
 
-### install fastqjoin from ea-utils
+### install ea-utils
 RUN cd /root \
 	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
 	&& cd ea-utils/clipper \
-	&& make fastq-join \
 	&& make fastq-multx \
-	&& install -m755 -s fastq-join /usr/local/bin \
+	&& make fastq-join \
+	&& make fastq-mcf \
 	&& install -m755 -s fastq-multx /usr/local/bin \
+	&& install -m755 -s fastq-join /usr/local/bin \
+	&& install -m755 -s fastq-mcf /usr/local/bin \
 	&& cd /root ; rm -rf /root/ea-utils
 
 ### install sortmerna
@@ -130,7 +131,6 @@ RUN cd /root \
 	&& make install \
 	&& make clean \
 	&& cd /root ; rm -rf /root/vsearch-2* 
-
 
 ### install CWL runner
 RUN pip install cwlref-runner
