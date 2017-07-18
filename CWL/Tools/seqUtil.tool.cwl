@@ -77,7 +77,7 @@ inputs:
     inputBinding:
       prefix: --input
   fastq2fasta:
-    type: boolean
+    type: boolean?
     inputBinding:
       prefix: --fastq2fasta
   fasta2tab:
@@ -88,6 +88,10 @@ inputs:
     type: boolean?
     inputBinding:
       prefix: --sortbyid2tab
+  bowtie_truncate:
+    type: boolean?
+    inputBinding:
+      prefix: --bowtie_truncate    
   output: 
     type: string
     inputBinding:  
@@ -120,6 +124,8 @@ outputs:
         if (inputs.fasta2tab) { return "tsv"}
         else if (inputs.sortbyid2tab) { return "tsv"}
         else if (inputs.fastq2fasta) { return "fasta"}
+        else if (inputs.sequences.format) { return inputs.sequences.format}
+        else { return '' }
       }
     outputBinding: 
       glob: $(inputs.output)
