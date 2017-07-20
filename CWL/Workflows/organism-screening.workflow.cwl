@@ -13,6 +13,7 @@ requirements:
 inputs:
   stage: 
     type: string
+    doc:  Stage ID used by MG-RAST for identification
     default: "200"
     # inputBinding:
     #   valueFrom: '200'
@@ -31,8 +32,7 @@ outputs:
   
   
 steps:
-  
-  
+    
   truncate:
     run: ../Tools/seqUtil.tool.cwl
     in:
