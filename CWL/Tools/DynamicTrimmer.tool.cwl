@@ -11,8 +11,9 @@ hints:
 requirements:
   InlineJavascriptRequirement: {}
   InitialWorkDirRequirement:
-    listing: $(inputs.sequences)
-  
+    listing: 
+      - $(inputs.sequences)
+
 stdout: DynamicTrimmer.log
 stderr: DynamicTrimmer.error
 
@@ -35,39 +36,32 @@ stderr: DynamicTrimmer.error
 # Creates output file called input_file.trimmed.fastq and input_file.rejected.fastq.  Refuses to overwrite output file.
 
 
-# requirements:
-#   InitialWorkDirRequirement:
-#     listing: $(inputs.sequences)
-#
-      # |
-#       ${
-#           return inputs.sequences.map(
-#             function(f){ return f.basename }
-#             )
-#         }
-#
-      
+
         
 
 
 inputs:
   sequences:
-    type: File[]
+    type: File
     format:
       - Formats:fastq
     inputBinding:
       position: 1
-      valueFrom: |
-        ${
-            return inputs.sequences.map(
-              function(f){ return f.basename }
-              )
-          }
+      valueFrom:  $(inputs.sequences.basename)
+        # |
+        # ${
+        #     return inputs.sequences.map(
+        #       function(f){ return f.basename }
+        #       )
+        #   }
 
       
 baseCommand: [DynamicTrimmer.pl]
 
-
+# arguments:
+#   - valueFrom: ; sleep 100
+#     position: 10
+    
 outputs: 
   info:
     type: stdout
