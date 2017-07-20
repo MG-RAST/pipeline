@@ -11,8 +11,7 @@ hints:
 requirements:
   InlineJavascriptRequirement: {}
   InitialWorkDirRequirement:
-    listing: 
-      - $(inputs.sequences)
+    listing: $(inputs.sequences)
 
 stdout: DynamicTrimmer.log
 stderr: DynamicTrimmer.error
@@ -42,18 +41,13 @@ stderr: DynamicTrimmer.error
 
 inputs:
   sequences:
-    type: File
-    format:
-      - Formats:fastq
     inputBinding:
       position: 1
-      valueFrom:  $(inputs.sequences.basename)
-        # |
-        # ${
-        #     return inputs.sequences.map(
-        #       function(f){ return f.basename }
-        #       )
-        #   }
+    type:
+      type: array
+      items: File
+      inputBinding: 
+        valueFrom: $(self.basename)
 
       
 baseCommand: [DynamicTrimmer.pl]
