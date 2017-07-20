@@ -1,5 +1,5 @@
 sequences:
-  - class: File
-    format: fastq
-    path: ../Data/Inputs/sequences.fastq
-fastq2fasta: true  
+  class: File
+  format: fastq
+  path: ../Data/Inputs/sequences.fastq
+ 
