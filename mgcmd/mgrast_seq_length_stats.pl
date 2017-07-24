@@ -173,13 +173,14 @@ if (@error == 0) {
 
 # errors?
 if (@error > 0) {
-    $data->{data_type} = "invalid";
-    $data->{error} = \@error;
-} else {
-    $data->{data_type} = "sequence";
+    foreach my $e (@error) {
+        PipelineAWE::logger('error', $e);
+    }
+    exit 42;
 }
 
 # output attributes with stats
+$data->{data_type} = "sequence";
 if ($output_json_file eq "") {
     $output_json_file = "$input_file.out.json";
 }

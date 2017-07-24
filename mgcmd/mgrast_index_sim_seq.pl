@@ -85,8 +85,8 @@ if (-z $sim_file) {
                    'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
     PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
     PipelineAWE::logger('error', "pipeline failed, no similarities found");
-    # delete job ??
-    exit 1;
+    # exit failed-permanent
+    exit 42;
 }
 
 PipelineAWE::run_cmd("uncluster_sims.py -v -c $map_file $sim_file $sim_file.unclust");

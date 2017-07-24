@@ -102,8 +102,8 @@ if (-z $passed_seq) {
                    'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
     PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
     PipelineAWE::logger('error', "pipeline failed, no sequences passed preprocessing");
-    # delete job ??
-    exit 1;
+    # exit failed-permanent
+    exit 42;
 }
 
 # get stats
