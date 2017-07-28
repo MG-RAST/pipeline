@@ -142,5 +142,5 @@ sub cigar_length {
 
 
 sub get_usage {
-    return "USAGE: awe_search_rna.pl -input=<input fasta> -output=<output fasta> [-rna_nr=<rna cluster sequences, default: md5rna.clust.fasta> -index=<rna cluster index, default: md5rna.clust.index> -proc=<number of threads, default: 8> -mem=<memory in mb, default: 4096> -eval=<e-value, default: 0.1> -ident=<ident percentage, default: 75>] \n";
+    return "USAGE: mgrast_sortme_rna.pl -input=<input fasta> -output=<output fasta> [-rna_nr=<rna cluster sequences, default: md5rna.clust.fasta> -index=<rna cluster index, default: md5rna.clust.index> -proc=<number of threads, default: 8> -mem=<memory in mb, default: 4096> -eval=<e-value, default: 0.1> -ident=<ident percentage, default: 75>] \n";
 }

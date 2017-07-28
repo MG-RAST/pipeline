@@ -271,7 +271,7 @@ PipelineAWE::post_data($api_url."/job/viewable", $api_key, {metagenome_id => $mg
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_done.pl -job=<job identifier>\n";
+    return "USAGE: mgrast_stats.pl -job=<job identifier>\n";
 }
 
 sub read_ratios {

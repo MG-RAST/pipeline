@@ -94,7 +94,7 @@ def runBlatProcess(infile, nr, output):
         sys.exit(EXIT_RUNBLAT_FAIL)
 
 if __name__ == "__main__":
-    usage  = "usage: awe_blat_prot.py --input=<input file name (*.faa)> --output=<output file name>"
+    usage  = "usage: mgrast_blat_prot.py --input=<input file name (*.faa)> --output=<output file name>"
     parser = OptionParser(usage)
     parser.add_option("-i", "--input", dest="input", type = "string", default=None, help="input file path")
     parser.add_option("-o", "--output", dest="output", type = "string", default=None, help="output file path")

@@ -215,5 +215,5 @@ sub process_reads {
 }
 
 sub get_usage {
-    return "USAGE: awe_filter_feature.pl -in_clust=<input cluster map> -in_sim=<input similarity> -in_seq=<input sequence> -output=<output sequence> [-overlap=<overlap, default: 10> [-memory=<memory usage in GB, default is 16>]\n";
+    return "USAGE: mgrast_filter_feature.pl -in_clust=<input cluster map> -in_sim=<input similarity> -in_seq=<input sequence> -output=<output sequence> [-overlap=<overlap, default: 10> [-memory=<memory usage in GB, default is 16>]\n";
 }

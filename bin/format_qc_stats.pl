@@ -55,15 +55,28 @@ if ($help){
 # kmer input validation
 my @klens = split(/,/, $kmer_lens);
 my @kfiles = split(/,/, $kmer_stats);
-my $bad_kmer = 0;
+if (@klens == 0) {
+    print STDERR "missing kmer_lens option";
+    exit 1;
+}
+if (@kfiles == 0) {
+    print STDERR "missing kmer_stats option";
+    exit 1;
+}
 foreach (@klens) {
-    if ($_ !~ /^\d+$/) { $bad_kmer = 1; }
+    if ($_ !~ /^\d+$/) {
+        print STDERR "invalid kmer_lens value: $_";
+        exit 1;
+    }
 }
 foreach (@kfiles) {
-    unless (-s $_) { $bad_kmer = 1; }
+    unless (-s $_) {
+        print STDERR "missing kmer_stats file: $_";
+        exit 1;
+    }
 }
-if ((@klens == 0) || (@kfiles == 0) || $bad_kmer || (scalar(@klens) != scalar(@kfiles))) {
-    print STDERR "invalid kmer_lens or kmer_stats";
+if (scalar(@klens) != scalar(@kfiles)) {
+    print STDERR "mismatch between kmer_lens and kmer_stats";
     exit 1;
 }
 
