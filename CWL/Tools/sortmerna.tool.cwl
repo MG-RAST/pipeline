@@ -1,9 +1,10 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: rna screening
-doc:  |
-    identify potential rRNAs based on match to clustered rRNA DB:
+label: rna alignment
+doc: |
+    align rRNA fasta file against clustered rRNA index
+    output in blast m8 format
     >sortmerna -a $proc -m $mem -e $eval --blast '1 cigar qcov qstrand' --ref '$rna_nr,$index' --reads $fasta --aligned $fasta 
 
 hints:
@@ -21,8 +22,8 @@ inputs:
         type: File
         doc: Input file, sequence (fasta/fastq)
         format:
-            - Formats: fasta
-            - Formats: fastq
+            - Formats:fasta
+            - Formats:fastq
         inputBinding:
             prefix: --reads
     
@@ -67,6 +68,7 @@ outputs:
         type: stderr  
     aligned:
         type: File
+        doc: Output tab separated aligned file
         outputBinding: 
             glob: $(inputs.sequences.basename).blast
 
