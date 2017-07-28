@@ -1,0 +1,79 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mgrast_blat_prot.py
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+label: "aa sims blat"
+
+requirements:
+  - class: InlineJavascriptRequirement
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: userattr.json
+        entry: |
+         {
+           "stage_id": "650",
+           "stage_name": "protein.sims",
+           "m5nr_sims_version": $(inputs.nr_version)",
+           "data_type": "similarity",
+           "file_format": "blast m8",
+           "sim_type": "protein"
+         }
+      # - $(inputs.myFile)
+      - ${var f =inputs.nr_dir.location.concat('/').concat(inputs.nr_prefix).concat('.1'); return f; }
+      - ${var f =inputs.nr_dir.location.concat('/').concat(inputs.nr_prefix).concat('.2'); return f; }
+      
+   
+      
+     
+stdout: out.log
+stderr: error.log
+
+inputs:
+  input:
+    type: File
+    inputBinding:
+      prefix: -i
+  output:
+    type: string
+    inputBinding:
+      prefix: -o
+  nr_prefix:
+    type: string
+    doc: prefix for nr, expects *.1 and *.2
+    default: md5nr
+  nr_dir:
+    type: Directory
+    doc: Directory containing the db with prefix nr_prefix
+  sort_dir:
+    type: string?
+    inputBinding:
+      prefix: -d  
+  nr_version:
+    type: string
+  myFile:
+    type: File
+
+ 
+        
+                 
+  
+                        
+outputs:
+  sims:
+    type: File
+    outputBinding:
+      glob: $(inputs.output)
+  userattr:
+    type: File
+    outputBinding:
+      glob: userattr.json
+  stdout:
+    type: stdout
+  error: 
+    type: stderr    
+ 
+        

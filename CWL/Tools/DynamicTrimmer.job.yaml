@@ -1,0 +1,5 @@
+sequences:
+  - class: File
+    format: fastq
+    path: ../Data/Inputs/sequences.fastq
+ 

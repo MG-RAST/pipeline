@@ -1,0 +1,5 @@
+sequences:
+  class: File
+  format: fasta
+  path: ../Data/Inputs/sequences.all.fasta
+count: 42  

@@ -1,0 +1,36 @@
+{
+    "stats": {
+        "format": "file:///pipeline/CWL/Tools/json", 
+        "checksum": "sha1$bb4777c8223bb7c8a1833b3e670761fa0fa35b14", 
+        "basename": "stats.formatted.seq.stats", 
+        "nameroot": "stats.formatted.seq", 
+        "nameext": ".stats", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/stats.formatted.seq.stats", 
+        "path": "/pipeline/CWL/Data/Outputs/stats.formatted.seq.stats", 
+        "class": "File", 
+        "size": 359
+    }, 
+    "bins": {
+        "checksum": "sha1$b2fe89ff6829ab26ac32e5449f94bebca5b05626", 
+        "basename": "stats.formatted.seq.bins", 
+        "nameroot": "stats.formatted.seq", 
+        "nameext": ".bins", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/stats.formatted.seq.bins", 
+        "path": "/pipeline/CWL/Data/Outputs/stats.formatted.seq.bins", 
+        "class": "File", 
+        "size": 1450
+    }, 
+    "error": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "format_seq_stats.error", 
+        "nameroot": "format_seq_stats", 
+        "nameext": ".error", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/format_seq_stats.error", 
+        "path": "/pipeline/CWL/Data/Outputs/format_seq_stats.error", 
+        "class": "File", 
+        "size": 0
+    }
+}

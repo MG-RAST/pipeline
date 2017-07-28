@@ -1,0 +1,29 @@
+output_prefix: stats.formatted
+drisee_stat: 
+  class: File
+  path: ../Data/Outputs/drisee.stats 
+drisee_info: 
+  class: File
+  path: ../Data/Outputs/drisee.log
+kmer:
+  - length: 2
+    file: 
+      class: File
+      path: ../Data/Outputs/BaselineTesting.100.preprocess.kmer.2.stats
+  - length: 3
+    file: 
+      class: File
+      path: ../Data/Outputs/BaselineTesting.100.preprocess.kmer.3.stats
+# kmer_lens:  2,3
+# kmer_stats: BaselineTesting.100.preprocess.kmer.2.stats,BaselineTesting.100.preprocess.kmer.3.stats
+# kmer_files:
+#   - class: File
+#     path: ../Data/Outputs/BaselineTesting.100.preprocess.kmer.2.stats
+#   - class: File
+#     path: ../Data/Outputs/BaselineTesting.100.preprocess.kmer.3.stats
+    
+consensus: 
+  class: File
+  path: ../Data/Outputs/BaselineTesting.100.preprocess.consensus.stats
+
+     

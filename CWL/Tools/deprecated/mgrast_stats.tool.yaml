@@ -1,0 +1,221 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mgrast_stats.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/dbload:1.0
+
+requirements:
+  - class: EnvVarRequirement
+  # No option to mask/mark env virables as private
+  # private env variables are not supposed to show up in a completed job/workflow/recipe document
+    envDef:
+      MGRAST_WEBKEY: $(inputs.api_key)
+  - class: InitialWorkDirRequirement
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "999",
+            "stage_name": "done"
+          }
+      - $(inputs.m5nr_db)
+      - $(inputs.taxa_hier)
+      - $(inputs.ont_hier)
+  
+      # - m5nr_v1.annotation.bdb
+      # - m5nr_v1.taxonomy.map.json
+      # - m5nr_v1.ontology.map.json
+      
+inputs: 
+  # -job=[% job_id %] 
+  # -nr_ver=[% ach_sequence_ver %]
+  # -ann_ver=[% ach_annotation_ver %] 
+  # -api_url=[% mgrast_api %] 
+  # -upload=@[% job_id %].075.upload.stats 
+  # -qc=@[% job_id %].075.qc.stats 
+  # -preproc=@[% job_id %].100.preprocess.passed.fna 
+  # -derep=@[% job_id %].150.dereplication.removed.fna 
+  # -post_qc=@[% job_id %].299.screen.passed.fna 
+  # -source=@[% job_id %].700.annotation.source.stats 
+  # -search=@[% job_id %].425.search.rna.fna 
+  # -rna_clust=@[% job_id %].440.cluster.rna[% rna_pid %].fna 
+  # -rna_map=@[% job_id %].440.cluster.rna[% rna_pid %].mapping 
+  # -genecall=@[% job_id %].350.genecalling.coding.faa 
+  # -aa_clust=@[% job_id %].550.cluster.aa[% aa_pid %].faa 
+  # -aa_map=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
+  # -ontol=[% job_id %].650.aa.expand.ontology 
+  # -filter=[% job_id %].700.annotation.sims.filter.seq 
+  # -md5_abund=@[% job_id %].700.annotation.md5.abundance 
+  # -m5nr_db=m5nr_v1.annotation.bdb 
+  # -taxa_hier=m5nr_v1.taxonomy.map.json 
+  # -ont_hier=m5nr_v1.ontology.map.json",
+  
+  api_key: 
+    type: string?
+    default: ''
+  api_url:
+    type: string
+    inputBinding:
+      prefix: -api_url  
+  job:
+    type: int
+    inputBinding:
+      prefix: -job
+  nr_aa_annotation_version:
+    type: string
+    inputBinding:
+      prefix: -ann_ver
+  nr_aa_sequence_version:
+    type: string
+    inputBinding:
+      prefix: -nr_ver      
+  upload:
+    type: File
+    inputBinding:
+      prefix: -upload
+  qc:
+    type: File
+    inputBinding:
+      prefix: -qc
+  preproc:
+    type: File
+    inputBinding:
+      prefix: -preproc    
+  derep:
+    type: File
+    inputBinding:
+      prefix: -derep
+  post_qc:
+    type: File
+    inputBinding:
+      prefix: -post_qc         
+  source:
+    type: File
+    inputBinding:
+      prefix: -source         
+  search:
+    type: File
+    inputBinding:
+      prefix: -search
+  rna_clust:
+    type: File
+    inputBinding:
+      prefix: -rna_clust    
+  rna_map:
+    type: File
+    inputBinding:
+      prefix: -rna_map        
+  genecall:
+   type: File
+   inputBinding:
+     prefix: -genecall   
+  aa_clust:
+   type: File
+   inputBinding:
+     prefix: -aa_clust 
+  aa_map:
+   type: File
+   inputBinding:
+     prefix: -aa_map
+  ontol:
+   type: File
+   inputBinding:
+     prefix: -ontol
+  c :
+   type: File
+   inputBinding:
+     prefix: -filter
+  md5_abund:
+   type: File
+   inputBinding:
+     prefix: -md5_abund
+  m5nr_db:
+   type: File
+   inputBinding:
+     prefix: -m5nr_db  
+  taxa_hier:
+   type: File
+   inputBinding:
+     prefix: -taxa_hier
+  ont_hier:
+   type: File
+   inputBinding:
+     prefix: -ont_hier             
+
+
+outputs:
+  statisticsFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.job).statistics.json
+  statisticsAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.job).statistics.json.attr
+
+  screenFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.post_qc)
+  screenAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.post_qc).json
+
+  searchFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.search)
+  searchAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.search).json          
+           
+  rnaClustFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.rna_clust)
+  rnaClustAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.rna_clust).json               
+      
+  rnaMapFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.rna_map)
+  rnaMapAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.rna_map).json 
+
+  genecallFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.genecall)
+  genecallAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.genecall).json 
+
+  aaClustFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.aa_clust)
+  aaClustAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.aa_clust).json 
+                        
+  aaMapFile:
+    type: File
+    outputBinding:
+      glob: $(inputs.aa_map)
+  aaMapAttr:
+    type: File
+    outputBinding:
+      glob: $(inputs.aa_map).json 
+                        
+     

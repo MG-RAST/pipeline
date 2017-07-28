@@ -1,0 +1,4 @@
+type: enum
+name: FileFormat
+symbols: [fasta , fastq , hash, json, tsv]
+ 

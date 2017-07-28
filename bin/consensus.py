@@ -39,7 +39,7 @@ def bp_max_from_stats(infile):
     maxl = 600
     hasmax = False
     for line in fhdl:
-        if line.statswith('length_max'):
+        if line.startswith('length_max'):
             parts = line.split("\t")
             maxl = min(maxl, int(parts[1]))
             hasmax = True
