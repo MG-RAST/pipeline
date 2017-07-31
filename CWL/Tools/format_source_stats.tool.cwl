@@ -1,10 +1,10 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: cluster file reformat
+label: source stats file reformat
 doc: |
-    re-formats cd-hit .clstr file into mg-rast .mapping file
-    >format_cluster.pl --input <input> --output <output>
+    re-formats source tsv profile into json stats summary
+    >format_source_stats.pl --input <input> --output <output>
 
 hints:
     DockerRequirement:
@@ -13,24 +13,26 @@ hints:
 requirements:
     InlineJavascriptRequirement: {}
 
-stdout: format_cluster.log
-stderr: format_cluster.error
+stdout: format_source_stats.log
+stderr: format_source_stats.error
 
 inputs:
     input:
         type: File
-        doc: Input .clstr format file
+        doc: Input source profile file
+        format:
+            - Formats:tsv
         inputBinding:
             prefix: --input
     
     output:
         type: string
-        doc: Output .mapping format file
+        doc: Output source stats file
         inputBinding:
             prefix: --output
 
 
-baseCommand: [format_cluster.pl]
+baseCommand: [format_source_stats.pl]
 
 outputs:
     info:
@@ -39,7 +41,7 @@ outputs:
         type: stderr  
     output:
         type: File
-        doc: Output .mapping format file
+        doc: Output json format file
         outputBinding: 
             glob: $(inputs.output)
 
