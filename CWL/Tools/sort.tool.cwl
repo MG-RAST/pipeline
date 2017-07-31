@@ -56,6 +56,8 @@ baseCommand: [sort]
 arguments:
     - prefix: -T
       valueFrom: $(runtime.tmpdir)
+    - prefix: -S
+      valueFrom: $(runtime.ram)M
 
 outputs:
     info:
