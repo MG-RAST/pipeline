@@ -2,7 +2,9 @@ cwlVersion: v1.0
 class: CommandLineTool
 
 label: rna features
-doc: identify rRNAs features from given rRNA fasta and blast aligned files 
+doc: |
+    identify rRNAs features from given rRNA fasta and blast aligned files
+    >rna_feature.pl --seq <sequence> --sim <aligned> --ident 75 --output <output>
 
 hints:
     DockerRequirement:

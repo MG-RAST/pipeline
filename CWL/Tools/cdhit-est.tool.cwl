@@ -4,7 +4,7 @@ class: CommandLineTool
 label: CD-HIT-est
 doc: |
     cluster nucleotide sequences
-    >cdhit-est -n $word -d 0 -T 0 -M 0 -c $pid -i $fasta -o $output
+    >cdhit-est -n 9 -d 0 -T 0 -M 0 -c 0.97 -i <input> -o <output>
 
 hints:
     DockerRequirement:
@@ -17,7 +17,7 @@ stdout: cdhit-est.log
 stderr: cdhit-est.error
 
 inputs:
-    sequence:
+    input:
         type: File
         doc: Input fasta format file
         format:
@@ -50,9 +50,9 @@ baseCommand: [cdhit-est]
 
 arguments:
     - prefix: -M
-      valueFrom: $(runtime.ram)
+      valueFrom: 0
     - prefix: -T
-      valueFrom: $(runtime.cores)
+      valueFrom: 0
     - prefix: -d
       valueFrom: 0
 

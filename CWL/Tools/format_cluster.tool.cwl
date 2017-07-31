@@ -2,7 +2,9 @@ cwlVersion: v1.0
 class: CommandLineTool
 
 label: cluster file reformat
-doc: re-formats cd-hit .clstr file into mg-rast .mapping file
+doc: |
+    re-formats cd-hit .clstr file into mg-rast .mapping file
+    >format_cluster.pl -i <input> -o <output>
 
 hints:
     DockerRequirement:
