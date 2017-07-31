@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: CommandLineTool
 
 label: GNU sort
-doc: sort text file base on given field(s) 
+doc: sort text file base on given field(s)
 
 hints:
     DockerRequirement:
