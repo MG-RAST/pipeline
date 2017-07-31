@@ -1,10 +1,10 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: BLAT
+label: superBLAT
 doc: |
-    fast sequence search command line tool
-    >blat -fastMap -t dna -q rna -out blast8 <database> <query> <output>
+    multi-threaded fast sequence search command line tool, protein only
+    >superblat -fastMap -prot -out blast8 <database> <query> <output>
 
 hints:
     DockerRequirement:
@@ -13,8 +13,8 @@ hints:
 requirements:
     InlineJavascriptRequirement: {}
 
-stdout: blat.log
-stderr: blat.error
+stdout: superblat.log
+stderr: superblat.error
 
 inputs:
     database:
@@ -39,28 +39,6 @@ inputs:
         inputBinding:
             position: 3
     
-    dbType:
-        type: string
-        doc: Database type
-        format:
-            - Types:dna
-            - Types:prot
-            - Types:dnax
-        inputBinding:
-            prefix: -t
-    
-    queryType:
-        type: string
-        doc: Query type
-        format:
-            - Types:dna
-            - Types:rna
-            - Types:prot
-            - Types:dnax
-            - Types:rnax
-        inputBinding:
-            prefix: -q
-    
     fastMap:
         type: boolean?
         doc: Run for fast DNA/DNA remapping - not allowing introns
@@ -68,9 +46,10 @@ inputs:
           prefix: -fastMap
 
 
-baseCommand: [blat]
+baseCommand: [superblat]
 
 arguments:
+    - prefix: -prot
     - prefix: -out
       valueFrom: blast8
 
@@ -87,5 +66,4 @@ outputs:
 
 $namespaces:
     Formats: FileFormats.cv.yaml
-    Types: BlatTypes.cv.yaml
 
