@@ -69,12 +69,12 @@ outputs:
         type: File
         doc: Output .fna (dna) file
         outputBinding: 
-            glob: $(inputs.output).fna
+            glob: $(inputs.outName).fna
     outProt:
         type: File
         doc: Output .faa (protein) file
         outputBinding: 
-            glob: $(inputs.output).faa
+            glob: $(inputs.outName).faa
 
 $namespaces:
     Formats: FileFormats.cv.yaml

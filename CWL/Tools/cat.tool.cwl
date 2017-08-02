@@ -38,5 +38,5 @@ outputs:
         type: File
         doc: Concatenated file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
 

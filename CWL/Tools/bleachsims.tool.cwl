@@ -64,7 +64,7 @@ outputs:
         type: File
         doc: Output filtered similarity blast-m8 file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
 
 $namespaces:
     Formats: FileFormats.cv.yaml

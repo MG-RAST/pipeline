@@ -87,27 +87,27 @@ outputs:
         type: File
         doc: Output filtered similarity file
         outputBinding: 
-            glob: $(inputs.outFilter)
+            glob: $(inputs.outFilterName)
     outExpand:
         type: File?
         doc: Output expanded protein sim file (protein mode only)
         outputBinding: 
-            glob: $(inputs.outExpand)
+            glob: $(inputs.outExpandName)
     outOntology:
         type: File?
         doc: Output expanded ontology sim file (protein mode only)
         outputBinding: 
-            glob: $(inputs.outOntology)
+            glob: $(inputs.outOntologyName)
     outRna:
         type: File?
         doc: Output expanded rna sim file (rna mode only)
         outputBinding: 
-            glob: $(inputs.outRna)
+            glob: $(inputs.outRnaName)
     outLca:
         type: File?
         doc: Output expanded LCA file (protein and rna mode)
         outputBinding: 
-            glob: $(inputs.outLca)
+            glob: $(inputs.outLcaName)
 
 $namespaces:
     Formats: FileFormats.cv.yaml

@@ -66,12 +66,12 @@ outputs:
         type: File
         doc: Output fasta format file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
     outClstr:
         type: File
         doc: Output cluster mapping file
         outputBinding: 
-            glob: $(inputs.output).clstr
+            glob: $(inputs.outName).clstr
 
 $namespaces:
     Formats: FileFormats.cv.yaml

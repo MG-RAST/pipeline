@@ -80,7 +80,7 @@ outputs:
         type: File
         doc: Output abundance profile file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
 
 $namespaces:
     Types: ProfileTypes.cv.yaml

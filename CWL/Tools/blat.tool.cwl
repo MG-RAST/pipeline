@@ -83,7 +83,7 @@ outputs:
         type: File
         doc: Output tab separated similarity file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
 
 $namespaces:
     Formats: FileFormats.cv.yaml

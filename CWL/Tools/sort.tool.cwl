@@ -68,7 +68,7 @@ outputs:
         type: File
         doc: The sorted file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
 
 $namespaces:
     Formats: FileFormats.cv.yaml
