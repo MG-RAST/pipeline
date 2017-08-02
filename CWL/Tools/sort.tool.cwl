@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: CommandLineTool
 
 label: GNU sort
-doc: sort text file base on given field(s) 
+doc: sort text file base on given field(s)
 
 hints:
     DockerRequirement:
@@ -42,7 +42,7 @@ inputs:
         inputBinding:
             prefix: -t
     
-    output:
+    outName:
         type: string
         doc: |
             -o, --output=FILE
@@ -56,6 +56,8 @@ baseCommand: [sort]
 arguments:
     - prefix: -T
       valueFrom: $(runtime.tmpdir)
+    - prefix: -S
+      valueFrom: $(runtime.ram)M
 
 outputs:
     info:
@@ -66,7 +68,7 @@ outputs:
         type: File
         doc: The sorted file
         outputBinding: 
-            glob: $(inputs.output)
+            glob: $(inputs.outName)
 
 $namespaces:
     Formats: FileFormats.cv.yaml

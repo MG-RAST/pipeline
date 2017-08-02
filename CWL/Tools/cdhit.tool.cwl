@@ -1,11 +1,11 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: CD-HIT-est
+label: CD-HIT
 doc: |
-    cluster nucleotide sequences
+    cluster protein sequences
     use max available cpus and memory
-    >cdhit-est -n 9 -d 0 -T 0 -M 0 -c 0.97 -i <input> -o <output>
+    >cdhit -n 5 -d 0 -T 0 -M 0 -c 0.9 -i <input> -o <output>
 
 hints:
     DockerRequirement:
@@ -14,8 +14,8 @@ hints:
 requirements:
     InlineJavascriptRequirement: {}
 
-stdout: cdhit-est.log
-stderr: cdhit-est.error
+stdout: cdhit.log
+stderr: cdhit.error
 
 inputs:
     input:
@@ -28,15 +28,15 @@ inputs:
     
     identity:
         type: float?
-        doc: Percent identity threshold, default 0.97
-        default: 0.97
+        doc: Percent identity threshold, default 0.9
+        default: 0.9
         inputBinding:
             prefix: -c
     
     word:
         type: int?
-        doc: Word length, default 9
-        default: 9
+        doc: Word length, default 5
+        default: 5
         inputBinding:
             prefix: -n
     
@@ -47,7 +47,7 @@ inputs:
             prefix: -o
 
 
-baseCommand: [cdhit-est]
+baseCommand: [cdhit]
 
 arguments:
     - prefix: -M

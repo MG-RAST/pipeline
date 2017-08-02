@@ -1,11 +1,11 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: rna alignment
+label: sortmerna
 doc: |
     align rRNA fasta file against clustered rRNA index
     output in blast m8 format
-    >sortmerna -a $proc -m $mem -e $eval --blast '1 cigar qcov qstrand' --ref '$rna_nr,$index' --reads $fasta --aligned $fasta 
+    >sortmerna -a <# core> -m <MB ram> -e 0.1 --blast '1 cigar qcov qstrand' --ref '<refFasta>,<indexDir>/<indexName>' --reads <input> --aligned <input basename>
 
 hints:
     DockerRequirement:
@@ -18,7 +18,7 @@ stdout: sortmerna.log
 stderr: sortmerna.error
 
 inputs:
-    sequences:
+    input:
         type: File
         doc: Input file, sequence (fasta/fastq)
         format:
@@ -41,8 +41,9 @@ inputs:
         doc: Prefix for index files
     
     evalue:
-        type: float
-        doc: E-value threshold
+        type: float?
+        doc: E-value threshold, default 0.1
+        default: 0.1
         inputBinding:
             prefix: -e
     
@@ -59,18 +60,18 @@ arguments:
     - prefix: --ref
       valueFrom: $(inputs.refFasta.path),$(inputs.indexDir.path)/$(inputs.indexName)
     - prefix: --aligned
-      valueFrom: $(inputs.sequences.basename)
+      valueFrom: $(inputs.input.basename)
 
 outputs:
     info:
         type: stdout
     error: 
         type: stderr  
-    aligned:
+    output:
         type: File
         doc: Output tab separated aligned file
         outputBinding: 
-            glob: $(inputs.sequences.basename).blast
+            glob: $(inputs.input.basename).blast
 
 $namespaces:
     Formats: FileFormats.cv.yaml
