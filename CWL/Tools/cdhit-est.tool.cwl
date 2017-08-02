@@ -4,6 +4,7 @@ class: CommandLineTool
 label: CD-HIT-est
 doc: |
     cluster nucleotide sequences
+    use max available cpus and memory
     >cdhit-est -n 9 -d 0 -T 0 -M 0 -c 0.97 -i <input> -o <output>
 
 hints:
@@ -50,11 +51,11 @@ baseCommand: [cdhit-est]
 
 arguments:
     - prefix: -M
-      valueFrom: 0
+      valueFrom: "0"
     - prefix: -T
-      valueFrom: 0
+      valueFrom: "0"
     - prefix: -d
-      valueFrom: 0
+      valueFrom: "0"
 
 outputs:
     info:

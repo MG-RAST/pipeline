@@ -4,6 +4,7 @@ class: CommandLineTool
 label: CD-HIT
 doc: |
     cluster protein sequences
+    use max available cpus and memory
     >cdhit -n 5 -d 0 -T 0 -M 0 -c 0.9 -i <input> -o <output>
 
 hints:
@@ -50,11 +51,11 @@ baseCommand: [cdhit]
 
 arguments:
     - prefix: -M
-      valueFrom: 0
+      valueFrom: "0"
     - prefix: -T
-      valueFrom: 0
+      valueFrom: "0"
     - prefix: -d
-      valueFrom: 0
+      valueFrom: "0"
 
 outputs:
     info:
