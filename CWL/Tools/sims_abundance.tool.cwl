@@ -29,19 +29,19 @@ inputs:
     
     coverage:
         type: File?
-        doc: Optional input file: assembly coverage
+        doc: Optional input file, assembly coverage
         inputBinding:
             prefix: --coverage
     
     cluster:
         type: File?
-        doc: Optional input file: cluster mapping
+        doc: Optional input file, cluster mapping
         inputBinding:
             prefix: --cluster
     
     md5index:
         type: File?
-        doc: Optional input file: md5,seek,length
+        doc: Optional input file, md5,seek,length
         inputBinding:
             prefix: --md5_index
     
