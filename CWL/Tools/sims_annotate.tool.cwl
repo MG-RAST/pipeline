@@ -32,31 +32,31 @@ inputs:
         inputBinding:
             prefix: --ann_file
     
-    outFilter:
+    outFilterName:
         type: string
         doc: Output filtered sim file
         inputBinding:
             prefix: --out_filter
     
-    outExpand:
+    outExpandName:
         type: string?
         doc: Output expanded protein sim file (protein mode only)
         inputBinding:
             prefix: --out_expand
     
-    outOntology:
+    outOntologyName:
         type: string?
         doc: Output expanded ontology sim file (protein mode only)
         inputBinding:
             prefix: --out_ontology
     
-    outRna:
+    outRnaName:
         type: string?
         doc: Output expanded rna sim file (rna mode only)
         inputBinding:
             prefix: --out_rna
     
-    outLca:
+    outLcaName:
         type: string?
         doc: Output expanded LCA file (protein and rna mode)
         inputBinding:

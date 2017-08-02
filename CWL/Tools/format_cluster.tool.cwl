@@ -23,7 +23,7 @@ inputs:
         inputBinding:
             prefix: --input
     
-    output:
+    outName:
         type: string
         doc: Output .mapping format file
         inputBinding:

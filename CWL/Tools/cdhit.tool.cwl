@@ -39,7 +39,7 @@ inputs:
         inputBinding:
             prefix: -n
     
-    output:
+    outName:
         type: string
         doc: Output name
         inputBinding:

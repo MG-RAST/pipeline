@@ -33,7 +33,7 @@ inputs:
         inputBinding:
             position: 2
     
-    output:
+    outName:
         type: string
         doc: Output name
         inputBinding:

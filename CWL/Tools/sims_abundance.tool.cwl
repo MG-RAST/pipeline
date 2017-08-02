@@ -62,7 +62,7 @@ inputs:
         inputBinding:
             prefix: -s
     
-    output:
+    outName:
         type: string
         doc: Output abundance profile
         inputBinding:

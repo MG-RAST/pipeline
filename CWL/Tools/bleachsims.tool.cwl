@@ -46,7 +46,7 @@ inputs:
         inputBinding:
             prefix: -c
     
-    output:
+    outName:
         type: string
         doc: Output name
         inputBinding:

@@ -51,7 +51,7 @@ inputs:
         inputBinding:
             prefix: --train
     
-    output:
+    outName:
         type: string
         doc: Output name
         inputBinding:

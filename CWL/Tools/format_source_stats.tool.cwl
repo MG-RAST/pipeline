@@ -25,7 +25,7 @@ inputs:
         inputBinding:
             prefix: --input
     
-    output:
+    outName:
         type: string
         doc: Output source stats file
         inputBinding:

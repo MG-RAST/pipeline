@@ -40,7 +40,7 @@ inputs:
         inputBinding:
             prefix: --ident
     
-    output:
+    outName:
         type: string
         doc: Output fasta format file
         inputBinding:

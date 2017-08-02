@@ -23,7 +23,7 @@ inputs:
         inputBinding:
             position: 1
     
-    output:
+    outName:
         type: string
         inputBinding:
             position: 2

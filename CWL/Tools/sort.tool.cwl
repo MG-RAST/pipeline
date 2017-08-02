@@ -42,7 +42,7 @@ inputs:
         inputBinding:
             prefix: -t
     
-    output:
+    outName:
         type: string
         doc: |
             -o, --output=FILE
