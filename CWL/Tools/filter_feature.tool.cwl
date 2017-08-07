@@ -24,7 +24,7 @@ inputs:
             - Formats:tsv
         inputBinding:
             prefix: --seq
-    
+
     similarity:
         type: File
         doc: Input RNA similarity file
@@ -32,20 +32,20 @@ inputs:
             - Formats:tsv
         inputBinding:
             prefix: --sim
-    
+
     cluster:
         type: File
         doc: Input RNA cluster mapping file
         inputBinding:
             prefix: --clust
-    
-	overlap:
-		type: int?
-		doc: Overlap threshold in bp to accept, default 10
-		default: 10
+
+    overlap:
+        type: int?
+        doc: Overlap threshold in bp to accept, default 10
+        default: 10
         inputBinding:
             prefix: --overlap
-	
+
     outName:
         type: string
         doc: Output filtered protein fasta
