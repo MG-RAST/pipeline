@@ -75,4 +75,3 @@ outputs:
 $namespaces:
     Types: ProfileTypes.cv.yaml
 
-		
