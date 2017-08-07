@@ -16,7 +16,6 @@ use JSON;
 use List::Util qw(first max min sum);
 use POSIX qw(strftime floor);
 use Getopt::Long;
-use Cwd;
 umask 000;
 
 my $json = JSON->new;
