@@ -1,9 +1,9 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: abundance profile
+label: filter features
 doc: |
-    create abundance profile from expanded annotated sims files
+    remove predicted genes that have overlap with identified rRNAs
     >filter_feature.pl --seq <sequences> --sim <similarity> --clust <cluster> --output <output> --overlap <overlap> --memory <memory in MB> --tmp_dir <temp directory>
 
 hints:
@@ -53,7 +53,7 @@ inputs:
             prefix: --output
 
 
-baseCommand: [sims_abundance.py]
+baseCommand: [filter_feature.pl]
 
 arguments:
     - prefix: --memory
