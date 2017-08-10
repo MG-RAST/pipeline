@@ -9,8 +9,8 @@ import sys
 
 def main(args):
     parser = argparse.ArgumentParser(description="Script to expand the sims file to include cluster members. If cluster file is not included, input file is copied to output file")
-    parser.add_argument("ifile", dest="ifile", help="Name of input sim file.")
-    parser.add_argument("ofile", dest="ofile", help="Name of output sim file.")
+    parser.add_argument("ifile", help="Name of input sim file.")
+    parser.add_argument("ofile", help="Name of output sim file.")
     parser.add_argument("-d", "--db", dest="db", default="./db", help="Directory to store LevelDB.")
     parser.add_argument("-c", "--cfile", dest="cfile", help="Name of cluster mapping file")
     parser.add_argument("-p", "--position", dest="position", type="int", default=1, help="Column position of query in sims file, default is 1")
