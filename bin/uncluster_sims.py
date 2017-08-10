@@ -13,7 +13,7 @@ def main(args):
     parser.add_argument("ofile", help="Name of output sim file.")
     parser.add_argument("-d", "--db", dest="db", default="./db", help="Directory to store LevelDB.")
     parser.add_argument("-c", "--cfile", dest="cfile", help="Name of cluster mapping file")
-    parser.add_argument("-p", "--position", dest="position", type="int", default=1, help="Column position of query in sims file, default is 1")
+    parser.add_argument("-p", "--position", dest="position", type=int, default=1, help="Column position of query in sims file, default is 1")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages.")
     args = parser.parse_args()
 
