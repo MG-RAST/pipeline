@@ -61,9 +61,9 @@ def all_equal(iterable):
     return next(g, True) and not next(g, False)
 
 def print_row(hdl, row):
-    for r in row:
+    for i, r in enumerate(row):
         if isinstance(r, list):
-            r = ";".join(r)
+            row[i] = ";".join(r)
     hdl.write("\t".join(row)+"\n")
 
 
