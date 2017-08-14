@@ -31,9 +31,9 @@ def process_line(line):
     if not (frag and md5 and lca):
         return "", None
     id_match = id_re.match(frag)
-    if not rid_match:
+    if not id_match:
         return "", None
-    return rid_match.group(1), [ md5.split(';'), frag, ident.split(';'), length.split(';'), e_val.split(';'), lca.split(';'), lvl ]
+    return id_match.group(1), [ md5.split(';'), frag, ident.split(';'), length.split(';'), e_val.split(';'), lca.split(';'), lvl ]
 
 def merge_rows(cid, rows):
     md5, ident, length, e_val = (set() for i in range(4))
