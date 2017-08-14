@@ -64,15 +64,17 @@ def print_row(hdl, row):
     for i, r in enumerate(row):
         if isinstance(r, list):
             row[i] = ";".join(r)
+        if isinstance(r, int):
+            row[i] = str(r)
     hdl.write("\t".join(row)+"\n")
 
 
 usage = "usage: %prog [options]\n" + __doc__
 def main(args):
     parser = OptionParser(usage=usage)
-    parser.add_option('--in_rna', dest="in_rna", default=None, help="input file: expanded rna lca")
-    parser.add_option('--in_prot', dest="in_prot", default=None, help="input file: expanded protein lca")
-    parser.add_option('--output', dest="output", default=None, help="output file: expanded contig lca")
+    parser.add_option("--in_rna", dest="in_rna", default=None, help="input file: expanded rna lca")
+    parser.add_option("--in_prot", dest="in_prot", default=None, help="input file: expanded protein lca")
+    parser.add_option("-o", "--output", dest="output", default=None, help="output file: expanded contig lca")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages.")
     
     (opts, args) = parser.parse_args()
