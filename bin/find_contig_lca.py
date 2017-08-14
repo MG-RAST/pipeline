@@ -5,6 +5,7 @@ import re
 import sys
 import json
 import logging
+import itertools
 from optparse import OptionParser
 
 __doc__ = """
@@ -56,7 +57,7 @@ def merge_rows(cid, rows):
 
 def all_equal(iterable):
     "Returns True if all the elements are equal to each other"
-    g = groupby(iterable)
+    g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
 
 def print_row(hdl, row):
