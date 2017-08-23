@@ -68,7 +68,7 @@ $ftp->put($gzfile, basename($gzfile));
 
 # print output
 my $data = {
-    "path" => $updir."/".$gzfile,
+    "path" => $updir."/".basename($gzfile),
     "md5" => $md5
 };
 print_json($output, $data);
