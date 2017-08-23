@@ -90,7 +90,7 @@ my $data = {
     "path" => $updir."/".$ftpfile,
     "md5" => $md5
 };
-print_json($output, $data)
+print_json($output, $data);
 
 exit 0;
 
