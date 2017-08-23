@@ -59,8 +59,8 @@ $json->max_size(0);
 $json->allow_nonref;
 
 # set ftp connection
-$ftp = Net::FTP->new($furl) or die "Cannot connect to $furl: $!";
-$ftp->login($user, $password) or die "Cannot login using $user and $password. ", $ftp->message;
+my $ftp = Net::FTP->new($furl) or die "Cannot connect to $furl: $!";
+$ftp->login($user, $pswd) or die "Cannot login using $user and $pswd. ", $ftp->message;
 $ftp->mkdir($updir);
 $ftp->cwd($updir);
 $ftp->binary();
@@ -83,7 +83,7 @@ my $md5 = $ctx->digest;
 
 # ftp from tee
 my $ftpfile = basename($input).".gz";
-$ftp->put($ftpread, $ftpfile)
+$ftp->put($ftpread, $ftpfile);
 
 # print output
 my $data = {
