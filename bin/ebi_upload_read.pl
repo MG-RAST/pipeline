@@ -7,6 +7,7 @@ no warnings('once');
 use JSON;
 use Net::FTP;
 use Getopt::Long;
+use File::Basename;
 umask 000;
 
 # options
@@ -63,7 +64,7 @@ $ftp->binary();
 # compress / md5 / ftp
 my $gzfile = $input.".gz";
 my $md5 = `gzip -c $input | tee $gzfile | md5sum | cut -f1 -d' '`;
-$ftp->put($gzfile);
+$ftp->put($gzfile, basename($gzfile));
 
 # print output
 my $data = {
