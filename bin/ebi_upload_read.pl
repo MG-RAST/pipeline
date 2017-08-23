@@ -6,11 +6,6 @@ no warnings('once');
 
 use JSON;
 use Net::FTP;
-use File::Basename;
-use IPC::Open2;
-use Digest::MD5;
-use IO::Tee;
-use IO::Compress::Gzip qw(gzip $GzipError);
 use Getopt::Long;
 umask 000;
 
@@ -65,29 +60,14 @@ $ftp->mkdir($updir);
 $ftp->cwd($updir);
 $ftp->binary();
 
-# open pipes
-my ($md5read, $md5write, $ftpread, $ftpwrite);
-open2($md5read, $md5write) or die "open2() md5 failed: $!";
-open2($ftpread, $ftpwrite) or die "open2() ftp failed: $!";
-
-# tie together writes
-my $teewrite = IO::Tee->new($md5write, $ftpwrite);
-
-# gzip file to writer
-gzip $input => $teewrite or die "gzip failed: $GzipError\n";
-
-# md5 from tee
-my $ctx = Digest::MD5->new();
-$ctx->addfile($md5read);
-my $md5 = $ctx->digest;
-
-# ftp from tee
-my $ftpfile = basename($input).".gz";
-$ftp->put($ftpread, $ftpfile);
+# compress / md5 / ftp
+my $gzfile = $input.".gz";
+my $md5 = `gzip -c $input | tee $gzfile | md5sum | cut -f1 -d' '`;
+$ftp->put($gzfile);
 
 # print output
 my $data = {
-    "path" => $updir."/".$ftpfile,
+    "path" => $updir."/".$gzfile,
     "md5" => $md5
 };
 print_json($output, $data);
