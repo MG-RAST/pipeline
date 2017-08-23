@@ -57,7 +57,7 @@ $json->max_size(0);
 $json->allow_nonref;
 
 # set ftp connection
-my $ftp = Net::FTP->new($furl) or die "Cannot connect to $furl: $!";
+my $ftp = Net::FTP->new($furl, Passive => 1) or die "Cannot connect to $furl: $!";
 $ftp->login($user, $pswd) or die "Cannot login using $user and $pswd. ", $ftp->message;
 $ftp->mkdir($updir);
 $ftp->cwd($updir);
@@ -72,12 +72,11 @@ $ftp->put($gzfile, basename($gzfile));
 
 # print output
 my $data = {
-    "path" => $updir."/".basename($gzfile),
-    "md5" => $md5
+    metagenome_id => $mgid || undef,
+    filepath => $updir."/".basename($gzfile),
+    trim => $trim ? JSON::true : JSON::false,
+    md5 => $md5
 };
-if ($mgid) {
-    $data->{metagenome_id} = $mgid;
-}
 print_json($output, $data);
 
 exit 0;
