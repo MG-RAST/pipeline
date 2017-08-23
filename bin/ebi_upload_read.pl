@@ -12,7 +12,8 @@ umask 000;
 
 # options
 my $input  = "";
-my $output = "";   
+my $output = "";
+my $mgid   = "";
 my $updir  = "";
 my $furl   = "webin.ebi.ac.uk";
 my $user   = $ENV{'EBI_USER'} || undef;
@@ -22,6 +23,7 @@ my $help   = 0;
 my $options = GetOptions (
         "input=s"  => \$input,
         "output=s" => \$output,
+        "mgid=s"   => \$mgid,
         "updir=s"  => \$updir,
         "furl=s"   => \$furl,
         "user=s"   => \$user,
@@ -61,9 +63,11 @@ $ftp->mkdir($updir);
 $ftp->cwd($updir);
 $ftp->binary();
 
-# compress / md5 / ftp
+# compress / md5
 my $gzfile = $input.".gz";
 my $md5 = `gzip -c $input | tee $gzfile | md5sum | cut -f1 -d' '`;
+chomp $md5;
+# ftp
 $ftp->put($gzfile, basename($gzfile));
 
 # print output
@@ -71,6 +75,9 @@ my $data = {
     "path" => $updir."/".basename($gzfile),
     "md5" => $md5
 };
+if ($mgid) {
+    $data->{metagenome_id} = $mgid;
+}
 print_json($output, $data);
 
 exit 0;
