@@ -1,6 +1,6 @@
 # MG-RAST dockerfiles
 
-FROM	debian
+FROM debian
 MAINTAINER The MG-RAST team
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -65,8 +65,7 @@ RUN cd /root \
 	&& cd blatSrc \
 	&& make BINDIR=/usr/local/bin/ \
 	&& strip /usr/local/bin/blat \
-	&& cd .. \
-	&& rm -rf blatSrc blatSrc35.zip
+	&& cd /root ; rm -rf blatSrc blatSrc35.zip
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
@@ -84,12 +83,10 @@ ENV PATH /root/FragGeneScan/bin:$PATH
 ### install DIAMOND
 RUN cd /root \
 	&& git clone https://github.com/bbuchfink/diamond.git \
-	&& mkdir -p /root/diamond \
-	&& cd /root/diamond \
-	# && cat build_simple.sh | sed s/-static//g > build_simple.sh \
+	&& cd diamond \
 	&& sh ./build_simple.sh \
 	&& install -s -m555 diamond /usr/local/bin \
-	&& cd /root ; rm -rf /root/diamond
+	&& cd /root ; rm -rf diamond
 
 ### install swarm 2.1.9
 RUN cd /root \
@@ -110,15 +107,18 @@ RUN cd /root \
 	&& install -m755 -s fastq-multx /usr/local/bin \
 	&& install -m755 -s fastq-join /usr/local/bin \
 	&& install -m755 -s fastq-mcf /usr/local/bin \
-	&& cd /root ; rm -rf /root/ea-utils
+	&& cd /root ; rm -rf ea-utils
 
 ### install sortmerna
 RUN cd /root \
 	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
-	&& tar xvf 2.1b.tar.gz \
-	&& cd sortmerna-2.1b \
+	&& tar xvf 2*.tar.gz \
+	&& cd sortmerna-2* \
 	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
-	&& ./configure && make install && make clean
+	&& ./configure \
+    && make install \
+    && make clean \
+    && cd /root ; rm -rf sortmerna-2* 2*.tar.gz
 
 ### install vsearch 2.43
 RUN cd /root \
@@ -130,7 +130,23 @@ RUN cd /root \
 	&& make \
 	&& make install \
 	&& make clean \
-	&& cd /root ; rm -rf /root/vsearch-2* 
+	&& cd /root ; rm -rf vsearch-2* v2*.tar.gz
+
+### install skewer
+RUN cd /root \
+    && git clone https://github.com/relipmoc/skewer \
+    && cd skewer \
+    && make \
+    && make install \
+    && make clean \
+    && cd /root ; rm -rf skewer
+
+### install autoskewer
+RUN cd /root \
+    git clone http://github.com/MG-RAST/autoskewer \
+    && cd autoskewer \
+    && make
+ENV PATH /root/autoskewer/:$PATH
 
 ### install CWL runner
 RUN pip install cwlref-runner
