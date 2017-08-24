@@ -143,7 +143,7 @@ RUN cd /root \
 
 ### install autoskewer
 RUN cd /root \
-    git clone http://github.com/MG-RAST/autoskewer \
+    && git clone http://github.com/MG-RAST/autoskewer \
     && cd autoskewer \
     && make
 ENV PATH /root/autoskewer/:$PATH
