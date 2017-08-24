@@ -83,5 +83,6 @@ outputs:
             glob: $(inputs.outName)
 
 $namespaces:
+    Formats: FileFormats.cv.yaml
     Types: ProfileTypes.cv.yaml
 
