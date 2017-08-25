@@ -5,7 +5,7 @@
 #       text drisee info      (optional)
 #       tabbed consensus stat (optional)
 #       tabbed coverage stat  (optional)
-#outputs: json ${out_prefix}.qc.summery
+#outputs: json ${out_prefix}.qc.summary
 #         json ${out_prefix}.qc.stats	
 
 use strict;
@@ -16,7 +16,6 @@ use JSON;
 use List::Util qw(first max min sum);
 use POSIX qw(strftime floor);
 use Getopt::Long;
-use Cwd;
 umask 000;
 
 my $json = JSON->new;
@@ -80,7 +79,7 @@ if (scalar(@klens) != scalar(@kfiles)) {
     exit 1;
 }
 
-# summery stats
+# summary stats
 my $qcsum = {};
 
 # process drisee
@@ -139,12 +138,12 @@ for (my $i=0; $i<scalar(@klens); $i++) {
 
 # output stats
 print_json($out_prefix.".qc.stats", $qcstat);
-print_json($out_prefix.".qc.summery", $qcsum);
+print_json($out_prefix.".qc.summary", $qcsum);
 
 exit 0;
 
 sub get_usage {
-    return "USAGE: format_qc_stats.pl -drisee_stat=<drisee stat file> -drisee_info=<drisee info file> -kmer_lens=<kmer len list> -kmer_stats=<kmer file list> -consensus=<consensus stat file> -coverage=<coverage stat file> -out_prefix=<output prefix>\noutputs: \${out_prefix}.qc.summery, \${out_prefix}.qc.stats\n";
+    return "USAGE: format_qc_stats.pl -drisee_stat=<drisee stat file> -drisee_info=<drisee info file> -kmer_lens=<kmer len list> -kmer_stats=<kmer file list> -consensus=<consensus stat file> -coverage=<coverage stat file> -out_prefix=<output prefix>\noutputs: \${out_prefix}.qc.summary, \${out_prefix}.qc.stats\n";
 }
 
 sub get_drisee {

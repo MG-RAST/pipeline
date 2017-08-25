@@ -1,0 +1,60 @@
+jobid : 100
+no-shock: true
+db_dir:
+  class: Directory
+  path: /pipeline/CWL/Data/Inputs/DBs
+sequences: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/seq.fna
+seqformat: fasta
+assembled: 0
+qc_proc:  8
+qc_kmers: 15,6
+dereplicate: 1
+derep_prefix_length: 50
+derep_memory: 4
+
+screen_index: "e_coli"
+screen_bowtie: 1 
+
+rna_nr_clust:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5rna.clust  
+rna_nr:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5rna
+rna_nr_version: "dev"  
+rna_pid: 97
+rna_assembled: false
+exclusive_parameters:
+  rna: true
+    
+nr_prefix: md5nr
+nr_version: "dev"
+nr_aa_annotation_version: "dev"
+nr_aa_sequence_version: "dev"
+nr_rna_annotation_version: "dev" 
+nr_rna_sequence_version: "dev" 
+nr_dir: 
+  class: Directory
+  path: /pipeline/CWL/Data/Inputs/DBs
+nr_part_1:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5nr.1
+nr_part_2:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/md5nr.2    
+nr_aa_ann_file: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb 
+nr_rna_ann_file: 
+  class: File
+  path: /pipeline/CWL/Data/Inputs/DBs/m5nr_v1.bdb  
+  
+memory_index_sims: 10  
+  
+# filter feature step input
+ff_memory: 8
+ff_overlap: 10  
+aa_cluster_pid: 90
+aa_cluster_memory: 20  

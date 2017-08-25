@@ -1,0 +1,6 @@
+sequences:
+  class: File
+  format: fastq
+  path: ../Data/Inputs/sequences.fastq
+fastq2fasta: true 
+output: "sequences.fasta" 

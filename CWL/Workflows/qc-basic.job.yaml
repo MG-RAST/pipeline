@@ -1,0 +1,11 @@
+jobid: BaselineTesting
+sequences:
+  class: File
+  format: fasta
+  path: ../Data/Inputs/sequences.all.fasta
+
+length_bin: seq.length.bin
+gc_percent_bin: seq.gc.bin
+basepairs: 100
+kmerLength: [2 , 3]
+  

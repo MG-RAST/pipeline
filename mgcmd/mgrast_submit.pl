@@ -120,6 +120,8 @@ if ($project) {
     unless ($project eq $pinfo->{id}) {
         PipelineAWE::logger('error', "project $project does not exist");
     }
+} else {
+    PipelineAWE::logger('error', "project ID is missing");
 }
 
 my $submitted = {}; # file_name => [name, awe_id, mg_id]
@@ -134,11 +136,13 @@ FILES: foreach my $fname (keys %$to_submit) {
         foreach my $mg (@{$mg_by_md5->{data}}) {
             next if ($mg->{status} =~ /deleted/);
             if ($mg->{submission} && ($mg->{submission} eq $params->{submission})) {
+                PipelineAWE::logger('warn', $mg->{id}." already exists, re-submitting");
                 my $awe_id = exists($mg->{pipeline_id}) ? $mg->{pipeline_id} : "";
                 # not in pipeline
                 if (! $awe_id) {
                     # not properly created, redo
                     if (! $mg->{project}) {
+                        PipelineAWE::logger('warn', $mg->{id}." has no project, re-creating");
                         my $create_data = $params->{parameters};
                         $create_data->{metagenome_id} = $mg->{id};
                         $create_data->{input_id}      = $info->{id};

@@ -1,0 +1,59 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: ["mgrast_search_rna.pl"]
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/pipeline:cwl
+
+label: "rna detection"
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+                "stage_id": "425",
+                "stage_name": "rna.filter",
+                "data_type": "sequence",
+                "file_format": "fasta",
+                "seq_format": "bp" ,
+          }
+      - entry: $(inputs.input)
+
+inputs:
+  input:
+    type: File
+    inputBinding:
+      prefix: -input
+      valueFrom: $(inputs.input.basename)
+  output:
+    type: string
+    inputBinding:
+      prefix: -output 
+  rna_nr:
+    type: File
+    inputBinding:
+      prefix: -rna_nr
+  size:
+    type: int
+    default: 100
+    inputBinding:
+      prefix: -size
+  proc:
+    type: int
+    default: 8
+    inputBinding:
+      prefix: -proc          
+  
+                        
+outputs:
+ rna:
+   type: File
+   outputBinding:
+     glob: $(inputs.output)
+ userattr:
+   type: File
+   outputBinding:
+     glob: userattr.json

@@ -1,0 +1,63 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mgrast_annotate_summary.pl
+
+label:  abundance files
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/annotate:1.0
+
+requirements:
+  InitialWorkDirRequirement:
+    listing:
+      - entryname: userattr.json
+        entry: |
+          {
+            "stage_id": "700",
+            "stage_name": "annotation.summary",
+            "m5nr_annotation_version": $(inputs.nr_version),
+            "m5rna_annotation_version": $(inputs.nr_version),
+            "file_format": "abundance table",
+            "data_type": $(inputs.abundanceType)
+          }
+
+inputs:
+  in_expand:
+    type: File[]
+    inputBinding:
+      prefix: -in_expand
+  in_maps:
+    type: File[]
+    inputBinding:
+      prefix: -in_maps
+  in_assemb:
+    type: File?
+    inputBinding:
+      prefix: -in_assemb
+  in_index:
+    type: File?
+    inputBinding:
+      prefix: -in_index
+  abundanceType:
+    type: string
+    doc: <md5|ontology|function|organism|source|lca>
+    inputBinding:
+      prefix: -type
+  nr_version:
+    type: string    
+  output:
+    type: string
+    inputBinding:
+      prefix: -output
+      
+outputs:
+  abundance:
+    type: File
+    outputBinding:
+      glob: $(inputs.output)
+  abundanceattr:
+    type: File
+    outputBinding:
+      glob: userattr.json  
+  

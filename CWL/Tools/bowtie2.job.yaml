@@ -1,0 +1,9 @@
+sequences:
+  class: File
+  path: ../Data/Inputs/sequences.all.fasta
+  format: fasta
+indexDir: 
+  class: Directory
+  path: ../Data/Inputs/DBs/
+indexName: e_coli
+outUnaligned: unligned.bowtie2.fasta

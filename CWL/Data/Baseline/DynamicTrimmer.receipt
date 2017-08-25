@@ -1,0 +1,46 @@
+{
+    "info": {
+        "checksum": "sha1$596fc924e4cc214bbd1a54709917c7c99f0c9872", 
+        "basename": "DynamicTrimmer.log", 
+        "nameroot": "DynamicTrimmer", 
+        "nameext": ".log", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/DynamicTrimmer.log", 
+        "path": "/pipeline/CWL/Data/Outputs/DynamicTrimmer.log", 
+        "class": "File", 
+        "size": 171
+    }, 
+    "trimmed": {
+        "checksum": "sha1$277eb0534f5f412ff548534bdff143e55c95db74", 
+        "basename": "sequences.fastq.trimmed.fastq", 
+        "nameroot": "sequences.fastq.trimmed", 
+        "nameext": ".fastq", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/sequences.fastq.trimmed.fastq", 
+        "path": "/pipeline/CWL/Data/Outputs/sequences.fastq.trimmed.fastq", 
+        "class": "File", 
+        "size": 4976168
+    }, 
+    "rejected": {
+        "checksum": "sha1$7a300b7e05a790816aadaabea5f4193aaa4b9d93", 
+        "basename": "sequences.fastq.rejected.fastq", 
+        "nameroot": "sequences.fastq.rejected", 
+        "nameext": ".fastq", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/sequences.fastq.rejected.fastq", 
+        "path": "/pipeline/CWL/Data/Outputs/sequences.fastq.rejected.fastq", 
+        "class": "File", 
+        "size": 337714
+    }, 
+    "error": {
+        "checksum": "sha1$19332c743eb4a6881f6c710d719bff2939029faa", 
+        "basename": "DynamicTrimmer.error", 
+        "nameroot": "DynamicTrimmer", 
+        "nameext": ".error", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/DynamicTrimmer.error", 
+        "path": "/pipeline/CWL/Data/Outputs/DynamicTrimmer.error", 
+        "class": "File", 
+        "size": 99
+    }
+}

@@ -1,0 +1,11 @@
+type: array
+name: BowtieIndicies
+symbols: 
+  - a_thaliana: 201
+  - b_taurus: 202
+  - d_melanogaster: 203
+  - e_coli: 204
+  - h_sapiens: 205
+  - m_musculus: 206
+  - s_scrofa: 207
+  - r_norvegicus: 208

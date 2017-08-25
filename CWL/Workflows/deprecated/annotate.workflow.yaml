@@ -1,0 +1,198 @@
+cwlVersion: v1.0
+class: Workflow
+
+requirements:
+  - class: InlineJavascriptRequirement
+  - class: StepInputExpressionRequirement
+  - class: MultipleInputFeatureRequirement
+
+inputs:
+  jobid : int
+  api_key: string?
+  db_dir: Directory
+  no-shock:
+    type: boolean?
+    default: true
+  sequences: File
+  sequencing_method: 
+    type: string
+    doc: <sanger|454|illumina|complete>
+    default: illumina
+  
+  sims_rna: File
+  sims_aa: File     
+  
+  nr_dir: Directory
+  nr_prefix: string
+  nr_version: string
+  nr_part_1: File
+  nr_part_2: File
+  nr_aa_annotation_version: string
+  nr_aa_sequence_version: string
+  nr_aa_ann_file: File  
+  nr_rna_annotation_version: string 
+  nr_rna_sequence_version: string 
+  nr_rna_ann_file: File
+    
+  in_seqs: File[]
+  in_sims: File[]
+  in_maps: File[]
+  in_index: File
+  in_assemb: File
+  
+  
+  
+  memory_index_sims: int    
+
+outputs:
+  proteinFilterFile:
+    type: File
+    outputSource: aa/filter
+  proteinFile:
+    type: File
+    outputSource: aa/protein  
+  proteinLcaFile:
+   type: File
+   outputSource: aa/lca
+  proteinOntologyFile:
+   type: File
+   outputSource: aa/ontology
+  rnaFilterFile:
+   type: File
+   outputSource: rna/filter
+  rnaLcaFile:
+    type: File
+    outputSource: rna/lca
+  rnaFeatureFile:
+    type: File
+    outputSource: rna/feature
+  indexedSimsFile:
+    type: File
+    outputSource: index/index
+  summaryMD5File:
+    type: File
+    outputSource: summaryMD5/abundance
+  summaryLCAFile:
+    type: File
+    outputSource: summaryLCA/abundance
+  summarySourceFile:
+    type: File
+    outputSource: summarySource/abundance          
+     
+  
+        
+steps:
+  aa:
+    run: ../Tools/mgrast_annotate_aa_sims.tool.yaml
+    in:
+      input: sims_aa 
+      # input: simsAA/sims
+      out_prefix: 
+        source: jobid
+        valueFrom: $(self).650
+      ach_ver: nr_aa_annotation_version 
+      ach_sequence_ver: nr_aa_sequence_version 
+      ann_file: nr_aa_ann_file
+      exclusive_parameters: 
+        # source: nr_prefix
+        valueFrom: |
+            ${ return { "aa": true }; }  
+                          
+    out: [filter,protein,lca,ontology]
+
+  rna:
+    run: ../Tools/mgrast_annotate_rna_sims.tool.yaml
+    in:
+      # input: simsRNA/sims
+      input: sims_rna
+      out_prefix: 
+        source: jobid
+        valueFrom: $(self).450
+      ach_ver: nr_rna_annotation_version 
+      ach_sequence_ver: nr_rna_sequence_version 
+      ann_file: nr_rna_ann_file 
+    out: [filter, feature, lca]
+  
+  index:
+    run: ../Tools/mgrast_index_sim_seq.tool.yaml
+    requirements:
+      - class: EnvVarRequirement
+      # No option to mask/mark env virables as private
+      # private env variables are not supposed to show up in a completed job/workflow/recipe document
+        envDef:
+          MGRAST_WEBKEY: api_key
+    in:
+      in_seqs: in_seqs
+      # in_seq: [genecalling/fna , searchRNA/rna]
+      in_maps: in_maps
+      in_sims: in_sims
+      memory: memory_index_sims
+      m5nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.sims.filter.seq
+    out: [index]
+  summaryMD5:
+    label: md5 abundance
+    run: ../Tools/mgrast_annotate_summary.tool.yaml
+    in:
+      in_expand: [ aa/filter , rna/filter ]
+      in_maps: in_maps
+      in_assemb: in_assemb
+      in_index: in_index
+      abundanceType: 
+        default: "md5"
+      nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.md5.abundance 
+    out: [abundance]                     
+  summaryLCA:
+    label: lca abundance
+    run: ../Tools/mgrast_annotate_summary.tool.yaml
+    # -in_expand=@[% job_id %].650.aa.expand.lca 
+    # -in_expand=@[% job_id %].450.rna.expand.lca
+    # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
+    # -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping
+    # -in_assemb=@[% job_id %].075.assembly.coverage 
+    # -output=[% job_id %].700.annotation.lca.abundance 
+    # -type=lca",
+    
+    in:
+      in_expand: [ aa/lca , rna/lca ]
+      in_maps: in_maps
+      in_assemb: in_assemb
+      abundanceType: 
+        default: "lca"
+      nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.lca.abundance 
+    out: [abundance]  
+      
+  summarySource:
+    label: source abundance
+    run: ../Tools/mgrast_annotate_summary.tool.yaml
+    # -in_expand=@[% job_id %].650.aa.expand.protein 
+    # -in_expand=@[% job_id %].450.rna.expand.rna 
+    # -in_maps=@[% job_id %].550.cluster.aa[% aa_pid %].mapping 
+    # -in_maps=@[% job_id %].440.cluster.rna[% rna_pid %].mapping 
+    # -in_assemb=@[% job_id %].075.assembly.coverage 
+    # -output=[% job_id %].700.annotation.source.stats 
+    # -type=source",
+    
+    in:
+      in_expand: [ aa/protein , rna/feature ]
+      in_maps: in_maps
+      in_assemb: in_assemb
+      abundanceType: 
+        default: "source"
+      nr_version: nr_aa_annotation_version
+      output:
+        source: jobid
+        valueFrom: $(self).700.annotation.source.stats 
+    out: [abundance]  
+      
+         
+      
+

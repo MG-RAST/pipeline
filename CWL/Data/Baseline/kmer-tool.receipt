@@ -1,0 +1,29 @@
+{
+    "summary": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "kmer-tool.log", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/kmer-tool.log", 
+        "path": "/pipeline/CWL/Data/Outputs/kmer-tool.log", 
+        "class": "File", 
+        "size": 0
+    }, 
+    "stats": {
+        "checksum": "sha1$ed60ed6a84f160dfae60d8f2fcb04b55e42e42b1", 
+        "basename": "kmer-tool.kmer.6.stats", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/kmer-tool.kmer.6.stats", 
+        "path": "/pipeline/CWL/Data/Outputs/kmer-tool.kmer.6.stats", 
+        "class": "File", 
+        "size": 703
+    }, 
+    "error": {
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709", 
+        "basename": "kmer-tool.error", 
+        "http://commonwl.org/cwltool#generation": 0, 
+        "location": "file:///pipeline/CWL/Data/Outputs/kmer-tool.error", 
+        "path": "/pipeline/CWL/Data/Outputs/kmer-tool.error", 
+        "class": "File", 
+        "size": 0
+    }
+}

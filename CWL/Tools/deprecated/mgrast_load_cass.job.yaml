@@ -1,0 +1,11 @@
+job: 222340
+ann_ver: "dev"
+api_url: http://api.metagenomics.anl.gov
+md5:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.700.annotation.md5.abundance
+lca:
+  class: File
+  path: /pipeline/CWL/Data/Inputs/100/100.700.annotation.lca.abundance
+    
+

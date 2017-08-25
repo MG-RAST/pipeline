@@ -1,0 +1,3 @@
+type: enum
+name: FragGeneScanType
+symbols: [complete, sanger_5, sanger_10, 454_5, 454_10, 454_30, illumina_5, illumina_10]

@@ -20,6 +20,7 @@ my $ann_ver   = "";
 my $api_url   = "";
 my $upload    = "";
 my $qc        = "";
+my $adtrim    = "";
 my $preproc   = "";
 my $derep     = "";
 my $post_qc   = "";
@@ -44,6 +45,7 @@ my $options   = GetOptions (
 		"api_url=s"   => \$api_url,
 		"upload=s"    => \$upload,
 		"qc=s"        => \$qc,
+        "adtrim=s"    => \$adtrim,
 		"preproc=s"   => \$preproc,
 		"derep=s"     => \$derep,
 		"post_qc=s"   => \$post_qc,
@@ -105,6 +107,13 @@ PipelineAWE::print_json($rna_map.'.json', $rm_attr);
 PipelineAWE::print_json($aa_map.'.json', $am_attr);
 # cleanup
 unlink($post_qc, $search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
+# optional adapter trim file
+if ($adtrim) {
+    my $at_attr = PipelineAWE::read_json($adtrim.'.json');
+    $at_attr->{statistics} = PipelineAWE::get_seq_stats($adtrim, $at_attr->{file_format});
+    PipelineAWE::print_json($adtrim.'.json', $at_attr);
+    unlink($adtrim);
+}
 
 ### JobDB update
 # get JobDB statistics

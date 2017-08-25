@@ -1,0 +1,49 @@
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: mgrast_load_cass.pl
+
+hints:
+  DockerRequirement:
+    dockerPull: mgrast/dbload:1.0
+
+requirements:
+  - class: EnvVarRequirement
+  # No option to mask/mark env virables as private
+  # private env variables are not supposed to show up in a completed job/workflow/recipe document
+    envDef:
+      MGRAST_WEBKEY: $(inputs.api_key)
+  
+stderr: cassandra_load.error
+stdout: cassandra_load.log
+
+inputs: 
+  job:
+    type: int
+    inputBinding:
+      prefix: -job
+  ann_ver:
+    type: string
+    inputBinding:
+      prefix: -ann_ver
+  api_url:
+    type: string
+    inputBinding:
+      prefix: -api_url
+  md5:
+    type: File
+    inputBinding:
+      prefix: -md5
+  lca:
+    type: File
+    inputBinding:
+      prefix: -lca
+  api_key: 
+    type: string?
+    default: ''       
+
+# No outputs
+outputs:
+  error:
+    type: stderr
+  log:
+    type: stdout  
