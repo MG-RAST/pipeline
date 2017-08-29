@@ -29,7 +29,7 @@ inputs:
             position: 2
 
 
-baseCommand: [sort]
+baseCommand: [cat]
 
 outputs:
     error: 
