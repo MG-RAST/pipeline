@@ -11,7 +11,7 @@ hints:
 requirements:
     InlineJavascriptRequirement: {}
 
-stdout: $(inputs.output)
+stdout: $(inputs.outName)
 stderr: cat.error
 
 inputs:
@@ -25,8 +25,6 @@ inputs:
     
     outName:
         type: string
-        inputBinding:
-            position: 2
 
 
 baseCommand: [cat]
