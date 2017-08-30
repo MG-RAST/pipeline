@@ -46,13 +46,21 @@ stderr: format_qc_stats.error
 inputs:
   
   kmer:
-    type: 
+    type:
       type: array
-      items: 
+      items:
         type: record
         fields:
-          length: int
-          file: File
+          # length: int
+          # file: File
+          - name: length
+            type: int
+          - name: file
+            type: File
+          
+ 
+            
+        
   
   drisee_stat:
     doc: drisee stat file
