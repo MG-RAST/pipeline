@@ -2,8 +2,9 @@ cwlVersion: v1.0
 class: Workflow
 
 label: preprocess-fastq
-doc:  Remove and trim low quality reads from fastq files. 
-      Return fasta files with reads passed this qc steo and reads removed.
+doc: |
+    Remove and trim low quality reads from fastq files. 
+    Return fasta files with reads passed this qc steo and reads removed.
 
 requirements:
   - class: StepInputExpressionRequirement
@@ -14,9 +15,6 @@ requirements:
 inputs:
   jobid: string
   sequences: File[]
-  
-  
-    
 
 outputs:
   trimmed:
@@ -25,28 +23,25 @@ outputs:
   rejected:
     type: File
     outputSource: rejected2fasta/file  
- 
-  
-  
+
 steps:
-  
+
   filter:    
     run: ../Tools/DynamicTrimmer.tool.cwl
     in:
-      sequences:  sequences
+      sequences: sequences
       output:
         source: jobid
         valueFrom: $(self).100.preprocess.length.stats
-    out: [trimmed , rejected ]
-    
-  
+    out: [trimmed, rejected]
+
   trimmed2fasta:
     run: ../Tools/seqUtil.tool.cwl
     in:
       sequences: 
         # set format to fastq
         source: filter/trimmed
-        valueFrom: | 
+        valueFrom: |
           ${
             inputs.sequences.format = "fastq" ; return inputs.sequences
           }
@@ -56,7 +51,7 @@ steps:
         source: jobid
         valueFrom: $(self).100.preprocess.passed.fasta
     out: [file]
-    
+
   rejected2fasta:
     run: ../Tools/seqUtil.tool.cwl
     in:
@@ -65,7 +60,6 @@ steps:
         default: true
       output:
         source: jobid
-        valueFrom: $(self).100.preprocess.removed.fasta      
-        
+        valueFrom: $(self).100.preprocess.removed.fasta
     out: [file]
-      
+
