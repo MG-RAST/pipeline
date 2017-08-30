@@ -28,10 +28,10 @@ requirements:
           };
 
           return indexFiles ;
-
-
          }
   
+  
+        
 stdout: bowtie2.log
 stderr: bowtie2.error
 
@@ -72,7 +72,7 @@ arguments:
   - prefix: -p
     valueFrom: $(runtime.cores)
   - prefix: -x
-    valueFrom: $(inputs.indexDir.path)$(inputs.indexName)
+    valueFrom: $(inputs.indexDir.path)/$(inputs.indexName)
  
 
  
