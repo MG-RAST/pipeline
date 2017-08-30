@@ -112,7 +112,7 @@ PipelineAWE::create_attr($mapf.".json", undef, {data_type => "cluster", file_for
 exit 0;
 
 sub get_usage {
-    return "USAGE: awe_cluster.pl -input=<input fasta> <-aa|-rna|-dna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -memory=<memory usage in GB, default is 16>]\n";
+    return "USAGE: mgrast_cluster.pl -input=<input fasta> <-aa|-rna|-dna> -pid=<percentage of identification, default 90> [-out_prefix=<output prefix> -memory=<memory usage in GB, default is 16>]\n";
 }
 
 # process cluster file lines

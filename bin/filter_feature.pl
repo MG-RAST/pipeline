@@ -1,13 +1,12 @@
 #!/usr/bin/env perl
 
-#input: sequence file, similarity file
+#input: sequence file, similarity file, cluster file
 #outputs:  sequence file
 
 use strict;
 use warnings;
 no warnings('once');
 
-use PipelineAWE;
 use Getopt::Long;
 use Cwd;
 umask 000;
@@ -17,46 +16,45 @@ my $in_clust = "";
 my $in_sim  = "";
 my $in_seq  = "";
 my $output  = "";
-my $memory  = 8;
+my $tmp_dir = "";
+my $memory  = 8192;
 my $overlap = 10;
 my $help    = 0;
-my $do_not_create_index_files = 0 ;
 
 my $options = GetOptions (
-    "in_clust=s" => \$in_clust,
-    "in_sim=s"   => \$in_sim,
-    "in_seq=s"   => \$in_seq,
-    "output=s"   => \$output,
-    "memory=i"   => \$memory,
-    "overlap=i"  => \$overlap,
-    "no-shock"   => \$do_not_create_index_files,
-    "help!"      => \$help
+    "clust=s"   => \$in_clust,
+    "sim=s"     => \$in_sim,
+    "seq=s"     => \$in_seq,
+    "output=s"  => \$output,
+	"tmpdir:s"  => \$tmp_dir,
+    "memory:i"  => \$memory,
+    "overlap:i" => \$overlap,
+    "help!"     => \$help
 );
-
 
 if ($help){
     print get_usage();
     exit 0;
 }elsif (length($in_clust)==0){
-    PipelineAWE::logger('error', "input cluster map file was not specified");
+    print STDERR "input cluster map file was not specified";
     exit 1;
 }elsif (length($in_sim)==0){
-    PipelineAWE::logger('error', "input similarity file was not specified");
+    print STDERR "input similarity file was not specified";
     exit 1;
 }elsif (length($in_seq)==0){
-    PipelineAWE::logger('error', "input sequence file was not specified");
+    print STDERR "input sequence file was not specified";
     exit 1;
 }elsif (! -e $in_clust){
-    PipelineAWE::logger('error', "input cluster map file [$in_clust] does not exist");
+    print STDERR "input cluster map file [$in_clust] does not exist";
     exit 1;
 }elsif (! -e $in_sim){
-    PipelineAWE::logger('error', "input similarity file [$in_sim] does not exist");
+    print STDERR "input similarity file [$in_sim] does not exist";
     exit 1;
 }elsif (! -e $in_seq){
-    PipelineAWE::logger('error', "input sequence file [$in_seq] does not exist");
+    print STDERR "input sequence file [$in_seq] does not exist";
     exit 1;
 }elsif (length($output)==0){
-    PipelineAWE::logger('error', "output sequence file was not specified");
+    print STDERR "output sequence file was not specified";
     exit 1;
 }
 
@@ -64,58 +62,29 @@ if ($overlap < 0) {
     $overlap = 0;
 }
 
-my $mem = $memory * 1024;
-my $run_dir = getcwd;
+unless ($tmp_dir) {
+	$tmp_dir = getcwd;
+}
+
 my $common  = "common.ids.".time();
 my $members = "member.ids.".time();
 
-if (-z $in_sim) {
-    # no rna sims, filtered is same as genecalled
-    my $filter_stats = PipelineAWE::get_seq_stats($in_seq, 'fasta', 1);
-    PipelineAWE::create_attr($output.'.json', $filter_stats);
-
-    open(OUT, ">$output") || die "Can't open file $output!\n";
-    foreach my $i (1..int($filter_stats->{sequence_count})) {
-        print OUT "$i\n";
-    }
-    exit 0;
-}
-
 # get sorted unique sim ids
-PipelineAWE::run_cmd("cut -f1 $in_sim | sort -u -T $run_dir -S ${mem}M > $in_sim.sort.ids", 1);
-PipelineAWE::run_cmd("rm $in_sim");
+system("cut -f1 $in_sim | sort -u -T $tmp_dir -S ${memory}M > $in_sim.sort.ids");
 # sort clusters by seed, get seed list
-PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 1,1 -o $in_clust.sort $in_clust");
-PipelineAWE::run_cmd("rm $in_clust");
-PipelineAWE::run_cmd("cut -f1 $in_clust.sort | uniq -u > $in_clust.sort.seed", 1);
+system(split(/ /, "sort -T $tmp_dir -S ${memory}M -t \t -k 1,1 -o $in_clust.sort $in_clust"));
+system("cut -f1 $in_clust.sort | uniq -u > $in_clust.sort.seed");
 # get subset of sim ids that are cluster seeds
-PipelineAWE::run_cmd("comm -12 $in_sim.sort.ids $in_clust.sort.seed > $common", 1);
+system("comm -12 $in_sim.sort.ids $in_clust.sort.seed > $common");
 # get cluster members for each common id
 get_cluster_members($common, "$in_clust.sort", $members);
-PipelineAWE::run_cmd("rm $common $in_clust.sort $in_clust.sort.seed");
 # cat hits and their members / sort
-PipelineAWE::run_cmd("cat $in_sim.sort.ids $members | sort -T $run_dir -S ${mem}M > $members.all", 1);
-PipelineAWE::run_cmd("rm $in_sim.sort.ids $members");
-# tabbed fasta file
-PipelineAWE::run_cmd("seqUtil -t $run_dir -i $in_seq -o $in_seq.tab --fasta2tab");
+system("cat $in_sim.sort.ids $members | sort -T $tmp_dir -S $${memory}M > $members.all");
 # cat rna ids with fasta ids / sort
-PipelineAWE::run_cmd("cat $members.all $in_seq.tab > $in_seq.tab.all", 1);
-PipelineAWE::run_cmd("rm $members.all $in_seq.tab");
-PipelineAWE::run_cmd("sort -T $run_dir -S ${mem}M -t \t -k 1,1 -o $in_seq.tab.all.sort $in_seq.tab.all");
-PipelineAWE::run_cmd("rm $in_seq.tab.all");
+system("cat $members.all $in_seq > $in_seq.all");
+system(split(/ /, "sort -T $tmp_dir -S ${memory}M -t \t -k 1,1 -o $in_seq.all.sort $in_seq.all"));
 # filter
-filter_fasta("$in_seq.tab.all.sort", $output, $overlap);
-
-# stats and attributes
-my $filter_stats = PipelineAWE::get_seq_stats($output, 'fasta', 1);
-PipelineAWE::create_attr($output.'.json', $filter_stats);
-
-# create subset record list
-# note: parent and child files NOT in same order
-if (-s $output and not $do_not_create_index_files) {
-    PipelineAWE::run_cmd("index_subset_seq.py -p $in_seq -c $output -m $memory -t $run_dir");
-    PipelineAWE::run_cmd("mv $output.index $output");
-}
+filter_fasta("$in_seq.all.sort", $output, $overlap);
 
 exit 0;
 
@@ -215,5 +184,5 @@ sub process_reads {
 }
 
 sub get_usage {
-    return "USAGE: mgrast_filter_feature.pl -in_clust=<input cluster map> -in_sim=<input similarity> -in_seq=<input sequence> -output=<output sequence> [-overlap=<overlap, default: 10> [-memory=<memory usage in GB, default is 16>]\n";
+    return "USAGE: filter_feature.pl -clust=<input cluster map> -sim=<input similarity> -seq=<input sorted-tabbed sequence> -output=<output fasta sequence> [-overlap=<bp overlap, default: 10> -memory=<memory usage in MB, default is 8192> -tmpdir=<temp directory>]\n";
 }

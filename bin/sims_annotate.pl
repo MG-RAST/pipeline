@@ -33,7 +33,7 @@ Output: top hit for each query per source (protein or rna formats)
     3. ontology sims: see below
     4. lca expanded (protein): see below
 
-m8: query|md5, subject|fragment, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
+m8:       subject|fragment, query|md5, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
 expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source
 rna:      md5|query, fragment|subject, identity, length, evalue, function, organism, source, is_rna
 ontology: md5|query, fragment|subject, identity, length, evalue, function, ontology, source
@@ -213,7 +213,7 @@ sub get_top_hits {
   # get data for md5s from memcache
   # ach: md5 => source => function => [organism | ontology_id]
   # lca: md5 => [lca]
-  my ($md5_ach, $md5_lca, $md5_id) = &get_md5_data([keys %$total_md5s], $get_lca);
+  my ($md5_ach, $md5_lca) = &get_md5_data([keys %$total_md5s], $get_lca);
 
   # get sources per frag: frag => {source}
   foreach my $frag (keys %$data) {
@@ -263,7 +263,7 @@ sub get_top_hits {
   foreach my $frag (sort keys %$data) {
     if ($get_lca && exists($frag_lca->{$frag})) {
       my $level = pop @{$frag_lca->{$frag}{lca}};
-      $lca_text .= join("\t", ( join(";", map {$md5_id->{$_}} grep {exists $md5_id->{$_}} @{$frag_lca->{$frag}{md5s}}), # md5s
+      $lca_text .= join("\t", ( join(";", grep {exists $md5_lca->{$_}} @{$frag_lca->{$frag}{md5s}}), # md5s
 				                $frag,
 				                join(";", map {$_->[0]} @{$frag_lca->{$frag}{sims}}), # identity
 				                join(";", map {$_->[1]} @{$frag_lca->{$frag}{sims}}), # length
@@ -275,7 +275,7 @@ sub get_top_hits {
     next unless (exists $data_min_md5->{$frag});
     foreach my $score ( sort keys %{$data_min_md5->{$frag}} ) {
       foreach my $md5 ( sort keys %{$data_min_md5->{$frag}{$score}} ) {
-        next unless (exists $md5_id->{$md5});
+        next unless (exists $md5_ach->{$md5});
         
   	    # sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
 	    my $sim = $data->{$frag}{$score}{$md5};
@@ -292,8 +292,8 @@ sub get_top_hits {
 	      foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
 	        foreach my $otype ( keys %{$md5_ach->{$md5}{$src}{$func}} ) {
 	          foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}{$otype}} ) {
-	            my $expand_text = join("\t", ($md5_id->{$md5}, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $src));
-	            my $expand_wout_fo_text = join("\t", ($md5_id->{$md5}, $frag, $sim->[0], $sim->[1], $sim->[8], "", "", $src));
+	            my $expand_text = join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $src));
+	            my $expand_wout_fo_text = join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], "", "", $src));
 	            if (($otype eq 'organism') && ($stype eq 'rna') && $get_rna) {
 		          $rna_text .= $expand_text . "\t1\n";
 	            }
@@ -322,7 +322,6 @@ sub get_md5_data {
 
     my $ann   = {};
     my $lca   = {};
-    my $md5id = {};
     my %data = ();
     foreach my $md5 (@{$md5s}) {
         if (exists $m5nr{$md5}) {
@@ -333,14 +332,11 @@ sub get_md5_data {
         if (exists($data{$m}{lca}) && $get_lca) {
             $lca->{$m} = $data{$m}{lca};
         }
-        if (exists $data{$m}{id}) {
-            $md5id->{$m} = $data{$m}{id};
-        }
         if (exists $data{$m}{ann}) {
             $ann->{$m} = $data{$m}{ann};
         }
     }
-    return ($ann, $lca, $md5id);
+    return ($ann, $lca);
 }
 
 sub get_min_md5s_by_source {

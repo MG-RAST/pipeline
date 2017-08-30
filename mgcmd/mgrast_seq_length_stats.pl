@@ -173,13 +173,14 @@ if (@error == 0) {
 
 # errors?
 if (@error > 0) {
-    $data->{data_type} = "invalid";
-    $data->{error} = \@error;
-} else {
-    $data->{data_type} = "sequence";
+    foreach my $e (@error) {
+        PipelineAWE::logger('error', $e);
+    }
+    exit 42;
 }
 
 # output attributes with stats
+$data->{data_type} = "sequence";
 if ($output_json_file eq "") {
     $output_json_file = "$input_file.out.json";
 }
@@ -188,6 +189,6 @@ PipelineAWE::print_json($output_json_file, $data);
 exit 0;
 
 sub print_usage {
-    print "USAGE: awe_seq_length_stats.pl -input=<input fasta or fastq> [-input_json=<attr_filename>, -output_json=<attr_filename>, -type=<fasta or fastq (default is fasta)>]\n";
+    print "USAGE: mgrast_seq_length_stats.pl -input=<input fasta or fastq> [-input_json=<attr_filename>, -output_json=<attr_filename>, -type=<fasta or fastq (default is fasta)>]\n";
 }
 

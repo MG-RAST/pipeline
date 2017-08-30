@@ -184,7 +184,7 @@ def print_lca_stats(ohdl, data, md5s):
                  str_round(e_mean),
                  str_round(l_mean),
                  str_round(i_mean),
-                 str(len(md5s[lca])),
+                 str(md5s[lca]),
                  str(stats['lvl']) ]
         ohdl.write("\t".join(line)+"\n")
 
@@ -306,25 +306,22 @@ def main(args):
                     continue
                 if lca not in data:
                     data[lca] = np.zeros(1, dtype=LCA_DT)
-                    md5s[lca] = set()
+                    md5s[lca] = 0
                 abun = get_abundance(frag, amap)
                 if abun < 1:
                     continue
-                e_line_sum = sum(map(lambda x: get_exponent(float(x)), e_val.split(';')))
-                l_line_sum = sum(map(int, length.split(';')))
-                i_line_sum = sum(map(float, ident.split(';')))
-                md5_count  = 0
-                for m in md5.split(';'):
-                    md5_count += 1
-                    md5s[lca].add(int(m))
-                e_avg = e_line_sum / md5_count
-                l_avg = l_line_sum / md5_count
-                i_avg = i_line_sum / md5_count
+                e_list = map(lambda x: get_exponent(float(x)), e_val.split(';'))
+                l_list = map(int, length.split(';'))
+                i_list = map(float, ident.split(';'))
+                md5s[lca] += len(md5.split(';'))
+                e_avg = sum(e_list) / len(e_list)
+                l_avg = sum(l_list) / len(l_list)
+                i_avg = sum(i_list) / len(i_list)
                 data[lca][0]['abun'] += abun
                 data[lca][0]['esum'] += abun * e_avg
                 data[lca][0]['lsum'] += abun * l_avg
                 data[lca][0]['isum'] += abun * i_avg
-                data[lca][0]['lvl']  = int(level)     
+                data[lca][0]['lvl']  = int(level)
             elif opts.type == 'source':
                 if len(parts) < 8:
                     continue

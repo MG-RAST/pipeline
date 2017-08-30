@@ -14,22 +14,7 @@ hints:
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
-  InitialWorkDirRequirement:
-      listing: |
-        ${
-          var listing = inputs.indexDir.listing;
-          //listing.push(inputs.myfile);
 
-          var indexFiles = [] ;
-          var regexp = new RegExp("^" + inputs.indexName);
-
-          for (var i in listing) {
-             if (regexp.test(listing[i].basename)) { indexFiles.push(listing[i])}
-          };
-
-          return indexFiles ;
-         }
-  
   
         
 stdout: bowtie2.log
@@ -56,13 +41,7 @@ inputs:
     doc: write unpaired reads that didn't align to <path>
     inputBinding:
       prefix: --un
-    
-  index:
-    type: string?
-    doc: <bt2-idx>  Index filename prefix (minus trailing .X.bt2). 
-    inputBinding:
-      prefix: -x
-      
+
       
 baseCommand: [bowtie2]
 
