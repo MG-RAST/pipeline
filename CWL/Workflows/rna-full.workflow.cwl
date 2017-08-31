@@ -9,6 +9,7 @@ requirements:
     - class: InlineJavascriptRequirement
     - class: ScatterFeatureRequirement
     - class: MultipleInputFeatureRequirement
+    - class: SubworkflowFeatureRequirement
 
 inputs:
     jobid: string
