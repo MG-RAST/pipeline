@@ -14,7 +14,9 @@ hints:
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
+
   
+        
 stdout: bowtie2.log
 stderr: bowtie2.error
 
