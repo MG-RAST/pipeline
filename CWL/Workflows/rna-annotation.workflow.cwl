@@ -50,7 +50,7 @@ steps:
             input: sequences
             refFasta: m5rnaClust
             indexDir: m5rnaIndex
-            indexName: m5rnaIndex # NEED NAME not Directory
+            indexName: m5rnaPrefix
         out: [output]
     sortseq:
         run: ../Tools/seqUtil.tool.cwl
