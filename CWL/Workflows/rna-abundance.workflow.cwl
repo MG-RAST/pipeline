@@ -35,31 +35,34 @@ steps:
             input: rnaExpand
             cluster: rnaClustMap
             coverage: coverageStats
-            profileType: md5
-            output:
+            profileType: 
+              default: md5
+            outName: # change to outName
                 source: jobid
                 valueFrom: $(self).700.annotation.md5.abundance
-        out: output
+        out: [output]
     lcaProfile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
             input: rnaLCA
             cluster: rnaClustMap
             coverage: coverageStats
-            profileType: lca
-            output:
+            profileType: 
+              default: lca
+            outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.lca.abundance
-        out: output
+        out: [output]
     sourceStats:
         run: ../Tools/sims_abundance.tool.cwl
         in:
             input: rnaExpand
             cluster: rnaClustMap
             coverage: coverageStats
-            profileType: source
+            profileType: 
+              default: source
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.source.stats
-        out: output
+        out: [output]
 

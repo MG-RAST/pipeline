@@ -51,7 +51,7 @@ steps:
             refFasta: m5rnaClust
             indexDir: m5rnaIndex
             indexName: m5rnaPrefix
-        out: output
+        out: [output]
     sortseq:
         run: ../Tools/seqUtil.tool.cwl
         in:
@@ -61,16 +61,18 @@ steps:
             output:
                 source: sequences
                 valueFrom: $(self).sort.tab
-        out: file
+        out: [file]
     sorttab:
         run: ../Tools/sort.tool.cwl
         in:
             input: sortmerna/output
-            key: ["1,1"]
+            key: 
+              default: |
+                  ${ return ["1,1"] ; }
             outName:
                 source: sortmerna/output
                 valueFrom: $(self).sort
-        out: output
+        out: [output]
     rnaFeature:
         run: ../Tools/rna_feature.tool.cwl
         in:
@@ -79,12 +81,13 @@ steps:
             outName:
                 source: jobid
                 valueFrom: $(self).425.search.rna.fna
-        out: output
+        out: [output]
     rnaCluster:
-        run: ../Tools/cdhit-est.tool.cel
+        run: ../Tools/cdhit-est.tool.cwl
         in:
             input: rnaFeature/output
-            identity: 0.97
+            identity: 
+              default: 0.97
             outName:
                 source: jobid
                 valueFrom: $(self).440.cluster.rna.97.fna
@@ -96,20 +99,22 @@ steps:
             outName:
                 source: jobid
                 valueFrom: $(self).440.cluster.rna.97.mapping
-        out: output
+        out: [output]
     rnaBlat:
         run: ../Tools/blat.tool.cwl
         in:
             query: rnaCluster/outSeq
             database: m5rnaFull
-            dbType: dna
-            queryType: rna
+            dbType: 
+              default: dna
+            queryType: 
+              default: rna
             fastMap:
                 default: true
             outName:
                 source: jobid
                 valueFrom: $(self).450.rna.sims.full
-        out: output
+        out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
         in:
@@ -117,7 +122,7 @@ steps:
             outName:
                 source: jobid
                 valueFrom: $(self).450.rna.sims
-        out: output
+        out: [output]
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:
