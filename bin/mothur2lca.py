@@ -67,7 +67,7 @@ def main(args):
     # output profile
     outhdl = open(opts.output, 'w')
     for lca in sorted(lca_map):
-        outhdl.write("\t".join([lca, str(lca.count(";")), str(lca_map[lca])])+"\n")
+        outhdl.write("\t".join([lca, str(lca.count(";") + 1), str(lca_map[lca])])+"\n")
     outhdl.close()
     
     return 0
