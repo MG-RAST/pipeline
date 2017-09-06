@@ -66,7 +66,7 @@ def main(args):
     for i, row in enumerate(biom['rows']):
         lca = lca_from_taxa(row)
         if len(lca) > 0:
-            clust_size = sum(matrix[i])
+            clust_size = int(sum(matrix[i]))
             lca_full = ['-'] * 8
             for i, t in enumerate(lca):
                 lca_full[i] = t
