@@ -63,6 +63,7 @@ def main(args):
         matrix = biom['data']
     
     # get lca abundace
+    lca_map = {}
     for i, row in enumerate(biom['rows']):
         lca = lca_from_taxa(row['metadata']['taxonomy'])
         if len(lca) > 0:
