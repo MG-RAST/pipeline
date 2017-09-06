@@ -5,7 +5,6 @@ import re
 import sys
 import json
 import datetime
-from collections import defaultdict
 from optparse import OptionParser
 
 TAXA_PREFIX = ['d_', 'p_', 'c_', 'o_', 'f_', 'g_']
@@ -41,7 +40,7 @@ usage = "usage: %prog [options]\n"
 def main(args):
     parser = OptionParser(usage=usage)
     parser.add_option('-i', '--input', dest="input", default=None, help="input file: mothur taxonomy file")
-    parser.add_option('-o', '--output', dest="output", default=None, help="output file: lca abundance file")
+    parser.add_option('-o', '--output', dest="output", default=None, help="output file: lca abundance file: lca text, abundance, level")
     parser.add_option('-m', '--mgid', dest="mgid", default=None, help="MG-RAST ID of metagenome, used in json output")
     parser.add_option('-j', '--json', dest="json", action="store_true", help="output format json, default is tabbed text")
     

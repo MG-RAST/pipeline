@@ -5,7 +5,6 @@ import re
 import sys
 import json
 import datetime
-from collections import defaultdict
 from optparse import OptionParser
 
 TAX_RE = re.compile(r"^[k|p|c|o|f|g|s]__(.*)$")
@@ -27,7 +26,7 @@ def lca_from_taxa(row):
     for t in taxa:
         tax_match = TAX_RE.match(t)
         if tax_match and (tax_match.group(1) != ''):
-            lca.append(t)
+            lca.append(tax_match.group(1))
     return lca
 
 
@@ -36,7 +35,7 @@ usage = "usage: %prog [options]\n"
 def main(args):
     parser = OptionParser(usage=usage)
     parser.add_option('-i', '--input', dest="input", default=None, help="input file: qiime otu biom file")
-    parser.add_option('-o', '--output', dest="output", default=None, help="output file: lca abundance file")
+    parser.add_option('-o', '--output', dest="output", default=None, help="output file: lca abundance file: lca text, abundance, level, # otus")
     parser.add_option('-m', '--mgid', dest="mgid", default=None, help="MG-RAST ID of metagenome, used in json output")
     parser.add_option('-j', '--json', dest="json", action="store_true", help="output format json, default is tabbed text")
     
@@ -65,7 +64,7 @@ def main(args):
     # get lca abundace
     lca_map = {}
     for i, row in enumerate(biom['rows']):
-        lca = lca_from_taxa(row['metadata']['taxonomy'])
+        lca = lca_from_taxa(row)
         if len(lca) > 0:
             clust_size = sum(matrix[i])
             lca_full = ['-'] * 8
@@ -74,8 +73,9 @@ def main(args):
             lca_str = ";".join(lca_full)
             if lca_str in lca_map:
                 lca_map[lca_str][0] += clust_size
+                lca_map[lca_str][2] += 1
             else:
-                lca_map[lca_str] = [ clust_size, i+1 ]
+                lca_map[lca_str] = [ clust_size, i+1, 1 ]
     
     # output profile
     outhdl  = open(opts.output, 'w')
@@ -90,9 +90,9 @@ def main(args):
     }
     for lca in sorted(lca_map):
         if opts.json:
-            lca_obj['data'].append([ lca, lca_map[lca][0], -1, 1, 1, 1, lca_map[lca][1] ])
+            lca_obj['data'].append([ lca, lca_map[lca][0], -1, 1, 1, lca_map[lca][2], lca_map[lca][1] ])
         else:
-            outhdl.write("\t".join([ lca, str(lca_map[lca][0]), str(lca_map[lca][1]) ])+"\n")
+            outhdl.write("\t".join([ lca, str(lca_map[lca][0]), str(lca_map[lca][1]), str(lca_map[lca][2]) ])+"\n")
     if opts.json:
         json.dump(lca_obj, outhdl)
     outhdl.close()
