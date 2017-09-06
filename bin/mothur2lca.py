@@ -67,7 +67,12 @@ def main(args):
     # output profile
     outhdl = open(opts.output, 'w')
     for lca in sorted(lca_map):
-        outhdl.write("\t".join([lca, str(lca.count(";") + 1), str(lca_map[lca])])+"\n")
+        lca_list = ['-'] * 8
+        for i, t in enumerate(lca.split(';')):
+            lca_list[i] = t
+        lvl_num = i + 1
+        lca_str = ";".join(lca_list)
+        outhdl.write("\t".join([lca_str, str(lca_map[lca]), str(lvl_num)])+"\n")
     outhdl.close()
     
     return 0
