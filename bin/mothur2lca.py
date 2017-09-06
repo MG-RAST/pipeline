@@ -3,7 +3,8 @@
 import os
 import re
 import sys
-from collections import defaultdict
+import json
+import datetime
 from optparse import OptionParser
 
 TAXA_PREFIX = ['d_', 'p_', 'c_', 'o_', 'f_', 'g_']
@@ -39,7 +40,9 @@ usage = "usage: %prog [options]\n"
 def main(args):
     parser = OptionParser(usage=usage)
     parser.add_option('-i', '--input', dest="input", default=None, help="input file: mothur taxonomy file")
-    parser.add_option('-o', '--output', dest="output", default=None, help="output file: lca abundance file")
+    parser.add_option('-o', '--output', dest="output", default=None, help="output file: lca abundance file: lca text, abundance, level")
+    parser.add_option('-m', '--mgid', dest="mgid", default=None, help="MG-RAST ID of metagenome, used in json output")
+    parser.add_option('-j', '--json', dest="json", action="store_true", help="output format json, default is tabbed text")
     
     (opts, args) = parser.parse_args()
     if not (opts.input and os.path.isfile(opts.input)):
@@ -49,7 +52,7 @@ def main(args):
         parser.error("[error] missing required output file")
         return 1
     
-    lca_map = defaultdict(int)
+    lca_map = {}
     
     # get lca abundace
     inhdl = open(opts.input, 'rU')
@@ -60,14 +63,34 @@ def main(args):
             clust_size = int(id_match.group(1))
             lca = parse_lca(parts[1])
             if len(lca) > 0:
-                lca_str = ";".join(lca)
-                lca_map[lca_str] += clust_size
+                lca_full = ['-'] * 8
+                for i, t in enumerate(lca):
+                    lca_full[i] = t
+                lca_str = ";".join(lca_full)
+                if lca_str in lca_map:
+                    lca_map[lca_str][0] += clust_size
+                else:
+                    lca_map[lca_str] = [ clust_size, i+1 ]
     inhdl.close()
     
     # output profile
-    outhdl = open(opts.output, 'w')
+    outhdl  = open(opts.output, 'w')
+    lca_obj = {
+        'id'        : opts.mgid,
+        'created'   : datetime.datetime.now().isoformat(),
+        'version'   : 1,
+        'source'    : 'TAP',
+        'columns'   : ["lca", "abundance", "e-value", "percent identity", "alignment length", "md5s", "level"],
+        'row_total' : len(lca_map),
+        'data'      : []
+    }
     for lca in sorted(lca_map):
-        outhdl.write("\t".join([lca, str(lca.count(";") + 1), str(lca_map[lca])])+"\n")
+        if opts.json:
+            lca_obj['data'].append([ lca, lca_map[lca][0], -1, 1, 1, 1, lca_map[lca][1] ])
+        else:
+            outhdl.write("\t".join([ lca, str(lca_map[lca][0]), str(lca_map[lca][1]) ])+"\n")
+    if opts.json:
+        json.dump(lca_obj, outhdl)
     outhdl.close()
     
     return 0
