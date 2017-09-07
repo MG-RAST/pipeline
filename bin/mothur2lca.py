@@ -81,7 +81,7 @@ def main(args):
         'created'   : datetime.datetime.now().isoformat(),
         'version'   : 1,
         'source'    : 'TAP',
-        'columns'   : ["lca", "abundance", "e-value", "percent identity", "alignment length", "md5s", "level"],
+        'columns'   : ["lca", "abundance", "e-value", "percent identity", "alignment length", "otus", "level"],
         'row_total' : len(lca_map),
         'data'      : []
     }
