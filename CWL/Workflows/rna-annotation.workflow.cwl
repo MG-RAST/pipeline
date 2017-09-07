@@ -60,18 +60,18 @@ steps:
                 default: true
             output:
                 source: sequences
-                valueFrom: $(self).sort.tab
+                valueFrom: $(self.basename).sort.tab
         out: [file]
     sorttab:
         run: ../Tools/sort.tool.cwl
         in:
             input: sortmerna/output
             key: 
-              default: |
+              valueFrom: |
                   ${ return ["1,1"] ; }
             outName:
                 source: sortmerna/output
-                valueFrom: $(self).sort
+                valueFrom: $(self.basename).sort
         out: [output]
     rnaFeature:
         run: ../Tools/rna_feature.tool.cwl
