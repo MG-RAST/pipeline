@@ -47,7 +47,8 @@ inputs:
             - Types:prot
             - Types:dnax
         inputBinding:
-            prefix: -t
+            prefix: -t=
+            separate: False
     
     queryType:
         type: string
@@ -59,7 +60,8 @@ inputs:
             - Types:dnax
             - Types:rnax
         inputBinding:
-            prefix: -q
+            prefix: -q=
+            separate: False
     
     fastMap:
         type: boolean?
@@ -71,9 +73,8 @@ inputs:
 baseCommand: [blat]
 
 arguments:
-    - prefix: -out
-      valueFrom: blast8
-
+    - -out=blast8
+      
 outputs:
     info:
         type: stdout
