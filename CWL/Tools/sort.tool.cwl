@@ -24,11 +24,9 @@ inputs:
             position: 1
     
     key:
-        type:
-            type: array
-            items: string
-            inputBinding:
-                prefix: -k
+        type: string 
+        inputBinding:
+            prefix: -k
         doc: |
             -k, --key=POS1[,POS2]
             start a key at POS1, end it at POS2 (origin 1)
@@ -38,9 +36,9 @@ inputs:
         doc: |
             -t, --field-separator=SEP
             use SEP instead of non-blank to blank transition
-        default: \t
         inputBinding:
             prefix: -t
+            valueFrom: $("\u0009")
     
     outName:
         type: string
@@ -65,7 +63,7 @@ outputs:
     error: 
         type: stderr  
     output:
-        type: File
+        type: File?
         doc: The sorted file
         outputBinding: 
             glob: $(inputs.outName)
