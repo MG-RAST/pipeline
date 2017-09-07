@@ -105,8 +105,8 @@ arguments:
   - prefix:
     valueFrom: |
         ${
-          if ( inputs.sequences.format.split("/").slice(-1)[0] == "fastq"  ) { return "--fastq"; } else { return "" ; }
-        }
+           if (  ("format" in inputs.sequences) && (inputs.sequences.format.split("/").slice(-1)[0] == "fastq")  ) { return "--fastq"; } else { return "" ; }  
+         }
     
 
  # return inputs.sequences.format.split("/").slice(-1)[0]
@@ -120,13 +120,18 @@ outputs:
   file:
     type: File
     format: |
-      ${
-        if (inputs.fasta2tab) { return "tsv"}
-        else if (inputs.sortbyid2tab) { return "tsv"}
-        else if (inputs.fastq2fasta) { return "fasta"}
-        else if (inputs.sequences.format) { return inputs.sequences.format}
-        else { return '' }
-      }
+        ${
+          if (inputs.fasta2tab) 
+              { return "tsv" ;}
+          else if (inputs.sortbyid2tab) 
+              { return "tsv" ;}
+          else if (inputs.fastq2fasta) 
+              { return "fasta";}
+          else if (inputs.sequences.format) 
+              { return inputs.sequences.format ;}
+          else { return '' ;}
+          return "" ;
+        }
     outputBinding: 
       glob: $(inputs.output)
     
