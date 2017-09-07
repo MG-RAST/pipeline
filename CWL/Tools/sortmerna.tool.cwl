@@ -55,8 +55,9 @@ arguments:
       valueFrom: '1 cigar qcov qstrand'
     - prefix: -a
       valueFrom: $(runtime.cores)
-    - prefix: -m
-      valueFrom: $(runtime.ram)
+    # # Breaks if ram > 999 Mbytes
+   #  - prefix: -m
+   #    valueFrom: $(runtime.ram)
     - prefix: --ref
       valueFrom: $(inputs.refFasta.path),$(inputs.indexDir.path)/$(inputs.indexName)
     - prefix: --aligned
@@ -68,7 +69,7 @@ outputs:
     error: 
         type: stderr  
     output:
-        type: File
+        type: File?
         doc: Output tab separated aligned file
         outputBinding: 
             glob: $(inputs.input.basename).blast
