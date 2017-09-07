@@ -67,8 +67,7 @@ steps:
         in:
             input: sortmerna/output
             key: 
-              valueFrom: |
-                  ${ return ["1,1"] ; }
+              default: "1,1"
             outName:
                 source: sortmerna/output
                 valueFrom: $(self.basename).sort
