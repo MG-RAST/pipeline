@@ -14,7 +14,6 @@ requirements:
 inputs:
     jobid: string
     sequences: File[]
-    coverageStats: File
     # static DBs
     m5rnaBDB: File
     m5rnaFull: File
@@ -79,7 +78,6 @@ steps:
             rnaExpand: rnaAnnotate/rnaExpandOut
             rnaLCA: rnaAnnotate/rnaLCAOut
             rnaClustMap: rnaAnnotate/rnaClustMapOut
-            coverageStats: coverageStats
         out: [md5ProfileOut, lcaProfileOut, sourceStatsOut]
 
 

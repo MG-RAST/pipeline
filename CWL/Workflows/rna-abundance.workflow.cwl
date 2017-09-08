@@ -15,7 +15,6 @@ inputs:
     rnaExpand: File
     rnaLCA: File
     rnaClustMap: File
-    coverageStats: File
 
 outputs:
     md5ProfileOut:
@@ -34,7 +33,6 @@ steps:
         in:
             input: rnaExpand
             cluster: rnaClustMap
-            coverage: coverageStats
             profileType: 
               default: md5
             outName: # change to outName
@@ -46,7 +44,6 @@ steps:
         in:
             input: rnaLCA
             cluster: rnaClustMap
-            coverage: coverageStats
             profileType: 
               default: lca
             outName:
@@ -58,7 +55,6 @@ steps:
         in:
             input: rnaExpand
             cluster: rnaClustMap
-            coverage: coverageStats
             profileType: 
               default: source
             outName:
