@@ -1,13 +1,10 @@
-jobid: test01
+jobid: forest1
 
 sequences:
   - class: File
     format: fastq
     path: ../Data/Inputs/sequences.fastq
 
-coverageStats:
-    class: File
-    path: ../Data/Inputs/test01.075.assembly.coverage
 
 m5rnaBDB:
     class: File
