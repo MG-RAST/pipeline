@@ -29,7 +29,7 @@ def main(args):
 
     for line in shdl:
         parts = line.strip().split('\t')
-        db.Put(parts[0], 1)
+        db.Put(parts[0], "X")
     
     shdl.close()
     if args.verbose:
