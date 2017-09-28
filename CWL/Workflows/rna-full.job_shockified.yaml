@@ -1,0 +1,34 @@
+jobid: forest1
+
+sequences:
+  - class: File
+    format: fastq
+    path: ../Data/Inputs/sequences.fastq
+
+
+m5rnaBDB:
+    class: File
+    location: http://shock.metagenomics.anl.gov/node/e5dc6081-e289-4445-9617-b53fdc4023a8?download
+    basename: m5nr_v1.bdb
+
+m5rnaFull:
+    class: File
+    location: http://shock.metagenomics.anl.gov/node/1284813a-91d1-42b1-bc72-e74f19e1a0d1?download
+    basename: md5rna
+
+
+
+m5rnaClust:
+    class: File
+    location: http://shock.metagenomics.anl.gov/node/c4c76c22-297b-4404-af5c-8cd98e580f2a?download
+    basename: md5rna.clust
+
+# m5rna.clust.index.stats
+# m5rna.clust.index.pos_0.dat
+# m5rna.clust.index.kmer_0.dat
+# m5rna.clust.index.bursttrie_0.dat
+m5rnaIndex:
+    class: Directory
+    path: ../Data/Inputs/DBs/
+
+m5rnaPrefix: m5rna.clust.index
