@@ -9,9 +9,9 @@ from Bio import SeqIO
 
 def main(args):
     parser = argparse.ArgumentParser(description="Script to extract darkmatter - predicted proteins with no similarities")
-    parser.add_argument("-i", "--input", help="Name of input genecall fasta file.")
-    parser.add_argument("-o", "--output", help="Name of output darkmatter fasta file.")
-    parser.add_argument("-s", "--sims", dest="cfile", help="Name of similarity file")
+    parser.add_argument("-i", "--input", dest="input", help="Name of input genecall fasta file.")
+    parser.add_argument("-o", "--output", dest="output", help="Name of output darkmatter fasta file.")
+    parser.add_argument("-s", "--sims", dest="sims", help="Name of similarity file")
     parser.add_argument("-d", "--db", dest="db", default=".", help="Directory to store LevelDB, default CWD")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages")
     args = parser.parse_args()
