@@ -17,8 +17,8 @@ def main(args):
     args = parser.parse_args()
 
     if ('sims' not in args) or (os.stat(args.sims).st_size == 0):
-        print "Similarity file was omitted or is empty, copying %s to %s ... " % (args.ifile, args.ofile)
-        shutil.copyfile(args.ifile, args.ofile)
+        print "Similarity file was omitted or is empty, copying %s to %s ... " % (args.input, args.output)
+        shutil.copyfile(args.input, args.output)
         return 0
 
     db = leveldb.LevelDB(args.db)
