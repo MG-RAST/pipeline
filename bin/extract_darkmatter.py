@@ -15,7 +15,8 @@ def get_seq_stats(fname):
     proc  = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
     stdout, stderr = proc.communicate()
     if proc.returncode != 0:
-        raise IOError("%s\n%s"%(" ".join(cmd), stderr))
+        print "[warning] seq_length_stats.py returns: "+stderr
+        return {}
     for line in stdout.strip().split("\n"):
         parts = line.split("\t")
         try:
@@ -73,7 +74,7 @@ def main(args):
     ohdl.close()
     ihdl.close()
     
-    jhdl = open(args.output+".json", 'w')
+    jhdl = open(args.output+".stats", 'w')
     json.dump(get_seq_stats(args.output), jhdl)
     jhdl.close()
     
