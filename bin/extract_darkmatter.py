@@ -1,11 +1,32 @@
 #!/usr/bin/env python
 
-import argparse
-import leveldb
 import os
-import shutil
 import sys
+import json
+import shutil
+import leveldb
+import argparse
+import subprocess
 from Bio import SeqIO
+
+def get_seq_stats(fname):
+    stats = {}
+    cmd   = ["seq_length_stats.py", "-f", "-i", fname]
+    proc  = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    stdout, stderr = proc.communicate()
+    if proc.returncode != 0:
+        raise IOError("%s\n%s"%(" ".join(cmd), stderr))
+    for line in stdout.strip().split("\n"):
+        parts = line.split("\t")
+        try:
+            val = int(parts[1])
+        except ValueError:
+            try:
+                val = float(parts[1])
+            except ValueError:
+                val = None
+        stats[parts[0]] = val
+    return stats
 
 def main(args):
     parser = argparse.ArgumentParser(description="Script to extract darkmatter - predicted proteins with no similarities")
@@ -47,10 +68,15 @@ def main(args):
             val = db.Get(rec.id)
         except KeyError:
             d_num += 1
-            ohdl.write("%s\n%s\n"%(rec.id, str(rec.seq).upper()))
+            ohdl.write(">%s\n%s\n"%(rec.id, str(rec.seq).upper()))
 
-    ihdl.close()
     ohdl.close()
+    ihdl.close()
+    
+    jhdl = open(args.output+".json", 'w')
+    json.dump(get_seq_stats(args.output), jhdl)
+    jhdl.close()
+    
     if args.verbose:
         print "Done: %d darkmatter genes found out of %d total" %(d_num, g_num)
     return 0
