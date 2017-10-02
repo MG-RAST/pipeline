@@ -11,10 +11,10 @@ def main(args):
     parser = argparse.ArgumentParser(description="Script to expand the sims file to include cluster members. If cluster file is not included, input file is copied to output file")
     parser.add_argument("ifile", help="Name of input sim file.")
     parser.add_argument("ofile", help="Name of output sim file.")
-    parser.add_argument("-d", "--db", dest="db", default=".", help="Directory to store LevelDB.")
+    parser.add_argument("-d", "--db", dest="db", default=".", help="Directory to store LevelDB, default is CWD")
     parser.add_argument("-c", "--cfile", dest="cfile", help="Name of cluster mapping file")
     parser.add_argument("-p", "--position", dest="position", type=int, default=1, help="Column position of query in sims file, default is 1")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages.")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages")
     args = parser.parse_args()
 
     if ('cfile' not in args) or (os.stat(args.cfile).st_size == 0):
@@ -85,7 +85,7 @@ def main(args):
     ohdl.close()
 
     if args.verbose:
-        print "Done: %s sim queries expanded to %s queries" % (s_num, q_num)
+        print "Done: %d sim queries expanded to %d queries" % (s_num, q_num)
     return 0
 
 if __name__ == "__main__":
