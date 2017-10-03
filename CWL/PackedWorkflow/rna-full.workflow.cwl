@@ -2,31 +2,42 @@
     "cwlVersion": "v1.0", 
     "$graph": [
         {
-            "inputs": [
+            "class": "CommandLineTool", 
+            "hints": [
                 {
-                    "inputBinding": {
-                        "position": 1
-                    }, 
-                    "type": {
-                        "items": "File", 
-                        "inputBinding": {
-                            "valueFrom": "$(self.basename)"
-                        }, 
-                        "type": "array"
-                    }, 
-                    "id": "#DynamicTrimmer.tool.cwl/sequences"
+                    "dockerPull": "mgrast/pipeline:4.03", 
+                    "class": "DockerRequirement"
                 }
             ], 
             "requirements": [
                 {
-                    "class": "InitialWorkDirRequirement", 
-                    "listing": "$(inputs.sequences)"
+                    "listing": "$(inputs.sequences)", 
+                    "class": "InitialWorkDirRequirement"
                 }, 
                 {
                     "class": "InlineJavascriptRequirement"
                 }
             ], 
             "stdout": "DynamicTrimmer.log", 
+            "stderr": "DynamicTrimmer.error", 
+            "inputs": [
+                {
+                    "inputBinding": {
+                        "position": 1
+                    }, 
+                    "type": {
+                        "type": "array", 
+                        "items": "File", 
+                        "inputBinding": {
+                            "valueFrom": "$(self.basename)"
+                        }
+                    }, 
+                    "id": "#DynamicTrimmer.tool.cwl/sequences"
+                }
+            ], 
+            "baseCommand": [
+                "DynamicTrimmer.pl"
+            ], 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -37,114 +48,36 @@
                     "id": "#DynamicTrimmer.tool.cwl/info"
                 }, 
                 {
+                    "type": [
+                        "File"
+                    ], 
+                    "format": "file:///Users/wolfganggerlach/awe_data/pipeline/CWL/Tools/fastq", 
                     "outputBinding": {
                         "glob": "*.rejected.fastq"
                     }, 
+                    "id": "#DynamicTrimmer.tool.cwl/rejected"
+                }, 
+                {
                     "type": [
                         "File"
                     ], 
-                    "id": "#DynamicTrimmer.tool.cwl/rejected", 
-                    "format": "file:///Users/Andi/Development/MG-RAST-Repo/pipeline/CWL/Tools/fastq"
-                }, 
-                {
+                    "format": "file:///Users/wolfganggerlach/awe_data/pipeline/CWL/Tools/fastq", 
                     "outputBinding": {
                         "glob": "*.trimmed.fastq"
                     }, 
-                    "type": [
-                        "File"
-                    ], 
-                    "id": "#DynamicTrimmer.tool.cwl/trimmed", 
-                    "format": "file:///Users/Andi/Development/MG-RAST-Repo/pipeline/CWL/Tools/fastq"
+                    "id": "#DynamicTrimmer.tool.cwl/trimmed"
                 }
             ], 
-            "baseCommand": [
-                "DynamicTrimmer.pl"
-            ], 
+            "id": "#DynamicTrimmer.tool.cwl"
+        }, 
+        {
             "class": "CommandLineTool", 
-            "stderr": "DynamicTrimmer.error", 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#DynamicTrimmer.tool.cwl", 
+            "label": "BLAT", 
+            "doc": "fast sequence search command line tool\n>blat -fastMap -t dna -q rna -out blast8 <database> <query> <output>\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "doc": "Database fasta format file", 
-                    "inputBinding": {
-                        "position": 1
-                    }, 
-                    "type": "File", 
-                    "id": "#blat.tool.cwl/database", 
-                    "format": [
-                        "#blat.tool.cwl/database/FileFormats.cv.yamlfasta"
-                    ]
-                }, 
-                {
-                    "doc": "Database type", 
-                    "inputBinding": {
-                        "prefix": "-t=", 
-                        "separate": false
-                    }, 
-                    "type": "string", 
-                    "id": "#blat.tool.cwl/dbType", 
-                    "format": [
-                        "#blat.tool.cwl/dbType/BlatTypes.cv.yamldna", 
-                        "#blat.tool.cwl/dbType/BlatTypes.cv.yamlprot", 
-                        "#blat.tool.cwl/dbType/BlatTypes.cv.yamldnax"
-                    ]
-                }, 
-                {
-                    "doc": "Run for fast DNA/DNA remapping - not allowing introns", 
-                    "inputBinding": {
-                        "prefix": "-fastMap"
-                    }, 
-                    "type": [
-                        "null", 
-                        "boolean"
-                    ], 
-                    "id": "#blat.tool.cwl/fastMap"
-                }, 
-                {
-                    "doc": "Output name", 
-                    "inputBinding": {
-                        "position": 3
-                    }, 
-                    "type": "string", 
-                    "id": "#blat.tool.cwl/outName"
-                }, 
-                {
-                    "doc": "Query fasta format file", 
-                    "inputBinding": {
-                        "position": 2
-                    }, 
-                    "type": "File", 
-                    "id": "#blat.tool.cwl/query", 
-                    "format": [
-                        "#blat.tool.cwl/query/FileFormats.cv.yamlfasta"
-                    ]
-                }, 
-                {
-                    "doc": "Query type", 
-                    "inputBinding": {
-                        "prefix": "-q=", 
-                        "separate": false
-                    }, 
-                    "type": "string", 
-                    "id": "#blat.tool.cwl/queryType", 
-                    "format": [
-                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamldna", 
-                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamlrna", 
-                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamlprot", 
-                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamldnax", 
-                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamlrnax"
-                    ]
                 }
             ], 
             "requirements": [
@@ -153,16 +86,86 @@
                 }
             ], 
             "stdout": "blat.log", 
-            "doc": "fast sequence search command line tool\n>blat -fastMap -t dna -q rna -out blast8 <database> <query> <output>\n", 
-            "class": "CommandLineTool", 
+            "stderr": "blat.error", 
+            "inputs": [
+                {
+                    "type": "File", 
+                    "doc": "Database fasta format file", 
+                    "format": [
+                        "#blat.tool.cwl/database/FileFormats.cv.yamlfasta"
+                    ], 
+                    "inputBinding": {
+                        "position": 1
+                    }, 
+                    "id": "#blat.tool.cwl/database"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Database type", 
+                    "format": [
+                        "#blat.tool.cwl/dbType/BlatTypes.cv.yamldna", 
+                        "#blat.tool.cwl/dbType/BlatTypes.cv.yamlprot", 
+                        "#blat.tool.cwl/dbType/BlatTypes.cv.yamldnax"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-t=", 
+                        "separate": false
+                    }, 
+                    "id": "#blat.tool.cwl/dbType"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "doc": "Run for fast DNA/DNA remapping - not allowing introns", 
+                    "inputBinding": {
+                        "prefix": "-fastMap"
+                    }, 
+                    "id": "#blat.tool.cwl/fastMap"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output name", 
+                    "inputBinding": {
+                        "position": 3
+                    }, 
+                    "id": "#blat.tool.cwl/outName"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Query fasta format file", 
+                    "format": [
+                        "#blat.tool.cwl/query/FileFormats.cv.yamlfasta"
+                    ], 
+                    "inputBinding": {
+                        "position": 2
+                    }, 
+                    "id": "#blat.tool.cwl/query"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Query type", 
+                    "format": [
+                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamldna", 
+                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamlrna", 
+                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamlprot", 
+                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamldnax", 
+                        "#blat.tool.cwl/queryType/BlatTypes.cv.yamlrnax"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-q=", 
+                        "separate": false
+                    }, 
+                    "id": "#blat.tool.cwl/queryType"
+                }
+            ], 
             "baseCommand": [
                 "blat"
             ], 
-            "label": "BLAT", 
             "arguments": [
                 "-out=blast8"
             ], 
-            "stderr": "blat.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -173,82 +176,24 @@
                     "id": "#blat.tool.cwl/info"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output tab separated similarity file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
                     }, 
-                    "type": "File", 
                     "id": "#blat.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Types": "BlatTypes.cv.yaml", 
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#blat.tool.cwl", 
+            "id": "#blat.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "bleachsims", 
+            "doc": "filter similarity file by E-value and number of hits\n>bleachsims -s <input> -o <output> -m 20 -r 0 -c 3\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "default": 3, 
-                    "doc": "Remove all evalues with an exponent lower than cutoff, default 3", 
-                    "inputBinding": {
-                        "prefix": "-c"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#bleachsims.tool.cwl/cutoff"
-                }, 
-                {
-                    "doc": "Input similarity blast-m8 file", 
-                    "inputBinding": {
-                        "prefix": "-s"
-                    }, 
-                    "type": "File", 
-                    "id": "#bleachsims.tool.cwl/input", 
-                    "format": [
-                        "#bleachsims.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ]
-                }, 
-                {
-                    "default": 20, 
-                    "doc": "Minimum", 
-                    "inputBinding": {
-                        "prefix": "-m"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#bleachsims.tool.cwl/min"
-                }, 
-                {
-                    "doc": "Output name", 
-                    "inputBinding": {
-                        "prefix": "-o"
-                    }, 
-                    "type": "string", 
-                    "id": "#bleachsims.tool.cwl/outName"
-                }, 
-                {
-                    "default": 0, 
-                    "doc": "Best evalue plus this exponent that will be returned, default 0 (no range)", 
-                    "inputBinding": {
-                        "prefix": "-r"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#bleachsims.tool.cwl/range"
                 }
             ], 
             "requirements": [
@@ -257,13 +202,67 @@
                 }
             ], 
             "stdout": "bleachsims.log", 
-            "doc": "filter similarity file by E-value and number of hits\n>bleachsims -s <input> -o <output> -m 20 -r 0 -c 3\n", 
-            "class": "CommandLineTool", 
+            "stderr": "bleachsims.error", 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Remove all evalues with an exponent lower than cutoff, default 3", 
+                    "default": 3, 
+                    "inputBinding": {
+                        "prefix": "-c"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/cutoff"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input similarity blast-m8 file", 
+                    "format": [
+                        "#bleachsims.tool.cwl/input/FileFormats.cv.yamltsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-s"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/input"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Minimum", 
+                    "default": 20, 
+                    "inputBinding": {
+                        "prefix": "-m"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/min"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output name", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/outName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Best evalue plus this exponent that will be returned, default 0 (no range)", 
+                    "default": 0, 
+                    "inputBinding": {
+                        "prefix": "-r"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/range"
+                }
+            ], 
             "baseCommand": [
                 "bleachsims"
             ], 
-            "label": "bleachsims", 
-            "stderr": "bleachsims.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -274,69 +273,24 @@
                     "id": "#bleachsims.tool.cwl/info"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output filtered similarity blast-m8 file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
                     }, 
-                    "type": "File", 
                     "id": "#bleachsims.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#bleachsims.tool.cwl", 
+            "id": "#bleachsims.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "CD-HIT-est", 
+            "doc": "cluster nucleotide sequences\nuse max available cpus and memory\n>cdhit-est -n 9 -d 0 -T 0 -M 0 -c 0.97 -i <input> -o <output>\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "default": 0.97, 
-                    "doc": "Percent identity threshold, default 0.97", 
-                    "inputBinding": {
-                        "prefix": "-c"
-                    }, 
-                    "type": [
-                        "null", 
-                        "float"
-                    ], 
-                    "id": "#cdhit-est.tool.cwl/identity"
-                }, 
-                {
-                    "doc": "Input fasta format file", 
-                    "inputBinding": {
-                        "prefix": "-i"
-                    }, 
-                    "type": "File", 
-                    "id": "#cdhit-est.tool.cwl/input", 
-                    "format": [
-                        "#cdhit-est.tool.cwl/input/FileFormats.cv.yamlfasta"
-                    ]
-                }, 
-                {
-                    "doc": "Output name", 
-                    "inputBinding": {
-                        "prefix": "-o"
-                    }, 
-                    "type": "string", 
-                    "id": "#cdhit-est.tool.cwl/outName"
-                }, 
-                {
-                    "default": 9, 
-                    "doc": "Word length, default 9", 
-                    "inputBinding": {
-                        "prefix": "-n"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#cdhit-est.tool.cwl/word"
                 }
             ], 
             "requirements": [
@@ -345,12 +299,55 @@
                 }
             ], 
             "stdout": "cdhit-est.log", 
-            "doc": "cluster nucleotide sequences\nuse max available cpus and memory\n>cdhit-est -n 9 -d 0 -T 0 -M 0 -c 0.97 -i <input> -o <output>\n", 
-            "class": "CommandLineTool", 
+            "stderr": "cdhit-est.error", 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "float"
+                    ], 
+                    "doc": "Percent identity threshold, default 0.97", 
+                    "default": 0.97, 
+                    "inputBinding": {
+                        "prefix": "-c"
+                    }, 
+                    "id": "#cdhit-est.tool.cwl/identity"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input fasta format file", 
+                    "format": [
+                        "#cdhit-est.tool.cwl/input/FileFormats.cv.yamlfasta"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-i"
+                    }, 
+                    "id": "#cdhit-est.tool.cwl/input"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output name", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#cdhit-est.tool.cwl/outName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Word length, default 9", 
+                    "default": 9, 
+                    "inputBinding": {
+                        "prefix": "-n"
+                    }, 
+                    "id": "#cdhit-est.tool.cwl/word"
+                }
+            ], 
             "baseCommand": [
                 "cdhit-est"
             ], 
-            "label": "CD-HIT-est", 
             "arguments": [
                 {
                     "prefix": "-M", 
@@ -365,7 +362,6 @@
                     "valueFrom": "0"
                 }
             ], 
-            "stderr": "cdhit-est.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -376,50 +372,32 @@
                     "id": "#cdhit-est.tool.cwl/info"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output cluster mapping file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName).clstr"
                     }, 
-                    "type": "File", 
                     "id": "#cdhit-est.tool.cwl/outClstr"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output fasta format file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
                     }, 
-                    "type": "File", 
                     "id": "#cdhit-est.tool.cwl/outSeq"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#cdhit-est.tool.cwl", 
+            "id": "#cdhit-est.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "cluster file reformat", 
+            "doc": "re-formats cd-hit .clstr file into mg-rast .mapping file\n>format_cluster.pl --input <input> --output <output>\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "doc": "Input .clstr format file", 
-                    "inputBinding": {
-                        "prefix": "--input"
-                    }, 
-                    "type": "File", 
-                    "id": "#format_cluster.tool.cwl/input"
-                }, 
-                {
-                    "doc": "Output .mapping format file", 
-                    "inputBinding": {
-                        "prefix": "--output"
-                    }, 
-                    "type": "string", 
-                    "id": "#format_cluster.tool.cwl/outName"
                 }
             ], 
             "requirements": [
@@ -428,13 +406,28 @@
                 }
             ], 
             "stdout": "format_cluster.log", 
-            "doc": "re-formats cd-hit .clstr file into mg-rast .mapping file\n>format_cluster.pl --input <input> --output <output>\n", 
-            "class": "CommandLineTool", 
+            "stderr": "format_cluster.error", 
+            "inputs": [
+                {
+                    "type": "File", 
+                    "doc": "Input .clstr format file", 
+                    "inputBinding": {
+                        "prefix": "--input"
+                    }, 
+                    "id": "#format_cluster.tool.cwl/input"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output .mapping format file", 
+                    "inputBinding": {
+                        "prefix": "--output"
+                    }, 
+                    "id": "#format_cluster.tool.cwl/outName"
+                }
+            ], 
             "baseCommand": [
                 "format_cluster.pl"
             ], 
-            "label": "cluster file reformat", 
-            "stderr": "format_cluster.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -445,68 +438,24 @@
                     "id": "#format_cluster.tool.cwl/info"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output .mapping format file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
                     }, 
-                    "type": "File", 
                     "id": "#format_cluster.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#format_cluster.tool.cwl", 
+            "id": "#format_cluster.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "rna features", 
+            "doc": "identify rRNAs features from given rRNA fasta and blast aligned files\n>rna_feature.pl --seq <sequence> --sim <aligned> --ident 75 --output <output>\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "doc": "Tab separated similarity file", 
-                    "inputBinding": {
-                        "prefix": "--sim"
-                    }, 
-                    "type": "File", 
-                    "id": "#rna_feature.tool.cwl/aligned", 
-                    "format": [
-                        "#rna_feature.tool.cwl/aligned/FileFormats.cv.yamltsv"
-                    ]
-                }, 
-                {
-                    "default": 75, 
-                    "doc": "Percent identity threshold, default 75", 
-                    "inputBinding": {
-                        "prefix": "--ident"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#rna_feature.tool.cwl/identity"
-                }, 
-                {
-                    "doc": "Output fasta format file", 
-                    "inputBinding": {
-                        "prefix": "--output"
-                    }, 
-                    "type": "string", 
-                    "id": "#rna_feature.tool.cwl/outName"
-                }, 
-                {
-                    "doc": "Tab separated sequence file", 
-                    "inputBinding": {
-                        "prefix": "--seq"
-                    }, 
-                    "type": "File", 
-                    "id": "#rna_feature.tool.cwl/sequence", 
-                    "format": [
-                        "#rna_feature.tool.cwl/sequence/FileFormats.cv.yamltsv"
-                    ]
                 }
             ], 
             "requirements": [
@@ -515,13 +464,54 @@
                 }
             ], 
             "stdout": "rna_feature.log", 
-            "doc": "identify rRNAs features from given rRNA fasta and blast aligned files\n>rna_feature.pl --seq <sequence> --sim <aligned> --ident 75 --output <output>\n", 
-            "class": "CommandLineTool", 
+            "stderr": "rna_feature.error", 
+            "inputs": [
+                {
+                    "type": "File", 
+                    "doc": "Tab separated similarity file", 
+                    "format": [
+                        "#rna_feature.tool.cwl/aligned/FileFormats.cv.yamltsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--sim"
+                    }, 
+                    "id": "#rna_feature.tool.cwl/aligned"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Percent identity threshold, default 75", 
+                    "default": 75, 
+                    "inputBinding": {
+                        "prefix": "--ident"
+                    }, 
+                    "id": "#rna_feature.tool.cwl/identity"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output fasta format file", 
+                    "inputBinding": {
+                        "prefix": "--output"
+                    }, 
+                    "id": "#rna_feature.tool.cwl/outName"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Tab separated sequence file", 
+                    "format": [
+                        "#rna_feature.tool.cwl/sequence/FileFormats.cv.yamltsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--seq"
+                    }, 
+                    "id": "#rna_feature.tool.cwl/sequence"
+                }
+            ], 
             "baseCommand": [
                 "rna_feature.pl"
             ], 
-            "label": "rna features", 
-            "stderr": "rna_feature.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -532,84 +522,24 @@
                     "id": "#rna_feature.tool.cwl/info"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output fasta format file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
                     }, 
-                    "type": "File", 
                     "id": "#rna_feature.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#rna_feature.tool.cwl", 
+            "id": "#rna_feature.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "seqUtil", 
+            "doc": "Convert fastq into fasta and fasta into tab files.", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "inputBinding": {
-                        "prefix": "--bowtie_truncate"
-                    }, 
-                    "type": [
-                        "null", 
-                        "boolean"
-                    ], 
-                    "id": "#seqUtil.tool.cwl/bowtie_truncate"
-                }, 
-                {
-                    "inputBinding": {
-                        "prefix": "--fasta2tab"
-                    }, 
-                    "type": [
-                        "null", 
-                        "boolean"
-                    ], 
-                    "id": "#seqUtil.tool.cwl/fasta2tab"
-                }, 
-                {
-                    "inputBinding": {
-                        "prefix": "--fastq2fasta"
-                    }, 
-                    "type": [
-                        "null", 
-                        "boolean"
-                    ], 
-                    "id": "#seqUtil.tool.cwl/fastq2fasta"
-                }, 
-                {
-                    "inputBinding": {
-                        "prefix": "--output"
-                    }, 
-                    "type": "string", 
-                    "id": "#seqUtil.tool.cwl/output"
-                }, 
-                {
-                    "inputBinding": {
-                        "prefix": "--input"
-                    }, 
-                    "type": "File", 
-                    "id": "#seqUtil.tool.cwl/sequences", 
-                    "format": [
-                        "#seqUtil.tool.cwl/sequences/FileFormats.cv.yamlfastq", 
-                        "#seqUtil.tool.cwl/sequences/FileFormats.cv.yamlfasta"
-                    ]
-                }, 
-                {
-                    "inputBinding": {
-                        "prefix": "--sortbyid2tab"
-                    }, 
-                    "type": [
-                        "null", 
-                        "boolean"
-                    ], 
-                    "id": "#seqUtil.tool.cwl/sortbyid2tab"
                 }
             ], 
             "requirements": [
@@ -618,126 +548,104 @@
                 }
             ], 
             "stdout": "seqUtil.log", 
-            "doc": "Convert fastq into fasta and fasta into tab files.", 
-            "class": "CommandLineTool", 
+            "stderr": "seqUtil.error", 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--bowtie_truncate"
+                    }, 
+                    "id": "#seqUtil.tool.cwl/bowtie_truncate"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--fasta2tab"
+                    }, 
+                    "id": "#seqUtil.tool.cwl/fasta2tab"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--fastq2fasta"
+                    }, 
+                    "id": "#seqUtil.tool.cwl/fastq2fasta"
+                }, 
+                {
+                    "type": "string", 
+                    "inputBinding": {
+                        "prefix": "--output"
+                    }, 
+                    "id": "#seqUtil.tool.cwl/output"
+                }, 
+                {
+                    "type": "File", 
+                    "format": [
+                        "#seqUtil.tool.cwl/sequences/FileFormats.cv.yamlfastq", 
+                        "#seqUtil.tool.cwl/sequences/FileFormats.cv.yamlfasta"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--input"
+                    }, 
+                    "id": "#seqUtil.tool.cwl/sequences"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--sortbyid2tab"
+                    }, 
+                    "id": "#seqUtil.tool.cwl/sortbyid2tab"
+                }
+            ], 
             "baseCommand": [
                 "seqUtil"
             ], 
-            "label": "seqUtil", 
             "arguments": [
                 {
                     "prefix": null, 
                     "valueFrom": "${\n   if (  (\"format\" in inputs.sequences) && (inputs.sequences.format.split(\"/\").slice(-1)[0] == \"fastq\")  ) { return \"--fastq\"; } else { return \"\" ; }  \n }\n"
                 }
             ], 
-            "stderr": "seqUtil.error", 
             "outputs": [
                 {
                     "type": "stderr", 
                     "id": "#seqUtil.tool.cwl/error"
                 }, 
                 {
+                    "type": "File", 
+                    "format": "${\n  if (inputs.fasta2tab) \n      { return \"tsv\" ;}\n  else if (inputs.sortbyid2tab) \n      { return \"tsv\" ;}\n  else if (inputs.fastq2fasta) \n      { return \"fasta\";}\n  else if (inputs.sequences.format) \n      { return inputs.sequences.format ;}\n  else { return '' ;}\n  return \"\" ;\n}\n", 
                     "outputBinding": {
                         "glob": "$(inputs.output)"
                     }, 
-                    "type": "File", 
-                    "id": "#seqUtil.tool.cwl/file", 
-                    "format": "${\n  if (inputs.fasta2tab) \n      { return \"tsv\" ;}\n  else if (inputs.sortbyid2tab) \n      { return \"tsv\" ;}\n  else if (inputs.fastq2fasta) \n      { return \"fasta\";}\n  else if (inputs.sequences.format) \n      { return inputs.sequences.format ;}\n  else { return '' ;}\n  return \"\" ;\n}\n"
+                    "id": "#seqUtil.tool.cwl/file"
                 }, 
                 {
                     "type": "stdout", 
                     "id": "#seqUtil.tool.cwl/info"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#seqUtil.tool.cwl", 
+            "id": "#seqUtil.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "abundance profile", 
+            "doc": "create abundance profile from expanded annotated sims files\nmd5:    sims_abundance.py -t md5 -i <input> -o <output> --coverage <coverage> --cluster <cluster> --md5index <md5index>\nlca:    sims_abundance.py -t lca -i <input> -o <output> --coverage <coverage> --cluster <cluster>\nsource: sims_abundance.py -t source -i <input> -o <output> --coverage <coverage> --cluster <cluster>\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "doc": "Optional input file, cluster mapping", 
-                    "inputBinding": {
-                        "prefix": "--cluster"
-                    }, 
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "id": "#sims_abundance.tool.cwl/cluster"
-                }, 
-                {
-                    "doc": "Optional input file, assembly coverage", 
-                    "inputBinding": {
-                        "prefix": "--coverage"
-                    }, 
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "id": "#sims_abundance.tool.cwl/coverage"
-                }, 
-                {
-                    "doc": "Input expanded sims file", 
-                    "inputBinding": {
-                        "prefix": "-i"
-                    }, 
-                    "type": "File", 
-                    "id": "#sims_abundance.tool.cwl/input", 
-                    "format": [
-                        "#sims_abundance.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ]
-                }, 
-                {
-                    "doc": "Optional input file, md5,seek,length", 
-                    "inputBinding": {
-                        "prefix": "--md5_index"
-                    }, 
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "id": "#sims_abundance.tool.cwl/md5index"
-                }, 
-                {
-                    "doc": "Output abundance profile", 
-                    "inputBinding": {
-                        "prefix": "-o"
-                    }, 
-                    "type": "string", 
-                    "id": "#sims_abundance.tool.cwl/outName"
-                }, 
-                {
-                    "doc": "Profile type", 
-                    "inputBinding": {
-                        "prefix": "-t"
-                    }, 
-                    "type": "string", 
-                    "id": "#sims_abundance.tool.cwl/profileType", 
-                    "format": [
-                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamlmd5", 
-                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamllca", 
-                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamlsource"
-                    ]
-                }, 
-                {
-                    "default": 18, 
-                    "doc": "Number of sources in m5nr, default 18", 
-                    "inputBinding": {
-                        "prefix": "-s"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#sims_abundance.tool.cwl/sourceNum"
                 }
             ], 
             "requirements": [
@@ -746,13 +654,89 @@
                 }
             ], 
             "stdout": "sims_abundance.log", 
-            "doc": "create abundance profile from expanded annotated sims files\nmd5:    sims_abundance.py -t md5 -i <input> -o <output> --coverage <coverage> --cluster <cluster> --md5index <md5index>\nlca:    sims_abundance.py -t lca -i <input> -o <output> --coverage <coverage> --cluster <cluster>\nsource: sims_abundance.py -t source -i <input> -o <output> --coverage <coverage> --cluster <cluster>\n", 
-            "class": "CommandLineTool", 
+            "stderr": "sims_abundance.error", 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "Optional input file, cluster mapping", 
+                    "inputBinding": {
+                        "prefix": "--cluster"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/cluster"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "Optional input file, assembly coverage", 
+                    "inputBinding": {
+                        "prefix": "--coverage"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/coverage"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input expanded sims file", 
+                    "format": [
+                        "#sims_abundance.tool.cwl/input/FileFormats.cv.yamltsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-i"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/input"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "Optional input file, md5,seek,length", 
+                    "inputBinding": {
+                        "prefix": "--md5_index"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/md5index"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output abundance profile", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/outName"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Profile type", 
+                    "format": [
+                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamlmd5", 
+                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamllca", 
+                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamlsource"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-t"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/profileType"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Number of sources in m5nr, default 18", 
+                    "default": 18, 
+                    "inputBinding": {
+                        "prefix": "-s"
+                    }, 
+                    "id": "#sims_abundance.tool.cwl/sourceNum"
+                }
+            ], 
             "baseCommand": [
                 "sims_abundance.py"
             ], 
-            "label": "abundance profile", 
-            "stderr": "sims_abundance.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -763,121 +747,24 @@
                     "id": "#sims_abundance.tool.cwl/info"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output abundance profile file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
                     }, 
-                    "type": "File", 
                     "id": "#sims_abundance.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Types": "ProfileTypes.cv.yaml", 
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#sims_abundance.tool.cwl", 
+            "id": "#sims_abundance.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "annotate sims", 
+            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "doc": "BerkelyDB of condensed M5NR", 
-                    "inputBinding": {
-                        "prefix": "--ann_file"
-                    }, 
-                    "type": "File", 
-                    "id": "#sims_annotate.tool.cwl/database"
-                }, 
-                {
-                    "default": 5000, 
-                    "doc": "Number of fragment chunks to load in memory at once before processing, default 5000", 
-                    "inputBinding": {
-                        "prefix": "--frag_num"
-                    }, 
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "id": "#sims_annotate.tool.cwl/fragNum"
-                }, 
-                {
-                    "doc": "Input similarity blast-m8 file", 
-                    "inputBinding": {
-                        "prefix": "--in_sim"
-                    }, 
-                    "type": "File", 
-                    "id": "#sims_annotate.tool.cwl/input", 
-                    "format": [
-                        "#sims_annotate.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ]
-                }, 
-                {
-                    "doc": "Output expanded protein sim file (protein mode only)", 
-                    "inputBinding": {
-                        "prefix": "--out_expand"
-                    }, 
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
-                    "id": "#sims_annotate.tool.cwl/outExpandName"
-                }, 
-                {
-                    "doc": "Output filtered sim file", 
-                    "inputBinding": {
-                        "prefix": "--out_filter"
-                    }, 
-                    "type": "string", 
-                    "id": "#sims_annotate.tool.cwl/outFilterName"
-                }, 
-                {
-                    "doc": "Output expanded LCA file (protein and rna mode)", 
-                    "inputBinding": {
-                        "prefix": "--out_lca"
-                    }, 
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
-                    "id": "#sims_annotate.tool.cwl/outLcaName"
-                }, 
-                {
-                    "doc": "Output expanded ontology sim file (protein mode only)", 
-                    "inputBinding": {
-                        "prefix": "--out_ontology"
-                    }, 
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
-                    "id": "#sims_annotate.tool.cwl/outOntologyName"
-                }, 
-                {
-                    "doc": "Output expanded rna sim file (rna mode only)", 
-                    "inputBinding": {
-                        "prefix": "--out_rna"
-                    }, 
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
-                    "id": "#sims_annotate.tool.cwl/outRnaName"
-                }, 
-                {
-                    "doc": "Verbose logging mode", 
-                    "inputBinding": {
-                        "prefix": "--verbose"
-                    }, 
-                    "type": [
-                        "null", 
-                        "boolean"
-                    ], 
-                    "id": "#sims_annotate.tool.cwl/verbose"
                 }
             ], 
             "requirements": [
@@ -886,13 +773,106 @@
                 }
             ], 
             "stdout": "sims_annotate.log", 
-            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
-            "class": "CommandLineTool", 
+            "stderr": "sims_annotate.error", 
+            "inputs": [
+                {
+                    "type": "File", 
+                    "doc": "BerkelyDB of condensed M5NR", 
+                    "inputBinding": {
+                        "prefix": "--ann_file"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/database"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "int"
+                    ], 
+                    "doc": "Number of fragment chunks to load in memory at once before processing, default 5000", 
+                    "default": 5000, 
+                    "inputBinding": {
+                        "prefix": "--frag_num"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/fragNum"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input similarity blast-m8 file", 
+                    "format": [
+                        "#sims_annotate.tool.cwl/input/FileFormats.cv.yamltsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--in_sim"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/input"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "Output expanded protein sim file (protein mode only)", 
+                    "inputBinding": {
+                        "prefix": "--out_expand"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/outExpandName"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output filtered sim file", 
+                    "inputBinding": {
+                        "prefix": "--out_filter"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/outFilterName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "Output expanded LCA file (protein and rna mode)", 
+                    "inputBinding": {
+                        "prefix": "--out_lca"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/outLcaName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "Output expanded ontology sim file (protein mode only)", 
+                    "inputBinding": {
+                        "prefix": "--out_ontology"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/outOntologyName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "Output expanded rna sim file (rna mode only)", 
+                    "inputBinding": {
+                        "prefix": "--out_rna"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/outRnaName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "doc": "Verbose logging mode", 
+                    "inputBinding": {
+                        "prefix": "--verbose"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/verbose"
+                }
+            ], 
             "baseCommand": [
                 "sims_annotate.pl"
             ], 
-            "label": "annotate sims", 
-            "stderr": "sims_annotate.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -903,109 +883,68 @@
                     "id": "#sims_annotate.tool.cwl/info"
                 }, 
                 {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
                     "doc": "Output expanded protein sim file (protein mode only)", 
                     "outputBinding": {
                         "glob": "$(inputs.outExpandName)"
                     }, 
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
                     "id": "#sims_annotate.tool.cwl/outExpand"
                 }, 
                 {
+                    "type": "File", 
                     "doc": "Output filtered similarity file", 
                     "outputBinding": {
                         "glob": "$(inputs.outFilterName)"
                     }, 
-                    "type": "File", 
                     "id": "#sims_annotate.tool.cwl/outFilter"
                 }, 
                 {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
                     "doc": "Output expanded LCA file (protein and rna mode)", 
                     "outputBinding": {
                         "glob": "$(inputs.outLcaName)"
                     }, 
+                    "id": "#sims_annotate.tool.cwl/outLca"
+                }, 
+                {
                     "type": [
                         "null", 
                         "File"
                     ], 
-                    "id": "#sims_annotate.tool.cwl/outLca"
-                }, 
-                {
                     "doc": "Output expanded ontology sim file (protein mode only)", 
                     "outputBinding": {
                         "glob": "$(inputs.outOntologyName)"
                     }, 
+                    "id": "#sims_annotate.tool.cwl/outOntology"
+                }, 
+                {
                     "type": [
                         "null", 
                         "File"
                     ], 
-                    "id": "#sims_annotate.tool.cwl/outOntology"
-                }, 
-                {
                     "doc": "Output expanded rna sim file (rna mode only)", 
                     "outputBinding": {
                         "glob": "$(inputs.outRnaName)"
                     }, 
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
                     "id": "#sims_annotate.tool.cwl/outRna"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#sims_annotate.tool.cwl", 
+            "id": "#sims_annotate.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "GNU sort", 
+            "doc": "sort text file base on given field(s)", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "doc": "-t, --field-separator=SEP\nuse SEP instead of non-blank to blank transition\n", 
-                    "inputBinding": {
-                        "prefix": "-t", 
-                        "valueFrom": "$(\"\\u0009\")"
-                    }, 
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
-                    "id": "#sort.tool.cwl/field"
-                }, 
-                {
-                    "doc": "File to sort", 
-                    "inputBinding": {
-                        "position": 1
-                    }, 
-                    "type": "File", 
-                    "id": "#sort.tool.cwl/input", 
-                    "format": [
-                        "#sort.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ]
-                }, 
-                {
-                    "doc": "-k, --key=POS1[,POS2]\nstart a key at POS1, end it at POS2 (origin 1)\n", 
-                    "inputBinding": {
-                        "prefix": "-k"
-                    }, 
-                    "type": "string", 
-                    "id": "#sort.tool.cwl/key"
-                }, 
-                {
-                    "doc": "-o, --output=FILE\nwrite result to FILE instead of standard output\n", 
-                    "inputBinding": {
-                        "prefix": "-o"
-                    }, 
-                    "type": "string", 
-                    "id": "#sort.tool.cwl/outName"
                 }
             ], 
             "requirements": [
@@ -1014,12 +953,51 @@
                 }
             ], 
             "stdout": "sort.log", 
-            "doc": "sort text file base on given field(s)", 
-            "class": "CommandLineTool", 
+            "stderr": "sort.error", 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "-t, --field-separator=SEP\nuse SEP instead of non-blank to blank transition\n", 
+                    "inputBinding": {
+                        "prefix": "-t", 
+                        "valueFrom": "$(\"\\u0009\")"
+                    }, 
+                    "id": "#sort.tool.cwl/field"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "File to sort", 
+                    "format": [
+                        "#sort.tool.cwl/input/FileFormats.cv.yamltsv"
+                    ], 
+                    "inputBinding": {
+                        "position": 1
+                    }, 
+                    "id": "#sort.tool.cwl/input"
+                }, 
+                {
+                    "type": "string", 
+                    "inputBinding": {
+                        "prefix": "-k"
+                    }, 
+                    "doc": "-k, --key=POS1[,POS2]\nstart a key at POS1, end it at POS2 (origin 1)\n", 
+                    "id": "#sort.tool.cwl/key"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "-o, --output=FILE\nwrite result to FILE instead of standard output\n", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#sort.tool.cwl/outName"
+                }
+            ], 
             "baseCommand": [
                 "sort"
             ], 
-            "label": "GNU sort", 
             "arguments": [
                 {
                     "prefix": "-T", 
@@ -1030,7 +1008,6 @@
                     "valueFrom": "$(runtime.ram)M"
                 }
             ], 
-            "stderr": "sort.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -1041,72 +1018,27 @@
                     "id": "#sort.tool.cwl/info"
                 }, 
                 {
-                    "doc": "The sorted file", 
-                    "outputBinding": {
-                        "glob": "$(inputs.outName)"
-                    }, 
                     "type": [
                         "null", 
                         "File"
                     ], 
+                    "doc": "The sorted file", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outName)"
+                    }, 
                     "id": "#sort.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#sort.tool.cwl", 
+            "id": "#sort.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "sortmerna", 
+            "doc": "align rRNA fasta file against clustered rRNA index\noutput in blast m8 format\n>sortmerna -a <# core> -m <MB ram> -e 0.1 --blast '1 cigar qcov qstrand' --ref '<refFasta>,<indexDir>/<indexName>' --reads <input> --aligned <input basename>\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
                     "class": "DockerRequirement"
-                }
-            ]
-        }, 
-        {
-            "inputs": [
-                {
-                    "default": 0.1, 
-                    "doc": "E-value threshold, default 0.1", 
-                    "inputBinding": {
-                        "prefix": "-e"
-                    }, 
-                    "type": [
-                        "null", 
-                        "float"
-                    ], 
-                    "id": "#sortmerna.tool.cwl/evalue"
-                }, 
-                {
-                    "default": "./", 
-                    "doc": "Directory containing index files with prefix INDEXNAME", 
-                    "type": [
-                        "null", 
-                        "Directory"
-                    ], 
-                    "id": "#sortmerna.tool.cwl/indexDir"
-                }, 
-                {
-                    "doc": "Prefix for index files", 
-                    "type": "string", 
-                    "id": "#sortmerna.tool.cwl/indexName"
-                }, 
-                {
-                    "doc": "Input file, sequence (fasta/fastq)", 
-                    "inputBinding": {
-                        "prefix": "--reads"
-                    }, 
-                    "type": "File", 
-                    "id": "#sortmerna.tool.cwl/input", 
-                    "format": [
-                        "#sortmerna.tool.cwl/input/FileFormats.cv.yamlfasta", 
-                        "#sortmerna.tool.cwl/input/FileFormats.cv.yamlfastq"
-                    ]
-                }, 
-                {
-                    "doc": "Reference .fasta file", 
-                    "type": "File", 
-                    "id": "#sortmerna.tool.cwl/refFasta"
                 }
             ], 
             "requirements": [
@@ -1115,12 +1047,55 @@
                 }
             ], 
             "stdout": "sortmerna.log", 
-            "doc": "align rRNA fasta file against clustered rRNA index\noutput in blast m8 format\n>sortmerna -a <# core> -m <MB ram> -e 0.1 --blast '1 cigar qcov qstrand' --ref '<refFasta>,<indexDir>/<indexName>' --reads <input> --aligned <input basename>\n", 
-            "class": "CommandLineTool", 
+            "stderr": "sortmerna.error", 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "float"
+                    ], 
+                    "doc": "E-value threshold, default 0.1", 
+                    "default": 0.1, 
+                    "inputBinding": {
+                        "prefix": "-e"
+                    }, 
+                    "id": "#sortmerna.tool.cwl/evalue"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "Directory"
+                    ], 
+                    "doc": "Directory containing index files with prefix INDEXNAME", 
+                    "default": "./", 
+                    "id": "#sortmerna.tool.cwl/indexDir"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Prefix for index files", 
+                    "id": "#sortmerna.tool.cwl/indexName"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input file, sequence (fasta/fastq)", 
+                    "format": [
+                        "#sortmerna.tool.cwl/input/FileFormats.cv.yamlfasta", 
+                        "#sortmerna.tool.cwl/input/FileFormats.cv.yamlfastq"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--reads"
+                    }, 
+                    "id": "#sortmerna.tool.cwl/input"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Reference .fasta file", 
+                    "id": "#sortmerna.tool.cwl/refFasta"
+                }
+            ], 
             "baseCommand": [
                 "sortmerna"
             ], 
-            "label": "sortmerna", 
             "arguments": [
                 {
                     "prefix": "--blast", 
@@ -1139,7 +1114,6 @@
                     "valueFrom": "$(inputs.input.basename)"
                 }
             ], 
-            "stderr": "sortmerna.error", 
             "outputs": [
                 {
                     "type": "stderr", 
@@ -1150,42 +1124,23 @@
                     "id": "#sortmerna.tool.cwl/info"
                 }, 
                 {
-                    "doc": "Output tab separated aligned file", 
-                    "outputBinding": {
-                        "glob": "$(inputs.input.basename).blast"
-                    }, 
                     "type": [
                         "null", 
                         "File"
                     ], 
+                    "doc": "Output tab separated aligned file", 
+                    "outputBinding": {
+                        "glob": "$(inputs.input.basename).blast"
+                    }, 
                     "id": "#sortmerna.tool.cwl/output"
                 }
             ], 
-            "$namespaces": {
-                "Formats": "FileFormats.cv.yaml"
-            }, 
-            "id": "#sortmerna.tool.cwl", 
-            "hints": [
-                {
-                    "dockerPull": "mgrast/pipeline:4.03", 
-                    "class": "DockerRequirement"
-                }
-            ]
+            "id": "#sortmerna.tool.cwl"
         }, 
         {
-            "inputs": [
-                {
-                    "type": "string", 
-                    "id": "#preprocess-fastq.workflow.cwl/jobid"
-                }, 
-                {
-                    "type": {
-                        "items": "File", 
-                        "type": "array"
-                    }, 
-                    "id": "#preprocess-fastq.workflow.cwl/sequences"
-                }
-            ], 
+            "class": "Workflow", 
+            "label": "preprocess-fastq", 
+            "doc": "Remove and trim low quality reads from fastq files. \nReturn fasta files with reads passed this qc steo and reads removed.\n", 
             "requirements": [
                 {
                     "class": "StepInputExpressionRequirement"
@@ -1200,17 +1155,34 @@
                     "class": "MultipleInputFeatureRequirement"
                 }
             ], 
-            "doc": "Remove and trim low quality reads from fastq files. \nReturn fasta files with reads passed this qc steo and reads removed.\n", 
-            "class": "Workflow", 
-            "label": "preprocess-fastq", 
+            "inputs": [
+                {
+                    "type": "string", 
+                    "id": "#preprocess-fastq.workflow.cwl/jobid"
+                }, 
+                {
+                    "type": {
+                        "type": "array", 
+                        "items": "File"
+                    }, 
+                    "id": "#preprocess-fastq.workflow.cwl/sequences"
+                }
+            ], 
+            "outputs": [
+                {
+                    "type": "File", 
+                    "outputSource": "#preprocess-fastq.workflow.cwl/rejected2fasta/file", 
+                    "id": "#preprocess-fastq.workflow.cwl/rejected"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#preprocess-fastq.workflow.cwl/trimmed2fasta/file", 
+                    "id": "#preprocess-fastq.workflow.cwl/trimmed"
+                }
+            ], 
             "steps": [
                 {
-                    "out": [
-                        "#preprocess-fastq.workflow.cwl/filter/trimmed", 
-                        "#preprocess-fastq.workflow.cwl/filter/rejected"
-                    ], 
                     "run": "#DynamicTrimmer.tool.cwl", 
-                    "id": "#preprocess-fastq.workflow.cwl/filter", 
                     "in": [
                         {
                             "source": "#preprocess-fastq.workflow.cwl/jobid", 
@@ -1221,14 +1193,15 @@
                             "source": "#preprocess-fastq.workflow.cwl/sequences", 
                             "id": "#preprocess-fastq.workflow.cwl/filter/sequences"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#preprocess-fastq.workflow.cwl/filter/trimmed", 
+                        "#preprocess-fastq.workflow.cwl/filter/rejected"
+                    ], 
+                    "id": "#preprocess-fastq.workflow.cwl/filter"
                 }, 
                 {
-                    "out": [
-                        "#preprocess-fastq.workflow.cwl/rejected2fasta/file"
-                    ], 
                     "run": "#seqUtil.tool.cwl", 
-                    "id": "#preprocess-fastq.workflow.cwl/rejected2fasta", 
                     "in": [
                         {
                             "default": true, 
@@ -1243,14 +1216,14 @@
                             "source": "#preprocess-fastq.workflow.cwl/filter/rejected", 
                             "id": "#preprocess-fastq.workflow.cwl/rejected2fasta/sequences"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#preprocess-fastq.workflow.cwl/rejected2fasta/file"
+                    ], 
+                    "id": "#preprocess-fastq.workflow.cwl/rejected2fasta"
                 }, 
                 {
-                    "out": [
-                        "#preprocess-fastq.workflow.cwl/trimmed2fasta/file"
-                    ], 
                     "run": "#seqUtil.tool.cwl", 
-                    "id": "#preprocess-fastq.workflow.cwl/trimmed2fasta", 
                     "in": [
                         {
                             "default": true, 
@@ -1266,29 +1239,34 @@
                             "valueFrom": "${\n  inputs.sequences.format = \"fastq\" ; return inputs.sequences\n}\n", 
                             "id": "#preprocess-fastq.workflow.cwl/trimmed2fasta/sequences"
                         }
-                    ]
-                }
-            ], 
-            "outputs": [
-                {
-                    "outputSource": "#preprocess-fastq.workflow.cwl/rejected2fasta/file", 
-                    "type": "File", 
-                    "id": "#preprocess-fastq.workflow.cwl/rejected"
-                }, 
-                {
-                    "outputSource": "#preprocess-fastq.workflow.cwl/trimmed2fasta/file", 
-                    "type": "File", 
-                    "id": "#preprocess-fastq.workflow.cwl/trimmed"
+                    ], 
+                    "out": [
+                        "#preprocess-fastq.workflow.cwl/trimmed2fasta/file"
+                    ], 
+                    "id": "#preprocess-fastq.workflow.cwl/trimmed2fasta"
                 }
             ], 
             "id": "#preprocess-fastq.workflow.cwl"
         }, 
         {
-            "inputs": [
+            "class": "Workflow", 
+            "label": "rna abundance", 
+            "doc": "RNAs - abundace profiles from annotated files", 
+            "requirements": [
                 {
-                    "type": "File", 
-                    "id": "#rna-abundance.workflow.cwl/coverageStats"
+                    "class": "StepInputExpressionRequirement"
                 }, 
+                {
+                    "class": "InlineJavascriptRequirement"
+                }, 
+                {
+                    "class": "ScatterFeatureRequirement"
+                }, 
+                {
+                    "class": "MultipleInputFeatureRequirement"
+                }
+            ], 
+            "inputs": [
                 {
                     "type": "string", 
                     "id": "#rna-abundance.workflow.cwl/jobid"
@@ -1306,38 +1284,30 @@
                     "id": "#rna-abundance.workflow.cwl/rnaLCA"
                 }
             ], 
-            "requirements": [
+            "outputs": [
                 {
-                    "class": "StepInputExpressionRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-abundance.workflow.cwl/lcaProfile/output", 
+                    "id": "#rna-abundance.workflow.cwl/lcaProfileOut"
                 }, 
                 {
-                    "class": "InlineJavascriptRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-abundance.workflow.cwl/md5Profile/output", 
+                    "id": "#rna-abundance.workflow.cwl/md5ProfileOut"
                 }, 
                 {
-                    "class": "ScatterFeatureRequirement"
-                }, 
-                {
-                    "class": "MultipleInputFeatureRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-abundance.workflow.cwl/sourceStats/output", 
+                    "id": "#rna-abundance.workflow.cwl/sourceStatsOut"
                 }
             ], 
-            "doc": "RNAs - abundace profiles from annotated files", 
-            "class": "Workflow", 
-            "label": "rna abundance", 
             "steps": [
                 {
-                    "out": [
-                        "#rna-abundance.workflow.cwl/lcaProfile/output"
-                    ], 
                     "run": "#sims_abundance.tool.cwl", 
-                    "id": "#rna-abundance.workflow.cwl/lcaProfile", 
                     "in": [
                         {
                             "source": "#rna-abundance.workflow.cwl/rnaClustMap", 
                             "id": "#rna-abundance.workflow.cwl/lcaProfile/cluster"
-                        }, 
-                        {
-                            "source": "#rna-abundance.workflow.cwl/coverageStats", 
-                            "id": "#rna-abundance.workflow.cwl/lcaProfile/coverage"
                         }, 
                         {
                             "source": "#rna-abundance.workflow.cwl/rnaLCA", 
@@ -1352,22 +1322,18 @@
                             "default": "lca", 
                             "id": "#rna-abundance.workflow.cwl/lcaProfile/profileType"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-abundance.workflow.cwl/lcaProfile/output"
+                    ], 
+                    "id": "#rna-abundance.workflow.cwl/lcaProfile"
                 }, 
                 {
-                    "out": [
-                        "#rna-abundance.workflow.cwl/md5Profile/output"
-                    ], 
                     "run": "#sims_abundance.tool.cwl", 
-                    "id": "#rna-abundance.workflow.cwl/md5Profile", 
                     "in": [
                         {
                             "source": "#rna-abundance.workflow.cwl/rnaClustMap", 
                             "id": "#rna-abundance.workflow.cwl/md5Profile/cluster"
-                        }, 
-                        {
-                            "source": "#rna-abundance.workflow.cwl/coverageStats", 
-                            "id": "#rna-abundance.workflow.cwl/md5Profile/coverage"
                         }, 
                         {
                             "source": "#rna-abundance.workflow.cwl/rnaExpand", 
@@ -1382,22 +1348,18 @@
                             "default": "md5", 
                             "id": "#rna-abundance.workflow.cwl/md5Profile/profileType"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-abundance.workflow.cwl/md5Profile/output"
+                    ], 
+                    "id": "#rna-abundance.workflow.cwl/md5Profile"
                 }, 
                 {
-                    "out": [
-                        "#rna-abundance.workflow.cwl/sourceStats/output"
-                    ], 
                     "run": "#sims_abundance.tool.cwl", 
-                    "id": "#rna-abundance.workflow.cwl/sourceStats", 
                     "in": [
                         {
                             "source": "#rna-abundance.workflow.cwl/rnaClustMap", 
                             "id": "#rna-abundance.workflow.cwl/sourceStats/cluster"
-                        }, 
-                        {
-                            "source": "#rna-abundance.workflow.cwl/coverageStats", 
-                            "id": "#rna-abundance.workflow.cwl/sourceStats/coverage"
                         }, 
                         {
                             "source": "#rna-abundance.workflow.cwl/rnaExpand", 
@@ -1412,29 +1374,33 @@
                             "default": "source", 
                             "id": "#rna-abundance.workflow.cwl/sourceStats/profileType"
                         }
-                    ]
-                }
-            ], 
-            "outputs": [
-                {
-                    "outputSource": "#rna-abundance.workflow.cwl/lcaProfile/output", 
-                    "type": "File", 
-                    "id": "#rna-abundance.workflow.cwl/lcaProfileOut"
-                }, 
-                {
-                    "outputSource": "#rna-abundance.workflow.cwl/md5Profile/output", 
-                    "type": "File", 
-                    "id": "#rna-abundance.workflow.cwl/md5ProfileOut"
-                }, 
-                {
-                    "outputSource": "#rna-abundance.workflow.cwl/sourceStats/output", 
-                    "type": "File", 
-                    "id": "#rna-abundance.workflow.cwl/sourceStatsOut"
+                    ], 
+                    "out": [
+                        "#rna-abundance.workflow.cwl/sourceStats/output"
+                    ], 
+                    "id": "#rna-abundance.workflow.cwl/sourceStats"
                 }
             ], 
             "id": "#rna-abundance.workflow.cwl"
         }, 
         {
+            "class": "Workflow", 
+            "label": "rna annotation", 
+            "doc": "RNAs - predict, cluster, identify, annotate", 
+            "requirements": [
+                {
+                    "class": "StepInputExpressionRequirement"
+                }, 
+                {
+                    "class": "InlineJavascriptRequirement"
+                }, 
+                {
+                    "class": "ScatterFeatureRequirement"
+                }, 
+                {
+                    "class": "MultipleInputFeatureRequirement"
+                }
+            ], 
             "inputs": [
                 {
                     "type": "string", 
@@ -1465,32 +1431,46 @@
                     "id": "#rna-annotation.workflow.cwl/sequences"
                 }
             ], 
-            "requirements": [
+            "outputs": [
                 {
-                    "class": "StepInputExpressionRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/formatCluster/output", 
+                    "id": "#rna-annotation.workflow.cwl/rnaClustMapOut"
                 }, 
                 {
-                    "class": "InlineJavascriptRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/rnaCluster/outSeq", 
+                    "id": "#rna-annotation.workflow.cwl/rnaClustSeqOut"
                 }, 
                 {
-                    "class": "ScatterFeatureRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/annotateSims/outRna", 
+                    "id": "#rna-annotation.workflow.cwl/rnaExpandOut"
                 }, 
                 {
-                    "class": "MultipleInputFeatureRequirement"
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/rnaFeature/output", 
+                    "id": "#rna-annotation.workflow.cwl/rnaFeatureOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/annotateSims/outFilter", 
+                    "id": "#rna-annotation.workflow.cwl/rnaFilterOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/annotateSims/outLca", 
+                    "id": "#rna-annotation.workflow.cwl/rnaLCAOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#rna-annotation.workflow.cwl/bleachSims/output", 
+                    "id": "#rna-annotation.workflow.cwl/rnaSimsOut"
                 }
             ], 
-            "doc": "RNAs - predict, cluster, identify, annotate", 
-            "class": "Workflow", 
-            "label": "rna annotation", 
             "steps": [
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/annotateSims/outFilter", 
-                        "#rna-annotation.workflow.cwl/annotateSims/outRna", 
-                        "#rna-annotation.workflow.cwl/annotateSims/outLca"
-                    ], 
                     "run": "#sims_annotate.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/annotateSims", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/m5rnaBDB", 
@@ -1515,14 +1495,16 @@
                             "valueFrom": "$(self).450.rna.expand.rna", 
                             "id": "#rna-annotation.workflow.cwl/annotateSims/outRnaName"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/annotateSims/outFilter", 
+                        "#rna-annotation.workflow.cwl/annotateSims/outRna", 
+                        "#rna-annotation.workflow.cwl/annotateSims/outLca"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/annotateSims"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/bleachSims/output"
-                    ], 
                     "run": "#bleachsims.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/bleachSims", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/rnaBlat/output", 
@@ -1533,14 +1515,14 @@
                             "valueFrom": "$(self).450.rna.sims", 
                             "id": "#rna-annotation.workflow.cwl/bleachSims/outName"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/bleachSims/output"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/bleachSims"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/formatCluster/output"
-                    ], 
                     "run": "#format_cluster.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/formatCluster", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/rnaCluster/outClstr", 
@@ -1551,14 +1533,14 @@
                             "valueFrom": "$(self).440.cluster.rna.97.mapping", 
                             "id": "#rna-annotation.workflow.cwl/formatCluster/outName"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/formatCluster/output"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/formatCluster"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/rnaBlat/output"
-                    ], 
                     "run": "#blat.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/rnaBlat", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/m5rnaFull", 
@@ -1585,15 +1567,14 @@
                             "default": "rna", 
                             "id": "#rna-annotation.workflow.cwl/rnaBlat/queryType"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/rnaBlat/output"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/rnaBlat"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/rnaCluster/outSeq", 
-                        "#rna-annotation.workflow.cwl/rnaCluster/outClstr"
-                    ], 
                     "run": "#cdhit-est.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/rnaCluster", 
                     "in": [
                         {
                             "default": 0.97, 
@@ -1608,14 +1589,15 @@
                             "valueFrom": "$(self).440.cluster.rna.97.fna", 
                             "id": "#rna-annotation.workflow.cwl/rnaCluster/outName"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/rnaCluster/outSeq", 
+                        "#rna-annotation.workflow.cwl/rnaCluster/outClstr"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/rnaCluster"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/rnaFeature/output"
-                    ], 
                     "run": "#rna_feature.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/rnaFeature", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/sorttab/output", 
@@ -1630,14 +1612,14 @@
                             "source": "#rna-annotation.workflow.cwl/sortseq/file", 
                             "id": "#rna-annotation.workflow.cwl/rnaFeature/sequence"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/rnaFeature/output"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/rnaFeature"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/sortmerna/output"
-                    ], 
                     "run": "#sortmerna.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/sortmerna", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/m5rnaIndex", 
@@ -1655,14 +1637,14 @@
                             "source": "#rna-annotation.workflow.cwl/m5rnaClust", 
                             "id": "#rna-annotation.workflow.cwl/sortmerna/refFasta"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/sortmerna/output"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/sortmerna"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/sortseq/file"
-                    ], 
                     "run": "#seqUtil.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/sortseq", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/sequences", 
@@ -1677,14 +1659,14 @@
                             "default": true, 
                             "id": "#rna-annotation.workflow.cwl/sortseq/sortbyid2tab"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/sortseq/file"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/sortseq"
                 }, 
                 {
-                    "out": [
-                        "#rna-annotation.workflow.cwl/sorttab/output"
-                    ], 
                     "run": "#sort.tool.cwl", 
-                    "id": "#rna-annotation.workflow.cwl/sorttab", 
                     "in": [
                         {
                             "source": "#rna-annotation.workflow.cwl/sortmerna/output", 
@@ -1699,54 +1681,37 @@
                             "valueFrom": "$(self.basename).sort", 
                             "id": "#rna-annotation.workflow.cwl/sorttab/outName"
                         }
-                    ]
-                }
-            ], 
-            "outputs": [
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/formatCluster/output", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaClustMapOut"
-                }, 
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/rnaCluster/outSeq", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaClustSeqOut"
-                }, 
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/annotateSims/outRna", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaExpandOut"
-                }, 
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/rnaFeature/output", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaFeatureOut"
-                }, 
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/annotateSims/outFilter", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaFilterOut"
-                }, 
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/annotateSims/outLca", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaLCAOut"
-                }, 
-                {
-                    "outputSource": "#rna-annotation.workflow.cwl/bleachSims/output", 
-                    "type": "File", 
-                    "id": "#rna-annotation.workflow.cwl/rnaSimsOut"
+                    ], 
+                    "out": [
+                        "#rna-annotation.workflow.cwl/sorttab/output"
+                    ], 
+                    "id": "#rna-annotation.workflow.cwl/sorttab"
                 }
             ], 
             "id": "#rna-annotation.workflow.cwl"
         }, 
         {
-            "inputs": [
+            "class": "Workflow", 
+            "label": "rna full analysis", 
+            "doc": "RNAs - preprocess, annotation, abundance", 
+            "requirements": [
                 {
-                    "type": "File", 
-                    "id": "#main/coverageStats"
+                    "class": "StepInputExpressionRequirement"
                 }, 
+                {
+                    "class": "InlineJavascriptRequirement"
+                }, 
+                {
+                    "class": "ScatterFeatureRequirement"
+                }, 
+                {
+                    "class": "MultipleInputFeatureRequirement"
+                }, 
+                {
+                    "class": "SubworkflowFeatureRequirement"
+                }
+            ], 
+            "inputs": [
                 {
                     "type": "string", 
                     "id": "#main/jobid"
@@ -1773,40 +1738,67 @@
                 }, 
                 {
                     "type": {
-                        "items": "File", 
-                        "type": "array"
+                        "type": "array", 
+                        "items": "File"
                     }, 
                     "id": "#main/sequences"
                 }
             ], 
-            "requirements": [
+            "outputs": [
                 {
-                    "class": "StepInputExpressionRequirement"
+                    "type": "File", 
+                    "outputSource": "#main/rnaAbundance/lcaProfileOut", 
+                    "id": "#main/lcaProfileOut"
                 }, 
                 {
-                    "class": "InlineJavascriptRequirement"
+                    "type": "File", 
+                    "outputSource": "#main/rnaAbundance/md5ProfileOut", 
+                    "id": "#main/md5ProfileOut"
                 }, 
                 {
-                    "class": "ScatterFeatureRequirement"
+                    "type": "File", 
+                    "outputSource": "#main/preProcess/rejected", 
+                    "id": "#main/preProcessRejected"
                 }, 
                 {
-                    "class": "MultipleInputFeatureRequirement"
+                    "type": "File", 
+                    "outputSource": "#main/preProcess/trimmed", 
+                    "id": "#main/preProcessTrimmed"
                 }, 
                 {
-                    "class": "SubworkflowFeatureRequirement"
+                    "type": "File", 
+                    "outputSource": "#main/rnaAnnotate/rnaClustMapOut", 
+                    "id": "#main/rnaClustMapOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#main/rnaAnnotate/rnaClustSeqOut", 
+                    "id": "#main/rnaClustSeqOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#main/rnaAnnotate/rnaFeatureOut", 
+                    "id": "#main/rnaFeatureOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#main/rnaAnnotate/rnaFilterOut", 
+                    "id": "#main/rnaFilterOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#main/rnaAnnotate/rnaSimsOut", 
+                    "id": "#main/rnaSimsOut"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#main/rnaAbundance/sourceStatsOut", 
+                    "id": "#main/sourceStatsOut"
                 }
             ], 
-            "doc": "RNAs - preprocess, annotation, abundance", 
-            "class": "Workflow", 
-            "label": "rna full analysis", 
             "steps": [
                 {
-                    "out": [
-                        "#main/preProcess/trimmed", 
-                        "#main/preProcess/rejected"
-                    ], 
                     "run": "#preprocess-fastq.workflow.cwl", 
-                    "id": "#main/preProcess", 
                     "in": [
                         {
                             "source": "#main/jobid", 
@@ -1816,21 +1808,16 @@
                             "source": "#main/sequences", 
                             "id": "#main/preProcess/sequences"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#main/preProcess/trimmed", 
+                        "#main/preProcess/rejected"
+                    ], 
+                    "id": "#main/preProcess"
                 }, 
                 {
-                    "out": [
-                        "#main/rnaAbundance/md5ProfileOut", 
-                        "#main/rnaAbundance/lcaProfileOut", 
-                        "#main/rnaAbundance/sourceStatsOut"
-                    ], 
                     "run": "#rna-abundance.workflow.cwl", 
-                    "id": "#main/rnaAbundance", 
                     "in": [
-                        {
-                            "source": "#main/coverageStats", 
-                            "id": "#main/rnaAbundance/coverageStats"
-                        }, 
                         {
                             "source": "#main/jobid", 
                             "id": "#main/rnaAbundance/jobid"
@@ -1847,20 +1834,16 @@
                             "source": "#main/rnaAnnotate/rnaLCAOut", 
                             "id": "#main/rnaAbundance/rnaLCA"
                         }
-                    ]
+                    ], 
+                    "out": [
+                        "#main/rnaAbundance/md5ProfileOut", 
+                        "#main/rnaAbundance/lcaProfileOut", 
+                        "#main/rnaAbundance/sourceStatsOut"
+                    ], 
+                    "id": "#main/rnaAbundance"
                 }, 
                 {
-                    "out": [
-                        "#main/rnaAnnotate/rnaFeatureOut", 
-                        "#main/rnaAnnotate/rnaClustSeqOut", 
-                        "#main/rnaAnnotate/rnaClustMapOut", 
-                        "#main/rnaAnnotate/rnaSimsOut", 
-                        "#main/rnaAnnotate/rnaFilterOut", 
-                        "#main/rnaAnnotate/rnaExpandOut", 
-                        "#main/rnaAnnotate/rnaLCAOut"
-                    ], 
                     "run": "#rna-annotation.workflow.cwl", 
-                    "id": "#main/rnaAnnotate", 
                     "in": [
                         {
                             "source": "#main/jobid", 
@@ -1890,59 +1873,17 @@
                             "source": "#main/preProcess/trimmed", 
                             "id": "#main/rnaAnnotate/sequences"
                         }
-                    ]
-                }
-            ], 
-            "outputs": [
-                {
-                    "outputSource": "#main/rnaAbundance/lcaProfileOut", 
-                    "type": "File", 
-                    "id": "#main/lcaProfileOut"
-                }, 
-                {
-                    "outputSource": "#main/rnaAbundance/md5ProfileOut", 
-                    "type": "File", 
-                    "id": "#main/md5ProfileOut"
-                }, 
-                {
-                    "outputSource": "#main/preProcess/rejected", 
-                    "type": "File", 
-                    "id": "#main/preProcessRejected"
-                }, 
-                {
-                    "outputSource": "#main/preProcess/trimmed", 
-                    "type": "File", 
-                    "id": "#main/preProcessTrimmed"
-                }, 
-                {
-                    "outputSource": "#main/rnaAnnotate/rnaClustMapOut", 
-                    "type": "File", 
-                    "id": "#main/rnaClustMapOut"
-                }, 
-                {
-                    "outputSource": "#main/rnaAnnotate/rnaClustSeqOut", 
-                    "type": "File", 
-                    "id": "#main/rnaClustSeqOut"
-                }, 
-                {
-                    "outputSource": "#main/rnaAnnotate/rnaFeatureOut", 
-                    "type": "File", 
-                    "id": "#main/rnaFeatureOut"
-                }, 
-                {
-                    "outputSource": "#main/rnaAnnotate/rnaFilterOut", 
-                    "type": "File", 
-                    "id": "#main/rnaFilterOut"
-                }, 
-                {
-                    "outputSource": "#main/rnaAnnotate/rnaSimsOut", 
-                    "type": "File", 
-                    "id": "#main/rnaSimsOut"
-                }, 
-                {
-                    "outputSource": "#main/rnaAbundance/sourceStatsOut", 
-                    "type": "File", 
-                    "id": "#main/sourceStatsOut"
+                    ], 
+                    "out": [
+                        "#main/rnaAnnotate/rnaFeatureOut", 
+                        "#main/rnaAnnotate/rnaClustSeqOut", 
+                        "#main/rnaAnnotate/rnaClustMapOut", 
+                        "#main/rnaAnnotate/rnaSimsOut", 
+                        "#main/rnaAnnotate/rnaFilterOut", 
+                        "#main/rnaAnnotate/rnaExpandOut", 
+                        "#main/rnaAnnotate/rnaLCAOut"
+                    ], 
+                    "id": "#main/rnaAnnotate"
                 }
             ], 
             "id": "#main"
