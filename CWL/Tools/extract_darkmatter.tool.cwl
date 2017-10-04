@@ -26,16 +26,20 @@ inputs:
             prefix: -i
 
     simHit:
-        type: File[]
+        type:
+            type: array
+            items: File
+            inputBinding:
+                prefix: -s
         doc: Input similarity hit files
-        inputBinding:
-            prefix: -s
 
     clustMap:
-        type: File[]
+        type:
+            type: array
+            items: File
+            inputBinding:
+                prefix: -m
         doc: Input cluster mapping files
-        inputBinding:
-            prefix: -m
 
     outName:
         type: string
