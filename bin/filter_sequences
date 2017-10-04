@@ -119,13 +119,14 @@ sub filter_fastq {
 
   my $output;
   eval {
-    $output = `DynamicTrimmer.pl $infile -h $min_qual -n $max_lqb -454`;
+    $output = `fastq-mcf 'n/a' $infile -S -l 50 --max-ns $max_lqb -q $min_qual -w 10 -o $infile.trimmed.fastq`;
+#    $output = `DynamicTrimmer.pl $infile -h $min_qual -n $max_lqb -454 -l 50`;
   };
   if ($@) {
-    print "Problem running script 'DynamicTrimmer.pl', exiting: $@, $output\n";
+    print "Problem running script 'fastq-mcf', exiting: $@, $output\n";
     exit;
   }
-  return ("$infile.trimmed.fastq", "$infile.rejected.fastq");
+  return ("$infile.trimmed.fastq", "$infile.trimmed.fastq.skip");
 }
 
 sub reformat_fastq {
