@@ -49,7 +49,7 @@ inputs:
 baseCommand: [superblat]
 
 arguments:
-    - prefix: -prot
+    - valueFrom: -prot
     - prefix: -out
       valueFrom: blast8
 

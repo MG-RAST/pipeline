@@ -65,9 +65,9 @@ baseCommand: [fastq-mcf]
 arguments:
     - position: 0
       valueFrom: 'n/a'
-    - prefix: -S
+    - valueFrom: -S
     - prefix: -k
-      valueFrom: '0'
+      valueFrom: "0"
 
 outputs:
     info:

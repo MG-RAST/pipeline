@@ -48,7 +48,7 @@ inputs:
 baseCommand: [uncluster_sims.py]
 
 arguments:
-    - prefix: --verbose
+    - valueFrom: --verbose
     - prefix: --db
       valueFrom: $(runtime.tmpdir)
 

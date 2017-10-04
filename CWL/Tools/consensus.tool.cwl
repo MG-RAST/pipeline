@@ -42,13 +42,11 @@ inputs:
     inputBinding:
       prefix: --output
 
-      
-  
-  
+
 baseCommand: [consensus.py]
 
 arguments: 
-  - prefix: --verbose
+  - valueFrom: --verbose
   - prefix: --type
     valueFrom: |
       ${
