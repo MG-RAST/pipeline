@@ -119,7 +119,7 @@ sub filter_fastq {
 
   my $output;
   eval {
-    $output = `fastq-mcf 'n/a' $infile -S -l 50 --max-ns $max_lqb -q $min_qual -w 10 -o $infile.trimmed.fastq`;
+    $output = `fastq-mcf 'n/a' $infile -S -l 50 -k 0 --max-ns $max_lqb -q $min_qual -w 10 -o $infile.trimmed.fastq`;
 #    $output = `DynamicTrimmer.pl $infile -h $min_qual -n $max_lqb -454 -l 50`;
   };
   if ($@) {
