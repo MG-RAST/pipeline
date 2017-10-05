@@ -34,8 +34,8 @@ steps:
             input: [rnaExpand]
             cluster: [rnaClustMap]
             profileType: 
-                default: md5
-            outName: # change to outName
+                valueFrom: md5
+            outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.md5.abundance
         out: [output]
@@ -45,7 +45,7 @@ steps:
             input: [rnaLCA]
             cluster: [rnaClustMap]
             profileType: 
-                default: lca
+                valueFrom: lca
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.lca.abundance
@@ -56,7 +56,7 @@ steps:
             input: [rnaExpand]
             cluster: [rnaClustMap]
             profileType: 
-                default: source
+                valueFrom: source
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.source.stats

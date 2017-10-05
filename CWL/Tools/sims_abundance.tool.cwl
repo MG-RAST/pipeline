@@ -35,7 +35,8 @@ inputs:
     
     cluster:
         type:
-            type: array?
+          - 'null'
+          - type: array
             items: File
             inputBinding:
                 prefix: --cluster
