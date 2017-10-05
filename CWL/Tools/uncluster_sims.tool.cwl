@@ -61,7 +61,7 @@ outputs:
         type: stderr  
     output:
         type: File
-        doc: Output expanded similarity file
+        doc: Output unclustered similarity file
         outputBinding: 
             glob: $(inputs.outName)
 
