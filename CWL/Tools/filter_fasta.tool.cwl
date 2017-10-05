@@ -64,8 +64,8 @@ inputs:
     outPassed:
         type: string
         doc: output passed sequences
-         inputBinding:
-             prefix: -output
+        inputBinding:
+            prefix: -output
     
     outRemoved:
         type: string
@@ -91,5 +91,5 @@ outputs:
             glob: $(inputs.outRemoved)
 
 $namespaces:
-  Formats: FileFormats.cv.yaml
+    Formats: FileFormats.cv.yaml
 
