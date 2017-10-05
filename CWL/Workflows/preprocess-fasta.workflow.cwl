@@ -14,7 +14,7 @@ requirements:
 
 inputs:
     jobid: string
-    input: File
+    sequences: File
     stats: File
     filterLn:
         type: boolean
@@ -41,7 +41,7 @@ steps:
     filter:
         run: ../Tools/filter_fasta.tool.cwl
         in:
-            input: input
+            input: sequences
             stats: stats
             filterLn: filterLn
             filterAmbig: filterAmbig

@@ -14,7 +14,7 @@ requirements:
 
 inputs:
     jobid: string
-    input: File
+    sequences: File
     minQual:
         type: int
         default: 15
@@ -37,7 +37,7 @@ steps:
     filter:    
         run: ../Tools/fastq-mcf.tool.cwl
         in:
-            input: input
+            input: sequences
             minQual: minQual
             maxLqb: maxLqb
             minLength: minLength
