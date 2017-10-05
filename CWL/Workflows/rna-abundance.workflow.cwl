@@ -31,8 +31,12 @@ steps:
     md5Profile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: [rnaExpand]
-            cluster: [rnaClustMap]
+            input:
+                source: rnaExpand
+                valueFrom: ${ return [self]; }
+            cluster:
+                source: rnaClustMap
+                valueFrom: ${ return [self]; }
             profileType: 
                 valueFrom: md5
             outName:
@@ -42,8 +46,12 @@ steps:
     lcaProfile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: [rnaLCA]
-            cluster: [rnaClustMap]
+            input:
+                source: rnaLCA
+                valueFrom: ${ return [self]; }
+            cluster:
+                source: rnaClustMap
+                valueFrom: ${ return [self]; }
             profileType: 
                 valueFrom: lca
             outName:
@@ -53,8 +61,12 @@ steps:
     sourceStats:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: [rnaExpand]
-            cluster: [rnaClustMap]
+            input:
+                source: rnaExpand
+                valueFrom: ${ return [self]; }
+            cluster:
+                source: rnaClustMap
+                valueFrom: ${ return [self]; }
             profileType: 
                 valueFrom: source
             outName:
