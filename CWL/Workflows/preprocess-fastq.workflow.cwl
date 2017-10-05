@@ -41,32 +41,29 @@ steps:
             minQual: minQual
             maxLqb: maxLqb
             minLength: minLength
-            outPassed:
+            outName:
                 source: jobid
-                valueFrom: $(self).100.preprocess.passed
-            outRemoved:
-                source: jobid
-                valueFrom: $(self).100.preprocess.removed
-        out: [passed, removed]
+                valueFrom: $(self).100.preprocess.fastq
+        out: [outTrim, outSkip]
 
     passed2fasta:
         run: ../Tools/seqUtil.tool.cwl
         in:
-            sequences: filter/passed
+            sequences: filter/outTrim
             fastq2fasta: 
                 default: true
             output:
-                source: filter/passed
-                valueFrom: $(self).fna
+                source: jobid
+                valueFrom: $(self).100.preprocess.passed.fna
         out: [file]
 
     removed2fasta:
         run: ../Tools/seqUtil.tool.cwl
         in:
-            sequences: filter/removed
+            sequences: filter/outSkip
             fastq2fasta: 
                 default: true
             output:
-                source: filter/removed
-                valueFrom: $(self).fna
+                source: jobid
+                valueFrom: $(self).100.preprocess.removed.fna
         out: [file]

@@ -74,12 +74,12 @@ outputs:
         type: stdout
     error: 
         type: stderr  
-    passed:
+    outTrim:
         type: File
         doc: Output trimmed fastq sequences
         outputBinding: 
             glob: $(inputs.outName)
-    removed:
+    outSkip:
         type: File
         doc: Output skipped fastq sequences
         outputBinding: 
