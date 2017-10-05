@@ -1,7 +1,7 @@
 cwlVersion: v1.0
 class: Workflow
 
-label: rna full analysis for fastq files
+label: rna amplicon analysis for fasta files
 doc: RNAs - preprocess, annotation, abundance
 
 requirements:
@@ -14,10 +14,17 @@ requirements:
 inputs:
     jobid: string
     sequences: File
-    minQual:
-        type: int
-        default: 15
-    maxLqb:
+    stats: File
+    filterLn:
+        type: boolean
+        default: true
+    filterAmbig:
+        type: boolean
+        default: true
+    deviation:
+        type: float
+        default: 2.0
+    maxAmbig:
         type: int
         default: 5
     # static DBs
@@ -64,12 +71,15 @@ outputs:
 
 steps:
     preProcess:
-        run: ../Workflows/preprocess-fastq.workflow.cwl
+        run: ../Workflows/preprocess-fasta.workflow.cwl
         in:
             jobid: jobid
             sequences: sequences
-            minQual: minQual
-            maxLqb: maxLqb
+            stats: stats
+            filterLn: filterLn
+            filterAmbig: filterAmbig
+            deviation: deviation
+            maxAmbig: maxAmbig
         out: [passed, removed]
     annotate:
         run: ../Workflows/rna-annotation.workflow.cwl
