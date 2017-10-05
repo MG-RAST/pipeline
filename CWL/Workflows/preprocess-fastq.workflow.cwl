@@ -1,65 +1,72 @@
 cwlVersion: v1.0
 class: Workflow
 
-label: preprocess-fastq
+label: preprocess fastq
 doc: |
     Remove and trim low quality reads from fastq files. 
-    Return fasta files with reads passed this qc steo and reads removed.
+    Return fasta files with reads passed and reads removed.
 
 requirements:
-  - class: StepInputExpressionRequirement
-  - class: InlineJavascriptRequirement
-  - class: ScatterFeatureRequirement
-  - class: MultipleInputFeatureRequirement
+    - class: StepInputExpressionRequirement
+    - class: InlineJavascriptRequirement
+    - class: ScatterFeatureRequirement
+    - class: MultipleInputFeatureRequirement
 
 inputs:
-  jobid: string
-  sequences: File[]
+    jobid: string
+    input: File
+    minQual:
+        type: int
+        default: 15
+    maxLqb:
+        type: int
+        default: 5
+    minLength:
+        type: int
+        default: 30
 
 outputs:
-  trimmed:
-    type: File
-    outputSource: trimmed2fasta/file
-  rejected:
-    type: File
-    outputSource: rejected2fasta/file  
+    passed:
+        type: File
+        outputSource: passed2fasta/file
+    removed:
+        type: File
+        outputSource: removed2fasta/file  
 
 steps:
+    filter:    
+        run: ../Tools/fastq-mcf.tool.cwl
+        in:
+            input: input
+            minQual: minQual
+            maxLqb: maxLqb
+            minLength: minLength
+            outPassed:
+                source: jobid
+                valueFrom: $(self).100.preprocess.passed
+            outRemoved:
+                source: jobid
+                valueFrom: $(self).100.preprocess.removed
+        out: [passed, removed]
 
-  filter:    
-    run: ../Tools/DynamicTrimmer.tool.cwl
-    in:
-      sequences: sequences
-      output:
-        source: jobid
-        valueFrom: $(self).100.preprocess.length.stats
-    out: [trimmed, rejected]
+    passed2fasta:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: filter/passed
+            fastq2fasta: 
+                default: true
+            output:
+                source: filter/passed
+                valueFrom: $(self).fna
+        out: [file]
 
-  trimmed2fasta:
-    run: ../Tools/seqUtil.tool.cwl
-    in:
-      sequences: 
-        # set format to fastq
-        source: filter/trimmed
-        valueFrom: |
-          ${
-            inputs.sequences.format = "fastq" ; return inputs.sequences
-          }
-      fastq2fasta: 
-        default: true
-      output:
-        source: jobid
-        valueFrom: $(self).100.preprocess.passed.fasta
-    out: [file]
-
-  rejected2fasta:
-    run: ../Tools/seqUtil.tool.cwl
-    in:
-      sequences: filter/rejected
-      fastq2fasta: 
-        default: true
-      output:
-        source: jobid
-        valueFrom: $(self).100.preprocess.removed.fasta
-    out: [file]
-
+    removed2fasta:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: filter/removed
+            fastq2fasta: 
+                default: true
+            output:
+                source: filter/removed
+                valueFrom: $(self).fna
+        out: [file]
