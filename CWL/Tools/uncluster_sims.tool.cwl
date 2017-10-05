@@ -17,25 +17,21 @@ stdout: uncluster_sims.log
 stderr: uncluster_sims.error
 
 inputs:
-    input:
-        type: File
-        doc: Input similarity blast-m8 file
-        format:
-            - Formats:tsv
-        inputBinding:
-            position: 1
+    simHit:
+        type:
+            type: array
+            items: File
+            inputBinding:
+                prefix: -i
+        doc: Input similarity hit files
 
-    outName:
-        type: string
-        doc: Output expanded similarity
-        inputBinding:
-            position: 2
-
-    cluster:
-        type: File
-        doc: Input cluster mapping file
-        inputBinding:
-            prefix: --cfile
+    clustMap:
+        type:
+            type: array
+            items: File
+            inputBinding:
+                prefix: -c
+        doc: Input cluster mapping files
 
     position:
         type: int?
@@ -43,6 +39,12 @@ inputs:
         default: 1
         inputBinding:
             prefix: --position
+
+    outName:
+        type: string
+        doc: Output unclustered similarity
+        inputBinding:
+            prefix: -o
 
 
 baseCommand: [uncluster_sims.py]

@@ -62,7 +62,6 @@ def main(args):
         mhdl = open(mfile, 'rU')
         if args.verbose:
             print "\treading file %s ... "%(mfile)
-    
         for line in mhdl:
             parts = line.strip().split('\t')
             query = SEED + parts[0]
