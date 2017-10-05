@@ -34,7 +34,8 @@ my $aa_map    = "";
 my $ontol     = "";
 my $filter    = "";
 my $md5_abund = "";
-my $m5nr_db  = "";
+my $dark      = "";
+my $m5nr_db   = "";
 my $taxa_hier = "";
 my $ont_hier  = "";
 my $help      = 0;
@@ -59,6 +60,7 @@ my $options   = GetOptions (
 		"ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
 		"md5_abund=s" => \$md5_abund,
+        "dark=s"      => \$dark,
 		"m5nr_db=s"   => \$m5nr_db,
 		"taxa_hier=s" => \$taxa_hier,
 		"ont_hier=s"  => \$ont_hier,
@@ -107,12 +109,20 @@ PipelineAWE::print_json($rna_map.'.json', $rm_attr);
 PipelineAWE::print_json($aa_map.'.json', $am_attr);
 # cleanup
 unlink($post_qc, $search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
+
 # optional adapter trim file
 if ($adtrim) {
     my $at_attr = PipelineAWE::read_json($adtrim.'.json');
     $at_attr->{statistics} = PipelineAWE::get_seq_stats($adtrim, $at_attr->{file_format});
     PipelineAWE::print_json($adtrim.'.json', $at_attr);
     unlink($adtrim);
+}
+# optional darkmatter file
+if ($dark) {
+    my $dm_attr = PipelineAWE::read_json($dark.'.json');
+    $dm_attr->{statistics} = PipelineAWE::get_seq_stats($dark, 'fasta', 1);
+    PipelineAWE::print_json($dark.'.json', $dm_attr);
+    unlink($dark);
 }
 
 ### JobDB update
