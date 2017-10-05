@@ -89,7 +89,7 @@ steps:
                 valueFrom: "0.97"
             outName:
                 source: jobid
-                valueFrom: $(self).440.cluster.rna.97.fna
+                valueFrom: $(self).440.cluster.rna97.fna
         out: [outSeq, outClstr]
     formatCluster:
         run: ../Tools/format_cluster.tool.cwl
@@ -97,7 +97,7 @@ steps:
             input: rnaCluster/outClstr
             outName:
                 source: jobid
-                valueFrom: $(self).440.cluster.rna.97.mapping
+                valueFrom: $(self).440.cluster.rna97.mapping
         out: [output]
     rnaBlat:
         run: ../Tools/blat.tool.cwl
