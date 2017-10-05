@@ -67,7 +67,7 @@ steps:
         in:
             input: sortmerna/output
             key: 
-              default: "1,1"
+                default: "1,1"
             outName:
                 source: sortmerna/output
                 valueFrom: $(self.basename).sort
@@ -86,7 +86,7 @@ steps:
         in:
             input: rnaFeature/output
             identity: 
-              default: 0.97
+                default: 0.97
             outName:
                 source: jobid
                 valueFrom: $(self).440.cluster.rna.97.fna
@@ -105,9 +105,9 @@ steps:
             query: rnaCluster/outSeq
             database: m5rnaFull
             dbType: 
-              default: dna
+                default: dna
             queryType: 
-              default: rna
+                default: rna
             fastMap:
                 default: true
             outName:

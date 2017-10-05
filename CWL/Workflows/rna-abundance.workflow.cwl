@@ -31,10 +31,10 @@ steps:
     md5Profile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: rnaExpand
-            cluster: rnaClustMap
+            input: [rnaExpand]
+            cluster: [rnaClustMap]
             profileType: 
-              default: md5
+                default: md5
             outName: # change to outName
                 source: jobid
                 valueFrom: $(self).700.annotation.md5.abundance
@@ -42,10 +42,10 @@ steps:
     lcaProfile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: rnaLCA
-            cluster: rnaClustMap
+            input: [rnaLCA]
+            cluster: [rnaClustMap]
             profileType: 
-              default: lca
+                default: lca
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.lca.abundance
@@ -53,10 +53,10 @@ steps:
     sourceStats:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: rnaExpand
-            cluster: rnaClustMap
+            input: [rnaExpand]
+            cluster: [rnaClustMap]
             profileType: 
-              default: source
+                default: source
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.source.stats
