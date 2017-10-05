@@ -95,7 +95,7 @@ steps:
     indexSimSeq:
         run: ../Workflows/index_sim_seq.workflow.cwl
         in:
-            jobid: string
+            jobid: jobid
             featureSeqs:
                 source: annotate/rnaFeatureOut
                 valueFrom: ${ return [self]; }
