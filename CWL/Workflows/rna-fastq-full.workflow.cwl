@@ -36,28 +36,31 @@ outputs:
         outputSource: preProcess/removed
     rnaFeatureOut:
         type: File
-        outputSource: rnaAnnotate/rnaFeatureOut
+        outputSource: annotate/rnaFeatureOut
     rnaClustSeqOut:
         type: File
-        outputSource: rnaAnnotate/rnaClustSeqOut
+        outputSource: annotate/rnaClustSeqOut
     rnaClustMapOut:
         type: File
-        outputSource: rnaAnnotate/rnaClustMapOut
+        outputSource: annotate/rnaClustMapOut
     rnaSimsOut:
         type: File
-        outputSource: rnaAnnotate/rnaSimsOut
+        outputSource: annotate/rnaSimsOut
     rnaFilterOut:
         type: File
-        outputSource: rnaAnnotate/rnaFilterOut
+        outputSource: annotate/rnaFilterOut
+    simSeqOut:
+        type: File
+        outputSource: indexSimSeq/simSeqOut
     md5ProfileOut:
         type: File
-        outputSource: rnaAbundance/md5ProfileOut
+        outputSource: abundance/md5ProfileOut
     lcaProfileOut:
         type: File
-        outputSource: rnaAbundance/lcaProfileOut
+        outputSource: abundance/lcaProfileOut
     sourceStatsOut:
         type: File
-        outputSource: rnaAbundance/sourceStatsOut
+        outputSource: abundance/sourceStatsOut
 
 steps:
     preProcess:
@@ -68,7 +71,7 @@ steps:
             minQual: minQual
             maxLqb: maxLqb
         out: [passed, removed]
-    rnaAnnotate:
+    annotate:
         run: ../Workflows/rna-annotation.workflow.cwl
         in:
             jobid: jobid
@@ -79,13 +82,36 @@ steps:
             m5rnaIndex: m5rnaIndex
             m5rnaPrefix: m5rnaPrefix
         out: [rnaFeatureOut, rnaClustSeqOut, rnaClustMapOut, rnaSimsOut, rnaFilterOut, rnaExpandOut, rnaLCAOut]
-    rnaAbundance:
-        run: ../Workflows/rna-abundance.workflow.cwl
+    indexSimSeq:
+        run: ../Workflows/index_sim_seq.workflow.cwl
+        in:
+            jobid: string
+            featureSeqs:
+                source: annotate/rnaFeatureOut
+                valueFrom: ${ return [self]; }
+            filterSims:
+                source: annotate/rnaFilterOut
+                valueFrom: ${ return [self]; }
+            clustMaps:
+                source: annotate/rnaClustMapOut
+                valueFrom: ${ return [self]; }
+        out: [simSeqOut, indexOut]
+    abundance:
+        run: ../Workflows/abundance.workflow.cwl
         in:
             jobid: jobid
-            rnaExpand: rnaAnnotate/rnaExpandOut
-            rnaLCA: rnaAnnotate/rnaLCAOut
-            rnaClustMap: rnaAnnotate/rnaClustMapOut
+            md5index: indexSimSeq/indexOut
+            filterSims:
+                source: annotate/rnaFilterOut
+                valueFrom: ${ return [self]; }
+            expandSims:
+                source: annotate/rnaExpandOut
+                valueFrom: ${ return [self]; }
+            lcaAnns:
+                source: annotate/rnaLCAOut
+                valueFrom: ${ return [self]; }
+            clustMaps:
+                source: annotate/rnaClustMapOut
+                valueFrom: ${ return [self]; }
         out: [md5ProfileOut, lcaProfileOut, sourceStatsOut]
-
 
