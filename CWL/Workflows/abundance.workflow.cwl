@@ -1,8 +1,8 @@
 cwlVersion: v1.0
 class: Workflow
 
-label: rna abundance
-doc: RNAs - abundace profiles from annotated files
+label: abundance
+doc: abundace profiles from annotated files, for protein and/or rna
 
 requirements:
     - class: StepInputExpressionRequirement
@@ -12,9 +12,12 @@ requirements:
 
 inputs:
     jobid: string
-    rnaExpand: File
-    rnaLCA: File
-    rnaClustMap: File
+    md5index: File
+    filterSims: File[]
+    expandSims: File[]
+    lcaAnns: File[]
+    clustMaps: File[]
+    coverage: File?
 
 outputs:
     md5ProfileOut:
@@ -31,12 +34,10 @@ steps:
     md5Profile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input:
-                source: rnaExpand
-                valueFrom: ${ return [self]; }
-            cluster:
-                source: rnaClustMap
-                valueFrom: ${ return [self]; }
+            input: filterSims
+            cluster: clustMaps
+            coverage: coverage
+            md5index: md5index
             profileType: 
                 valueFrom: md5
             outName:
@@ -46,12 +47,9 @@ steps:
     lcaProfile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input:
-                source: rnaLCA
-                valueFrom: ${ return [self]; }
-            cluster:
-                source: rnaClustMap
-                valueFrom: ${ return [self]; }
+            input: lcaAnns
+            cluster: clustMaps
+            coverage: coverage
             profileType: 
                 valueFrom: lca
             outName:
@@ -61,12 +59,9 @@ steps:
     sourceStats:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input:
-                source: rnaExpand
-                valueFrom: ${ return [self]; }
-            cluster:
-                source: rnaClustMap
-                valueFrom: ${ return [self]; }
+            input: expandSims
+            cluster: clustMaps
+            coverage: coverage
             profileType: 
                 valueFrom: source
             outName:
