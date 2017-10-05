@@ -84,9 +84,9 @@ steps:
     indexSimSeq:
         run: ../Tools/index_sims_file_md5.tool.cwl
         in:
-            input: sortByMd5/output
+            input: sortSimSeq/output
             outName:
-                source: sortByMd5/output
+                source: sortSimSeq/output
                 valueFrom: $(self.basename).index
         out: [output]
 
