@@ -29,7 +29,7 @@ steps:
         run: ../Tools/uncluster_sims.tool.cwl
         in:
             simHit: filterSims
-            clustMap: clustMap
+            clustMap: clustMaps
             outName:
                 source: jobid
                 valueFrom: $(self).uncluster.sims
