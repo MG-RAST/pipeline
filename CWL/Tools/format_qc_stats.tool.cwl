@@ -21,7 +21,7 @@ inputs:
                     - name: length
                       type: int
                     - name: file
-                    type: File
+                      type: File
         doc: kmer record array
 
     driseeStat:
