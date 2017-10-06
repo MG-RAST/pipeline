@@ -120,8 +120,8 @@ steps:
         in:
             jobid: jobid
             sequences: sequences
-            rnaSims: rnaSimsOut
-            rnaClustMap: rnaClustMapOut
+            rnaSims: rnaAnnotate/rnaSimsOut
+            rnaClustMap: rnaAnnotate/rnaClustMapOut
             m5nrBDB: m5nrBDB
             m5nrFull: m5nrFull
         out: [protFeatureOut, protFilterFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut, protOntologyOut]
