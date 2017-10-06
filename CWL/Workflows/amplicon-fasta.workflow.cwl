@@ -27,7 +27,7 @@ inputs:
         type: int
         default: 5
     # static DBs
-    m5rnaBDB: File
+    m5nrBDB: File
     m5rnaFull: File
     m5rnaClust: File
     m5rnaIndex: Directory
@@ -102,7 +102,7 @@ steps:
         in:
             jobid: jobid
             sequences: preProcess/passed
-            m5rnaBDB: m5rnaBDB
+            m5nrBDB: m5nrBDB
             m5rnaFull: m5rnaFull
             m5rnaClust: m5rnaClust
             m5rnaIndex: m5rnaIndex

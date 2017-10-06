@@ -14,7 +14,7 @@ inputs:
     jobid: string
     sequences: File
     # static DBs
-    m5rnaBDB: File
+    m5nrBDB: File
     m5rnaFull: File
     m5rnaClust: File
     m5rnaIndex: Directory
@@ -126,7 +126,7 @@ steps:
         run: ../Tools/sims_annotate.tool.cwl
         in:
             input: bleachSims/output
-            database: m5rnaBDB
+            database: m5nrBDB
             outFilterName:
                 source: jobid
                 valueFrom: $(self).450.rna.sims.filter
