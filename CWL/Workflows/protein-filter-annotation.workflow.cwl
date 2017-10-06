@@ -23,7 +23,7 @@ outputs:
     protFeatureOut:
         type: File
         outputSource: protFeature/outProt
-    protFilterOut:
+    protFilterFeatureOut:
         type: File
         outputSource: protFilter/output
     protClustSeqOut:

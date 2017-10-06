@@ -53,9 +53,9 @@ outputs:
     protFeatureOut:
         type: File
         outputSource: protAnnotate/protFeatureOut
-    protFilterOut:
+    protFilterFeatureOut:
         type: File
-        outputSource: protAnnotate/protFilterOut
+        outputSource: protAnnotate/protFilterFeatureOut
     protClustSeqOut:
         type: File
         outputSource: protAnnotate/protClustSeqOut
@@ -107,7 +107,7 @@ steps:
             rnaClustMap: rnaClustMapOut
             m5nrBDB: m5nrBDB
             m5nrFull: m5nrFull
-        out: [protFeatureOut, protFilterOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut, protOntologyOut]
+        out: [protFeatureOut, protFilterFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut, protOntologyOut]
     indexSimSeq:
         run: ../Workflows/index_sim_seq.workflow.cwl
         in:
