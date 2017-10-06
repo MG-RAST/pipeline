@@ -28,6 +28,18 @@ inputs:
     m5rnaPrefix: string
 
 outputs:
+    seqStatOut:
+        type: File
+        outputSource: qcBasic/seqStatFile
+    seqBinOut:
+        type: File
+        outputSource: qcBasic/seqBinFile
+    qcStatOut:
+        type: File
+        outputSource: qcBasic/qcStatFile
+    qcSummaryOut:
+        type: File
+        outputSource: qcBasic/qcSummaryFile
     preProcessPassed:
         type: File
         outputSource: preProcess/passed
@@ -63,6 +75,14 @@ outputs:
         outputSource: abundance/sourceStatsOut
 
 steps:
+    qcBasic:
+        run: ../Workflows/qc-basic.workflow.cwl
+        in:
+            jobid: jobid
+            sequences: sequences
+            kmerLength:
+                valueFrom: ${ return [6, 15]; }
+        out: [seqStatFile, seqBinFile, qcStatFile, qcSummaryFile]
     preProcess:
         run: ../Workflows/preprocess-fastq.workflow.cwl
         in:

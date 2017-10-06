@@ -10,7 +10,7 @@ requirements:
 inputs:
     jobid: string
     sequences: File
-    kmerLength: 
+    kmerLength:
         type: int[]?
         default: [6]
 
