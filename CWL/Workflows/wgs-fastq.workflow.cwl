@@ -20,6 +20,9 @@ inputs:
     maxLqb:
         type: int
         default: 5
+    derepPrefix:
+        type: int
+        default: 50
     # static DBs
     m5nrBDB: File
     m5nrFull: File
@@ -47,6 +50,12 @@ outputs:
     preProcessRemoved:
         type: File
         outputSource: preProcess/removed
+    dereplicationPassed:
+        type: File
+        outputSource: dereplication/passed
+    dereplicationRemoved:
+        type: File
+        outputSource: dereplication/removed
     rnaFeatureOut:
         type: File
         outputSource: rnaAnnotate/rnaFeatureOut
@@ -104,6 +113,19 @@ steps:
             minQual: minQual
             maxLqb: maxLqb
         out: [passed, removed]
+    dereplication:
+        run: ../Tools/dereplication.tool.cwl
+        in:
+            sequences: preProcess/passed
+            prefixLength: derepPrefix
+            inFormat:
+                valueFrom: fasta
+            outFormat:
+                valueFrom: fasta
+            outPrefix:
+                source: jobid
+                valueFrom: $(self).150.dereplication
+        out: [passed, removed]
     rnaAnnotate:
         run: ../Workflows/rna-annotation.workflow.cwl
         in:
@@ -119,7 +141,7 @@ steps:
         run: ../Workflows/protein-filter-annotation.workflow.cwl
         in:
             jobid: jobid
-            sequences: sequences
+            sequences: dereplication/passed
             rnaSims: rnaAnnotate/rnaSimsOut
             rnaClustMap: rnaAnnotate/rnaClustMapOut
             m5nrBDB: m5nrBDB
