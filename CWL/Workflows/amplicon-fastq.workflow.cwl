@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: Workflow
 
 label: rna amplicon analysis for fastq files
-doc: RNAs - preprocess, annotation, abundance
+doc: RNAs - qc, preprocess, annotation, index, abundance
 
 requirements:
     - class: StepInputExpressionRequirement
@@ -58,9 +58,6 @@ outputs:
     rnaSimsOut:
         type: File
         outputSource: annotate/rnaSimsOut
-    rnaFilterOut:
-        type: File
-        outputSource: annotate/rnaFilterOut
     simSeqOut:
         type: File
         outputSource: indexSimSeq/simSeqOut
