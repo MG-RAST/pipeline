@@ -35,14 +35,14 @@ steps:
             sequences: sequences
             outName:
                 source: jobid
-                valueFrom: $(self).075.qc.seq.stats
+                valueFrom: $(self).075.seq.stats
             lenBin:
                 source: jobid
-                valueFrom: $(self).075.qc.length.bin
+                valueFrom: $(self).075.length.bin
             gcBin:
                 source: jobid
-                valueFrom: $(self).075.qc.gc.bin
-        out: [statOut, lenBinOut, gcBinOut]    
+                valueFrom: $(self).075.gc.bin
+        out: [statOut, lenBinOut, gcBinOut]
     drisee:
         run: ../Tools/drisee.tool.cwl
         in:
@@ -59,8 +59,8 @@ steps:
                 valueFrom: histo
             prefix:
                 source: jobid
-                valueFrom: $(self).075.qc
-        out: [summary, stats]
+                valueFrom: $(self).075
+        out: [stats]
     consensus:
         run: ../Tools/consensus.tool.cwl
         in:
@@ -68,7 +68,7 @@ steps:
             stats: sequenceStats/statOut
             output:
                 source: jobid
-                valueFrom: $(self).075.qc.consensus.stats
+                valueFrom: $(self).075.consensus.stats
         out: [summary, consensus]
     formatSequenceStats:
         run: ../Tools/format_seq_stats.tool.cwl
@@ -83,11 +83,11 @@ steps:
     formatQcStats:
         run: ../Tools/format_qc_stats.tool.cwl
         in:
-            output_prefix:
+            outPrefix:
                 source: jobid
                 valueFrom: $(self).075.qc
-            drisee_stat: drisee/stats
-            drisee_info: drisee/info
+            driseeStat: drisee/stats
+            driseeInfo: drisee/info
             consensus: consensus/consensus
             kmer: kmer/stats
         out: [stats, summary]

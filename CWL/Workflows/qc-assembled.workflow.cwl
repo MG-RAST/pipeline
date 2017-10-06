@@ -2,141 +2,88 @@ cwlVersion: v1.0
 class: Workflow
 
 requirements:
-  - class: StepInputExpressionRequirement
-  - class: InlineJavascriptRequirement
-  - class: ScatterFeatureRequirement
-  - class: MultipleInputFeatureRequirement
+    - class: StepInputExpressionRequirement
+    - class: InlineJavascriptRequirement
+    - class: ScatterFeatureRequirement
+    - class: MultipleInputFeatureRequirement
 
 inputs:
-  jobid: string
-  sequences: File
-  
-  kmerLength: 
-    type: 
-      type: array
-      items: int
-    default: [6]
-  basepairs: int
-    
-    
+    jobid: string
+    sequences: File
+    kmerLength: 
+        type: int[]?
+        default: [6]
 
 outputs:
-  consensusStatsFile:
-    type: File
-    outputSource: consensus/consensus
-  sequenceStatsFile:
-    type: File
-    outputSource: sequenceStats/stats
-  sequenceStatsLenFile:
-    type: File
-    outputSource: sequenceStats/len_bin
-  sequenceStatsGcFile:
-    type: File
-    outputSource: sequenceStats/gc_bin    
-  driseeFile:
-    type: File
-    outputSource: drisee/info
-  driseeStatsFile:
-    type: File
-    outputSource: drisee/stats  
-  kmerStruct:
-    type: 
-      type: array
-      items: 
-        type: record
-        label: none
-        fields:
-          - name: length
-            type: int
-          - name: file 
-            type: File 
-    outputSource: [kmer/stats]
-  consensusFile:
-    type: File
-    outputSource: consensus/consensus
-  formatSeqStatsFile:
-    type: File
-    outputSource: formatSequenceStats/stats
-  formatSeqStatsBinFile:
-    type: File
-    outputSource: formatSequenceStats/bins
+    assemblyCoverage:
+        type: File
+        outputSource: coverage/output
+    seqStatFile:
+        type: File
+        outputSource: formatSequenceStats/stats
+    seqBinFile:
+        type: File
+        outputSource: formatSequenceStats/bins
+    qcStatFile:
+        type: File
+        outputSource: formatQcStats/stats
+    qcSummaryFile:
+        type: File
+        outputSource: formatQcStats/summary
 
 steps:
-  
-  sequenceStats:
-    run: ../Tools/seq_length_stats.tool.cwl
-    in:
-      sequences: sequences
-      output:
-        source: jobid
-        valueFrom: $(self).100.preprocess.length.stats
-      length_bin:
-        source: jobid
-        valueFrom: $(self).100.preprocess.length.bin
-      gc_percent_bin:
-        source: jobid
-        valueFrom: $(self).100.preprocess.gc.bin
-    out: [stats , len_bin , gc_bin]    
-  
-  drisee:
-    run: ../Tools/drisee.tool.cwl
-    in:
-      sequences: sequences
+    sequenceStats:
+        run: ../Tools/seq_length_stats.tool.cwl
+        in:
+            sequences: sequences
+            outName:
+                source: jobid
+                valueFrom: $(self).075.seq.stats
+            lenBin:
+                source: jobid
+                valueFrom: $(self).075.length.bin
+            gcBin:
+                source: jobid
+                valueFrom: $(self).075.gc.bin
+        out: [statOut, lenBinOut, gcBinOut]
+    kmer:
+        run: ../Tools/kmer-tool.tool.cwl
+        scatter: "#kmer/length"  
+        scatterMethod: dotproduct
+        in:
+            input: sequences
+            length: kmerLength
+            format:
+                valueFrom: histo
+            prefix:
+                source: jobid
+                valueFrom: $(self).075
+        out: [stats]
+    coverage:
+        run: ../Tools/assembly_coverage.tool.cwl
+        in:
+            sequences: sequences
+            outName:
+                source: jobid
+                valueFrom: $(self).075.assembly.coverage
+        out: [output]
+    formatSequenceStats:
+        run: ../Tools/format_seq_stats.tool.cwl
+        in:
+            output_prefix:
+                source: jobid
+                valueFrom: $(self).075.qc
+            sequence_stats: sequenceStats/statOut
+            sequence_lengths: sequenceStats/lenBinOut
+            sequence_gc: sequenceStats/gcBinOut
+        out: [stats, bins]
+    formatQcStats:
+        run: ../Tools/format_qc_stats.tool.cwl
+        in:
+            outPrefix:
+                source: jobid
+                valueFrom: $(self).075.qc
+            coverage: coverage/output
+            kmer: kmer/stats
+        out: [stats, summary]
 
-    out: [ info , error , stats ]
-
-
-  # Compute kmer for first value in list
-  kmer:
-    run: ../Tools/kmer-tool.tool.cwl
-    
-    scatter: "#kmer/length"  
-    in:
-      sequences: sequences
-      length: 
-        source: kmerLength
-#         valueFrom: $(self[0])
-      prefix:
-        source: jobid
-        valueFrom: $(self).100.preprocess
-
-    out: [ summary, error , stats ]
-
-  consensus:
-    run: ../Tools/consensus.tool.cwl
-    in:
-      sequences: sequences
-      stats: sequenceStats/stats
-      output:
-        source: jobid
-        valueFrom: $(self).100.preprocess.consensus.stats
-
-    out: [summary, error , consensus]
-
-
-  formatSequenceStats:
-    run: ../Tools/format_seq_stats.tool.cwl
-    in:
-      output_prefix:
-        source: jobid
-        valueFrom: $(self).100.preprocess
-      sequence_stats: sequenceStats/stats
-      sequence_lengths: sequenceStats/len_bin
-      sequence_gc: sequenceStats/gc_bin
-    out: [stats, bins]
-
-
-
-
-  formatQcStats:
-    run: ../Tools/format_qc_stats.tool.cwl
-    in:
-      output_prefix:
-        source: jobid
-        valueFrom: $(self).100.preprocess
-      drisee_stat: drisee/stats
-      drisee_info: drisee/info
-      kmer: 
-        source: kmer/stats
-      consensus: consensus/consensus
-    out: [stats, summary]
