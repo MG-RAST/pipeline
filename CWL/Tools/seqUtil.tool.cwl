@@ -62,7 +62,7 @@ inputs:
     subsetList:
         type: File?
         doc: List of sequences to subset input by, required with subsetSeqs option
-        nputBinding:
+        inputBinding:
             prefix: --list
     output:
         type: string
