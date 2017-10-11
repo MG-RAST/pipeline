@@ -16,10 +16,10 @@ import sys
 import time
 import math
 import logging
-import numpy as np
+import argparse
 import subprocess
+import numpy as np
 from collections import defaultdict
-from optparse import OptionParser
 
 # constants
 SOURCES = None
@@ -77,7 +77,7 @@ def index_map(fname):
             ia[i][2] = int(tabs[2])
     return ia
 
-def abundance_map(afile, cfile):
+def abundance_map(afile, cfiles):
     data = defaultdict(int)
     if afile and os.path.isfile(afile):
         with open(afile, 'rU') as fhdl:
@@ -91,14 +91,15 @@ def abundance_map(afile, cfile):
                         data[tabs[0]] = int(float(tabs[1]))
                     except ValueError:
                         data[tabs[0]] = 0
-    if cfile and os.path.isfile(cfile):
-        with open(cfile, 'rU') as fhdl:
-            for line in fhdl:
-                tabs = line.strip().split('\t')
-                #ids = tabs[2].split(',') # old way
-                #ids.append(tabs[1])      # old way
-                ids = tabs[1].split(',') # new way
-                data[tabs[0]] += len(ids)
+    for cfile in cfiles:
+        if cfile and os.path.isfile(cfile):
+            with open(cfile, 'rU') as fhdl:
+                for line in fhdl:
+                    tabs = line.strip().split('\t')
+                    #ids = tabs[2].split(',') # old way
+                    #ids.append(tabs[1])      # old way
+                    ids = tabs[1].split(',') # new way
+                    data[tabs[0]] += len(ids)
     return data
 
 def get_e_bin(val):
@@ -209,54 +210,56 @@ def print_source_stats(ohdl, data):
         ohdl.write("\n")
 
 
-usage = "usage: %prog [options]\n"
-
 def main(args):
     global SOURCES
-    parser = OptionParser(usage=usage)
-    parser.add_option('-i', '--input', dest="input", default=None, help="input file: expanded sims")
-    parser.add_option('-o', '--output', dest="output", default=None, help="output file: summary abundace")
-    parser.add_option('-t', '--type', dest="type", default=None, help="type of summary, one of: "+",".join(TYPES))
-    parser.add_option('-s', '--m5nr_sources', dest="m5nr_sources", type="int", default=18, help="number of real sources in m5nr")
-    parser.add_option('-m', '--memory', dest="memory", type="int", default=0, help="log memory usage to *.mem.log [default off]")
-    parser.add_option('--coverage', dest="coverage", default=None, help="optional input file: assembely coverage")
-    parser.add_option('--cluster', dest="cluster", default=None, help="optional input file: cluster mapping")
-    parser.add_option('--md5_index', dest="md5_index", default=None, help="optional input file: md5,seek,length")
+    parser = argparse.ArgumentParser(description="Script to create abundance profiles from expanded similarity files")
+    parser.add_argument('-i', '--input', dest="input", default=[], help="input file(s): expanded sims", action='append')
+    parser.add_argument('-o', '--output', dest="output", default=None, help="output file: summary abundace")
+    parser.add_argument('-t', '--type', dest="type", default=None, help="type of summary, one of: "+",".join(TYPES))
+    parser.add_argument('-s', '--m5nr_sources', dest="m5nr_sources", type=int, default=18, help="number of real sources in m5nr")
+    parser.add_argument('-m', '--memory', dest="memory", type=int, default=0, help="log memory usage to *.mem.log [default off]")
+    parser.add_argument('--coverage', dest="coverage", default=None, help="optional input file: assembely coverage")
+    parser.add_argument('--cluster', dest="cluster", default=[], help="optional input file(s): cluster mapping", action='append')
+    parser.add_argument('--md5_index', dest="md5_index", default=None, help="optional input file: md5,seek,length")
+    args = parser.parse_args()
     
-    (opts, args) = parser.parse_args()
-    if not (opts.input and os.path.isfile(opts.input)):
+    has_input= False
+    for i in args.input:
+        if os.stat(i).st_size > 0:
+            has_input = True
+    if not has_input:
         logger.error("missing required input file")
         return 1
-    if not opts.output:
+    if not args.output:
         logger.error("missing required output file")
         return 1
-    if not (opts.type and (opts.type in TYPES)):
+    if not (args.type and (args.type in TYPES)):
         logger.error("missing or invalid type")
         return 1
-    SOURCES = opts.m5nr_sources
+    SOURCES = args.m5nr_sources
     
     # fork the process
     pid = None
-    if opts.memory:
+    if args.memory:
         pid = os.fork()
     
     # we are the parent
     if pid:
         info = os.waitpid(pid, os.WNOHANG)
-        mhdl = open(opts.output+'.mem.log', 'w')
+        mhdl = open(args.output+'.mem.log', 'w')
         while(info[0] == 0):
             mem = memory_usage(pid)['rss']
             mhdl.write("%d\n"%int(mem/1024))
             mhdl.flush()
-            time.sleep(opts.memory)
+            time.sleep(args.memory)
             info = os.waitpid(pid, os.WNOHANG)
         mhdl.close()
     
     # we are child or no forking
     else:
         # get optional file info
-        imap = index_map(opts.md5_index)
-        amap = abundance_map(opts.coverage, opts.cluster)
+        imap = index_map(args.md5_index)
+        amap = abundance_map(args.coverage, args.cluster)
         
         # Variables used to track which entries to record.  If the fragment ID (read
         #  or cluster ID) has changed, then the frag_keys hash will be emptied.  But,
@@ -269,85 +272,87 @@ def main(args):
         # data structs to fill
         data = {}
         md5s = {}
-        if opts.type == 'source':
+        if args.type == 'source':
             data['e_val'] = defaultdict(lambda: defaultdict(int))
             data['ident'] = defaultdict(lambda: defaultdict(int))
         
         # parse expand file
-        ihdl = open(opts.input, 'rU')
-        for line in ihdl:
-            parts = line.strip().split('\t')
-            if opts.type == 'md5':
-                if len(parts) < 12:
-                    continue
-                (frag, md5, ident, length, _miss, _gap, _qs, _qe, _hs, _he, e_val, _bs) = parts[:12]
-                if not (frag and md5):
-                    continue
-                (ident, length, e_val) = (float(ident), int(length), float(e_val))
-                if frag != prev_frag:
-                    frag_keys.clear()
-                if md5 not in frag_keys:
-                    if md5 not in data:
-                        data[md5] = np.zeros(1, dtype=MD5_DT)
+        for ifile in args.input:
+            ihdl = open(ifile, 'rU')
+            for line in ihdl:
+                parts = line.strip().split('\t')
+                if args.type == 'md5':
+                    if len(parts) < 12:
+                        continue
+                    (frag, md5, ident, length, _miss, _gap, _qs, _qe, _hs, _he, e_val, _bs) = parts[:12]
+                    if not (frag and md5):
+                        continue
+                    (ident, length, e_val) = (float(ident), int(length), float(e_val))
+                    if frag != prev_frag:
+                        frag_keys.clear()
+                    if md5 not in frag_keys:
+                        if md5 not in data:
+                            data[md5] = np.zeros(1, dtype=MD5_DT)
+                        eval_exp = get_exponent(e_val)
+                        abun = get_abundance(frag, amap)
+                        if abun < 1:
+                            continue
+                        data[md5][0]['abun'] += abun
+                        data[md5][0]['esum'] += abun * eval_exp
+                        data[md5][0]['lsum'] += abun * length
+                        data[md5][0]['isum'] += abun * ident
+                        frag_keys.add(md5)
+                elif args.type == 'lca':
+                    if len(parts) < 7:
+                        continue
+                    (md5, frag, ident, length, e_val, lca, level) = parts[:7]
+                    if not (frag and md5 and lca):
+                        continue
+                    if lca not in data:
+                        data[lca] = np.zeros(1, dtype=LCA_DT)
+                        md5s[lca] = 0
+                    abun = get_abundance(frag, amap)
+                    if abun < 1:
+                        continue
+                    e_list = map(lambda x: get_exponent(float(x)), e_val.split(';'))
+                    l_list = map(int, length.split(';'))
+                    i_list = map(float, ident.split(';'))
+                    md5s[lca] += len(md5.split(';'))
+                    e_avg = sum(e_list) / len(e_list)
+                    l_avg = sum(l_list) / len(l_list)
+                    i_avg = sum(i_list) / len(i_list)
+                    data[lca][0]['abun'] += abun
+                    data[lca][0]['esum'] += abun * e_avg
+                    data[lca][0]['lsum'] += abun * l_avg
+                    data[lca][0]['isum'] += abun * i_avg
+                    data[lca][0]['lvl']  = int(level)
+                elif args.type == 'source':
+                    if len(parts) < 8:
+                        continue
+                    (_md5, frag, ident, _length, e_val, _fid, _oid, source) = parts[:8]
+                    if not (frag and source):
+                        continue
+                    (ident, e_val, source) = (float(ident), float(e_val), int(source))
                     eval_exp = get_exponent(e_val)
                     abun = get_abundance(frag, amap)
                     if abun < 1:
                         continue
-                    data[md5][0]['abun'] += abun
-                    data[md5][0]['esum'] += abun * eval_exp
-                    data[md5][0]['lsum'] += abun * length
-                    data[md5][0]['isum'] += abun * ident
-                    frag_keys.add(md5)
-            elif opts.type == 'lca':
-                if len(parts) < 7:
-                    continue
-                (md5, frag, ident, length, e_val, lca, level) = parts[:7]
-                if not (frag and md5 and lca):
-                    continue
-                if lca not in data:
-                    data[lca] = np.zeros(1, dtype=LCA_DT)
-                    md5s[lca] = 0
-                abun = get_abundance(frag, amap)
-                if abun < 1:
-                    continue
-                e_list = map(lambda x: get_exponent(float(x)), e_val.split(';'))
-                l_list = map(int, length.split(';'))
-                i_list = map(float, ident.split(';'))
-                md5s[lca] += len(md5.split(';'))
-                e_avg = sum(e_list) / len(e_list)
-                l_avg = sum(l_list) / len(l_list)
-                i_avg = sum(i_list) / len(i_list)
-                data[lca][0]['abun'] += abun
-                data[lca][0]['esum'] += abun * e_avg
-                data[lca][0]['lsum'] += abun * l_avg
-                data[lca][0]['isum'] += abun * i_avg
-                data[lca][0]['lvl']  = int(level)
-            elif opts.type == 'source':
-                if len(parts) < 8:
-                    continue
-                (_md5, frag, ident, _length, e_val, _fid, _oid, source) = parts[:8]
-                if not (frag and source):
-                    continue
-                (ident, e_val, source) = (float(ident), float(e_val), int(source))
-                eval_exp = get_exponent(e_val)
-                abun = get_abundance(frag, amap)
-                if abun < 1:
-                    continue
-                e_bin = get_e_bin(eval_exp)
-                i_bin = get_i_bin(ident)
-                data['e_val'][source][e_bin] += abun
-                data['ident'][source][i_bin] += abun
-            prev_frag = frag
+                    e_bin = get_e_bin(eval_exp)
+                    i_bin = get_i_bin(ident)
+                    data['e_val'][source][e_bin] += abun
+                    data['ident'][source][i_bin] += abun
+                prev_frag = frag
             # end of file looping
-        ihdl.close()
+            ihdl.close()
+        # end of file list
     
         # output stats        
-        ohdl = open(opts.output, 'w')
-        if opts.type == 'md5':
+        ohdl = open(args.output, 'w')
+        if args.type == 'md5':
             print_md5_stats(ohdl, data, imap)
-        elif opts.type == 'lca':
+        elif args.type == 'lca':
             print_lca_stats(ohdl, data, md5s)
-        elif opts.type == 'source':
+        elif args.type == 'source':
             print_source_stats(ohdl, data)
         ohdl.close()
     

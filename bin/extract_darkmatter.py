@@ -41,7 +41,8 @@ def main(args):
     parser.add_argument("-s", "--sims", dest="sims", default=[], help="One or more similarity files", action='append')
     parser.add_argument("-m", "--maps", dest="maps", default=[], help="One or more cluster map files", action='append')
     parser.add_argument("-d", "--db", dest="db", default=".", help="Directory to store LevelDB, default CWD")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages")
+    parser.add_argument("--stats", dest="stats", action="store_true", default=False, help="Compute sequence stats on output")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print informational messages")
     args = parser.parse_args()
     
     has_sims = False
@@ -61,7 +62,6 @@ def main(args):
         mhdl = open(mfile, 'rU')
         if args.verbose:
             print "\treading file %s ... "%(mfile)
-    
         for line in mhdl:
             parts = line.strip().split('\t')
             query = SEED + parts[0]
@@ -127,9 +127,10 @@ def main(args):
     ohdl.close()
     ihdl.close()
     
-    jhdl = open(args.output+".stats", 'w')
-    json.dump(get_seq_stats(args.output), jhdl)
-    jhdl.close()
+    if args.stats:
+        jhdl = open(args.output+".stats", 'w')
+        json.dump(get_seq_stats(args.output), jhdl)
+        jhdl.close()
     
     if args.verbose:
         print "Done: %d darkmatter genes found out of %d total" %(d_num, g_num)

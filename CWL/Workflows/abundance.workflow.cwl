@@ -1,8 +1,8 @@
 cwlVersion: v1.0
 class: Workflow
 
-label: rna abundance
-doc: RNAs - abundace profiles from annotated files
+label: abundance
+doc: abundace profiles from annotated files, for protein and/or rna
 
 requirements:
     - class: StepInputExpressionRequirement
@@ -12,9 +12,14 @@ requirements:
 
 inputs:
     jobid: string
-    rnaExpand: File
-    rnaLCA: File
-    rnaClustMap: File
+    md5index: File
+    filterSims: File[]
+    expandSims: File[]
+    lcaAnns: File[]
+    clustMaps: File[]
+    coverage:
+        type: File
+        default: 'null'
 
 outputs:
     md5ProfileOut:
@@ -31,21 +36,24 @@ steps:
     md5Profile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: rnaExpand
-            cluster: rnaClustMap
+            input: filterSims
+            cluster: clustMaps
+            coverage: coverage
+            md5index: md5index
             profileType: 
-              default: md5
-            outName: # change to outName
+                valueFrom: md5
+            outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.md5.abundance
         out: [output]
     lcaProfile:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: rnaLCA
-            cluster: rnaClustMap
+            input: lcaAnns
+            cluster: clustMaps
+            coverage: coverage
             profileType: 
-              default: lca
+                valueFrom: lca
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.lca.abundance
@@ -53,10 +61,11 @@ steps:
     sourceStats:
         run: ../Tools/sims_abundance.tool.cwl
         in:
-            input: rnaExpand
-            cluster: rnaClustMap
+            input: expandSims
+            cluster: clustMaps
+            coverage: coverage
             profileType: 
-              default: source
+                valueFrom: source
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.source.stats

@@ -14,7 +14,7 @@ inputs:
     jobid: string
     sequences: File
     # static DBs
-    m5rnaBDB: File
+    m5nrBDB: File
     m5rnaFull: File
     m5rnaClust: File
     m5rnaIndex: Directory
@@ -67,7 +67,7 @@ steps:
         in:
             input: sortmerna/output
             key: 
-              default: "1,1"
+                valueFrom: "1,1"
             outName:
                 source: sortmerna/output
                 valueFrom: $(self.basename).sort
@@ -86,10 +86,10 @@ steps:
         in:
             input: rnaFeature/output
             identity: 
-              default: 0.97
+                valueFrom: "0.97"
             outName:
                 source: jobid
-                valueFrom: $(self).440.cluster.rna.97.fna
+                valueFrom: $(self).440.cluster.rna97.fna
         out: [outSeq, outClstr]
     formatCluster:
         run: ../Tools/format_cluster.tool.cwl
@@ -97,7 +97,7 @@ steps:
             input: rnaCluster/outClstr
             outName:
                 source: jobid
-                valueFrom: $(self).440.cluster.rna.97.mapping
+                valueFrom: $(self).440.cluster.rna97.mapping
         out: [output]
     rnaBlat:
         run: ../Tools/blat.tool.cwl
@@ -105,9 +105,9 @@ steps:
             query: rnaCluster/outSeq
             database: m5rnaFull
             dbType: 
-              default: dna
+                valueFrom: dna
             queryType: 
-              default: rna
+                valueFrom: rna
             fastMap:
                 default: true
             outName:
@@ -126,7 +126,7 @@ steps:
         run: ../Tools/sims_annotate.tool.cwl
         in:
             input: bleachSims/output
-            database: m5rnaBDB
+            database: m5nrBDB
             outFilterName:
                 source: jobid
                 valueFrom: $(self).450.rna.sims.filter

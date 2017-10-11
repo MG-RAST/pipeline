@@ -1,10 +1,10 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: uncluster sims
+label: extract darkmatter
 doc: |
-    expand out similarity file (blast m8) by turning each cluster seed hit into a hit per cluster member
-    >uncluster_sims.py <input> <outName> --cfile <cluster> --position <position>
+    retrieve predicted proteins that have no similarity hits
+    >extract_darkmatter.py -i <input> -s <sim 1> -s <sim 2> -m <clust map 1> -m <clust map 2> -o <outName>
 
 hints:
     DockerRequirement:
@@ -13,16 +13,24 @@ hints:
 requirements:
     InlineJavascriptRequirement: {}
 
-stdout: uncluster_sims.log
-stderr: uncluster_sims.error
+stdout: extract_darkmatter.log
+stderr: extract_darkmatter.error
 
 inputs:
+    geneSeq:
+        type: File
+        doc: Input gene sequence file
+        format:
+            - Formats:fasta
+        inputBinding:
+            prefix: -i
+
     simHit:
         type:
             type: array
             items: File
             inputBinding:
-                prefix: -i
+                prefix: -s
         doc: Input similarity hit files
 
     clustMap:
@@ -30,29 +38,17 @@ inputs:
             type: array
             items: File
             inputBinding:
-                prefix: -c
+                prefix: -m
         doc: Input cluster mapping files
-
-    position:
-        type: int?
-        doc: Column position of query in sims file, default is 1
-        default: 1
-        inputBinding:
-            prefix: --position
 
     outName:
         type: string
-        doc: Output unclustered similarity
+        doc: Output darkmatter sequence
         inputBinding:
             prefix: -o
 
 
-baseCommand: [uncluster_sims.py]
-
-arguments:
-    - valueFrom: --verbose
-    - prefix: --db
-      valueFrom: $(runtime.tmpdir)
+baseCommand: [extract_darkmatter.py]
 
 outputs:
     info:
@@ -61,7 +57,7 @@ outputs:
         type: stderr  
     output:
         type: File
-        doc: Output unclustered similarity file
+        doc: Output darkmatter sequence file
         outputBinding: 
             glob: $(inputs.outName)
 

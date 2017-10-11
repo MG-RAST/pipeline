@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, re, sys, math, subprocess
+import os, re, sys, math, json, subprocess
 from collections import defaultdict
 from optparse import OptionParser
 from Bio import SeqIO
@@ -95,6 +95,7 @@ def main(args):
     parser = OptionParser(usage=usage)
     parser.add_option("-i", "--input", dest="input", default=None, help="Input sequence file")
     parser.add_option("-o", "--output", dest="output", default=None, help="Output stats file, if not called prints to STDOUT")
+    parser.add_option("-j", "--json", dest="json", default=False, action="store_true", help="Output stats in json format, default is tabbed text")
     parser.add_option("-t", "--type", dest="type", default="fasta", help="Input file type. Must be fasta or fastq [default 'fasta']")
     parser.add_option("-l", "--length_bin", dest="len_bin", metavar="FILE", default=None, help="File to place length bins [default is no output]")
     parser.add_option("-g", "--gc_percent_bin", dest="gc_bin", metavar="FILE", default=None, help="File to place % gc bins [default is no output]")
@@ -195,33 +196,57 @@ def main(args):
     len_mean, len_stdev = get_mean_stdev(seqnum, lengths)
     min_len   = min( lengths.iterkeys() )
     max_len   = max( lengths.iterkeys() )
-    stat_text = [ "bp_count\t%d"%sum_map(lengths),
-                  "sequence_count\t%d"%seqnum,
-                  "average_length\t%.3f"%len_mean,
-                  "standard_deviation_length\t%.3f"%len_stdev,
-                  "length_min\t%d"%min_len,
-                  "length_max\t%d"%max_len ]
+    stat_text = [
+        "bp_count\t%d"%sum_map(lengths),
+        "sequence_count\t%d"%seqnum,
+        "average_length\t%.3f"%len_mean,
+        "standard_deviation_length\t%.3f"%len_stdev,
+        "length_min\t%d"%min_len,
+        "length_max\t%d"%max_len
+    ]
+    stat_map = {
+        "bp_count" : sum_map(lengths),
+        "sequence_count": seqnum,
+        "average_length": len_mean,
+        "standard_deviation_length": len_stdev,
+        "length_min": min_len,
+        "length_max": max_len
+    }
 
     if not opts.fast:
         gcp_mean, gcp_stdev = get_mean_stdev(seqnum, gc_perc)
         gcr_mean, gcr_stdev = get_mean_stdev(seqnum, gc_ratio)
-        stat_text.extend([ "average_gc_content\t%.3f"%gcp_mean,
-                           "standard_deviation_gc_content\t%.3f"%gcp_stdev,
-                           "average_gc_ratio\t%.3f"%gcr_mean,
-                           "standard_deviation_gc_ratio\t%.3f"%gcr_stdev,
-                           "ambig_char_count\t%d"%ambig_char,
-                           "ambig_sequence_count\t%d"%ambig_seq,
-                           "average_ambig_chars\t%.3f"%((ambig_char * 1.0) / seqnum) ])
+        stat_text.extend([
+            "average_gc_content\t%.3f"%gcp_mean,
+            "standard_deviation_gc_content\t%.3f"%gcp_stdev,
+            "average_gc_ratio\t%.3f"%gcr_mean,
+            "standard_deviation_gc_ratio\t%.3f"%gcr_stdev,
+            "ambig_char_count\t%d"%ambig_char,
+            "ambig_sequence_count\t%d"%ambig_seq,
+            "average_ambig_chars\t%.3f"%((ambig_char * 1.0) / seqnum)
+        ])
+        stat_map["average_gc_content"] = gcp_mean
+        stat_map["standard_deviation_gc_content"] = gcp_stdev
+        stat_map["average_gc_ratio"] = gcr_mean
+        stat_map["standard_deviation_gc_ratio"] = gcr_stdev
+        stat_map["ambig_char_count"] = ambig_char
+        stat_map["ambig_sequence_count"] = ambig_seq
+        stat_map["average_ambig_chars"] = ((ambig_char * 1.0) / seqnum)
+
     if opts.seq_type:
         seq_type_guess = get_seq_type(kmer_len, prefix_map)
         stat_text.append("sequence_type\t%s"%seq_type_guess)
+        stat_map["sequence_type"] = seq_type_guess
 
     # output stats
     if not opts.output:
         sys.stdout.write( "\n".join(stat_text) + "\n" )
     else:
         out_hdl = open(opts.output, "w")
-        out_hdl.write( "\n".join(stat_text) + "\n" )
+        if opts.json:
+            json.dump(stat_map, out_hdl)
+        else:
+            out_hdl.write( "\n".join(stat_text) + "\n" )
         out_hdl.close()
 
     # get binned stats

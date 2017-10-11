@@ -20,12 +20,12 @@ stderr: sims_abundance.error
 
 inputs:
     input:
-        type: File
+        type:
+            type: array
+            items: File
+            inputBinding:
+                prefix: -i
         doc: Input expanded sims file
-        format:
-            - Formats:tsv
-        inputBinding:
-            prefix: -i
     
     coverage:
         type: File?
@@ -34,10 +34,13 @@ inputs:
             prefix: --coverage
     
     cluster:
-        type: File?
-        doc: Optional input file, cluster mapping
-        inputBinding:
-            prefix: --cluster
+        type:
+          - 'null'
+          - type: array
+            items: File
+            inputBinding:
+                prefix: --cluster
+        doc: Optional input file(s), cluster mapping
     
     md5index:
         type: File?

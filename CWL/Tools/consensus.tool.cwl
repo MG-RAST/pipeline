@@ -42,17 +42,15 @@ inputs:
     inputBinding:
       prefix: --output
 
-      
-  
-  
+
 baseCommand: [consensus.py]
 
 arguments: 
-  - prefix: --verbose
+  - valueFrom: --verbose
   - prefix: --type
     valueFrom: |
-      ${
-         return inputs.sequences.format.split("/").slice(-1)[0]
+        ${
+            return inputs.sequences.format.split("/").slice(-1)[0]
         } 
     
  

@@ -43,7 +43,7 @@ inputs:
 baseCommand: [index_sims_file_md5]
 
 arguments:
-    - prefix: --verbose
+    - valueFrom: --verbose
 
 outputs:
     info:

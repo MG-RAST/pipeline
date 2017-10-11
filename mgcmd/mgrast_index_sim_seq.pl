@@ -89,7 +89,7 @@ if (-z $sim_file) {
     exit 42;
 }
 
-PipelineAWE::run_cmd("uncluster_sims.py -v -c $map_file $sim_file $sim_file.unclust");
+PipelineAWE::run_cmd("uncluster_sims.py -v -c $map_file -i $sim_file -o $sim_file.unclust");
 PipelineAWE::run_cmd("rm $sim_file $map_file");
 PipelineAWE::run_cmd("seqUtil -t $run_dir -i $seq_file -o $seq_file.tab --sortbyid2tab");
 PipelineAWE::run_cmd("rm $seq_file");

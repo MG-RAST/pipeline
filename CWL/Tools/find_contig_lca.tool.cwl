@@ -43,7 +43,7 @@ inputs:
 baseCommand: [find_contig_lca.py]
 
 arguments:
-    - prefix: --verbose
+    - valueFrom: --verbose
 
 outputs:
     info:
