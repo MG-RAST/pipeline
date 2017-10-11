@@ -17,7 +17,7 @@ stdout: find_contig_lca.log
 stderr: find_contig_lca.error
 
 inputs:
-    in_rna:
+    inRna:
         type: File
         doc: Input expanded rna LCA file
         format:
@@ -25,7 +25,7 @@ inputs:
         inputBinding:
             prefix: --in_rna
     
-    in_prot:
+    inProt:
         type: File
         doc: Input expanded protein LCA file
         format:

@@ -130,6 +130,7 @@ steps:
         in:
             jobid: jobid
             md5index: indexSimSeq/indexOut
+            coverage: qcAssemble/assemblyCoverage
             filterSims:
                 source:
                     - rnaAnnotate/rnaFilterOut
