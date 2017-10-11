@@ -29,8 +29,12 @@ steps:
     unclusterRna:
         run: ../Tools/uncluster_sims.tool.cwl
         in:
-            simHit: rnaExpandLca
-            clustMap: rnaClustMap
+            simHit:
+                source: rnaExpandLca
+                valueFrom: ${ return [self]; }
+            clustMap:
+                source: rnaClustMap
+                valueFrom: ${ return [self]; }
             position:
                 valueFrom: "2"
             outName:
@@ -50,8 +54,12 @@ steps:
     unclusterProt:
         run: ../Tools/uncluster_sims.tool.cwl
         in:
-            simHit: protExpandLca
-            clustMap: protClustMap
+            simHit:
+                source: protExpandLca
+                valueFrom: ${ return [self]; }
+            clustMap:
+                source: protClustMap
+                valueFrom: ${ return [self]; }
             position:
                 valueFrom: "2"
             outName:
