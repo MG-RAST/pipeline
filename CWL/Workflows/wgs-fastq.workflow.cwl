@@ -24,6 +24,8 @@ inputs:
         type: int
         default: 50
     # static DBs
+    indexDir: Directory
+    indexName: string
     m5nrBDB: File
     m5nrFull: File
     m5rnaFull: File
@@ -56,6 +58,9 @@ outputs:
     dereplicationRemoved:
         type: File
         outputSource: dereplication/removed
+    orgScreenPassed:
+        type: File
+        outputSource: orgScreen/passed
     rnaFeatureOut:
         type: File
         outputSource: rnaAnnotate/rnaFeatureOut
@@ -126,6 +131,14 @@ steps:
                 source: jobid
                 valueFrom: $(self).150.dereplication
         out: [passed, removed]
+    orgScreen:
+        run: ../Workflows/organism-screening.workflow.cwl
+        in:
+            jobid: jobid
+            sequences: dereplication/passed
+            indexDir: indexDir
+            indexName: indexName
+        out: [passed]
     rnaAnnotate:
         run: ../Workflows/rna-annotation.workflow.cwl
         in:
@@ -141,7 +154,7 @@ steps:
         run: ../Workflows/protein-filter-annotation.workflow.cwl
         in:
             jobid: jobid
-            sequences: dereplication/passed
+            sequences: orgScreen/passed
             rnaSims: rnaAnnotate/rnaSimsOut
             rnaClustMap: rnaAnnotate/rnaClustMapOut
             m5nrBDB: m5nrBDB
