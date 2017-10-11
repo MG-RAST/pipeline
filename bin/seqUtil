@@ -23,6 +23,7 @@ group.add_option('--stdfasta', dest="stdfasta", action="store_true", default=Fal
 group.add_option('--sortbyseq', dest="sortbyseq", action="store_true", default=False, help="sort fasta file by sequence length, longest first")
 group.add_option('--sortbyid', dest="sortbyid", action="store_true", default=False, help="sort fasta file by sequence ids")
 group.add_option('--sortbyid2tab', dest="sortbyid2tab", action="store_true", default=False, help="sort fasta file by sequence ids and return as tab file")
+group.add_option('--sortbyid2id', dest="sortbyid2id", action="store_true", default=False, help="sort fasta file by sequence ids and return id list")
 group.add_option('--remove_seqs', dest="remove_seqs", action="store_true", default=False, help="remove a list of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
 group.add_option('--subset_seqs', dest="subset_seqs", action="store_true", default=False, help="return a subset of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
 group.add_option('--fastq_random_subset', dest="fastq_random_subset", type="int", default=0, help="return a random subset of sequences from a fastq file.")
@@ -48,7 +49,14 @@ def fasta2tab(input, output, is_fastq=False, add_len=False):
         for rec in SeqIO.parse(input, seqtype):
             output_handle.write("%s\t%s\t%d\n" %(rec.id, str(rec.seq), len(rec.seq)))
         output_handle.close()
-    
+
+def fasta2id(input, output, is_fastq=False):
+    seqtype = 'fastq' if is_fastq else 'fasta'
+    output_handle = open(output, "w")
+    for rec in SeqIO.parse(input, seqtype):
+        output_handle.write(rec.id+"\n")
+    output_handle.close()
+
 def tab2fasta(input, output, has_len=False):
     if not has_len:
         SeqIO.convert(input, "tab", output, "fasta")
@@ -119,7 +127,16 @@ def sortbyid2tab(input, output, tmp_dir, is_fastq):
     p1.communicate()
     sortedtab.close()
     os.remove("%s.tmp" % output)
-    
+
+def sortbyid2id(input, output, tmp_dir, is_fastq):
+    fasta2id(input, "%s.tmp" % output, is_fastq=is_fastq)
+    sortedtab = open(output, "w")
+    args = ["sort", "-T", tmp_dir, "-t","\t","-k", "1,1", "%s.tmp" % output]
+    p1 = sub.Popen(args, stdout=sortedtab)
+    p1.communicate()
+    sortedtab.close()
+    os.remove("%s.tmp" % output)
+
 def remove_seqs(fasta_input, list, output, check):
     fasta_handle = open(fasta_input, "rU")
     list_handle = open(list, "rU") 
@@ -262,6 +279,8 @@ if __name__ == '__main__':
         sortbyid(options.input, options.out, options.tmp_dir)
     elif options.sortbyid2tab:
         sortbyid2tab(options.input, options.out, options.tmp_dir, options.fastq)
+    elif options.sortbyid2id:
+        sortbyid2id(options.input, options.out, options.tmp_dir, options.fastq)
     elif options.fastq2uniquefasta:
         fastq2uniquefasta(options.input, options.out)
     elif options.uniquefasta:

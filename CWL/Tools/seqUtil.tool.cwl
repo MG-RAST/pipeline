@@ -27,27 +27,43 @@ inputs:
     fastq2fasta:
         type: boolean?
         doc: Transform fastq to fasta
-        default: false
         inputBinding:
             prefix: --fastq2fasta
     fasta2tab:
         type: boolean?
         doc: Transform fasta to tabbed
-        default: false
         inputBinding:
             prefix: --fasta2tab
+    sortbyid:
+        type: boolean?
+        doc: Sort fasta file by ID
+        inputBinding:
+            prefix: --sortbyid
     sortbyid2tab:
         type: boolean?
         doc: Transform fasta to tabbed, sorted by ID
-        default: false
         inputBinding:
             prefix: --sortbyid2tab
-    bowtie_truncate:
+    sortbyid2id:
+        type: boolean?
+        doc: Transform fasta to ID list, sorted by ID
+        inputBinding:
+            prefix: --sortbyid2id
+    bowtieTruncate:
         type: boolean?
         doc: Return fasta with each sequence truncated to 1024 bps
-        default: false
         inputBinding:
             prefix: --bowtie_truncate
+    subsetSeqs:
+        type: boolean?
+        doc: Return fasta with each sequence truncated to 1024 bps
+        inputBinding:
+            prefix: --subset_seqs
+    subsetList:
+        type: File?
+        doc: List of sequences to subset input by, required with subsetSeqs option
+        nputBinding:
+            prefix: --list
     output:
         type: string
         doc: Output sequence file
