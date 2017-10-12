@@ -2,7 +2,7 @@ jobid: wgs_fq_test
 
 sequences:
     class: File
-    format: fastq
+    format: fasta
     path: ../Data/Inputs/sequences.wgs.fastq
 
 filterLn: true

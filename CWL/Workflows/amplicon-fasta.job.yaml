@@ -2,7 +2,7 @@ jobid: amp_fna_test
 
 sequences:
     class: File
-    format: fastq
+    format: fasta
     path: ../Data/Inputs/sequences.amplicon.fasta
 
 filterLn: true
