@@ -16,7 +16,7 @@ inputs:
     sequences: File
     # static DBs
     m5nrBDB: File
-    m5nrFull: File
+    m5nrFull: File[]
     m5rnaFull: File
     m5rnaClust: File
     m5rnaIndex: Directory
