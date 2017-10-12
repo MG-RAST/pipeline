@@ -13,6 +13,9 @@ requirements:
 inputs:
     jobid: string
     sequences: File
+    rnaIdentity:
+        type: float?
+        default: 0.97
     # static DBs
     m5nrBDB: File
     m5rnaFull: File
@@ -85,8 +88,7 @@ steps:
         run: ../Tools/cdhit-est.tool.cwl
         in:
             input: rnaFeature/output
-            identity: 
-                valueFrom: "0.97"
+            identity: rnaIdentity
             outName:
                 source: jobid
                 valueFrom: $(self).440.cluster.rna97.fna
