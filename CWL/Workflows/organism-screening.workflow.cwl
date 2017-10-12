@@ -12,7 +12,9 @@ inputs:
     jobid: string
     sequences: File
     indexDir: Directory
-    indexName: string
+    indexName:
+        type: string?
+        default: h_sapiens
 
 outputs:
     passed:
