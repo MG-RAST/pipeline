@@ -22,7 +22,7 @@ inputs:
         default: 5
     # static DBs
     m5nrBDB: File
-    m5nrFull: File
+    m5nrFull: File[]
 
 outputs:
     seqStatOut:

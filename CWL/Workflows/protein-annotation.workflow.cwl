@@ -15,7 +15,7 @@ inputs:
     sequences: File
     # static DBs
     m5nrBDB: File
-    m5nrFull: File
+    m5nrFull: File[]
 
 outputs:
     protFeatureOut:
@@ -29,7 +29,7 @@ outputs:
         outputSource: formatCluster/output
     protSimsOut:
         type: File
-        outputSource: bleachSims/output
+        outputSource: catSims/output
     protFilterOut:
         type: File
         outputSource: annotateSims/outFilter
@@ -72,19 +72,31 @@ steps:
         out: [output]
     superblat:
         run: ../Tools/superblat.tool.cwl
+        scatter: ["#superblat/database", "#superblat/outName"]
+        scatterMethod: dotproduct
         in:
             query: protCluster/outSeq
             database: m5nrFull
             fastMap:
                 default: true
             outName:
-                source: jobid
-                valueFrom: $(self).650.superblat.sims.full
+                source: m5nrFull
+                valueFrom: $(self.basename).superblat.sims
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
+        scatter: ["#bleachSims/input", "#bleachSims/outName"]
+        scatterMethod: dotproduct
         in:
             input: superblat/output
+            outName:
+                source: superblat/output
+                valueFrom: $(self.basename).trim
+        out: [output]
+    catSims:
+        run: ../Tools/cat.tool.cwl
+        in:
+            files: bleachSims/output
             outName:
                 source: jobid
                 valueFrom: $(self).650.superblat.sims
@@ -92,7 +104,7 @@ steps:
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:
-            input: bleachSims/output
+            input: catSims/output
             database: m5nrBDB
             outFilterName:
                 source: jobid

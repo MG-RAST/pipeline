@@ -25,9 +25,11 @@ inputs:
         default: 50
     # static DBs
     indexDir: Directory
-    indexName: string
+    indexName:
+        type: string?
+        default: h_sapiens
     m5nrBDB: File
-    m5nrFull: File
+    m5nrFull: File[]
     m5rnaFull: File
     m5rnaClust: File
     m5rnaIndex: Directory
