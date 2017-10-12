@@ -17,9 +17,7 @@ inputs:
     expandSims: File[]
     lcaAnns: File[]
     clustMaps: File[]
-    coverage:
-        type: File
-        default: 'null'
+    coverage: File?
 
 outputs:
     md5ProfileOut:
