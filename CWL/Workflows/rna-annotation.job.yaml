@@ -1,11 +1,11 @@
-jobid: test01
+jobid: rna_ann_test
 
 sequences:
   class: File
-  path: ../Data/Inputs/sequences.all.fasta
+  path: ../Data/Inputs/sequences.amplicon.fasta
   format: fasta
 
-m5rnaBDB:
+m5nrBDB:
     class: File
     path: ../Data/Inputs/DBs/m5nr_v1.bdb
 
@@ -17,10 +17,6 @@ m5rnaClust:
     class: File
     path: ../Data/Inputs/DBs/md5rna.clust
 
-# m5rna.clust.index.stats
-# m5rna.clust.index.pos_0.dat
-# m5rna.clust.index.kmer_0.dat
-# m5rna.clust.index.bursttrie_0.dat
 m5rnaIndex:
     class: Directory
     path: ../Data/Inputs/DBs/
