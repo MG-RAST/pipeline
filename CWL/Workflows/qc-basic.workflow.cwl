@@ -53,7 +53,7 @@ steps:
         scatter: "#kmer/length"  
         scatterMethod: dotproduct
         in:
-            input: sequences
+            sequences: sequences
             length: kmerLength
             format:
                 valueFrom: histo
