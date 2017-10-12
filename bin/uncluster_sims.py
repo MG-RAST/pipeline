@@ -59,7 +59,7 @@ def main(args):
     s_num = 0
     q_num = 0
     qidx = args.position - 1 if args.position > 0 else 0
-    ohdl = open(args.ofile, 'w')
+    ohdl = open(args.output, 'w')
     
     for ifile in args.input:
         ihdl = open(ifile, 'rU')
