@@ -1,0 +1,20 @@
+jobid: mb_fq_test
+
+sequences:
+    class: File
+    format: fastq
+    path: ../Data/Inputs/sequences.metabarcode.fastq
+
+minQual: 15
+
+maxLqb: 5
+
+m5nrBDB:
+    class: File
+    path: ../Data/Inputs/DBs/m5nr_v1.bdb
+
+m5nrFull:
+    - class: File
+      path: ../Data/Inputs/DBs/md5nr.1
+    - class: File
+      path: ../Data/Inputs/DBs/md5nr.2
