@@ -29,7 +29,7 @@ outputs:
         outputSource: formatCluster/output
     protSimsOut:
         type: File
-        outputSource: bleachSims/output
+        outputSource: catSims/output
     protFilterOut:
         type: File
         outputSource: annotateSims/outFilter
