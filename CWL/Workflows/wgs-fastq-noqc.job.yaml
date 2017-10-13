@@ -1,0 +1,40 @@
+jobid: wgs_fq_test
+
+sequences:
+    class: File
+    format: fastq
+    path: ../Data/Inputs/sequences.wgs.fastq
+
+minQual: 0
+
+maxLqb: 0
+
+derepPrefix: 0
+
+indexDir:
+    class: Directory
+    path: ../Data/Inputs/DBs/
+
+m5nrBDB:
+    class: File
+    path: ../Data/Inputs/DBs/m5nr_v1.bdb
+
+m5nrFull:
+    - class: File
+      path: ../Data/Inputs/DBs/md5nr.1
+    - class: File
+      path: ../Data/Inputs/DBs/md5nr.2
+
+m5rnaFull:
+    class: File
+    path: ../Data/Inputs/DBs/md5rna
+
+m5rnaClust:
+    class: File
+    path: ../Data/Inputs/DBs/md5rna.clust
+
+m5rnaIndex:
+    class: Directory
+    path: ../Data/Inputs/DBs/
+
+m5rnaPrefix: m5rna.clust.index
