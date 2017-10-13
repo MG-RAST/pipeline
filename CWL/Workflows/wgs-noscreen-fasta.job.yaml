@@ -2,18 +2,18 @@ jobid: wgs_fq_test
 
 sequences:
     class: File
-    format: fastq
-    path: ../Data/Inputs/sequences.wgs.fastq
+    format: fasta
+    path: ../Data/Inputs/sequences.wgs.fasta
 
-minQual: 0
+filterLn: true
 
-maxLqb: 0
+filterAmbig: true
 
-derepPrefix: 0
+deviation: 2.0
 
-indexDir:
-    class: Directory
-    path: ../Data/Inputs/DBs/
+maxAmbig: 5
+
+derepPrefix: 50
 
 m5nrBDB:
     class: File
