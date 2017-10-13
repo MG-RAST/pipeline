@@ -75,7 +75,7 @@ arguments:
 
 outputs:
     error: 
-        type: stderr  
+        type: stderr
     summary:
         type: File
         outputBinding:
