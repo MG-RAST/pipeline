@@ -3,7 +3,7 @@ jobid: wgs_fq_test
 sequences:
     class: File
     format: fasta
-    path: ../Data/Inputs/sequences.wgs.fastq
+    path: ../Data/Inputs/sequences.wgs.fasta
 
 filterLn: true
 
