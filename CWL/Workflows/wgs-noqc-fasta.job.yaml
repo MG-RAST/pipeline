@@ -2,12 +2,16 @@ jobid: wgs_fq_test
 
 sequences:
     class: File
-    format: fastq
-    path: ../Data/Inputs/sequences.wgs.fastq
+    format: fasta
+    path: ../Data/Inputs/sequences.wgs.fasta
 
-minQual: 0
+filterLn: false
 
-maxLqb: 0
+filterAmbig: false
+
+deviation: 2.0
+
+maxAmbig: 5
 
 derepPrefix: 0
 
