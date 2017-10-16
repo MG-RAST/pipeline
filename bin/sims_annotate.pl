@@ -4,12 +4,14 @@ use strict;
 use warnings;
 
 use JSON;
+use File::Slurp;
 use BerkeleyDB;
 use Data::Dumper;
 use Getopt::Long;
 
 my $verbose   = 0;
 my $in_file   = '';
+my $in_scg    = '';
 my $filt_file = '';
 my $exp_file  = '';
 my $ont_file  = '';
@@ -22,7 +24,9 @@ my $get_ont   = 0;
 my $get_lca   = 0;
 my $frag_num  = 5000;
 my $usage     = qq($0
-Input:  m8 format blast / blat file - sorted by query | top hit
+Input:
+    1. sim: m8 format blast / blat file - sorted by query | top hit
+    2. scg: md5 single copy gene file in json format
 Output: top hit for each query per source (protein or rna formats)
     1. filtered sims: same format as m8
     2. rna expanded sims: see below
@@ -40,6 +44,7 @@ ontology: md5|query, fragment|subject, identity, length, evalue, function, ontol
 LCA:      md5|query list, fragment|subject, identity list, length list, evalue list, lca string, depth of lca (1-8)
 
   --in_sim       file name      Required. Name of input sim file
+  --in_scg       file name      Optional. Name of input md5 single copy gene file.
   --out_filter   file name      Required. Name of filtered sim file.
   --out_expand   file name      Name of output expanded protein sim file (protein mode only).
   --out_ontology file name      Name of output expanded ontology sim file (protein mode only).
@@ -53,6 +58,7 @@ LCA:      md5|query list, fragment|subject, identity list, length list, evalue l
 if ( (@ARGV > 0) && ($ARGV[0] =~ /-h/) ) { print STDERR $usage; exit 1; }
 if ( ! GetOptions( "verbose!"       => \$verbose,
 		           "in_sim=s"       => \$in_file,
+                   "in_scg=s"       => \$in_scg,
 		           "out_filter=s"   => \$filt_file,
 		           "out_expand:s"   => \$exp_file,
 		           "out_ontology:s" => \$ont_file,
@@ -81,6 +87,12 @@ if ($lca_file) {
   print "Running in lca mode.\n" if ($verbose);
   $get_lca = 1;
 }
+
+# get scg hash
+my $scgs = {};
+eval {
+    $scgs = $json->decode(read_file($in_scg));
+};
 
 # get m5nr BerkelyDB handle
 my %m5nr;
@@ -388,8 +400,15 @@ sub get_exp {
 sub get_lca {
   my ($md5s, $md5_lca) = @_;
 
-  my @taxa = map { $md5_lca->{$_} } grep { exists $md5_lca->{$_} } @$md5s;
-
+  my @taxa = ():
+  my @scg_md5s = grep { exists $scgs->{$_} } @$md5s;
+  
+  if (scalar(@scg_md5s) > 0) {
+      @taxa = map { $md5_lca->{$_} } grep { exists $md5_lca->{$_} } @scg_md5s;
+  } else {
+      @taxa = map { $md5_lca->{$_} } grep { exists $md5_lca->{$_} } @$md5s;
+  }
+  
   my $coverage = {};
   foreach my $t (@taxa) {
     for (my $i = 0; $i < scalar(@$t); $i++) {
