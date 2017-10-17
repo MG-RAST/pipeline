@@ -37,7 +37,7 @@ steps:
                 source: rnaClustMap
                 valueFrom: ${ return [self]; }
             position:
-                valueFrom: "2"
+                valueFrom: ${ return 2; }
             outName:
                 source: rnaExpandLca
                 valueFrom: $(self.basename).uncluster
@@ -62,7 +62,7 @@ steps:
                 source: protClustMap
                 valueFrom: ${ return [self]; }
             position:
-                valueFrom: "2"
+                valueFrom: ${ return 2; }
             outName:
                 source: protExpandLca
                 valueFrom: $(self.basename).uncluster
