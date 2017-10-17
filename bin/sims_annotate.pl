@@ -89,6 +89,7 @@ if ($lca_file) {
 }
 
 # get scg hash
+my $json = JSON->new->allow_nonref;
 my $scgs = {};
 eval {
     $scgs = $json->decode(read_file($in_scg));
@@ -108,7 +109,6 @@ my $curr  = '';
 my ($filt_fh, $exp_fh, $ont_fh, $rna_fh, $lca_fh, $filt_t, $exp_t, $ont_t, $rna_t, $lca_t);
 
 print "Loading ach source data for mapping ... " if ($verbose);
-my $json = JSON->new->allow_nonref;
 my $src_map = $json->decode($m5nr{'source'});
 unless ($src_map && ref($src_map)) {
   print STDERR "Error: Unable to get source data from berkeley db\n"; exit 1;
@@ -400,7 +400,7 @@ sub get_exp {
 sub get_lca {
   my ($md5s, $md5_lca) = @_;
 
-  my @taxa = ():
+  my @taxa = ();
   my @scg_md5s = grep { exists $scgs->{$_} } @$md5s;
   
   if (scalar(@scg_md5s) > 0) {
