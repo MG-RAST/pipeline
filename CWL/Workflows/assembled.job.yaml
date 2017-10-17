@@ -15,6 +15,10 @@ m5nrFull:
     - class: File
       path: ../Data/Inputs/DBs/md5nr.2
 
+m5nrSCG:
+    class: File
+    path: ../Data/Inputs/DBs/scg_md5.json
+
 m5rnaFull:
     class: File
     path: ../Data/Inputs/DBs/md5rna

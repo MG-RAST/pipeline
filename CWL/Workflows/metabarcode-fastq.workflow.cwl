@@ -23,6 +23,7 @@ inputs:
     # static DBs
     m5nrBDB: File
     m5nrFull: File[]
+    m5nrSCG: File
 
 outputs:
     seqStatOut:
@@ -37,6 +38,9 @@ outputs:
     qcSummaryOut:
         type: File
         outputSource: qcBasic/qcSummaryFile
+    adapterPassed:
+        type: File
+        outputSource: preProcess/trimmed
     preProcessPassed:
         type: File
         outputSource: preProcess/passed
@@ -84,7 +88,7 @@ steps:
             sequences: sequences
             minQual: minQual
             maxLqb: maxLqb
-        out: [passed, removed]
+        out: [trimmed, passed, removed]
     annotate:
         run: ../Workflows/protein-annotation.workflow.cwl
         in:
@@ -92,6 +96,7 @@ steps:
             sequences: preProcess/passed
             m5nrBDB: m5nrBDB
             m5nrFull: m5nrFull
+            m5nrSCG: m5nrSCG
         out: [protFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut, protOntologyOut]
     indexSimSeq:
         run: ../Workflows/index_sim_seq.workflow.cwl

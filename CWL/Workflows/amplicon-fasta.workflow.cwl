@@ -46,6 +46,9 @@ outputs:
     qcSummaryOut:
         type: File
         outputSource: qcBasic/qcSummaryFile
+    adapterPassed:
+        type: File
+        outputSource: preProcess/trimmed
     preProcessPassed:
         type: File
         outputSource: preProcess/passed
@@ -96,7 +99,7 @@ steps:
             filterAmbig: filterAmbig
             deviation: deviation
             maxAmbig: maxAmbig
-        out: [passed, removed]
+        out: [trimmed, passed, removed]
     annotate:
         run: ../Workflows/rna-annotation.workflow.cwl
         in:

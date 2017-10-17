@@ -36,6 +36,7 @@ inputs:
         default: h_sapiens
     m5nrBDB: File
     m5nrFull: File[]
+    m5nrSCG: File
     m5rnaFull: File
     m5rnaClust: File
     m5rnaIndex: Directory
@@ -54,6 +55,9 @@ outputs:
     qcSummaryOut:
         type: File
         outputSource: qcBasic/qcSummaryFile
+    adapterPassed:
+        type: File
+        outputSource: preProcess/trimmed
     preProcessPassed:
         type: File
         outputSource: preProcess/passed
@@ -108,6 +112,9 @@ outputs:
     sourceStatsOut:
         type: File
         outputSource: abundance/sourceStatsOut
+    darkmatterOut:
+        type: File
+        outputSource: darkmatter/output
 
 steps:
     qcBasic:
@@ -128,7 +135,7 @@ steps:
             filterAmbig: filterAmbig
             deviation: deviation
             maxAmbig: maxAmbig
-        out: [passed, removed]
+        out: [trimmed, passed, removed]
     dereplication:
         run: ../Tools/dereplication.tool.cwl
         in:
@@ -170,6 +177,7 @@ steps:
             rnaClustMap: rnaAnnotate/rnaClustMapOut
             m5nrBDB: m5nrBDB
             m5nrFull: m5nrFull
+            m5nrSCG: m5nrSCG
         out: [protFeatureOut, protFilterFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut, protOntologyOut]
     indexSimSeq:
         run: ../Workflows/index_sim_seq.workflow.cwl
@@ -189,7 +197,7 @@ steps:
                     - protAnnotate/protClustMapOut
         out: [simSeqOut, indexOut]
     abundance:
-        run: ../Workflows/abundance.workflow.cwl
+        run: ../Workflows/abundance-clca.workflow.cwl
         in:
             jobid: jobid
             md5index: indexSimSeq/indexOut
@@ -201,13 +209,25 @@ steps:
                 source:
                     - rnaAnnotate/rnaExpandOut
                     - protAnnotate/protExpandOut
-            lcaAnns:
+            rnaExpandLca: rnaAnnotate/rnaLCAOut
+            protExpandLca: protAnnotate/protLCAOut
+            rnaClustMap: rnaAnnotate/rnaClustMapOut
+            protClustMap: protAnnotate/protClustMapOut
+            m5nrSCG: m5nrSCG
+        out: [md5ProfileOut, lcaProfileOut, sourceStatsOut]
+    darkmatter:
+        run: ../Tools/extract_darkmatter.tool.cwl
+        in:
+            geneSeq: protAnnotate/protFilterFeatureOut
+            simHit:
                 source:
-                    - rnaAnnotate/rnaLCAOut
-                    - protAnnotate/protLCAOut
-            clustMaps:
+                    - rnaAnnotate/rnaSimsOut
+                    - protAnnotate/protSimsOut
+            clustMap:
                 source:
                     - rnaAnnotate/rnaClustMapOut
                     - protAnnotate/protClustMapOut
-        out: [md5ProfileOut, lcaProfileOut, sourceStatsOut]
-
+            outName:
+                source: jobid
+                valueFrom: $(self).750.darkmatter.faa
+        out: [output]

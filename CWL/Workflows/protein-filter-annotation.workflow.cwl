@@ -21,6 +21,7 @@ inputs:
     # static DBs
     m5nrBDB: File
     m5nrFull: File[]
+    m5nrSCG: File
 
 outputs:
     protFeatureOut:
@@ -132,6 +133,7 @@ steps:
         run: ../Tools/sims_annotate.tool.cwl
         in:
             input: catSims/output
+            scgs: m5nrSCG
             database: m5nrBDB
             outFilterName:
                 source: jobid

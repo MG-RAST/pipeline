@@ -40,6 +40,9 @@ outputs:
     qcSummaryOut:
         type: File
         outputSource: qcBasic/qcSummaryFile
+    adapterPassed:
+        type: File
+        outputSource: preProcess/trimmed
     preProcessPassed:
         type: File
         outputSource: preProcess/passed
@@ -87,7 +90,7 @@ steps:
             sequences: sequences
             minQual: minQual
             maxLqb: maxLqb
-        out: [passed, removed]
+        out: [trimmed, passed, removed]
     annotate:
         run: ../Workflows/rna-annotation.workflow.cwl
         in:
