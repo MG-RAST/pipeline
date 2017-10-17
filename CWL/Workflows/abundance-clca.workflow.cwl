@@ -9,14 +9,18 @@ requirements:
     - class: InlineJavascriptRequirement
     - class: ScatterFeatureRequirement
     - class: MultipleInputFeatureRequirement
+    - class: SubworkflowFeatureRequirement
 
 inputs:
     jobid: string
     md5index: File
     filterSims: File[]
     expandSims: File[]
-    lcaAnns: File[]
-    clustMaps: File[]
+    rnaExpandLca: File
+    protExpandLca: File
+    rnaClustMap: File
+    protClustMap: File
+    m5nrSCG: File
     coverage: File?
 
 outputs:
@@ -25,7 +29,7 @@ outputs:
         outputSource: md5Profile/output
     lcaProfileOut:
         type: File
-        outputSource: lcaProfile/output
+        outputSource: lcaProfile/contigLCA
     sourceStatsOut:
         type: File
         outputSource: sourceStats/output
@@ -35,7 +39,10 @@ steps:
         run: ../Tools/sims_abundance.tool.cwl
         in:
             input: filterSims
-            cluster: clustMaps
+            cluster:
+                source:
+                    - rnaClustMap
+                    - protClustMap
             coverage: coverage
             md5index: md5index
             profileType: 
@@ -45,22 +52,24 @@ steps:
                 valueFrom: $(self).700.annotation.md5.abundance
         out: [output]
     lcaProfile:
-        run: ../Tools/sims_abundance.tool.cwl
+        run: ../Workflows/contig-lca.workflow.cwl
         in:
-            input: lcaAnns
-            cluster: clustMaps
+            jobid: jobid
+            rnaExpandLca: rnaExpandLca
+            protExpandLca: protExpandLca
+            rnaClustMap: rnaClustMap
+            protClustMap: protClustMap
+            m5nrSCG: m5nrSCG
             coverage: coverage
-            profileType: 
-                valueFrom: lca
-            outName:
-                source: jobid
-                valueFrom: $(self).700.annotation.lca.abundance
-        out: [output]
+        out: [contigLCA]
     sourceStats:
         run: ../Tools/sims_abundance.tool.cwl
         in:
             input: expandSims
-            cluster: clustMaps
+            cluster:
+                source:
+                    - rnaClustMap
+                    - protClustMap
             coverage: coverage
             profileType: 
                 valueFrom: source

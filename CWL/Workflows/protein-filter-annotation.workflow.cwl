@@ -15,9 +15,13 @@ inputs:
     sequences: File
     rnaSims: File
     rnaClustMap: File
+    protIdentity:
+        type: float?
+        default: 0.9
     # static DBs
     m5nrBDB: File
     m5nrFull: File[]
+    m5nrSCG: File
 
 outputs:
     protFeatureOut:
@@ -81,8 +85,7 @@ steps:
         run: ../Tools/cdhit.tool.cwl
         in:
             input: protFilter/output
-            identity: 
-                valueFrom: "0.9"
+            identity: protIdentity
             outName:
                 source: jobid
                 valueFrom: $(self).550.cluster.aa90.faa
@@ -130,6 +133,7 @@ steps:
         run: ../Tools/sims_annotate.tool.cwl
         in:
             input: catSims/output
+            scgs: m5nrSCG
             database: m5nrBDB
             outFilterName:
                 source: jobid

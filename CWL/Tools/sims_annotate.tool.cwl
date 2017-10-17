@@ -4,7 +4,7 @@ class: CommandLineTool
 label: annotate sims
 doc: |
     create expanded annotated sims files from input md5 sim file and m5nr db
-    prot mode: sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000
+    prot mode: sims_annotate.pl --verbose --in_sim <input> --in_scg <scgs> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000
     rna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000
 
 hints:
@@ -25,6 +25,14 @@ inputs:
             - Formats:tsv
         inputBinding:
             prefix: --in_sim
+    
+    scgs:
+        type: File?
+        doc: md5 single copy gene file
+        format:
+            - Formats:json
+        inputBinding:
+            prefix: --in_scg
     
     database:
         type: File

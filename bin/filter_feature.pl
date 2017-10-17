@@ -79,7 +79,7 @@ system("comm -12 $in_sim.sort.ids $in_clust.sort.seed > $common");
 # get cluster members for each common id
 get_cluster_members($common, "$in_clust.sort", $members);
 # cat hits and their members / sort
-system("cat $in_sim.sort.ids $members | sort -T $tmp_dir -S $${memory}M > $members.all");
+system("cat $in_sim.sort.ids $members | sort -T $tmp_dir -S ${memory}M > $members.all");
 # cat rna ids with fasta ids / sort
 system("cat $members.all $in_seq > $in_seq.all");
 system(split(/ /, "sort -T $tmp_dir -S ${memory}M -t \t -k 1,1 -o $in_seq.all.sort $in_seq.all"));

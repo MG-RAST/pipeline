@@ -18,6 +18,7 @@ inputs:
     rnaExpandLca: File
     protClustMap: File
     protExpandLca: File
+    m5nrSCG: File
     coverage: File?
 
 outputs:
@@ -79,8 +80,9 @@ steps:
     expandLca:
         run: ../Tools/find_contig_lca.tool.cwl
         in:
-            inRna: sortRna/output
-            inProt: sortProt/output
+            rnaLCA: sortRna/output
+            protLCA: sortProt/output
+            scgs: m5nrSCG
             outName:
                 source: jobid
                 valueFrom: $(self).650.contig.expand.lca
@@ -91,14 +93,10 @@ steps:
             input:
                 source: expandLca/output
                 valueFrom: ${ return [self]; }
-            cluster:
-                source:
-                    - rnaClustMap
-                    - protClustMap
             coverage: coverage
             profileType: 
                 valueFrom: lca
             outName:
                 source: jobid
-                valueFrom: $(self).700.contig.lca.abundance
+                valueFrom: $(self).700.annotation.lca.abundance
         out: [output]

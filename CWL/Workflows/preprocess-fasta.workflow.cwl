@@ -30,6 +30,9 @@ inputs:
         default: 5
 
 outputs:
+    trimmed:
+        type: File
+        outputSource: adapterTrim/outTrim
     passed:
         type: File
         outputSource: filter/passed
@@ -38,10 +41,18 @@ outputs:
         outputSource: filter/removed
 
 steps:
+    adapterTrim:
+        run: ../Tools/autoskewer.tool.cwl
+        in:
+            input: sequences
+            outName:
+                source: jobid
+                valueFrom: $(self).080.adapter.trim.passed.fna
+        out: [outTrim]
     filter:
         run: ../Tools/filter_fasta.tool.cwl
         in:
-            input: sequences
+            input: adapterTrim/outTrim
             stats: stats
             filterLn: filterLn
             filterAmbig: filterAmbig

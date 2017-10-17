@@ -17,6 +17,7 @@ umask 000;
 # options
 my $out_prefix = "annotate_sims";
 my $input      = "";
+my $scgs       = "";
 my $achver     = "1";
 my $ann_file   = "/mnt/awe/data/predata/m5nr_v1.bdb";
 my $aa         = 0;
@@ -26,6 +27,7 @@ my $help       = 0;
 my $options    = GetOptions (
         "out_prefix=s" => \$out_prefix,
 		"input=s"      => \$input,
+        "scgs=s"       => \$scgs,
 		"ach_ver=s"    => \$achver,
 		"ann_file=s"   => \$ann_file,
         "aa!"          => \$aa,
@@ -45,12 +47,15 @@ if ($help){
 }
 
 my @out_files = ();
-my $cmd  = "process_sims_by_source_mem --verbose --in_sim $input --ann_file $ann_file";
-my $type = "";
+my $cmd = "sims_annotate.pl --verbose --in_sim $input --ann_file $ann_file";
 
+my $type = "";
 if ($aa) {
     $type = 'aa';
     $cmd .= " --out_expand $out_prefix.$type.expand.protein --out_ontology $out_prefix.$type.expand.ontology";
+    if ($scgs) {
+        $cmd .= " --in_scg $scgs";
+    }
     push @out_files, ("$out_prefix.$type.expand.protein", "$out_prefix.$type.expand.ontology");
 } elsif ($rna) {
     $type = 'rna';

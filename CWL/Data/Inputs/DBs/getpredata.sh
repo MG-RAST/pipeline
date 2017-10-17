@@ -34,6 +34,7 @@ echo "Downloading DB data to $DBDIR"
 `curl "$SHOCK/5190f16f-1bbc-44ba-a226-47add7889b0a?download" > $DBDIR/m5rna.clust.index.pos_0.dat`
 `curl "$SHOCK/266a5154-7a06-4813-b948-0524155c71ec?download" > $DBDIR/m5rna.clust.index.stats`
 
+`curl "$SHOCK/524aec48-6c6f-4ad1-8f45-cfd39d1b9060?download" > $DBDIR/scg_md5.json`
 `curl "$SHOCK/e5dc6081-e289-4445-9617-b53fdc4023a8?download" > $DBDIR/m5nr_v1.bdb`
 `curl "$SHOCK/4406405c-526c-4a63-be22-04b7c2d18434?download" > $DBDIR/md5nr.1`
 `curl "$SHOCK/65d644a8-55a5-439f-a8b5-af1440472d8d?download" > $DBDIR/md5nr.2`

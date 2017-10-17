@@ -14,26 +14,16 @@ requirements:
 inputs:
     jobid: string
     sequences: File
-    filterLn:
-        type: boolean
-        default: true
-    filterAmbig:
-        type: boolean
-        default: true
-    deviation:
-        type: float
-        default: 2.0
-    maxAmbig:
+    minQual:
+        type: int
+        default: 15
+    maxLqb:
         type: int
         default: 5
     derepPrefix:
         type: int
         default: 50
     # static DBs
-    indexDir: Directory
-    indexName:
-        type: string?
-        default: h_sapiens
     m5nrBDB: File
     m5nrFull: File[]
     m5nrSCG: File
@@ -70,9 +60,6 @@ outputs:
     dereplicationRemoved:
         type: File
         outputSource: dereplication/removed
-    orgScreenPassed:
-        type: File
-        outputSource: orgScreen/passed
     rnaFeatureOut:
         type: File
         outputSource: rnaAnnotate/rnaFeatureOut
@@ -126,15 +113,12 @@ steps:
                 valueFrom: ${ return [6, 15]; }
         out: [seqStatFile, seqBinFile, qcStatFile, qcSummaryFile]
     preProcess:
-        run: ../Workflows/preprocess-fasta.workflow.cwl
+        run: ../Workflows/preprocess-fastq.workflow.cwl
         in:
             jobid: jobid
             sequences: sequences
-            stats: qcBasic/seqStatFile
-            filterLn: filterLn
-            filterAmbig: filterAmbig
-            deviation: deviation
-            maxAmbig: maxAmbig
+            minQual: minQual
+            maxLqb: maxLqb
         out: [trimmed, passed, removed]
     dereplication:
         run: ../Tools/dereplication.tool.cwl
@@ -149,14 +133,6 @@ steps:
                 source: jobid
                 valueFrom: $(self).150.dereplication
         out: [passed, removed]
-    orgScreen:
-        run: ../Workflows/organism-screening.workflow.cwl
-        in:
-            jobid: jobid
-            sequences: dereplication/passed
-            indexDir: indexDir
-            indexName: indexName
-        out: [passed]
     rnaAnnotate:
         run: ../Workflows/rna-annotation.workflow.cwl
         in:
@@ -172,7 +148,7 @@ steps:
         run: ../Workflows/protein-filter-annotation.workflow.cwl
         in:
             jobid: jobid
-            sequences: orgScreen/passed
+            sequences: dereplication/passed
             rnaSims: rnaAnnotate/rnaSimsOut
             rnaClustMap: rnaAnnotate/rnaClustMapOut
             m5nrBDB: m5nrBDB

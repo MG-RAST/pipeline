@@ -26,6 +26,9 @@ inputs:
         default: 30
 
 outputs:
+    trimmed:
+        type: File
+        outputSource: adapterTrim/outTrim
     passed:
         type: File
         outputSource: passed2fasta/file
@@ -34,10 +37,18 @@ outputs:
         outputSource: removed2fasta/file  
 
 steps:
+    adapterTrim:
+        run: ../Tools/autoskewer.tool.cwl
+        in:
+            input: sequences
+            outName:
+                source: jobid
+                valueFrom: $(self).080.adapter.trim.passed.fastq
+        out: [outTrim]
     filter:    
         run: ../Tools/fastq-mcf.tool.cwl
         in:
-            input: sequences
+            input: adapterTrim/outTrim
             minQual: minQual
             maxLqb: maxLqb
             minLength: minLength
@@ -45,7 +56,6 @@ steps:
                 source: jobid
                 valueFrom: $(self).100.preprocess.fastq
         out: [outTrim, outSkip]
-
     passed2fasta:
         run: ../Tools/seqUtil.tool.cwl
         in:
@@ -56,7 +66,6 @@ steps:
                 source: jobid
                 valueFrom: $(self).100.preprocess.passed.fna
         out: [file]
-
     removed2fasta:
         run: ../Tools/seqUtil.tool.cwl
         in:

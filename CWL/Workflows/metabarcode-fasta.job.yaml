@@ -2,7 +2,7 @@ jobid: mb_fna_test
 
 sequences:
     class: File
-    format: fastq
+    format: fasta
     path: ../Data/Inputs/sequences.metabarcode.fasta
 
 filterLn: true
@@ -22,3 +22,7 @@ m5nrFull:
       path: ../Data/Inputs/DBs/md5nr.1
     - class: File
       path: ../Data/Inputs/DBs/md5nr.2
+
+m5nrSCG:
+    class: File
+    path: ../Data/Inputs/DBs/scg_md5.json

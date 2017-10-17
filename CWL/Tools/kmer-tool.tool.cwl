@@ -24,7 +24,7 @@ stdout: kmer-tool.log
 stderr: kmer-tool.error
 
 inputs:
-    input:
+    sequences:
         type: File
         doc: Input file, sequence (fasta/fastq) or binary count hash (hash).
         format: 

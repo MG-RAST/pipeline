@@ -18,7 +18,7 @@ def main(args):
 
     has_clust = False
     for c in args.cfile:
-        if os.stat(s).st_size > 0:
+        if os.stat(c).st_size > 0:
             has_clust = True
     if not has_clust:
         print "Cluster file(s) was omitted or is empty, copying %s to %s ... " % (", ".join(args.input), args.output)
@@ -59,7 +59,7 @@ def main(args):
     s_num = 0
     q_num = 0
     qidx = args.position - 1 if args.position > 0 else 0
-    ohdl = open(args.ofile, 'w')
+    ohdl = open(args.output, 'w')
     
     for ifile in args.input:
         ihdl = open(ifile, 'rU')

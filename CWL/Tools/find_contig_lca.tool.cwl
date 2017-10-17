@@ -4,7 +4,7 @@ class: CommandLineTool
 label: contig LCA
 doc: |
     create contig LCA from rRNA and Protein LCAs
-    >find_contig_lca.py --in_rna <in_rna> --in_prot <in_prot> --output <outName>
+    >find_contig_lca.py --rna <rnaLCA> --prot <protLCA> --scg <scgs> --output <outName>
 
 hints:
     DockerRequirement:
@@ -17,22 +17,30 @@ stdout: find_contig_lca.log
 stderr: find_contig_lca.error
 
 inputs:
-    inRna:
+    rnaLCA:
         type: File
         doc: Input expanded rna LCA file
         format:
             - Formats:tsv
         inputBinding:
-            prefix: --in_rna
+            prefix: --rna
     
-    inProt:
+    protLCA:
         type: File
         doc: Input expanded protein LCA file
         format:
             - Formats:tsv
         inputBinding:
-            prefix: --in_prot
+            prefix: --prot
     
+    scgs:
+        type: File?
+        doc: md5 single copy gene file
+        format:
+            - Formats:json
+        inputBinding:
+            prefix: --scg
+        
     outName:
         type: string
         doc: Output expanded contig LCA

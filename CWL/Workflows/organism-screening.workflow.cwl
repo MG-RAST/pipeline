@@ -52,7 +52,7 @@ steps:
                 source: sequences
                 valueFrom: $(self.basename).sort
         out: [file]
-    sortScrrenID:
+    sortScreenID:
         run: ../Tools/seqUtil.tool.cwl
         in:
             sequences: screen/unaligned
@@ -60,13 +60,13 @@ steps:
                 default: true
             output:
                 source: screen/unaligned
-                valueFrom: $(self).ids
+                valueFrom: $(self.basename).ids
         out: [file]
     untruncateScreen:
         run: ../Tools/seqUtil.tool.cwl
         in:
             sequences: sortInput/file
-            subsetList: sortScrrenID/file
+            subsetList: sortScreenID/file
             subsetSeqs:
                 default: true
             output:

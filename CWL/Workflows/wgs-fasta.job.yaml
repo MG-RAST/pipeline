@@ -2,8 +2,8 @@ jobid: wgs_fq_test
 
 sequences:
     class: File
-    format: fastq
-    path: ../Data/Inputs/sequences.wgs.fastq
+    format: fasta
+    path: ../Data/Inputs/sequences.wgs.fasta
 
 filterLn: true
 
@@ -30,6 +30,10 @@ m5nrFull:
       path: ../Data/Inputs/DBs/md5nr.1
     - class: File
       path: ../Data/Inputs/DBs/md5nr.2
+
+m5nrSCG:
+    class: File
+    path: ../Data/Inputs/DBs/scg_md5.json
 
 m5rnaFull:
     class: File
