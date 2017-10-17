@@ -6,6 +6,7 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
+use Cwd;
 umask 000;
 
 # options
