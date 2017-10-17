@@ -54,7 +54,7 @@ steps:
     lcaProfile:
         run: ../Workflows/contig-lca.workflow.cwl
         in:
-            jobid: string
+            jobid: jobid
             rnaExpandLca: rnaExpandLca
             protExpandLca: protExpandLca
             rnaClustMap: rnaClustMap
