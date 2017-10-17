@@ -62,7 +62,7 @@ if ($help){
 
 # use this for contig LCA
 # temp hack using filenames
-# neeb both expand and map files
+# need both expand and map files
 if ($scgs && (-s $scgs) && ($type eq 'lca') && (scalar(@in_expand) == 2) && (scalar(@in_maps) == 2)) {
     my $run_dir = getcwd;
     my ($rna_lca, $prot_lca, $rna_map, $prot_map);
