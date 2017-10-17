@@ -54,7 +54,7 @@ outputs:
         doc: Output trimmed sequences
         outputBinding: 
             glob: $(inputs.outName)
-    outLog:
+    trimLog:
         type: File?
         doc: Optional output trimmed log file
         outputBinding:
