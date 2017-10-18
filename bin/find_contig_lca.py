@@ -146,8 +146,8 @@ def main(args):
     
     # process last contig
     if len(data) > 0:
-        mrow = merge_rows(cid, data)
-        rna_contigs.add(cid)
+        mrow = merge_rows(prev, data)
+        rna_contigs.add(prev)
         print_row(ohdl, mrow)
         rctg += 1
     
@@ -191,7 +191,7 @@ def main(args):
     
     # process last contig
     if len(data) > 0:
-        mrow = merge_rows(cid, data)
+        mrow = merge_rows(prev, data)
         print_row(ohdl, mrow)
         prot += 1
     
