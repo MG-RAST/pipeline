@@ -80,6 +80,94 @@
         }, 
         {
             "class": "CommandLineTool", 
+            "label": "autoskewer", 
+            "doc": "detect and trim adapter sequences from reads\n>autoskewer.py -t <runtime.tmpdir> -i <input> -o <outName> -l <outLog>\n", 
+            "hints": [
+                {
+                    "dockerPull": "mgrast/pipeline:4.03", 
+                    "class": "DockerRequirement"
+                }
+            ], 
+            "requirements": [
+                {
+                    "class": "InlineJavascriptRequirement"
+                }
+            ], 
+            "stdout": "autoskewer.log", 
+            "stderr": "autoskewer.error", 
+            "inputs": [
+                {
+                    "type": "File", 
+                    "doc": "Input sequence file", 
+                    "format": [
+                        "#autoskewer.tool.cwl/input/FileFormats.cv.yamlfastq", 
+                        "#autoskewer.tool.cwl/input/FileFormats.cv.yamlfasta"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-i"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/input"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "Optional output trimmed log", 
+                    "inputBinding": {
+                        "prefix": "-l"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/outLog"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output trimmed sequences", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/outName"
+                }
+            ], 
+            "baseCommand": "autoskewer.py", 
+            "arguments": [
+                {
+                    "prefix": "-t", 
+                    "valueFrom": "$(runtime.tmpdir)"
+                }
+            ], 
+            "outputs": [
+                {
+                    "type": "stderr", 
+                    "id": "#autoskewer.tool.cwl/error"
+                }, 
+                {
+                    "type": "stdout", 
+                    "id": "#autoskewer.tool.cwl/info"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Output trimmed sequences", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outName)"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/outTrim"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "Optional output trimmed log file", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outLog)"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/trimLog"
+                }
+            ], 
+            "id": "#autoskewer.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
             "label": "bleachsims", 
             "doc": "filter similarity file by E-value and number of hits\n>bleachsims -s <input> -o <output> -m 20 -r 0 -c 3\n", 
             "hints": [
@@ -1640,7 +1728,7 @@
         {
             "class": "CommandLineTool", 
             "label": "annotate sims", 
-            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
+            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --in_scg <scgs> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
@@ -1737,6 +1825,20 @@
                         "prefix": "--out_rna"
                     }, 
                     "id": "#sims_annotate.tool.cwl/outRnaName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "md5 single copy gene file", 
+                    "format": [
+                        "#sims_annotate.tool.cwl/scgs/FileFormats.cv.yamljson"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--in_scg"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/scgs"
                 }, 
                 {
                     "type": [
@@ -2529,6 +2631,10 @@
                     "id": "#main/m5nrFull"
                 }, 
                 {
+                    "type": "File", 
+                    "id": "#main/m5nrSCG"
+                }, 
+                {
                     "type": "int", 
                     "default": 5, 
                     "id": "#main/maxAmbig"
@@ -2539,6 +2645,11 @@
                 }
             ], 
             "outputs": [
+                {
+                    "type": "File", 
+                    "outputSource": "#main/preProcess/trimmed", 
+                    "id": "#main/adapterPassed"
+                }, 
                 {
                     "type": "File", 
                     "outputSource": "#main/abundance/lcaProfileOut", 
@@ -2666,6 +2777,10 @@
                             "id": "#main/annotate/m5nrFull"
                         }, 
                         {
+                            "source": "#main/m5nrSCG", 
+                            "id": "#main/annotate/m5nrSCG"
+                        }, 
+                        {
                             "source": "#main/preProcess/passed", 
                             "id": "#main/annotate/sequences"
                         }
@@ -2744,6 +2859,7 @@
                         }
                     ], 
                     "out": [
+                        "#main/preProcess/trimmed", 
                         "#main/preProcess/passed", 
                         "#main/preProcess/removed"
                     ], 
@@ -2838,9 +2954,32 @@
                     "type": "File", 
                     "outputSource": "#preprocess-fasta.workflow.cwl/filter/removed", 
                     "id": "#preprocess-fasta.workflow.cwl/removed"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#preprocess-fasta.workflow.cwl/adapterTrim/outTrim", 
+                    "id": "#preprocess-fasta.workflow.cwl/trimmed"
                 }
             ], 
             "steps": [
+                {
+                    "run": "#autoskewer.tool.cwl", 
+                    "in": [
+                        {
+                            "source": "#preprocess-fasta.workflow.cwl/sequences", 
+                            "id": "#preprocess-fasta.workflow.cwl/adapterTrim/input"
+                        }, 
+                        {
+                            "source": "#preprocess-fasta.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).080.adapter.trim.passed.fna", 
+                            "id": "#preprocess-fasta.workflow.cwl/adapterTrim/outName"
+                        }
+                    ], 
+                    "out": [
+                        "#preprocess-fasta.workflow.cwl/adapterTrim/outTrim"
+                    ], 
+                    "id": "#preprocess-fasta.workflow.cwl/adapterTrim"
+                }, 
                 {
                     "run": "#filter_fasta.tool.cwl", 
                     "in": [
@@ -2857,7 +2996,7 @@
                             "id": "#preprocess-fasta.workflow.cwl/filter/filterLn"
                         }, 
                         {
-                            "source": "#preprocess-fasta.workflow.cwl/sequences", 
+                            "source": "#preprocess-fasta.workflow.cwl/adapterTrim/outTrim", 
                             "id": "#preprocess-fasta.workflow.cwl/filter/input"
                         }, 
                         {
@@ -2921,6 +3060,10 @@
                         "items": "File"
                     }, 
                     "id": "#protein-annotation.workflow.cwl/m5nrFull"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#protein-annotation.workflow.cwl/m5nrSCG"
                 }, 
                 {
                     "type": [
@@ -3008,6 +3151,10 @@
                             "source": "#protein-annotation.workflow.cwl/jobid", 
                             "valueFrom": "$(self).650.aa.expand.ontology", 
                             "id": "#protein-annotation.workflow.cwl/annotateSims/outOntologyName"
+                        }, 
+                        {
+                            "source": "#protein-annotation.workflow.cwl/m5nrSCG", 
+                            "id": "#protein-annotation.workflow.cwl/annotateSims/scgs"
                         }
                     ], 
                     "out": [

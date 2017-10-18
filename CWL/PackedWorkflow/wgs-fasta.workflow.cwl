@@ -80,6 +80,94 @@
         }, 
         {
             "class": "CommandLineTool", 
+            "label": "autoskewer", 
+            "doc": "detect and trim adapter sequences from reads\n>autoskewer.py -t <runtime.tmpdir> -i <input> -o <outName> -l <outLog>\n", 
+            "hints": [
+                {
+                    "dockerPull": "mgrast/pipeline:4.03", 
+                    "class": "DockerRequirement"
+                }
+            ], 
+            "requirements": [
+                {
+                    "class": "InlineJavascriptRequirement"
+                }
+            ], 
+            "stdout": "autoskewer.log", 
+            "stderr": "autoskewer.error", 
+            "inputs": [
+                {
+                    "type": "File", 
+                    "doc": "Input sequence file", 
+                    "format": [
+                        "#autoskewer.tool.cwl/input/FileFormats.cv.yamlfastq", 
+                        "#autoskewer.tool.cwl/input/FileFormats.cv.yamlfasta"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-i"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/input"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "string"
+                    ], 
+                    "doc": "Optional output trimmed log", 
+                    "inputBinding": {
+                        "prefix": "-l"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/outLog"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output trimmed sequences", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/outName"
+                }
+            ], 
+            "baseCommand": "autoskewer.py", 
+            "arguments": [
+                {
+                    "prefix": "-t", 
+                    "valueFrom": "$(runtime.tmpdir)"
+                }
+            ], 
+            "outputs": [
+                {
+                    "type": "stderr", 
+                    "id": "#autoskewer.tool.cwl/error"
+                }, 
+                {
+                    "type": "stdout", 
+                    "id": "#autoskewer.tool.cwl/info"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Output trimmed sequences", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outName)"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/outTrim"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "Optional output trimmed log file", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outLog)"
+                    }, 
+                    "id": "#autoskewer.tool.cwl/trimLog"
+                }
+            ], 
+            "id": "#autoskewer.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
             "label": "BLAT", 
             "doc": "fast sequence search command line tool\n>blat -fastMap -t dna -q rna -out blast8 <database> <query> <output>\n", 
             "hints": [
@@ -937,6 +1025,89 @@
         }, 
         {
             "class": "CommandLineTool", 
+            "label": "extract darkmatter", 
+            "doc": "retrieve predicted proteins that have no similarity hits\n>extract_darkmatter.py -i <input> -s <sim 1> -s <sim 2> -m <clust map 1> -m <clust map 2> -o <outName>\n", 
+            "hints": [
+                {
+                    "dockerPull": "mgrast/pipeline:4.03", 
+                    "class": "DockerRequirement"
+                }
+            ], 
+            "requirements": [
+                {
+                    "class": "InlineJavascriptRequirement"
+                }
+            ], 
+            "stdout": "extract_darkmatter.log", 
+            "stderr": "extract_darkmatter.error", 
+            "inputs": [
+                {
+                    "type": {
+                        "type": "array", 
+                        "items": "File", 
+                        "inputBinding": {
+                            "prefix": "-m"
+                        }
+                    }, 
+                    "doc": "Input cluster mapping files", 
+                    "id": "#extract_darkmatter.tool.cwl/clustMap"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input gene sequence file", 
+                    "format": [
+                        "#extract_darkmatter.tool.cwl/geneSeq/fasta"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "-i"
+                    }, 
+                    "id": "#extract_darkmatter.tool.cwl/geneSeq"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Output darkmatter sequence", 
+                    "inputBinding": {
+                        "prefix": "-o"
+                    }, 
+                    "id": "#extract_darkmatter.tool.cwl/outName"
+                }, 
+                {
+                    "type": {
+                        "type": "array", 
+                        "items": "File", 
+                        "inputBinding": {
+                            "prefix": "-s"
+                        }
+                    }, 
+                    "doc": "Input similarity hit files", 
+                    "id": "#extract_darkmatter.tool.cwl/simHit"
+                }
+            ], 
+            "baseCommand": [
+                "extract_darkmatter.py"
+            ], 
+            "outputs": [
+                {
+                    "type": "stderr", 
+                    "id": "#extract_darkmatter.tool.cwl/error"
+                }, 
+                {
+                    "type": "stdout", 
+                    "id": "#extract_darkmatter.tool.cwl/info"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Output darkmatter sequence file", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outName)"
+                    }, 
+                    "id": "#extract_darkmatter.tool.cwl/output"
+                }
+            ], 
+            "id": "#extract_darkmatter.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
             "label": "filter fasta", 
             "doc": "filter fasta file based on sequence length and/or on number of ambiguity characters (Ns)\nskipping both filters is equivalent to copying the file, but slower\n", 
             "hints": [
@@ -1170,6 +1341,97 @@
                 }
             ], 
             "id": "#filter_feature.tool.cwl"
+        }, 
+        {
+            "class": "CommandLineTool", 
+            "label": "contig LCA", 
+            "doc": "create contig LCA from rRNA and Protein LCAs\n>find_contig_lca.py --rna <rnaLCA> --prot <protLCA> --scg <scgs> --output <outName>\n", 
+            "hints": [
+                {
+                    "dockerPull": "mgrast/pipeline:4.03", 
+                    "class": "DockerRequirement"
+                }
+            ], 
+            "requirements": [
+                {
+                    "class": "InlineJavascriptRequirement"
+                }
+            ], 
+            "stdout": "find_contig_lca.log", 
+            "stderr": "find_contig_lca.error", 
+            "inputs": [
+                {
+                    "type": "string", 
+                    "doc": "Output expanded contig LCA", 
+                    "inputBinding": {
+                        "prefix": "--output"
+                    }, 
+                    "id": "#find_contig_lca.tool.cwl/outName"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input expanded protein LCA file", 
+                    "format": [
+                        "#find_contig_lca.tool.cwl/protLCA/tsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--prot"
+                    }, 
+                    "id": "#find_contig_lca.tool.cwl/protLCA"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Input expanded rna LCA file", 
+                    "format": [
+                        "#find_contig_lca.tool.cwl/rnaLCA/tsv"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--rna"
+                    }, 
+                    "id": "#find_contig_lca.tool.cwl/rnaLCA"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "md5 single copy gene file", 
+                    "format": [
+                        "#find_contig_lca.tool.cwl/scgs/json"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--scg"
+                    }, 
+                    "id": "#find_contig_lca.tool.cwl/scgs"
+                }
+            ], 
+            "baseCommand": [
+                "find_contig_lca.py"
+            ], 
+            "arguments": [
+                {
+                    "valueFrom": "--verbose"
+                }
+            ], 
+            "outputs": [
+                {
+                    "type": "stderr", 
+                    "id": "#find_contig_lca.tool.cwl/error"
+                }, 
+                {
+                    "type": "stdout", 
+                    "id": "#find_contig_lca.tool.cwl/info"
+                }, 
+                {
+                    "type": "File", 
+                    "doc": "Output expanded contig LCA file", 
+                    "outputBinding": {
+                        "glob": "$(inputs.outName)"
+                    }, 
+                    "id": "#find_contig_lca.tool.cwl/output"
+                }
+            ], 
+            "id": "#find_contig_lca.tool.cwl"
         }, 
         {
             "class": "CommandLineTool", 
@@ -2267,7 +2529,7 @@
         {
             "class": "CommandLineTool", 
             "label": "annotate sims", 
-            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
+            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --in_scg <scgs> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
@@ -2364,6 +2626,20 @@
                         "prefix": "--out_rna"
                     }, 
                     "id": "#sims_annotate.tool.cwl/outRnaName"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "doc": "md5 single copy gene file", 
+                    "format": [
+                        "#sims_annotate.tool.cwl/scgs/FileFormats.cv.yamljson"
+                    ], 
+                    "inputBinding": {
+                        "prefix": "--in_scg"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/scgs"
                 }, 
                 {
                     "type": [
@@ -2840,68 +3116,246 @@
                 }, 
                 {
                     "class": "MultipleInputFeatureRequirement"
+                }, 
+                {
+                    "class": "SubworkflowFeatureRequirement"
                 }
             ], 
             "inputs": [
-                {
-                    "type": {
-                        "type": "array", 
-                        "items": "File"
-                    }, 
-                    "id": "#abundance.workflow.cwl/clustMaps"
-                }, 
                 {
                     "type": [
                         "null", 
                         "File"
                     ], 
-                    "id": "#abundance.workflow.cwl/coverage"
+                    "id": "#abundance-clca.workflow.cwl/coverage"
                 }, 
                 {
                     "type": {
                         "type": "array", 
                         "items": "File"
                     }, 
-                    "id": "#abundance.workflow.cwl/expandSims"
+                    "id": "#abundance-clca.workflow.cwl/expandSims"
                 }, 
                 {
                     "type": {
                         "type": "array", 
                         "items": "File"
                     }, 
-                    "id": "#abundance.workflow.cwl/filterSims"
+                    "id": "#abundance-clca.workflow.cwl/filterSims"
                 }, 
                 {
                     "type": "string", 
-                    "id": "#abundance.workflow.cwl/jobid"
-                }, 
-                {
-                    "type": {
-                        "type": "array", 
-                        "items": "File"
-                    }, 
-                    "id": "#abundance.workflow.cwl/lcaAnns"
+                    "id": "#abundance-clca.workflow.cwl/jobid"
                 }, 
                 {
                     "type": "File", 
-                    "id": "#abundance.workflow.cwl/md5index"
+                    "id": "#abundance-clca.workflow.cwl/m5nrSCG"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#abundance-clca.workflow.cwl/md5index"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#abundance-clca.workflow.cwl/protClustMap"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#abundance-clca.workflow.cwl/protExpandLca"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#abundance-clca.workflow.cwl/rnaClustMap"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#abundance-clca.workflow.cwl/rnaExpandLca"
                 }
             ], 
             "outputs": [
                 {
                     "type": "File", 
-                    "outputSource": "#abundance.workflow.cwl/lcaProfile/output", 
-                    "id": "#abundance.workflow.cwl/lcaProfileOut"
+                    "outputSource": "#abundance-clca.workflow.cwl/lcaProfile/contigLCA", 
+                    "id": "#abundance-clca.workflow.cwl/lcaProfileOut"
                 }, 
                 {
                     "type": "File", 
-                    "outputSource": "#abundance.workflow.cwl/md5Profile/output", 
-                    "id": "#abundance.workflow.cwl/md5ProfileOut"
+                    "outputSource": "#abundance-clca.workflow.cwl/md5Profile/output", 
+                    "id": "#abundance-clca.workflow.cwl/md5ProfileOut"
                 }, 
                 {
                     "type": "File", 
-                    "outputSource": "#abundance.workflow.cwl/sourceStats/output", 
-                    "id": "#abundance.workflow.cwl/sourceStatsOut"
+                    "outputSource": "#abundance-clca.workflow.cwl/sourceStats/output", 
+                    "id": "#abundance-clca.workflow.cwl/sourceStatsOut"
+                }
+            ], 
+            "steps": [
+                {
+                    "run": "#contig-lca.workflow.cwl", 
+                    "in": [
+                        {
+                            "source": "#abundance-clca.workflow.cwl/coverage", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/coverage"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/jobid", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/jobid"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/m5nrSCG", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/m5nrSCG"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/protClustMap", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/protClustMap"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/protExpandLca", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/protExpandLca"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/rnaClustMap", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/rnaClustMap"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/rnaExpandLca", 
+                            "id": "#abundance-clca.workflow.cwl/lcaProfile/rnaExpandLca"
+                        }
+                    ], 
+                    "out": [
+                        "#abundance-clca.workflow.cwl/lcaProfile/contigLCA"
+                    ], 
+                    "id": "#abundance-clca.workflow.cwl/lcaProfile"
+                }, 
+                {
+                    "run": "#sims_abundance.tool.cwl", 
+                    "in": [
+                        {
+                            "source": [
+                                "#abundance-clca.workflow.cwl/rnaClustMap", 
+                                "#abundance-clca.workflow.cwl/protClustMap"
+                            ], 
+                            "id": "#abundance-clca.workflow.cwl/md5Profile/cluster"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/coverage", 
+                            "id": "#abundance-clca.workflow.cwl/md5Profile/coverage"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/filterSims", 
+                            "id": "#abundance-clca.workflow.cwl/md5Profile/input"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/md5index", 
+                            "id": "#abundance-clca.workflow.cwl/md5Profile/md5index"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).700.annotation.md5.abundance", 
+                            "id": "#abundance-clca.workflow.cwl/md5Profile/outName"
+                        }, 
+                        {
+                            "valueFrom": "md5", 
+                            "id": "#abundance-clca.workflow.cwl/md5Profile/profileType"
+                        }
+                    ], 
+                    "out": [
+                        "#abundance-clca.workflow.cwl/md5Profile/output"
+                    ], 
+                    "id": "#abundance-clca.workflow.cwl/md5Profile"
+                }, 
+                {
+                    "run": "#sims_abundance.tool.cwl", 
+                    "in": [
+                        {
+                            "source": [
+                                "#abundance-clca.workflow.cwl/rnaClustMap", 
+                                "#abundance-clca.workflow.cwl/protClustMap"
+                            ], 
+                            "id": "#abundance-clca.workflow.cwl/sourceStats/cluster"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/coverage", 
+                            "id": "#abundance-clca.workflow.cwl/sourceStats/coverage"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/expandSims", 
+                            "id": "#abundance-clca.workflow.cwl/sourceStats/input"
+                        }, 
+                        {
+                            "source": "#abundance-clca.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).700.annotation.source.stats", 
+                            "id": "#abundance-clca.workflow.cwl/sourceStats/outName"
+                        }, 
+                        {
+                            "valueFrom": "source", 
+                            "id": "#abundance-clca.workflow.cwl/sourceStats/profileType"
+                        }
+                    ], 
+                    "out": [
+                        "#abundance-clca.workflow.cwl/sourceStats/output"
+                    ], 
+                    "id": "#abundance-clca.workflow.cwl/sourceStats"
+                }
+            ], 
+            "id": "#abundance-clca.workflow.cwl"
+        }, 
+        {
+            "class": "Workflow", 
+            "label": "contig LCA", 
+            "doc": "create LCA consistant across input contigs contigs\norder of precedence - rRNA, single copy gene, LCA of genes\n", 
+            "requirements": [
+                {
+                    "class": "StepInputExpressionRequirement"
+                }, 
+                {
+                    "class": "InlineJavascriptRequirement"
+                }, 
+                {
+                    "class": "ScatterFeatureRequirement"
+                }, 
+                {
+                    "class": "MultipleInputFeatureRequirement"
+                }
+            ], 
+            "inputs": [
+                {
+                    "type": [
+                        "null", 
+                        "File"
+                    ], 
+                    "id": "#contig-lca.workflow.cwl/coverage"
+                }, 
+                {
+                    "type": "string", 
+                    "id": "#contig-lca.workflow.cwl/jobid"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#contig-lca.workflow.cwl/m5nrSCG"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#contig-lca.workflow.cwl/protClustMap"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#contig-lca.workflow.cwl/protExpandLca"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#contig-lca.workflow.cwl/rnaClustMap"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#contig-lca.workflow.cwl/rnaExpandLca"
+                }
+            ], 
+            "outputs": [
+                {
+                    "type": "File", 
+                    "outputSource": "#contig-lca.workflow.cwl/abundanceLca/output", 
+                    "id": "#contig-lca.workflow.cwl/contigLCA"
                 }
             ], 
             "steps": [
@@ -2909,98 +3363,157 @@
                     "run": "#sims_abundance.tool.cwl", 
                     "in": [
                         {
-                            "source": "#abundance.workflow.cwl/clustMaps", 
-                            "id": "#abundance.workflow.cwl/lcaProfile/cluster"
+                            "source": "#contig-lca.workflow.cwl/coverage", 
+                            "id": "#contig-lca.workflow.cwl/abundanceLca/coverage"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/coverage", 
-                            "id": "#abundance.workflow.cwl/lcaProfile/coverage"
+                            "source": "#contig-lca.workflow.cwl/expandLca/output", 
+                            "valueFrom": "${ return [self]; }", 
+                            "id": "#contig-lca.workflow.cwl/abundanceLca/input"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/lcaAnns", 
-                            "id": "#abundance.workflow.cwl/lcaProfile/input"
-                        }, 
-                        {
-                            "source": "#abundance.workflow.cwl/jobid", 
+                            "source": "#contig-lca.workflow.cwl/jobid", 
                             "valueFrom": "$(self).700.annotation.lca.abundance", 
-                            "id": "#abundance.workflow.cwl/lcaProfile/outName"
+                            "id": "#contig-lca.workflow.cwl/abundanceLca/outName"
                         }, 
                         {
                             "valueFrom": "lca", 
-                            "id": "#abundance.workflow.cwl/lcaProfile/profileType"
+                            "id": "#contig-lca.workflow.cwl/abundanceLca/profileType"
                         }
                     ], 
                     "out": [
-                        "#abundance.workflow.cwl/lcaProfile/output"
+                        "#contig-lca.workflow.cwl/abundanceLca/output"
                     ], 
-                    "id": "#abundance.workflow.cwl/lcaProfile"
+                    "id": "#contig-lca.workflow.cwl/abundanceLca"
                 }, 
                 {
-                    "run": "#sims_abundance.tool.cwl", 
+                    "run": "#find_contig_lca.tool.cwl", 
                     "in": [
                         {
-                            "source": "#abundance.workflow.cwl/clustMaps", 
-                            "id": "#abundance.workflow.cwl/md5Profile/cluster"
+                            "source": "#contig-lca.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).650.contig.expand.lca", 
+                            "id": "#contig-lca.workflow.cwl/expandLca/outName"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/coverage", 
-                            "id": "#abundance.workflow.cwl/md5Profile/coverage"
+                            "source": "#contig-lca.workflow.cwl/sortProt/output", 
+                            "id": "#contig-lca.workflow.cwl/expandLca/protLCA"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/filterSims", 
-                            "id": "#abundance.workflow.cwl/md5Profile/input"
+                            "source": "#contig-lca.workflow.cwl/sortRna/output", 
+                            "id": "#contig-lca.workflow.cwl/expandLca/rnaLCA"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/md5index", 
-                            "id": "#abundance.workflow.cwl/md5Profile/md5index"
-                        }, 
-                        {
-                            "source": "#abundance.workflow.cwl/jobid", 
-                            "valueFrom": "$(self).700.annotation.md5.abundance", 
-                            "id": "#abundance.workflow.cwl/md5Profile/outName"
-                        }, 
-                        {
-                            "valueFrom": "md5", 
-                            "id": "#abundance.workflow.cwl/md5Profile/profileType"
+                            "source": "#contig-lca.workflow.cwl/m5nrSCG", 
+                            "id": "#contig-lca.workflow.cwl/expandLca/scgs"
                         }
                     ], 
                     "out": [
-                        "#abundance.workflow.cwl/md5Profile/output"
+                        "#contig-lca.workflow.cwl/expandLca/output"
                     ], 
-                    "id": "#abundance.workflow.cwl/md5Profile"
+                    "id": "#contig-lca.workflow.cwl/expandLca"
                 }, 
                 {
-                    "run": "#sims_abundance.tool.cwl", 
+                    "run": "#sort.tool.cwl", 
                     "in": [
                         {
-                            "source": "#abundance.workflow.cwl/clustMaps", 
-                            "id": "#abundance.workflow.cwl/sourceStats/cluster"
+                            "source": "#contig-lca.workflow.cwl/unclusterProt/output", 
+                            "id": "#contig-lca.workflow.cwl/sortProt/input"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/coverage", 
-                            "id": "#abundance.workflow.cwl/sourceStats/coverage"
+                            "valueFrom": "2,2", 
+                            "id": "#contig-lca.workflow.cwl/sortProt/key"
                         }, 
                         {
-                            "source": "#abundance.workflow.cwl/expandSims", 
-                            "id": "#abundance.workflow.cwl/sourceStats/input"
-                        }, 
-                        {
-                            "source": "#abundance.workflow.cwl/jobid", 
-                            "valueFrom": "$(self).700.annotation.source.stats", 
-                            "id": "#abundance.workflow.cwl/sourceStats/outName"
-                        }, 
-                        {
-                            "valueFrom": "source", 
-                            "id": "#abundance.workflow.cwl/sourceStats/profileType"
+                            "source": "#contig-lca.workflow.cwl/unclusterProt/output", 
+                            "valueFrom": "$(self.basename).sort", 
+                            "id": "#contig-lca.workflow.cwl/sortProt/outName"
                         }
                     ], 
                     "out": [
-                        "#abundance.workflow.cwl/sourceStats/output"
+                        "#contig-lca.workflow.cwl/sortProt/output"
                     ], 
-                    "id": "#abundance.workflow.cwl/sourceStats"
+                    "id": "#contig-lca.workflow.cwl/sortProt"
+                }, 
+                {
+                    "run": "#sort.tool.cwl", 
+                    "in": [
+                        {
+                            "source": "#contig-lca.workflow.cwl/unclusterRna/output", 
+                            "id": "#contig-lca.workflow.cwl/sortRna/input"
+                        }, 
+                        {
+                            "valueFrom": "2,2", 
+                            "id": "#contig-lca.workflow.cwl/sortRna/key"
+                        }, 
+                        {
+                            "source": "#contig-lca.workflow.cwl/unclusterRna/output", 
+                            "valueFrom": "$(self.basename).sort", 
+                            "id": "#contig-lca.workflow.cwl/sortRna/outName"
+                        }
+                    ], 
+                    "out": [
+                        "#contig-lca.workflow.cwl/sortRna/output"
+                    ], 
+                    "id": "#contig-lca.workflow.cwl/sortRna"
+                }, 
+                {
+                    "run": "#uncluster_sims.tool.cwl", 
+                    "in": [
+                        {
+                            "source": "#contig-lca.workflow.cwl/protClustMap", 
+                            "valueFrom": "${ return [self]; }", 
+                            "id": "#contig-lca.workflow.cwl/unclusterProt/clustMap"
+                        }, 
+                        {
+                            "source": "#contig-lca.workflow.cwl/protExpandLca", 
+                            "valueFrom": "$(self.basename).uncluster", 
+                            "id": "#contig-lca.workflow.cwl/unclusterProt/outName"
+                        }, 
+                        {
+                            "valueFrom": "${ return 2; }", 
+                            "id": "#contig-lca.workflow.cwl/unclusterProt/position"
+                        }, 
+                        {
+                            "source": "#contig-lca.workflow.cwl/protExpandLca", 
+                            "valueFrom": "${ return [self]; }", 
+                            "id": "#contig-lca.workflow.cwl/unclusterProt/simHit"
+                        }
+                    ], 
+                    "out": [
+                        "#contig-lca.workflow.cwl/unclusterProt/output"
+                    ], 
+                    "id": "#contig-lca.workflow.cwl/unclusterProt"
+                }, 
+                {
+                    "run": "#uncluster_sims.tool.cwl", 
+                    "in": [
+                        {
+                            "source": "#contig-lca.workflow.cwl/rnaClustMap", 
+                            "valueFrom": "${ return [self]; }", 
+                            "id": "#contig-lca.workflow.cwl/unclusterRna/clustMap"
+                        }, 
+                        {
+                            "source": "#contig-lca.workflow.cwl/rnaExpandLca", 
+                            "valueFrom": "$(self.basename).uncluster", 
+                            "id": "#contig-lca.workflow.cwl/unclusterRna/outName"
+                        }, 
+                        {
+                            "valueFrom": "${ return 2; }", 
+                            "id": "#contig-lca.workflow.cwl/unclusterRna/position"
+                        }, 
+                        {
+                            "source": "#contig-lca.workflow.cwl/rnaExpandLca", 
+                            "valueFrom": "${ return [self]; }", 
+                            "id": "#contig-lca.workflow.cwl/unclusterRna/simHit"
+                        }
+                    ], 
+                    "out": [
+                        "#contig-lca.workflow.cwl/unclusterRna/output"
+                    ], 
+                    "id": "#contig-lca.workflow.cwl/unclusterRna"
                 }
             ], 
-            "id": "#abundance.workflow.cwl"
+            "id": "#contig-lca.workflow.cwl"
         }, 
         {
             "class": "Workflow", 
@@ -3434,9 +3947,32 @@
                     "type": "File", 
                     "outputSource": "#preprocess-fasta.workflow.cwl/filter/removed", 
                     "id": "#preprocess-fasta.workflow.cwl/removed"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#preprocess-fasta.workflow.cwl/adapterTrim/outTrim", 
+                    "id": "#preprocess-fasta.workflow.cwl/trimmed"
                 }
             ], 
             "steps": [
+                {
+                    "run": "#autoskewer.tool.cwl", 
+                    "in": [
+                        {
+                            "source": "#preprocess-fasta.workflow.cwl/sequences", 
+                            "id": "#preprocess-fasta.workflow.cwl/adapterTrim/input"
+                        }, 
+                        {
+                            "source": "#preprocess-fasta.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).080.adapter.trim.passed.fna", 
+                            "id": "#preprocess-fasta.workflow.cwl/adapterTrim/outName"
+                        }
+                    ], 
+                    "out": [
+                        "#preprocess-fasta.workflow.cwl/adapterTrim/outTrim"
+                    ], 
+                    "id": "#preprocess-fasta.workflow.cwl/adapterTrim"
+                }, 
                 {
                     "run": "#filter_fasta.tool.cwl", 
                     "in": [
@@ -3453,7 +3989,7 @@
                             "id": "#preprocess-fasta.workflow.cwl/filter/filterLn"
                         }, 
                         {
-                            "source": "#preprocess-fasta.workflow.cwl/sequences", 
+                            "source": "#preprocess-fasta.workflow.cwl/adapterTrim/outTrim", 
                             "id": "#preprocess-fasta.workflow.cwl/filter/input"
                         }, 
                         {
@@ -3517,6 +4053,10 @@
                         "items": "File"
                     }, 
                     "id": "#protein-filter-annotation.workflow.cwl/m5nrFull"
+                }, 
+                {
+                    "type": "File", 
+                    "id": "#protein-filter-annotation.workflow.cwl/m5nrSCG"
                 }, 
                 {
                     "type": [
@@ -3617,6 +4157,10 @@
                             "source": "#protein-filter-annotation.workflow.cwl/jobid", 
                             "valueFrom": "$(self).650.aa.expand.ontology", 
                             "id": "#protein-filter-annotation.workflow.cwl/annotateSims/outOntologyName"
+                        }, 
+                        {
+                            "source": "#protein-filter-annotation.workflow.cwl/m5nrSCG", 
+                            "id": "#protein-filter-annotation.workflow.cwl/annotateSims/scgs"
                         }
                     ], 
                     "out": [
@@ -4413,6 +4957,10 @@
                 }, 
                 {
                     "type": "File", 
+                    "id": "#main/m5nrSCG"
+                }, 
+                {
+                    "type": "File", 
                     "id": "#main/m5rnaClust"
                 }, 
                 {
@@ -4438,6 +4986,16 @@
                 }
             ], 
             "outputs": [
+                {
+                    "type": "File", 
+                    "outputSource": "#main/preProcess/trimmed", 
+                    "id": "#main/adapterPassed"
+                }, 
+                {
+                    "type": "File", 
+                    "outputSource": "#main/darkmatter/output", 
+                    "id": "#main/darkmatterOut"
+                }, 
                 {
                     "type": "File", 
                     "outputSource": "#main/dereplication/passed", 
@@ -4551,15 +5109,8 @@
             ], 
             "steps": [
                 {
-                    "run": "#abundance.workflow.cwl", 
+                    "run": "#abundance-clca.workflow.cwl", 
                     "in": [
-                        {
-                            "source": [
-                                "#main/rnaAnnotate/rnaClustMapOut", 
-                                "#main/protAnnotate/protClustMapOut"
-                            ], 
-                            "id": "#main/abundance/clustMaps"
-                        }, 
                         {
                             "source": [
                                 "#main/rnaAnnotate/rnaExpandOut", 
@@ -4579,15 +5130,28 @@
                             "id": "#main/abundance/jobid"
                         }, 
                         {
-                            "source": [
-                                "#main/rnaAnnotate/rnaLCAOut", 
-                                "#main/protAnnotate/protLCAOut"
-                            ], 
-                            "id": "#main/abundance/lcaAnns"
+                            "source": "#main/m5nrSCG", 
+                            "id": "#main/abundance/m5nrSCG"
                         }, 
                         {
                             "source": "#main/indexSimSeq/indexOut", 
                             "id": "#main/abundance/md5index"
+                        }, 
+                        {
+                            "source": "#main/protAnnotate/protClustMapOut", 
+                            "id": "#main/abundance/protClustMap"
+                        }, 
+                        {
+                            "source": "#main/protAnnotate/protLCAOut", 
+                            "id": "#main/abundance/protExpandLca"
+                        }, 
+                        {
+                            "source": "#main/rnaAnnotate/rnaClustMapOut", 
+                            "id": "#main/abundance/rnaClustMap"
+                        }, 
+                        {
+                            "source": "#main/rnaAnnotate/rnaLCAOut", 
+                            "id": "#main/abundance/rnaExpandLca"
                         }
                     ], 
                     "out": [
@@ -4596,6 +5160,38 @@
                         "#main/abundance/sourceStatsOut"
                     ], 
                     "id": "#main/abundance"
+                }, 
+                {
+                    "run": "#extract_darkmatter.tool.cwl", 
+                    "in": [
+                        {
+                            "source": [
+                                "#main/rnaAnnotate/rnaClustMapOut", 
+                                "#main/protAnnotate/protClustMapOut"
+                            ], 
+                            "id": "#main/darkmatter/clustMap"
+                        }, 
+                        {
+                            "source": "#main/protAnnotate/protFilterFeatureOut", 
+                            "id": "#main/darkmatter/geneSeq"
+                        }, 
+                        {
+                            "source": "#main/jobid", 
+                            "valueFrom": "$(self).750.darkmatter.faa", 
+                            "id": "#main/darkmatter/outName"
+                        }, 
+                        {
+                            "source": [
+                                "#main/rnaAnnotate/rnaSimsOut", 
+                                "#main/protAnnotate/protSimsOut"
+                            ], 
+                            "id": "#main/darkmatter/simHit"
+                        }
+                    ], 
+                    "out": [
+                        "#main/darkmatter/output"
+                    ], 
+                    "id": "#main/darkmatter"
                 }, 
                 {
                     "run": "#dereplication.tool.cwl", 
@@ -4721,6 +5317,7 @@
                         }
                     ], 
                     "out": [
+                        "#main/preProcess/trimmed", 
                         "#main/preProcess/passed", 
                         "#main/preProcess/removed"
                     ], 
@@ -4740,6 +5337,10 @@
                         {
                             "source": "#main/m5nrFull", 
                             "id": "#main/protAnnotate/m5nrFull"
+                        }, 
+                        {
+                            "source": "#main/m5nrSCG", 
+                            "id": "#main/protAnnotate/m5nrSCG"
                         }, 
                         {
                             "source": "#main/rnaAnnotate/rnaClustMapOut", 
