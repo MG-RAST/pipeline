@@ -1,4 +1,4 @@
-jobid: wgs_fq_test
+jobid: wgs_fna_test
 
 sequences:
     class: File
