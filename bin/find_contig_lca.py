@@ -113,7 +113,7 @@ def main(args):
     
     # create contig LCAs for RNA features first, take precidence over protein features
     if opts.verbose:
-        print "Reading file %s ... "%(opts.in_rna)
+        print "Reading file %s ... "%(opts.rna)
     
     # get first parsable line
     prev = ""
@@ -158,7 +158,7 @@ def main(args):
     md5_scgs = load_scgs(opts.scg)
     phdl = open(opts.prot, 'rU')
     if opts.verbose:
-        "Reading file %s ... "%(opts.in_prot)
+        "Reading file %s ... "%(opts.prot)
     
     # get first parsable line
     prev = ""
