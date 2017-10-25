@@ -11,6 +11,22 @@ use Data::Dumper;
 use Cwd;
 umask 000;
 
+# rRNA list
+my @rnas = (
+    '28S',  # Eukaryotic LSU
+    '23S',  # Prokaryotic LSU, Plastid LSU
+    '18S',  # Eukaryotic SSU
+    '16S',  # Prokaryotic SSU, Plastid SSU, Mitochondrial LSU
+    '12S',  # Mitochondrial SSU
+    'ITS'   # internal transcribed spacer
+);
+# seq type map
+my %seqmap = (
+    'metagenome'        => 'WGS',
+    'metatranscriptome' => 'MT',
+    'mimarks-survey'    => 'Amplicon'
+);
+
 # options
 my $input     = "";
 my $metadata  = "";
@@ -53,7 +69,7 @@ unless ($auth && $api) {
 my $inbox = PipelineAWE::obj_from_url($api."/inbox", $auth);
 my %seq_files = map { $_->{filename}, $_ } grep { exists($_->{data_type}) && ($_->{data_type} eq 'sequence') } @{$inbox->{files}};
 
-my $to_submit   = {}; # file_name => mg_name
+my $to_submit   = {}; # file_name => [ mg_name, sequence_type ]
 my $no_inbox    = {}; # file_name
 my $no_metadata = {}; # file_name
 
@@ -79,7 +95,7 @@ if ($mdata && $params->{metadata}) {
     if ($mdata->{id} && ($mdata->{id} =~ /^mgp/)) {
         $project = $mdata->{id};
     }
-    my %md_names = (); # file w/o extension => mg name
+    my %md_names = (); # file w/o extension => [ mg_name, sequence_type ]
     foreach my $sample ( @{$mdata->{samples}} ) {
         next unless ($sample->{libraries} && scalar(@{$sample->{libraries}}));
         foreach my $library (@{$sample->{libraries}}) {
@@ -95,7 +111,19 @@ if ($mdata && $params->{metadata}) {
                 $file_name = $mg_name;
             }
             if ($mg_name && $file_name) {
-                $md_names{$file_name} = $mg_name;
+                my $seq_type = undef;
+                if (exists($library->{data}{investigation_type}) && exists($seqmap{$library->{data}{investigation_type}{value}})) {
+                    $seq_type = $seqmap{$library->{data}{investigation_type}{value}};
+                    if (exists($library->{data}{target_gene}) && $library->{data}{target_gene}{value}) {
+                        $seq_type = 'Metabarcode';
+                        foreach my $r (@rnas) {
+                            if ($library->{data}{target_gene}{value} =~ /$r/) {
+                                $seq_type = 'Amplicon';
+                            }
+                        }
+                    }
+                }
+                $md_names{$file_name} = [$mg_name, $seq_type];
             }
         }
     }
@@ -113,7 +141,7 @@ if ($mdata && $params->{metadata}) {
 if ($project) {
     unless ($mdata && $params->{metadata}) {
         while (my ($basename, $file_name) = each %$in_inbox) {
-            $to_submit->{$file_name} = $basename;
+            $to_submit->{$file_name} = [$basename, undef];
         }
     }
     my $pinfo = PipelineAWE::obj_from_url($api."/project/".$project, $auth);
@@ -130,6 +158,8 @@ my $submitted = {}; # file_name => [name, awe_id, mg_id]
 my $mgids = [];
 FILES: foreach my $fname (keys %$to_submit) {
     my $info = $seq_files{$fname};
+    my $metagenome_name = $to_submit->{$fname}[0];
+    my $sequence_type = $to_submit->{$fname}[1];
     # see if already exists for this submission (due to re-start)
     my $mg_by_md5 = PipelineAWE::obj_from_url($api."/metagenome/md5/".$info->{stats_info}{checksum}, $auth);
     if ($mg_by_md5 && ($mg_by_md5->{total_count} > 0)) {
@@ -147,6 +177,9 @@ FILES: foreach my $fname (keys %$to_submit) {
                         $create_data->{metagenome_id} = $mg->{id};
                         $create_data->{input_id}      = $info->{id};
                         $create_data->{submission}    = $params->{submission};
+                        if ($sequence_type) {
+                            $create_data->{sequence_type} = $sequence_type;
+                        }
                         my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data);
                         PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg->{id}, project_id => $project});
                     }
@@ -163,19 +196,22 @@ FILES: foreach my $fname (keys %$to_submit) {
         }
     }
     # reserve and create job
-    my $reserve_job = PipelineAWE::post_data($api."/job/reserve", $auth, {name => $to_submit->{$fname}, input_id => $info->{id}});
+    my $reserve_job = PipelineAWE::post_data($api."/job/reserve", $auth, {name => $metagenome_name, input_id => $info->{id}});
     my $mg_id = $reserve_job->{metagenome_id};
     my $create_data = $params->{parameters};
     $create_data->{metagenome_id} = $mg_id;
     $create_data->{input_id}      = $info->{id};
     $create_data->{submission}    = $params->{submission};
+    if ($sequence_type) {
+        $create_data->{sequence_type} = $sequence_type;
+    }
     my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data);
     # project
     PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
     # submit it
     my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
-    $submitted->{$fname} = [$to_submit->{$fname}, $submit_job->{awe_id}, $mg_id];
-    print STDOUT join("\t", ("submitted", $fname, $to_submit->{$fname}, $submit_job->{awe_id}, $mg_id))."\n";
+    $submitted->{$fname} = [$metagenome_name, $submit_job->{awe_id}, $mg_id];
+    print STDOUT join("\t", ("submitted", $fname, $metagenome_name, $submit_job->{awe_id}, $mg_id))."\n";
     push @$mgids, $mg_id;
 }
 
@@ -211,7 +247,6 @@ if ($mdata && $params->{metadata}) {
         }
     }
 }
-
 
 sub get_usage {
     return "USAGE: mgrast_submit.pl -input=<pipeline parameter file> [-metadata=<metadata file>, -project=<project id>]\n";
