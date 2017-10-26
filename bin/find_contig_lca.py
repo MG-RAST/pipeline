@@ -40,20 +40,25 @@ def merge_rows(cid, rows, scgs=set()):
     md5, ident, length, e_val = (set() for i in range(4))
     lca = ["-"] * 8
     lvl = 0
-    lcamatrix = []
+    lca_scg = []   # [ [length, lca] ]
+    lcamatrix = [] # [ lcas ]
     
     for row in rows:
+        # get scg lcas if any
         if scgs and any(m in scgs for m in row[0]):
-            # use only SCG LCAs
-            lcamatrix.append(row[5])
+            lca_scg.append([max(row[3]), row[5]])
         md5.update(row[0])
         ident.update(row[2])
         length.update(row[3])
         e_val.update(row[4])
     
-    if len(lcamatrix) == 0:
+    if len(lca_scg) == 0:
         # no SCGs, use all LCAs
         lcamatrix = [row[5] for row in rows]
+    else:
+        # get LCA for best hit SCG
+        maxlen = max([x[0] for x in lca_scg])
+        lcamatrix = [x[1] for x in filter(lambda y: y[0] == maxlen, lca_scg)]
     
     # find LCA of LCAs
     lcarotate = zip(*lcamatrix)
