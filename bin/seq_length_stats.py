@@ -36,13 +36,13 @@ IUPAC_DNA_STRICT = [
 ]
 
 IUPAC_AA = [
-    'a','b','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','x','y','z',
-    'A','B','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','X','Y','Z',
-    ' ', '\n'
+    'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+    '*', ' ', '\n'
 ]
 
 IUPAC_AA_STRICT = [
-    'A','B','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','X','Y','Z'
+    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'
 ]
 
 def sum_map(aMap):
@@ -112,7 +112,7 @@ def main(args):
     parser.add_option("-j", "--json", dest="json", default=False, action="store_true", help="Output stats in json format, default is tabbed text")
     parser.add_option("-t", "--type", dest="type", default="fasta", help="Input file type. Must be fasta or fastq [default 'fasta']")
     parser.add_option("-p", "--protein", dest="protein", default=False, action="store_true", help="Input file is Protein sequences [default is DNA/RNA]")
-    parser.add_option("-n", "--n_percent", dest="n_percent", default=100, help="Percent of sequence that is Ns for it to be counted [default is 100]")
+    parser.add_option("-x", "--x_percent", dest="x_percent", default=100, help="Percent of protein sequence that is Xs for it to be counted [default is 100]")
     parser.add_option("-l", "--length_bin", dest="len_bin", metavar="FILE", default=None, help="File to place length bins [default is no output]")
     parser.add_option("-g", "--gc_percent_bin", dest="gc_bin", metavar="FILE", default=None, help="File to place % gc bins [default is no output]")
     parser.add_option("-f", "--fast", dest="fast", default=False, action="store_true", help="Fast mode, only calculate length stats")
