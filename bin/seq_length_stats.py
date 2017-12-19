@@ -142,8 +142,8 @@ def main(args):
     ambig_seq  = 0
     kmer_len   = 16
     kmer_num   = 0
-    n_count    = 0
-    n_percent  = opts.n_percent / 100.0
+    x_count    = 0
+    x_percent  = opts.x_percent / 100.0
     prefix_map = defaultdict(int)
     in_hdl = open(opts.input, "rU")
     
@@ -187,7 +187,7 @@ def main(args):
                 continue
             
             if opts.protein:
-                n_char = 0
+                x_char = 0
                 for i, c in enumerate(seq):
                     if c not in iupac_set:
                         try:
@@ -197,11 +197,11 @@ def main(args):
                         except:
                             sys.stderr.write("[error] non-ASCII character at position %d in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(i, head, seqnum))
                             os._exit(1)
-                    if (c == 'N') or (c == 'n'):
-                        n_char += 1
-                # check if this is all Ns
-                if n_char >= (slen * n_percent):
-                    n_count += 1
+                    if (c == 'X') or (c == 'x'):
+                        x_char += 1
+                # check if this is all Xs
+                if x_char >= (slen * x_percent):
+                    x_count += 1
             else:
                 if opts.type == 'fastq':
                     for q in qual:
@@ -268,8 +268,8 @@ def main(args):
     
     if not opts.fast:
         if opts.protein:
-            stat_text.add("all_N_sequence_count\t%d"%n_count)
-            stat_map["all_N_sequence_count"] = n_count
+            stat_text.add("all_X_sequence_count\t%d"%x_count)
+            stat_map["all_X_sequence_count"] = x_count
         else:
             gcp_mean, gcp_stdev = get_mean_stdev(seqnum, gc_perc)
             gcr_mean, gcr_stdev = get_mean_stdev(seqnum, gc_ratio)
