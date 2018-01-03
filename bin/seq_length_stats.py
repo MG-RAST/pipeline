@@ -120,6 +120,7 @@ def main(args):
     parser.add_option("-m", "--seq_max", dest="seq_max", default=100000, type="int", help="max number of seqs to process (for kmer entropy) [default 100000]")
     parser.add_option("-c", "--ignore_comma", dest="ignore_comma", default=False, action="store_true", help="Ignore commas in header ID [default is to throw error]")
     parser.add_option("--strict", dest="strict", default=False, action="store_true", help="Strict sequence checking, invalidate those with lowercase or whitespace")
+    parser.add_option("--iupac", dest="iupac", default=False, action="store_true", help="Count sequences with non-iupac characters, do not die when encountered")
 
     # check options
     (opts, args) = parser.parse_args()
@@ -142,6 +143,7 @@ def main(args):
     ambig_seq  = 0
     kmer_len   = 16
     kmer_num   = 0
+    non_iupac  = 0
     x_count    = 0
     x_percent  = float(opts.x_percent) / 100.0
     prefix_map = defaultdict(int)
@@ -190,13 +192,16 @@ def main(args):
                 x_char = 0
                 for i, c in enumerate(seq):
                     if c not in iupac_set:
-                        try:
-                            ord(c)
-                            sys.stderr.write("[error] character '%s' (position %d) in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, i, head, seqnum))
-                            os._exit(1)
-                        except:
-                            sys.stderr.write("[error] non-ASCII character at position %d in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(i, head, seqnum))
-                            os._exit(1)
+                        if opts.iupac:
+                            non_iupac += 1
+                        else:
+                            try:
+                                ord(c)
+                                sys.stderr.write("[error] character '%s' (position %d) in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, i, head, seqnum))
+                                os._exit(1)
+                            except:
+                                sys.stderr.write("[error] non-ASCII character at position %d in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(i, head, seqnum))
+                                os._exit(1)
                     if (c == 'X') or (c == 'x'):
                         x_char += 1
                 # check if this is all Xs
@@ -212,13 +217,16 @@ def main(args):
                 char = {'A': 0, 'T': 0, 'G': 0, 'C': 0}
                 for i, c in enumerate(seq):
                     if c not in iupac_set:
-                        try:
-                            ord(c)
-                            sys.stderr.write("[error] character '%s' (position %d) in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, i, head, seqnum))
-                            os._exit(1)
-                        except:
-                            sys.stderr.write("[error] non-ASCII character at position %d in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(i, head, seqnum))
-                            os._exit(1)
+                        if opts.iupac:
+                            non_iupac += 1
+                        else:
+                            try:
+                                ord(c)
+                                sys.stderr.write("[error] character '%s' (position %d) in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(c, i, head, seqnum))
+                                os._exit(1)
+                            except:
+                                sys.stderr.write("[error] non-ASCII character at position %d in sequence: %s (sequence number %d) is not a valid IUPAC code\n" %(i, head, seqnum))
+                                os._exit(1)
                     if c in char:
                         char[c] += 1
                 atgc  = char['A'] + char['T'] + char['G'] + char['C']
@@ -295,6 +303,10 @@ def main(args):
                 stat_text.append("sequence_type\t%s"%seq_type_guess)
                 stat_map["sequence_type"] = seq_type_guess
 
+    if opts.iupac:
+        stat_text.append("non_iupac_count\t%s"%non_iupac)
+        stat_map["non_iupac_count"] = non_iupac
+    
     # output stats
     if not opts.output:
         sys.stdout.write( "\n".join(stat_text) + "\n" )
