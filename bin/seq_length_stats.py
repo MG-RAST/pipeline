@@ -143,7 +143,7 @@ def main(args):
     kmer_len   = 16
     kmer_num   = 0
     x_count    = 0
-    x_percent  = opts.x_percent / 100.0
+    x_percent  = float(opts.x_percent) / 100.0
     prefix_map = defaultdict(int)
     in_hdl = open(opts.input, "rU")
     
@@ -268,7 +268,7 @@ def main(args):
     
     if not opts.fast:
         if opts.protein:
-            stat_text.add("all_X_sequence_count\t%d"%x_count)
+            stat_text.append("all_X_sequence_count\t%d"%x_count)
             stat_map["all_X_sequence_count"] = x_count
         else:
             gcp_mean, gcp_stdev = get_mean_stdev(seqnum, gc_perc)
