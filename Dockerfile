@@ -136,6 +136,7 @@ RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - ; \
     apt-get install -y nodejs
 
 # copy files into image
+COPY CWL /
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
 COPY superblat /usr/local/bin/
