@@ -1,4 +1,4 @@
-# MG-RAST dockerfiles
+# MG-RAST pipeline Dockerfile
 
 FROM debian
 MAINTAINER The MG-RAST team
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 	bowtie2 	\
 	cdbfasta 	\
 	cd-hit		\
-	cmake \
+	cmake       \
 	dh-autoreconf \
 	git 		\
 	jellyfish 	\
@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y \
 	python-sphinx \
 	unzip \
 	wget \
+    vim \
 	curl
 
 #### install BLAT from src
@@ -88,15 +89,6 @@ RUN cd /root \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root ; rm -rf diamond
 
-### install swarm 2.1.9
-RUN cd /root \
-	&& git clone https://github.com/torognes/swarm.git \
-	&& cd swarm/src/ \
-	&& make \
-	&& install -m755 -s bin/* /usr/local/bin \
-	&& install -m755 scripts/* /usr/local/bin \
-	&& cd /root ; rm -rf swarm
-
 ### install ea-utils
 RUN cd /root \
 	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
@@ -119,18 +111,6 @@ RUN cd /root \
     && make install \
     && make clean \
     && cd /root ; rm -rf sortmerna-2* 2*.tar.gz
-
-### install vsearch 2.43
-RUN cd /root \
-    && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
-	&& tar xzf v2*.tar.gz \
-	&& cd vsearch-2* \
-	&& sh ./autogen.sh \
-	&& ./configure --prefix=/usr/local/ \
-	&& make \
-	&& make install \
-	&& make clean \
-	&& cd /root ; rm -rf vsearch-2* v2*.tar.gz
 
 ### install skewer
 RUN cd /root \
