@@ -3,7 +3,7 @@ jobid: wgs_fna_test
 sequences:
     class: File
     format: fasta
-    path: ../Data/Inputs/sequences.wgs.fasta
+    path: ../Inputs/sequences.wgs.fasta
 
 filterLn: true
 
@@ -17,34 +17,34 @@ derepPrefix: 50
 
 indexDir:
     class: Directory
-    path: ../Data/Inputs/DBs/
+    path: ../Inputs/DBs/
 
 indexName: e_coli
 
 m5nrBDB:
     class: File
-    path: ../Data/Inputs/DBs/m5nr_v1.bdb
+    path: ../Inputs/DBs/m5nr_v1.bdb
 
 m5nrFull:
     - class: File
-      path: ../Data/Inputs/DBs/md5nr.1
+      path: ../Inputs/DBs/md5nr.1
     - class: File
-      path: ../Data/Inputs/DBs/md5nr.2
+      path: ../Inputs/DBs/md5nr.2
 
 m5nrSCG:
     class: File
-    path: ../Data/Inputs/DBs/scg_md5.json
+    path: ../Inputs/DBs/scg_md5.json
 
 m5rnaFull:
     class: File
-    path: ../Data/Inputs/DBs/md5rna
+    path: ../Inputs/DBs/md5rna
 
 m5rnaClust:
     class: File
-    path: ../Data/Inputs/DBs/md5rna.clust
+    path: ../Inputs/DBs/md5rna.clust
 
 m5rnaIndex:
     class: Directory
-    path: ../Data/Inputs/DBs/
+    path: ../Inputs/DBs/
 
 m5rnaPrefix: m5rna.clust.index

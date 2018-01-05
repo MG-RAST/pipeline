@@ -1,6 +1,6 @@
 # Run Test Data
 
-cd /CWL/Data/DBs
+cd /CWL/Inputs/DBs
 bash getpredata.sh
 
 cd /test/assembled

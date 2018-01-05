@@ -3,7 +3,7 @@ jobid: amp_fna_test
 sequences:
     class: File
     format: fasta
-    path: ../Data/Inputs/sequences.amplicon.fasta
+    path: ../Inputs/sequences.amplicon.fasta
 
 filterLn: true
 
@@ -15,18 +15,18 @@ maxAmbig: 5
 
 m5nrBDB:
     class: File
-    path: ../Data/Inputs/DBs/m5nr_v1.bdb
+    path: ../Inputs/DBs/m5nr_v1.bdb
 
 m5rnaFull:
     class: File
-    path: ../Data/Inputs/DBs/md5rna
+    path: ../Inputs/DBs/md5rna
 
 m5rnaClust:
     class: File
-    path: ../Data/Inputs/DBs/md5rna.clust
+    path: ../Inputs/DBs/md5rna.clust
 
 m5rnaIndex:
     class: Directory
-    path: ../Data/Inputs/DBs/
+    path: ../Inputs/DBs/
 
 m5rnaPrefix: m5rna.clust.index
