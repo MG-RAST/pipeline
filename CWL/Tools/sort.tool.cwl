@@ -36,6 +36,7 @@ inputs:
         doc: |
             -t, --field-separator=SEP
             use SEP instead of non-blank to blank transition
+            default is tab
         inputBinding:
             prefix: -t
             valueFrom: $("\u0009")

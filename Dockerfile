@@ -112,6 +112,18 @@ RUN cd /root \
     && make clean \
     && cd /root ; rm -rf sortmerna-2* 2*.tar.gz
 
+### install vsearch 2.43
+RUN cd /root \
+    && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
+	&& tar xzf v2*.tar.gz \
+	&& cd vsearch-2* \
+	&& sh ./autogen.sh \
+	&& ./configure --prefix=/usr/local/ \
+	&& make \
+	&& make install \
+	&& make clean \
+	&& cd /root ; rm -rf vsearch-2* v2*.tar.gz
+
 ### install skewer
 RUN cd /root \
     && git clone https://github.com/relipmoc/skewer \
