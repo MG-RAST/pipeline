@@ -38,7 +38,7 @@ outputs:
         outputSource: formatCluster/output
     protSimsOut:
         type: File
-        outputSource: catSims/output
+        outputSource: bleachSims/output
     protFilterOut:
         type: File
         outputSource: annotateSims/outFilter
@@ -111,20 +111,28 @@ steps:
                 source: m5nrFull
                 valueFrom: $(self.basename).superblat.sims
         out: [output]
-    bleachSims:
-        run: ../Tools/bleachsims.tool.cwl
-        scatter: ["#bleachSims/input", "#bleachSims/outName"]
-        scatterMethod: dotproduct
-        in:
-            input: superblat/output
-            outName:
-                source: superblat/output
-                valueFrom: $(self.basename).trim
-        out: [output]
     catSims:
         run: ../Tools/cat.tool.cwl
         in:
-            files: bleachSims/output
+            files: superblat/output
+            outName:
+                source: jobid
+                valueFrom: $(self).superblat.sims.raw
+        out: [output]
+    sortSims:
+        run: ../Tools/sort.tool.cwl
+        in:
+            input: catSims/output
+            key: 
+                valueFrom: "1,1"
+            outName:
+                source: jobid
+                valueFrom: $(self).superblat.sims.sort
+        out: [output]
+    bleachSims:
+        run: ../Tools/bleachsims.tool.cwl
+        in:
+            input: sortSims/output
             outName:
                 source: jobid
                 valueFrom: $(self).650.superblat.sims
@@ -132,7 +140,7 @@ steps:
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:
-            input: catSims/output
+            input: bleachSims/output
             scgs: m5nrSCG
             database: m5nrBDB
             outFilterName:
