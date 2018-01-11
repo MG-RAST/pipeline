@@ -47,6 +47,7 @@ stdGroup.add_option("--uppercase", dest="uppercase", default=False, action="stor
 stdGroup.add_option("--iupac", dest="iupac", default=False, action="store_true", help="remove sequences with non-iupac characters")
 stdGroup.add_option("--ambig_trim", dest="ambig_trim", default=False, action="store_true", help="remove sequences composed of ambiguous characters: N for dna, X for protein")
 stdGroup.add_option("--ambig_per", dest="ambig_per", type="int", default=100, help="Percent of ambiguous characters in sequence to trigger removal [default is 100]")
+stdGroup.add_option("--remove_list", dest="remove_list", default=None, help="Filename to store list of IDs removed from fasta file [default is to not store]")
 parser.add_option_group(stdGroup)
 
 subGroup = OptionGroup(parser, "Subset Options")
@@ -240,9 +241,10 @@ def random_subset(input, output, seqmax, seqnum, is_fastq=False):
     input_handle.close()
     output_handle.close()
 
-def fastastd(input, output, protein, uppercase, iupac, ambig_trim, ambig_per):
+def fastastd(input, output, protein, uppercase, iupac, ambig_trim, ambig_per, remove_list):
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
+    remove_handle = open(remove_list, "w") if remove_list else None
     ambig_per = float(ambig_per) / 100.0
     iupac_set = IUPAC_AA if protein else IUPAC_DNA
     for record in SeqIO.parse(input_handle, "fasta"):
@@ -258,6 +260,8 @@ def fastastd(input, output, protein, uppercase, iupac, ambig_trim, ambig_per):
                 else:
                     ambig_count = seq.count('n') + seq.count('N')
                 if ambig_count >= (len(seq) * ambig_per):
+                    if remove_handle:
+                        remove_handle.write(record.id+"\n")
                     continue
             if iupac:
                 invalid = False
@@ -265,6 +269,8 @@ def fastastd(input, output, protein, uppercase, iupac, ambig_trim, ambig_per):
                     if c not in iupac_set:
                         invalid = True
                 if invalid:
+                    if remove_handle:
+                        remove_handle.write(record.id+"\n")
                     continue
             output_handle.write(">%s\n%s\n" % (record.id, seq))
     input_handle.close()
@@ -313,7 +319,7 @@ if __name__ == '__main__':
     elif options.bowtie_truncate:
         truncate(options.input, options.out, '1024', False)
     elif options.stdfasta:
-        fastastd(options.input, options.out, options.protein, options.uppercase, options.iupac, options.ambig_trim, options.ambig_per)
+        fastastd(options.input, options.out, options.protein, options.uppercase, options.iupac, options.ambig_trim, options.ambig_per, options.remove_list)
     elif options.sortbyseq:
         sortbyseq(options.input, options.out, options.tmp_dir)
     elif options.sortbyid:
