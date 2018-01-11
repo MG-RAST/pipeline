@@ -270,8 +270,8 @@ def main(args):
         data = {}
         md5s = {}
         if args.type == 'source':
-            data['e_val'] = defaultdict(str)
-            data['ident'] = defaultdict(str)
+            data['e_val'] = defaultdict(lambda: defaultdict(int))
+            data['ident'] = defaultdict(lambda: defaultdict(int))
         
         # parse expand file
         for ifile in args.input:
@@ -336,13 +336,9 @@ def main(args):
                         continue
                     e_bin = get_e_bin(eval_exp)
                     i_bin = get_i_bin(ident)
-                    if source in SOURCES:
-                        data['e_val'][source][e_bin] += abun
-                        data['ident'][source][i_bin] += abun
-                    else:
-                        SOURCES.add(source)
-                        data['e_val'][source] = {e_bin: abun}
-                        data['ident'][source] = {i_bin: abun}
+                    SOURCES.add(source)
+                    data['e_val'][source][e_bin] += abun
+                    data['ident'][source][i_bin] += abun
                 prev_frag = frag
             # end of file looping
             ihdl.close()
