@@ -29,7 +29,7 @@ Output: top hit for each query per source (protein or rna formats)
     3. lca expanded: see below
 
 m8:       subject|fragment, query|md5, identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score
-expanded: md5|query, fragment|subject, identity, length, evalue, function, organism, source, is_rna
+expanded: md5|query, fragment|subject, identity, length, evalue, source
 LCA:      md5|query list, fragment|subject, identity list, length list, evalue list, lca string, depth of lca (1-8)
 
   --format       protein|rna    Required. Type of sequences data in input file.
@@ -178,15 +178,15 @@ sub get_top_hits {
   unless (scalar(keys %$total_md5s) > 0) { return; }
 
   # get data for md5s from memcache
-  # ach: md5 => source => function => [organism | ontology_id]
+  # source: md5 => { source => 1 }
   # lca: md5 => [lca]
-  my ($md5_ach, $md5_lca) = &get_md5_data([keys %$total_md5s]);
+  my ($md5_source, $md5_lca) = &get_md5_data([keys %$total_md5s]);
 
   # get sources per frag: frag => {source}
   foreach my $frag (keys %$data) {
     foreach my $score (keys %{$data->{$frag}}) {
-      foreach my $md5 (grep {exists $md5_ach->{$_}} keys %{$data->{$frag}{$score}}) {
-	    map { $frag_srcs->{$frag}{$_} = 1 } keys %{$md5_ach->{$md5}};
+      foreach my $md5 (grep {exists $md5_source->{$_}} keys %{$data->{$frag}{$score}}) {
+	    map { $frag_srcs->{$frag}{$_} = 1 } keys %{$md5_source->{$md5}};
       }
     }
   }
@@ -216,7 +216,7 @@ sub get_top_hits {
     my $seen_md5s = {};
     foreach my $score (sort {$b <=> $a} keys %{$data->{$frag}}) {
       if (scalar(keys %$seen_srcs) >= scalar(keys %{$frag_srcs->{$frag}})) { last; }
-      my ($min_md5, $srcs) = &get_min_md5s_by_source($md5_ach, [keys %{$data->{$frag}{$score}}], $seen_srcs, $seen_md5s);
+      my ($min_md5, $srcs) = &get_min_md5s_by_source($md5_source, [keys %{$data->{$frag}{$score}}], $seen_srcs, $seen_md5s);
       $data_min_md5->{$frag}{$score} = $min_md5;
       map { $total_min_md5->{$_} = 1 } keys %$min_md5;
       map { $seen_md5s->{$_} = 1 } keys %$min_md5;
@@ -240,7 +240,7 @@ sub get_top_hits {
     next unless (exists $data_min_md5->{$frag});
     foreach my $score ( sort keys %{$data_min_md5->{$frag}} ) {
       foreach my $md5 ( sort keys %{$data_min_md5->{$frag}{$score}} ) {
-        next unless (exists $md5_ach->{$md5});
+        next unless (exists $md5_source->{$md5});
         
   	    # sim: [ identity, length, mismatch, gaps, q_start, q_end, s_start, s_end, evalue, bit_score ]
 	    my $sim = $data->{$frag}{$score}{$md5};
@@ -248,25 +248,12 @@ sub get_top_hits {
 	    # filter sim output
 	    $filter_text .= join("\t", ($frag, $md5, @$sim)) . "\n";
 
-	    # md5_ach: md5 => source => function => { 'organism' => [], 'ontology' => [] }
+	    # md5_source: md5 => [ source ]
 	    # src_map: id => [ name, type ]
         foreach my $src ( sort keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
-	      next unless (exists($md5_ach->{$md5}{$src}) && exists($src_map->{$src}));
+	      next unless (exists($md5_source->{$md5}{$src}) && exists($src_map->{$src}));
 	      my ($sname, $stype) = @{$src_map->{$src}};
-
-	      foreach my $func ( keys %{$md5_ach->{$md5}{$src}} ) {
-	        foreach my $otype ( keys %{$md5_ach->{$md5}{$src}{$func}} ) {
-	          foreach my $other ( @{$md5_ach->{$md5}{$src}{$func}{$otype}} ) {
-	            my $expand_line = join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], ($func || ""), $other, $src));
-	            if (($otype eq 'organism') && ($stype eq 'rna') && (! $get_prot)) {
-		          $expand_text .= $expand_line . "\t1\n";
-	            }
-	            elsif (($otype eq 'organism') && ($stype eq 'protein') && $get_prot) {
-		          $expand_text .= $expand_line . "\n";
-	            }
-	          }
-	        }
-	      }
+          $expand_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $sname));
 	    }
       }
     }
@@ -290,7 +277,9 @@ sub get_md5_data {
             $lca->{$m} = $data{$m}{lca};
         }
         if (exists $data{$m}{ann}) {
-            $ann->{$m} = $data{$m}{ann};
+            foreach my $src (keys %{$data{$m}{ann}}) {
+                $ann->{$m}{$src} = 1;
+            }
         }
     }
     return ($ann, $lca);
