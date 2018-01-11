@@ -253,7 +253,7 @@ sub get_top_hits {
         foreach my $src ( sort keys %{$data_min_md5->{$frag}{$score}{$md5}} ) {
 	      next unless (exists($md5_source->{$md5}{$src}) && exists($src_map->{$src}));
 	      my ($sname, $stype) = @{$src_map->{$src}};
-          $expand_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $sname));
+          $expand_text .= join("\t", ($md5, $frag, $sim->[0], $sim->[1], $sim->[8], $sname))."\n";
 	    }
       }
     }
