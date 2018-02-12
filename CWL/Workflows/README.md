@@ -12,4 +12,4 @@ The full MG-RAST workflows are:
 
 Each one has a corrisponding input file for testing: *.job.yaml
 
-The reaming workflows are sub-workflows contained within the above full workflows
+The reamining workflows are sub-workflows contained within the above full workflows
