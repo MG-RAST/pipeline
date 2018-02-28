@@ -112,7 +112,7 @@ def main(args):
     parser.add_option("-j", "--json", dest="json", default=False, action="store_true", help="Output stats in json format, default is tabbed text")
     parser.add_option("-t", "--type", dest="type", default="fasta", help="Input file type. Must be fasta or fastq [default 'fasta']")
     parser.add_option("-p", "--protein", dest="protein", default=False, action="store_true", help="Input file is Protein sequences [default is DNA/RNA]")
-    parser.add_option("-x", "--x_percent", dest="x_percent", default=100, help="Percent of protein sequence that is Xs for it to be counted [default is 100]")
+    parser.add_option("-x", "--x_percent", dest="x_percent", default=100, help="Percent of protein sequence characters that are Xs or DNA for it to be counted [default is 100]")
     parser.add_option("-l", "--length_bin", dest="len_bin", metavar="FILE", default=None, help="File to place length bins [default is no output]")
     parser.add_option("-g", "--gc_percent_bin", dest="gc_bin", metavar="FILE", default=None, help="File to place % gc bins [default is no output]")
     parser.add_option("-f", "--fast", dest="fast", default=False, action="store_true", help="Fast mode, only calculate length stats")
@@ -145,6 +145,7 @@ def main(args):
     kmer_num   = 0
     non_iupac  = 0
     x_count    = 0
+    bp_count   = 0
     x_percent  = float(opts.x_percent) / 100.0
     prefix_map = defaultdict(int)
     in_hdl = open(opts.input, "rU")
@@ -190,6 +191,7 @@ def main(args):
             
             if opts.protein:
                 x_char = 0
+                bp_char = 0
                 for i, c in enumerate(seq):
                     if c not in iupac_set:
                         if opts.iupac:
@@ -204,9 +206,14 @@ def main(args):
                                 os._exit(1)
                     if (c == 'X') or (c == 'x'):
                         x_char += 1
+                    if c in "ATCGNatcgn":
+                        bp_char += 1
                 # check if this is all Xs
                 if x_char >= (slen * x_percent):
                     x_count += 1
+                # check if this is all dna
+                if bp_char >= (slen * x_percent):
+                    bp_count += 1
             else:
                 if opts.type == 'fastq':
                     for q in qual:
@@ -278,6 +285,8 @@ def main(args):
         if opts.protein:
             stat_text.append("all_X_sequence_count\t%d"%x_count)
             stat_map["all_X_sequence_count"] = x_count
+            stat_text.append("all_DNA_sequence_count\t%d"%bp_count)
+            stat_map["all_DNA_sequence_count"] = bp_count
         else:
             gcp_mean, gcp_stdev = get_mean_stdev(seqnum, gc_perc)
             gcr_mean, gcr_stdev = get_mean_stdev(seqnum, gc_ratio)
