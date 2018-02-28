@@ -21,6 +21,7 @@ parser = OptionParser(usage)
 parser.add_option('-i', '--input', dest="input", help="input file: must be fasta for truncate|stdfasta|sortbyseq|sortbyid|remove_seqs|subset_seqs, tabfile for tab2fasta")
 parser.add_option('-o', '--output', dest="out", help="output file")
 parser.add_option('--fastq', dest="fastq", action="store_true", default=False, help="input file is fastq: for fasta2tab|sortbyid2tab|sortbyid2id|uniquefasta|random_subset")
+parser.add_option("--minimum", dest="minimum", type="int", default=1, help="remove sequences less than minimum length (default 1): for stdfasta|remove_seqs|subset_seqs|random_subset")
 
 cmdGroup = OptionGroup(parser, "Command Options")
 cmdGroup.add_option('--truncate', dest="truncate", default=None, help="truncate reads to inputed length in bps")
@@ -60,12 +61,15 @@ sortGroup.add_option('-t', '--tmp_dir', dest="tmp_dir", default="/tmp", help="so
 sortGroup.add_option('-l', '--list', dest="list", help="list of sequences sorted")
 parser.add_option_group(sortGroup)
 
-(options, args) = parser.parse_args()
+(opts, args) = parser.parse_args()
 
-if not ( options.input or options.out ):
+if not ( opts.input or opts.out ):
     parser.print_help()
     sys.stderr.write("[error] missing input and/or output files\n")
     sys.exit(1);
+
+if opts.minimum < 1:
+    opts.minimum = 1
 
 def fasta2tab(input, output, is_fastq=False, add_len=False):
     seqtype = 'fastq' if is_fastq else 'fasta'
@@ -164,12 +168,14 @@ def sortbyid2id(input, output, tmp_dir, is_fastq):
     sortedtab.close()
     os.remove("%s.tmp" % output)
 
-def remove_seqs(fasta_input, list, output, check):
+def remove_seqs(fasta_input, list, output, check, minimum):
     fasta_handle = open(fasta_input, "rU")
     list_handle = open(list, "rU") 
     output_handle = open(output, "w")
     current = list_handle.readline()[:-1]
     for r in SeqIO.parse(fasta_handle, "fasta"):
+        if len(record.seq) < minimum:
+            continue
         if current == "":
             output_handle.write(">%s\n%s\n" % (r.id, r.seq))
             continue
@@ -195,12 +201,14 @@ def remove_seqs(fasta_input, list, output, check):
     list_handle.close()
     output_handle.close()
 
-def subset_seqs(fasta_input, list, output, check):
+def subset_seqs(fasta_input, list, output, check, minimum):
     fasta_handle = open(fasta_input, "rU")
     list_handle = open(list, "rU") 
     output_handle = open(output, "w")
     current = list_handle.readline()[:-1]
     for r in SeqIO.parse(fasta_handle, "fasta"):
+        if len(record.seq) < minimum:
+            continue
         if check:
             if cmp(r.id, current) == 0:
                 output_handle.write(">%s\n%s\n" % (r.id, r.seq))
@@ -219,16 +227,19 @@ def subset_seqs(fasta_input, list, output, check):
     list_handle.close()
     output_handle.close()
 
-def random_subset(input, output, seqmax, seqnum, is_fastq=False):
+def random_subset(input, output, seqmax, seqnum, minimum, is_fastq=False):
     seqtype = 'fastq' if is_fastq else 'fasta'
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
     if seqnum == 0:
         for record in SeqIO.parse(input_handle, seqtype):
-            seqnum += 1
+            if len(record.seq) >= minimum:
+                seqnum += 1
     seqper = float(seqmax) / seqnum
     count  = 0
     for record in SeqIO.parse(input_handle, seqtype):
+        if len(record.seq) < minimum:
+            continue
         if count == seqmax:
             break
         rnd_num = random.random()
@@ -241,14 +252,14 @@ def random_subset(input, output, seqmax, seqnum, is_fastq=False):
     input_handle.close()
     output_handle.close()
 
-def fastastd(input, output, protein, uppercase, iupac, ambig_trim, ambig_per, remove_list):
+def fastastd(input, output, minimum, protein, uppercase, iupac, ambig_trim, ambig_per, remove_list):
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
     remove_handle = open(remove_list, "w") if remove_list else None
     ambig_per = float(ambig_per) / 100.0
     iupac_set = IUPAC_AA if protein else IUPAC_DNA
     for record in SeqIO.parse(input_handle, "fasta"):
-        if len(record.seq) > 0:
+        if len(record.seq) >= minimum:
             seq = str(record.seq)
             seq = "".join(seq.split())
             if uppercase:
@@ -306,38 +317,38 @@ def random_str(size=8):
 
         
 if __name__ == '__main__':
-    if options.fasta2tab:
-        fasta2tab(options.input, options.out, options.fastq)
-    elif options.tab2fasta:
-        tab2fasta(options.input, options.out)
-    elif options.fastq2fasta:
-        fastq2fasta(options.input, options.out)
-    elif options.truncate:
-        truncate(options.input, options.out, options.truncate, False)
-    elif options.truncateuniqid:
-        truncate(options.input, options.out, options.truncateuniqid, True)
-    elif options.bowtie_truncate:
-        truncate(options.input, options.out, '1024', False)
-    elif options.stdfasta:
-        fastastd(options.input, options.out, options.protein, options.uppercase, options.iupac, options.ambig_trim, options.ambig_per, options.remove_list)
-    elif options.sortbyseq:
-        sortbyseq(options.input, options.out, options.tmp_dir)
-    elif options.sortbyid:
-        sortbyid(options.input, options.out, options.tmp_dir)
-    elif options.sortbyid2tab:
-        sortbyid2tab(options.input, options.out, options.tmp_dir, options.fastq)
-    elif options.sortbyid2id:
-        sortbyid2id(options.input, options.out, options.tmp_dir, options.fastq)
-    elif options.fastq2uniquefasta:
-        fastq2uniquefasta(options.input, options.out)
-    elif options.uniquefasta:
-        uniquefasta(options.input, options.out, options.fastq)
-    elif options.remove_seqs:
-        remove_seqs(options.input, options.list, options.out, options.check)
-    elif options.subset_seqs:
-        subset_seqs(options.input, options.list, options.out, options.check)
-    elif options.random_subset > 0:
-        random_subset(options.input, options.out, options.random_subset, options.seq_count, options.fastq)
+    if opts.fasta2tab:
+        fasta2tab(opts.input, opts.out, opts.fastq)
+    elif opts.tab2fasta:
+        tab2fasta(opts.input, opts.out)
+    elif opts.fastq2fasta:
+        fastq2fasta(opts.input, opts.out)
+    elif opts.truncate:
+        truncate(opts.input, opts.out, opts.truncate, False)
+    elif opts.truncateuniqid:
+        truncate(opts.input, opts.out, opts.truncateuniqid, True)
+    elif opts.bowtie_truncate:
+        truncate(opts.input, opts.out, '1024', False)
+    elif opts.stdfasta:
+        fastastd(opts.input, opts.out, opts.minimum, opts.protein, opts.uppercase, opts.iupac, opts.ambig_trim, opts.ambig_per, opts.remove_list)
+    elif opts.sortbyseq:
+        sortbyseq(opts.input, opts.out, opts.tmp_dir)
+    elif opts.sortbyid:
+        sortbyid(opts.input, opts.out, opts.tmp_dir)
+    elif opts.sortbyid2tab:
+        sortbyid2tab(opts.input, opts.out, opts.tmp_dir, opts.fastq)
+    elif opts.sortbyid2id:
+        sortbyid2id(opts.input, opts.out, opts.tmp_dir, opts.fastq)
+    elif opts.fastq2uniquefasta:
+        fastq2uniquefasta(opts.input, opts.out)
+    elif opts.uniquefasta:
+        uniquefasta(opts.input, opts.out, opts.fastq)
+    elif opts.remove_seqs:
+        remove_seqs(opts.input, opts.list, opts.out, opts.check, opts.minimum)
+    elif opts.subset_seqs:
+        subset_seqs(opts.input, opts.list, opts.out, opts.check, opts.minimum)
+    elif opts.random_subset > 0:
+        random_subset(opts.input, opts.out, opts.random_subset, opts.seq_count, opts.minimum, opts.fastq)
     else:
         parser.print_help()
         sys.stderr.write("[error] must give valid command\n")
