@@ -47,7 +47,8 @@ stdGroup.add_option("--protein", dest="protein", default=False, action="store_tr
 stdGroup.add_option("--uppercase", dest="uppercase", default=False, action="store_true", help="convert sequence characters to uppercase")
 stdGroup.add_option("--iupac", dest="iupac", default=False, action="store_true", help="remove sequences with non-iupac characters")
 stdGroup.add_option("--ambig_trim", dest="ambig_trim", default=False, action="store_true", help="remove sequences composed of ambiguous characters: N for dna, X for protein")
-stdGroup.add_option("--ambig_per", dest="ambig_per", type="int", default=100, help="Percent of ambiguous characters in sequence to trigger removal [default is 100]")
+stdGroup.add_option("--dna_trim", dest="dna_trim", default=False, action="store_true", help="remove sequences composed of dna (ATCGN) characters, protein mode only")
+stdGroup.add_option("--per_trim", dest="per_trim", type="int", default=100, help="Percent of sequence composed of ambiguous or dna characters to trigger removal [default is 100]")
 stdGroup.add_option("--remove_list", dest="remove_list", default=None, help="Filename to store list of IDs removed from fasta file [default is to not store]")
 parser.add_option_group(stdGroup)
 
@@ -252,11 +253,11 @@ def random_subset(input, output, seqmax, seqnum, minimum, is_fastq=False):
     input_handle.close()
     output_handle.close()
 
-def fastastd(input, output, minimum, protein, uppercase, iupac, ambig_trim, ambig_per, remove_list):
+def fastastd(input, output, minimum, protein, uppercase, iupac, ambig_trim, dna_trim, per_trim, remove_list):
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
     remove_handle = open(remove_list, "w") if remove_list else None
-    ambig_per = float(ambig_per) / 100.0
+    per_trim = float(ambig_per) / 100.0
     iupac_set = IUPAC_AA if protein else IUPAC_DNA
     for record in SeqIO.parse(input_handle, "fasta"):
         if len(record.seq) >= minimum:
@@ -270,7 +271,16 @@ def fastastd(input, output, minimum, protein, uppercase, iupac, ambig_trim, ambi
                     ambig_count = seq.count('x') + seq.count('X')
                 else:
                     ambig_count = seq.count('n') + seq.count('N')
-                if ambig_count >= (len(seq) * ambig_per):
+                if ambig_count >= (len(seq) * per_trim):
+                    if remove_handle:
+                        remove_handle.write(record.id+"\n")
+                    continue
+            if dna_trim and protein:
+                dna_count = 0
+                for c in seq:
+                    if c in "ATCGNatcgn":
+                        dna_count += 1
+                if dna_count >= (len(seq) * per_trim):
                     if remove_handle:
                         remove_handle.write(record.id+"\n")
                     continue
@@ -330,7 +340,7 @@ if __name__ == '__main__':
     elif opts.bowtie_truncate:
         truncate(opts.input, opts.out, '1024', False)
     elif opts.stdfasta:
-        fastastd(opts.input, opts.out, opts.minimum, opts.protein, opts.uppercase, opts.iupac, opts.ambig_trim, opts.ambig_per, opts.remove_list)
+        fastastd(opts.input, opts.out, opts.minimum, opts.protein, opts.uppercase, opts.iupac, opts.ambig_trim, opts.dna_trim, opts.per_trim, opts.remove_list)
     elif opts.sortbyseq:
         sortbyseq(opts.input, opts.out, opts.tmp_dir)
     elif opts.sortbyid:
