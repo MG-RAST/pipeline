@@ -257,7 +257,7 @@ def fastastd(input, output, minimum, protein, uppercase, iupac, ambig_trim, dna_
     input_handle = open(input, "rU")
     output_handle = open(output, "w")
     remove_handle = open(remove_list, "w") if remove_list else None
-    per_trim = float(ambig_per) / 100.0
+    per_trim = float(per_trim) / 100.0
     iupac_set = IUPAC_AA if protein else IUPAC_DNA
     for record in SeqIO.parse(input_handle, "fasta"):
         if len(record.seq) >= minimum:
