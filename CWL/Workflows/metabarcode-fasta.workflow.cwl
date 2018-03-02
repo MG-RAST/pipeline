@@ -106,7 +106,7 @@ steps:
             m5nrBDB: m5nrBDB
             m5nrFull: m5nrFull
             m5nrSCG: m5nrSCG
-        out: [protFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut, protOntologyOut]
+        out: [protFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut]
     indexSimSeq:
         run: ../Workflows/index_sim_seq.workflow.cwl
         in:

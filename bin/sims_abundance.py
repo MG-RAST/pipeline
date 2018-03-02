@@ -22,7 +22,7 @@ import numpy as np
 from collections import defaultdict
 
 # constants
-SOURCES = None
+SOURCES = set()
 ev_re  = re.compile(r"^(\d(\.\d)?)e([-+])?0?(\d+)$") # .group(4) == abs(exponent)
 TYPES  = ['md5', 'lca', 'source']
 EVALS  = [-5 , -10 , -20 , -30 , -1000]
@@ -192,11 +192,10 @@ def print_lca_stats(ohdl, data, md5s):
 def print_source_stats(ohdl, data):
     if len(data) == 0:
         return
-    for i in range(SOURCES+2):
-        source = i+1
+    for source in SOURCES:
         if source not in data['e_val']:
             continue
-        ohdl.write(str(source))
+        ohdl.write(source)
         for e in EVALS:
             if e in data['e_val'][source]:
                 ohdl.write("\t%d"%data['e_val'][source][e])
@@ -216,7 +215,6 @@ def main(args):
     parser.add_argument('-i', '--input', dest="input", default=[], help="input file(s): expanded sims", action='append')
     parser.add_argument('-o', '--output', dest="output", default=None, help="output file: summary abundace")
     parser.add_argument('-t', '--type', dest="type", default=None, help="type of summary, one of: "+",".join(TYPES))
-    parser.add_argument('-s', '--m5nr_sources', dest="m5nr_sources", type=int, default=18, help="number of real sources in m5nr")
     parser.add_argument('-m', '--memory', dest="memory", type=int, default=0, help="log memory usage to *.mem.log [default off]")
     parser.add_argument('--coverage', dest="coverage", default=None, help="optional input file: assembely coverage")
     parser.add_argument('--cluster', dest="cluster", default=[], help="optional input file(s): cluster mapping", action='append')
@@ -236,7 +234,6 @@ def main(args):
     if not (args.type and (args.type in TYPES)):
         logger.error("missing or invalid type")
         return 1
-    SOURCES = args.m5nr_sources
     
     # fork the process
     pid = None
@@ -327,18 +324,19 @@ def main(args):
                     data[lca][0]['isum'] += abun * i_avg
                     data[lca][0]['lvl']  = int(level)
                 elif args.type == 'source':
-                    if len(parts) < 8:
+                    if len(parts) < 6:
                         continue
-                    (_md5, frag, ident, _length, e_val, _fid, _oid, source) = parts[:8]
+                    (_md5, frag, ident, _length, e_val, source) = parts[:6]
                     if not (frag and source):
                         continue
-                    (ident, e_val, source) = (float(ident), float(e_val), int(source))
+                    (ident, e_val) = (float(ident), float(e_val))
                     eval_exp = get_exponent(e_val)
                     abun = get_abundance(frag, amap)
                     if abun < 1:
                         continue
                     e_bin = get_e_bin(eval_exp)
                     i_bin = get_i_bin(ident)
+                    SOURCES.add(source)
                     data['e_val'][source][e_bin] += abun
                     data['ident'][source][i_bin] += abun
                 prev_frag = frag

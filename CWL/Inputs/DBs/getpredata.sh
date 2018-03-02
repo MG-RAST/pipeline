@@ -2,13 +2,11 @@
 
 DBDIR=$1
 
-
-  
-if [ -n $DBDIR ]  && [ ! -d $DBDIR ] ; then 
-  DBDIR="./"
-elif [ ! -n $DBDIR] ; then
-  DBDIR="./"
-fi  
+if [ $# -eq 0 ]; then
+    DBDIR="."
+elif [ ! -d $DBDIR ]; then
+    DBDIR="."
+fi
 
 SHOCK="http://shock.metagenomics.anl.gov/node"
 
