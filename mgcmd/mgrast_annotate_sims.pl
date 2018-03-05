@@ -52,14 +52,14 @@ my $cmd = "sims_annotate.pl --verbose --in_sim $input --ann_file $ann_file";
 my $type = "";
 if ($aa) {
     $type = 'aa';
-    $cmd .= " --out_expand $out_prefix.$type.expand.protein --out_ontology $out_prefix.$type.expand.ontology";
+    $cmd .= " --format protein --out_expand $out_prefix.$type.expand.protein";
     if ($scgs) {
         $cmd .= " --in_scg $scgs";
     }
-    push @out_files, ("$out_prefix.$type.expand.protein", "$out_prefix.$type.expand.ontology");
+    push @out_files, "$out_prefix.$type.expand.protein";
 } elsif ($rna) {
     $type = 'rna';
-    $cmd .= " --out_rna $out_prefix.$type.expand.rna";
+    $cmd .= " --format rna --out_expand $out_prefix.$type.expand.rna";
     push @out_files, "$out_prefix.$type.expand.rna";
 } else {
     PipelineAWE::logger('error', "one of the following modes is required: --aa, --rna");
@@ -88,14 +88,6 @@ foreach my $out (@out_files) {
             {'sequence_count_sims_'.$type => $fstat},
             {sim_type => "filter", data_type => "similarity", file_format => "blast m8"}
         );
-    } elsif ($out =~ /ontology$/) {
-        my $ostat = `cut -f2 $out | uniq | wc -l`;
-        chomp $ostat;
-        PipelineAWE::create_attr(
-            $out.'.json',
-            {sequence_count_ontology => $ostat},
-            {sim_type => "expand", data_type => 'ontology', file_format => "text"}
-        );
     } else {
         my @parts = split(/\./, $out);
         PipelineAWE::create_attr(
@@ -110,7 +102,5 @@ exit 0;
 
 sub get_usage {
     return "USAGE: mgrast_annotate_sims.pl -input=<input sims> <-aa|-rna> -ann_file <m5nr annotations, .bdb> [-out_prefix=<output prefix> -ach_ver=<ach db ver>]\n".
-           "outputs: \${out_prefix}.aa.sims.filter, \${out_prefix}.aa.expand.protein, \${out_prefix}.aa.expand.lca, \${out_prefix}.aa.expand.ontology\n".
-           "           OR\n".
-           "         \${out_prefix}.rna.sims.filter, \${out_prefix}.rna.expand.rna, \${out_prefix}.rna.expand.lca\n";
+           "outputs: \${out_prefix}.aa.sims.filter, \${out_prefix}.aa.expand.lca, [\${out_prefix}.aa.expand.protein or \${out_prefix}.rna.expand.rna]\n";
 }

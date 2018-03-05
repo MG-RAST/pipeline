@@ -41,7 +41,7 @@ outputs:
         outputSource: annotateSims/outFilter
     rnaExpandOut:
         type: File
-        outputSource: annotateSims/outRna
+        outputSource: annotateSims/outExpand
     rnaLCAOut:
         type: File
         outputSource: annotateSims/outLca
@@ -129,14 +129,16 @@ steps:
         in:
             input: bleachSims/output
             database: m5nrBDB
+            seqFormat:
+                valueFrom: rna
             outFilterName:
                 source: jobid
                 valueFrom: $(self).450.rna.sims.filter
-            outRnaName:
+            outExpandName:
                 source: jobid
                 valueFrom: $(self).450.rna.expand.rna
             outLcaName:
                 source: jobid
                 valueFrom: $(self).450.rna.expand.lca
-        out: [outFilter, outRna, outLca]
+        out: [outFilter, outExpand, outLca]
 

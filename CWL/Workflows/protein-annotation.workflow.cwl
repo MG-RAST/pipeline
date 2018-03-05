@@ -43,9 +43,6 @@ outputs:
     protLCAOut:
         type: File
         outputSource: annotateSims/outLca
-    protOntologyOut:
-        type: File
-        outputSource: annotateSims/outOntology
 
 steps:
     protFeature:
@@ -118,6 +115,8 @@ steps:
             input: bleachSims/output
             scgs: m5nrSCG
             database: m5nrBDB
+            seqFormat:
+                valueFrom: protein
             outFilterName:
                 source: jobid
                 valueFrom: $(self).650.aa.sims.filter
@@ -127,8 +126,5 @@ steps:
             outLcaName:
                 source: jobid
                 valueFrom: $(self).650.aa.expand.lca
-            outOntologyName:
-                source: jobid
-                valueFrom: $(self).650.aa.expand.ontology
-        out: [outFilter, outExpand, outLca, outOntology]
+        out: [outFilter, outExpand, outLca]
 

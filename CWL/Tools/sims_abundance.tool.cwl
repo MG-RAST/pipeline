@@ -58,13 +58,6 @@ inputs:
         inputBinding:
             prefix: -t
     
-    sourceNum:
-        type: int?
-        doc: Number of sources in m5nr, default 18
-        default: 18
-        inputBinding:
-            prefix: -s
-    
     outName:
         type: string
         doc: Output abundance profile

@@ -31,7 +31,6 @@ my $rna_map   = "";
 my $genecall  = "";
 my $aa_clust  = "";
 my $aa_map    = "";
-my $ontol     = "";
 my $filter    = "";
 my $md5_abund = "";
 my $dark      = "";
@@ -57,7 +56,6 @@ my $options   = GetOptions (
 		"genecall=s"  => \$genecall,
 		"aa_clust=s"  => \$aa_clust,
 		"aa_map=s"    => \$aa_map,
-		"ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
 		"md5_abund=s" => \$md5_abund,
         "dark=s"      => \$dark,
@@ -135,7 +133,6 @@ my $qc_attr = PipelineAWE::read_json($qc.'.json');
 my $de_attr = PipelineAWE::read_json($derep.'.json');
 my $pp_attr = PipelineAWE::read_json($preproc.'.json');
 my $fl_attr = PipelineAWE::read_json($filter.'.json');
-my $on_attr = PipelineAWE::read_json($ontol.'.json');
 
 # populate job_stats
 $job_stats->{sequence_count_dereplication_removed} = $de_attr->{statistics}{sequence_count} || '0';  # derep fail
@@ -151,7 +148,6 @@ if ($qc_attr->{statistics}) {
     map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};        # qc stats
 }
 map { $job_stats->{$_} = $fl_attr->{statistics}{$_} } keys %{$fl_attr->{statistics}};        # sims filter stats
-map { $job_stats->{$_} = $on_attr->{statistics}{$_} } keys %{$on_attr->{statistics}};        # annotate ontology stats
 map { $job_stats->{$_.'_preprocessed_rna'} = $pp_attr->{statistics}{$_} } keys %{$pp_attr->{statistics}};  # preprocess seq stats
 map { $job_stats->{$_.'_preprocessed'}     = $pq_attr->{statistics}{$_} } keys %{$pq_attr->{statistics}};  # screen seq stats
 map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %{$rm_attr->{statistics}};  # rna clust stats
