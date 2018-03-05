@@ -1,7 +1,7 @@
 cwlVersion: v1.0
 class: Workflow
 
-label: preprocess fastq
+label: Preprocess fastq
 doc: |
     Remove and trim low quality reads from fastq files. 
     Return fasta files with reads passed and reads removed.
@@ -39,6 +39,7 @@ outputs:
 steps:
     adapterTrim:
         run: ../Tools/autoskewer.tool.cwl
+        label: Adapter Trimming
         in:
             input: sequences
             outName:
@@ -47,6 +48,7 @@ steps:
         out: [outTrim]
     filter:    
         run: ../Tools/fastq-mcf.tool.cwl
+        label: Low quality filtering
         in:
             input: adapterTrim/outTrim
             minQual: minQual
@@ -58,6 +60,7 @@ steps:
         out: [outTrim, outSkip]
     passed2fasta:
         run: ../Tools/seqUtil.tool.cwl
+        label: Convert to fasta
         in:
             sequences: filter/outTrim
             fastq2fasta: 
@@ -68,6 +71,7 @@ steps:
         out: [file]
     removed2fasta:
         run: ../Tools/seqUtil.tool.cwl
+        label: Convert to fasta
         in:
             sequences: filter/outSkip
             fastq2fasta: 
