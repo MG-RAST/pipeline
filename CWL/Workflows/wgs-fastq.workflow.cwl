@@ -142,6 +142,7 @@ steps:
         out: [passed, removed]
     orgScreen:
         run: ../Workflows/organism-screening.workflow.cwl
+        label: Host Screening
         in:
             jobid: jobid
             sequences: dereplication/passed
@@ -161,6 +162,7 @@ steps:
         out: [rnaFeatureOut, rnaClustSeqOut, rnaClustMapOut, rnaSimsOut, rnaFilterOut, rnaExpandOut, rnaLCAOut]
     protAnnotate:
         run: ../Workflows/protein-filter-annotation.workflow.cwl
+        label: Feature identification and annotation 
         in:
             jobid: jobid
             sequences: orgScreen/passed
