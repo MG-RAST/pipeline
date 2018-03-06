@@ -226,15 +226,17 @@ sub shock_time {
 sub post_data {
     my ($url, $token, $data) = @_;
     
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+    }
+    
     my $req = HTTP::Request->new(POST => $url);
     $req->header('content-type' => 'application/json');
     if ($token) {
         $req->header('authorization' => "mgrast $token");
     }
-    
-    my ($new_url, $host) = fix_api_url($url);
     if ($new_url) {
-        $url = $new_url;
         $req->header('host' => $host);
     }
     
