@@ -19,6 +19,8 @@ our $debug = 1;
 our $layout = '[%d] [%-5p] %m%n';
 our $shock_api = "http://shock-internal.metagenomics.anl.gov";
 our $default_api = "http://api-internal.metagenomics.anl.gov";
+our $proxy_url = "http://proxy.metagenomics.anl.gov";
+our $host_api = "api-internal.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $mg_smtp = 'smtp.mcs.anl.gov';
 our $global_attr = "userattr.json";
@@ -108,10 +110,30 @@ sub file_to_array {
     return $data;
 }
 
+sub fix_api_url {
+    my ($url) = @_;
+    
+    my $new_url = undef;
+    
+    if ($url =~ /^http:\/\/api.+?(\/.*)/) {
+        $new_url = $proxy_url.$1;
+    } elsif ($url =~ /^http:\/\/proxy/) {
+        $new_url = $url;
+    }
+    return ($new_url, $host_api);
+}
+
 sub obj_from_url {
     my ($url, $token) = @_;
     
     my @args = $token ? ('authorization', "mgrast $token") : ();
+    
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+        push @args, ('host', $host);
+    }
+    
     my $result = $agent->get($url, @args);
     unless ($result) {
         logger('error', "unable to connect to $url");
@@ -138,11 +160,19 @@ sub obj_from_url {
 
 sub async_obj_from_url {
     my ($url, $token, $try) = @_;
+    
     if ($try > 3) {
         logger('error', "async process for $url failed $try times");
         exit 1;
     }
     my @args = $token ? ('authorization', "mgrast $token") : ();
+    
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+        push @args, ('host', $host);
+    }
+    
     my $content = undef;
     eval {
         my $result = $agent->get( $url."&retry=".$try, @args );
@@ -155,7 +185,14 @@ sub async_obj_from_url {
         logger('info', "status: ".$content->{url});
         while ($content->{status} ne 'done') {
             sleep 120;
-            $result = $agent->get( $content->{url} );
+            my $status_url = $content->{url};
+            my @status_args = ();
+            my ($new_url, $host) = fix_api_url($status_url);
+            if ($new_url) {
+                $status_url = $new_url;
+                push @status_args, ('host', $host);
+            }
+            $result = $agent->get( $status_url, @status_args );
             $content = $json->decode( $result->content );
             if ($content->{ERROR}) {
                 logger('error', "from $url: ".$content->{'ERROR'}." - trying again");
@@ -194,8 +231,14 @@ sub post_data {
     if ($token) {
         $req->header('authorization' => "mgrast $token");
     }
-    $req->content($json->encode($data));
     
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+        $req->header('host' => $host);
+    }
+    
+    $req->content($json->encode($data));
     my $resp = $agent->request($req);
     
     # try 3 times
