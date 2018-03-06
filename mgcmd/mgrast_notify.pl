@@ -9,7 +9,7 @@ use Getopt::Long;
 umask 000;
 
 # globals
-my $site = 'http://metagenomics.anl.gov';
+my $site = 'https://www.mg-rast.org';
 my $api_url = "";
 my $user = "";
 my $mgid = "";
