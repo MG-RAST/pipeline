@@ -31,6 +31,7 @@ my $rna_map   = "";
 my $genecall  = "";
 my $aa_clust  = "";
 my $aa_map    = "";
+my $ontol     = "";
 my $filter    = "";
 my $md5_abund = "";
 my $dark      = "";
@@ -56,6 +57,7 @@ my $options   = GetOptions (
 		"genecall=s"  => \$genecall,
 		"aa_clust=s"  => \$aa_clust,
 		"aa_map=s"    => \$aa_map,
+        "ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
 		"md5_abund=s" => \$md5_abund,
         "dark=s"      => \$dark,
