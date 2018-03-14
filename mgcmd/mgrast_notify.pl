@@ -49,7 +49,7 @@ If you wish to publicly share the link to your results, you will need to make th
 This is an automated message. Please contact mg-rast\@mcs.anl.gov if you have any questions or concerns.
 );
 
-PipelineAWE::run_cmd(qq(curl -s -X POST -H "authorization: mgrast $api_key" -F "subject=$subject" -F "body=$body_txt" $api_url/user/$user/notify));
+PipelineAWE::post_data($api_url."/user/".$user."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});
 
 exit 0;
 
