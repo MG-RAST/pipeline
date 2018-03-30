@@ -74,6 +74,7 @@ my $to_submit   = {}; # file_name => [ mg_name, sequence_type ]
 my $no_inbox    = {}; # file_name
 my $min_seq     = {}; # file_name
 my $min_bp      = {}; # file_name
+my $max_length  = {}; # file_name
 my $no_metadata = {}; # file_name
 
 # check that input files in inbox and right sizes
@@ -91,6 +92,10 @@ foreach my $file (@{$params->{input}{files}}) {
         $min_bp->{$fname} = 1;
         continue;
     }
+    if (int($file->{stats_info}{length_max}) > 500000) {
+        $max_length->{$fname} = 1;
+        continue;
+    }
     if (exists $seq_files{$fname}) {
         my $basename = fileparse($fname, qr/\.[^.]*/);
         $is_valid->{$basename} = $fname;
@@ -106,6 +111,9 @@ foreach my $miss (keys %$min_seq) {
 }
 foreach my $miss (keys %$min_bp) {
     print STDOUT "below_min_bp_count\t$miss\n";
+}
+foreach my $miss (keys %$max_length) {
+    print STDOUT "above_max_seq_length\t$miss\n";
 }
 
 # populate to_submit from is_valid
