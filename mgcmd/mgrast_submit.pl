@@ -69,25 +69,46 @@ unless ($auth && $api) {
 my $inbox = PipelineAWE::obj_from_url($api."/inbox", $auth);
 my %seq_files = map { $_->{filename}, $_ } grep { exists($_->{data_type}) && ($_->{data_type} eq 'sequence') } @{$inbox->{files}};
 
+my $is_valid    = {}; # file_name w/o extension => file_name
 my $to_submit   = {}; # file_name => [ mg_name, sequence_type ]
 my $no_inbox    = {}; # file_name
+my $min_seq     = {}; # file_name
+my $min_bp      = {}; # file_name
 my $no_metadata = {}; # file_name
 
-# check that input files in inbox
-my $in_inbox = {}; # file_name w/o extension => file_name
-foreach my $fname (@{$params->{files}}) {
+# check that input files in inbox and right sizes
+foreach my $file (@{$params->{input}{files}}) {
+    my $fname = $file->{filename};
+    unless (exists($file->{stats_info}{sequence_count}) && exists($file->{stats_info}{bp_count})) {
+        $no_inbox->{$fname} = 1;
+        continue;
+    }
+    if (int($file->{stats_info}{sequence_count}) < 100) {
+        $min_seq->{$fname} = 1;
+        continue;
+    }
+    if (int($file->{stats_info}{bp_count}) < 1000000) {
+        $min_bp->{$fname} = 1;
+        continue;
+    }
     if (exists $seq_files{$fname}) {
         my $basename = fileparse($fname, qr/\.[^.]*/);
-        $in_inbox->{$basename} = $fname;
-    } else {
-        $no_inbox->{$fname} = 1;
+        $is_valid->{$basename} = $fname;
+        continue;
     }
+    $no_inbox->{$fname} = 1;
 }
 foreach my $miss (keys %$no_inbox) {
-    print STDOUT "no_inbox\t$miss\n";
+    print STDOUT "not_in_inbox\t$miss\n";
+}
+foreach my $miss (keys %$min_seq) {
+    print STDOUT "below_min_seq_count\t$miss\n";
+}
+foreach my $miss (keys %$min_bp) {
+    print STDOUT "below_min_bp_count\t$miss\n";
 }
 
-# populate to_submit from in_inbox or mg_names
+# populate to_submit from is_valid
 # if metadata, check that input files in metadata
 # extract metagenome names
 # need to create project before submitted
@@ -127,7 +148,7 @@ if ($mdata && $params->{metadata}) {
             }
         }
     }
-    while (my ($basename, $fname) = each %$in_inbox) {
+    while (my ($basename, $fname) = each %$is_valid) {
         if (exists $md_names{$basename}) {
             $to_submit->{$fname} = $md_names{$basename};
         } else {
@@ -140,7 +161,7 @@ if ($mdata && $params->{metadata}) {
 }
 if ($project) {
     unless ($mdata && $params->{metadata}) {
-        while (my ($basename, $file_name) = each %$in_inbox) {
+        while (my ($basename, $file_name) = each %$is_valid) {
             $to_submit->{$file_name} = [$basename, undef];
         }
     }
