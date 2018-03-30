@@ -95,12 +95,17 @@ else {
 # file is empty !!!
 if (-z $passed_seq) {
     my $user_attr = PipelineAWE::get_userattr();
-    my $user_info = PipelineAWE::get_user_info($user_attr->{owner}, undef, $api_key);
-    my $body_txt = "The annotation job that you submitted for '".$user_attr->{name}."' (".$user_attr->{id}.") has failed.\n".
-                   "No sequences passed our QC screening steps. ".
-                   "Either your sequences were too short or your pipeline QC settings were to stringent.\n\n".
-                   'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
-    PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
+    my $job_name  = $user_attr->{name};
+    my $job_id    = $user_attr->{id};
+    my $proj_name = $user_attr->{project_name};
+    my $subject   = "MG-RAST Job Failed";
+    my $body_txt  = qq(
+The annotation job that you submitted for $job_name ($job_id) belonging to study $proj_name has failed.
+No sequences passed our QC screening steps. Either your sequences were too short or your pipeline QC settings were to stringent.
+
+This is an automated message.  Please contact mg-rast\@mcs.anl.gov if you have any questions or concerns.
+);
+    PipelineAWE::post_data($api_url."/user/".$user_attr->{owner}."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});
     PipelineAWE::logger('error', "pipeline failed, no sequences passed preprocessing");
     # exit failed-permanent
     exit 42;

@@ -11,7 +11,6 @@ use DateTime::Format::ISO8601;
 use Data::Dumper;
 use LWP::UserAgent;
 use HTTP::Request;
-use Net::SMTP;
 use Capture::Tiny qw(:all);
 
 our $post_attempt = 0;
@@ -276,33 +275,6 @@ sub get_user_info {
     }
     my $get_url = $base_url.'/user/'.$user_id;
     return obj_from_url($get_url, $key);
-}
-
-sub send_mail {
-    my ($body, $subject, $user_info) = @_;
-    my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
-    if ($user_info->{email}) {
-        my $smtp = Net::SMTP->new($mg_smtp, Hello => $mg_smtp);
-        if (! $smtp) {
-            logger('error', "net::smtp failed to create object ($!; $@)");
-        }
-        my $receiver = "\"$owner_name\" <".$user_info->{email}.">";
-        $smtp->mail('mg-rast');
-        my @data = (
-            "To: $receiver\n",
-            "From: $mg_email\n",
-            "Date: ".strftime("%a, %d %b %Y %H:%M:%S %z", localtime)."\n",
-            "Subject: $subject\n\n",
-            $body
-        );
-        $smtp->mail('mg-rast');
-        if ($smtp->to($receiver)) {
-            $smtp->data(@data);
-        } else {
-            logger('error', $smtp->message());
-        }
-        $smtp->quit;
-    }
 }
 
 ######### JSON Functions ##########
