@@ -82,24 +82,24 @@ foreach my $file (@{$params->{input}{files}}) {
     my $fname = $file->{filename};
     unless (exists($file->{stats_info}{sequence_count}) && exists($file->{stats_info}{bp_count})) {
         $no_inbox->{$fname} = 1;
-        continue;
+        next;
     }
     if (int($file->{stats_info}{sequence_count}) < 100) {
         $min_seq->{$fname} = 1;
-        continue;
+        next;
     }
     if (int($file->{stats_info}{bp_count}) < 1000000) {
         $min_bp->{$fname} = 1;
-        continue;
+        next;
     }
     if (int($file->{stats_info}{length_max}) > 500000) {
         $max_length->{$fname} = 1;
-        continue;
+        next;
     }
     if (exists $seq_files{$fname}) {
         my $basename = fileparse($fname, qr/\.[^.]*/);
         $is_valid->{$basename} = $fname;
-        continue;
+        next;
     }
     $no_inbox->{$fname} = 1;
 }
