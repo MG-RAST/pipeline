@@ -13,19 +13,21 @@ use Cwd;
 umask 000;
 
 # options
-my @in_sims  = ();
-my @in_maps  = ();
-my @in_seqs  = ();
-my $output   = "";
-my $memory   = 16;
-my $help     = 0;
-my $options  = GetOptions (
-		"in_sims=s"  => \@in_sims,
-		"in_maps=s"  => \@in_maps,
-		"in_seqs=s"  => \@in_seqs,
-		"output=s"   => \$output,
-		"memory=i"   => \$memory,
-		"help!"      => \$help
+my $api_url = "";
+my @in_sims = ();
+my @in_maps = ();
+my @in_seqs = ();
+my $output  = "";
+my $memory  = 16;
+my $help    = 0;
+my $options = GetOptions (
+    "api_url=s"  => \$api_url,
+    "in_sims=s"  => \@in_sims,
+    "in_maps=s"  => \@in_maps,
+    "in_seqs=s"  => \@in_seqs,
+    "output=s"   => \$output,
+    "memory=i"   => \$memory,
+    "help!"      => \$help
 );
 
 if ($help){
@@ -43,6 +45,10 @@ if ($help){
 }elsif (length($output)==0){
     PipelineAWE::logger('error', "output file was not specified");
     exit 1;
+}
+
+unless ($api_url) {
+    $api_url = $PipelineAWE::default_api;
 }
 
 # get api variable
