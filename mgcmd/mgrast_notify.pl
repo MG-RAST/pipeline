@@ -30,6 +30,10 @@ if ($help) {
     exit 1;
 }
 
+unless ($api_url) {
+    $api_url = $PipelineAWE::default_api;
+}
+
 # get api variable
 my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 

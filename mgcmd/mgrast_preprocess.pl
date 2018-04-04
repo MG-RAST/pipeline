@@ -13,6 +13,7 @@ use Cwd;
 umask 000;
 
 # options
+my $api_url    = "";
 my $input_file = "";
 my $format     = "";
 my $out_prefix = "prep";
@@ -20,13 +21,14 @@ my $filter_options = "";
 my $do_not_create_index_files = 0 ;
 my $help = 0;
 my $options = GetOptions (
-      "input=s" => \$input_file,
-      "format=s" => \$format,
-		  "out_prefix=s" => \$out_prefix,
-		  "filter_options=s" => \$filter_options,
-      "no-shock" => \$do_not_create_index_files,
-		  "help!" => \$help
-      );
+    "api_url=s" => \$api_url,
+    "input=s" => \$input_file,
+    "format=s" => \$format,
+    "out_prefix=s" => \$out_prefix,
+    "filter_options=s" => \$filter_options,
+    "no-shock" => \$do_not_create_index_files,
+    "help!" => \$help
+);
 
 if ($help){
     print get_usage();
@@ -37,6 +39,10 @@ if ($help){
 }elsif (! -e $input_file){
     PipelineAWE::logger('error', "input sequence file [$input_file] does not exist");
     exit 1;
+}
+
+unless ($api_url) {
+    $api_url = $PipelineAWE::default_api;
 }
 
 # get api variable
