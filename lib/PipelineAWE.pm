@@ -223,7 +223,7 @@ sub shock_time {
 }
 
 sub post_data {
-    my ($url, $token, $data) = @_;
+    my ($url, $token, $data, $no_die) = @_;
     
     my ($new_url, $host) = fix_api_url($url);
     if ($new_url) {
@@ -259,10 +259,18 @@ sub post_data {
         exit 1;
     } elsif ($content->{'ERROR'}) {
         logger('error', "from $url: ".$content->{'ERROR'});
-        exit 1;
+        if ($no_die) {
+            return $content;
+        } else {
+            exit 1;
+        }
     } elsif ($content->{'error'}) {
         logger('error', "from $url: ".$content->{'error'});
-        exit 1;
+        if ($no_die) {
+            return $content;
+        } else {
+            exit 1;
+        }
     } else {
         return $content;
     }

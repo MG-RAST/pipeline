@@ -213,7 +213,12 @@ FILES: foreach my $fname (keys %$to_submit) {
                         PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg->{id}, project_id => $project});
                     }
                     # fully created but not in pipeline, submit it
-                    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg->{id}, input_id => $info->{id}});
+                    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg->{id}, input_id => $info->{id}}, 1);
+                    # some error, record it and skip to next
+                    if ($submit_job->{'ERROR'}) {
+                        print STDOUT $submit_job->{'ERROR'}."\t".$mg->{id}."\n";
+                        next FILES;
+                    }
                     $awe_id = $submit_job->{awe_id};
                 }
                 # submitted: add to set and process next
@@ -234,11 +239,21 @@ FILES: foreach my $fname (keys %$to_submit) {
     if ($sequence_type) {
         $create_data->{sequence_type} = $sequence_type;
     }
-    my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data);
+    my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data, 1);
+    # some error, record it and skip to next
+    if ($create_job->{'ERROR'}) {
+        print STDOUT $create_job->{'ERROR'}."\t".$mg_id."\n";
+        next FILES;
+    }
     # project
     PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
     # submit it
-    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
+    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}}, 1);
+    # some error, record it and skip to next
+    if ($submit_job->{'ERROR'}) {
+        print STDOUT $submit_job->{'ERROR'}."\t".$mg_id."\n";
+        next FILES;
+    }
     $submitted->{$fname} = [$metagenome_name, $submit_job->{awe_id}, $mg_id];
     print STDOUT join("\t", ("submitted", $fname, $metagenome_name, $submit_job->{awe_id}, $mg_id))."\n";
     push @$mgids, $mg_id;
@@ -246,7 +261,7 @@ FILES: foreach my $fname (keys %$to_submit) {
 
 if (@$mgids == 0) {
     PipelineAWE::logger('error', "no metagenomes created for submission");
-    exit 1;
+    exit 42;
 }
 
 # apply metadata
@@ -260,7 +275,7 @@ if ($mdata && $params->{metadata}) {
         } else {
             PipelineAWE::logger('error', "unable to import any metadata");
         }
-        exit 1;
+        exit 42;
     }
     # partial success
     if (scalar(@{$result->{added}}) < scalar(@$mgids)) {
