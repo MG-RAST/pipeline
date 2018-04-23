@@ -38,7 +38,7 @@ inputs:
     train:
         type: string?
         doc: Training model to use, default is 454_30
-        default: 454_30
+        default: "454_30"
         format:
             - Types:complete
             - Types:sanger_5
@@ -67,9 +67,9 @@ outputs:
         type: stderr  
     outDNA:
         type: File
-        doc: Output .fna (dna) file
+        doc: Output .ffn (dna) file
         outputBinding: 
-            glob: $(inputs.outName).fna
+            glob: $(inputs.outName).ffn
     outProt:
         type: File
         doc: Output .faa (protein) file

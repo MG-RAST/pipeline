@@ -1,0 +1,9 @@
+jobid: qcbasic_fq_test
+
+sequences:
+  class: File
+  format: fastq
+  path: ../Data/Inputs/sequences.amplicon.fastq
+
+kmerLength: [6 , 15]
+  

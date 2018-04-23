@@ -34,7 +34,8 @@ my $aa_map    = "";
 my $ontol     = "";
 my $filter    = "";
 my $md5_abund = "";
-my $m5nr_db  = "";
+my $dark      = "";
+my $m5nr_db   = "";
 my $taxa_hier = "";
 my $ont_hier  = "";
 my $help      = 0;
@@ -56,9 +57,10 @@ my $options   = GetOptions (
 		"genecall=s"  => \$genecall,
 		"aa_clust=s"  => \$aa_clust,
 		"aa_map=s"    => \$aa_map,
-		"ontol=s"     => \$ontol,
+        "ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
 		"md5_abund=s" => \$md5_abund,
+        "dark=s"      => \$dark,
 		"m5nr_db=s"   => \$m5nr_db,
 		"taxa_hier=s" => \$taxa_hier,
 		"ont_hier=s"  => \$ont_hier,
@@ -71,6 +73,10 @@ if ($help){
 }elsif (length($job_id)==0){
     PipelineAWE::logger('error', "job ID is required");
     exit 1;
+}
+
+unless ($api_url) {
+    $api_url = $PipelineAWE::default_api;
 }
 
 # get api variable
@@ -107,12 +113,20 @@ PipelineAWE::print_json($rna_map.'.json', $rm_attr);
 PipelineAWE::print_json($aa_map.'.json', $am_attr);
 # cleanup
 unlink($post_qc, $search, $genecall, $rna_clust, $aa_clust, $rna_map, $aa_map);
+
 # optional adapter trim file
 if ($adtrim) {
     my $at_attr = PipelineAWE::read_json($adtrim.'.json');
     $at_attr->{statistics} = PipelineAWE::get_seq_stats($adtrim, $at_attr->{file_format});
     PipelineAWE::print_json($adtrim.'.json', $at_attr);
     unlink($adtrim);
+}
+# optional darkmatter file
+if ($dark) {
+    my $dm_attr = PipelineAWE::read_json($dark.'.json');
+    $dm_attr->{statistics} = PipelineAWE::get_seq_stats($dark, 'fasta', 1);
+    PipelineAWE::print_json($dark.'.json', $dm_attr);
+    unlink($dark);
 }
 
 ### JobDB update
@@ -125,7 +139,6 @@ my $qc_attr = PipelineAWE::read_json($qc.'.json');
 my $de_attr = PipelineAWE::read_json($derep.'.json');
 my $pp_attr = PipelineAWE::read_json($preproc.'.json');
 my $fl_attr = PipelineAWE::read_json($filter.'.json');
-my $on_attr = PipelineAWE::read_json($ontol.'.json');
 
 # populate job_stats
 $job_stats->{sequence_count_dereplication_removed} = $de_attr->{statistics}{sequence_count} || '0';  # derep fail
@@ -141,7 +154,6 @@ if ($qc_attr->{statistics}) {
     map { $job_stats->{$_} = $qc_attr->{statistics}{$_} } keys %{$qc_attr->{statistics}};        # qc stats
 }
 map { $job_stats->{$_} = $fl_attr->{statistics}{$_} } keys %{$fl_attr->{statistics}};        # sims filter stats
-map { $job_stats->{$_} = $on_attr->{statistics}{$_} } keys %{$on_attr->{statistics}};        # annotate ontology stats
 map { $job_stats->{$_.'_preprocessed_rna'} = $pp_attr->{statistics}{$_} } keys %{$pp_attr->{statistics}};  # preprocess seq stats
 map { $job_stats->{$_.'_preprocessed'}     = $pq_attr->{statistics}{$_} } keys %{$pq_attr->{statistics}};  # screen seq stats
 map { $job_stats->{$_.'_processed_rna'}    = $rm_attr->{statistics}{$_} } keys %{$rm_attr->{statistics}};  # rna clust stats

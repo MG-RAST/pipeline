@@ -2,57 +2,74 @@ cwlVersion: v1.0
 class: Workflow
 
 label: screen out taxa
-doc:  Remove sequences which align against a reference set. The references are preformatted (index files)
+doc:  Remove sequences which align against a reference set using bowtie2. The references are preformatted (index files)
 
 requirements:
-  - class: StepInputExpressionRequirement
-  - class: InlineJavascriptRequirement
-  - class: ScatterFeatureRequirement
-  - class: MultipleInputFeatureRequirement
+    - class: InlineJavascriptRequirement
+    - class: MultipleInputFeatureRequirement
 
 inputs:
-  stage: 
-    type: string
-    doc:  Stage ID used by MG-RAST for identification
-    default: "200"
-    # inputBinding:
-    #   valueFrom: '200'
-  jobid: string
-  sequences: File
-  indexDir: Directory
-  indexName: string
-  
-  
-    
+    jobid: string
+    sequences: File
+    indexDir: Directory
+    indexName:
+        type: string?
+        default: h_sapiens
 
 outputs:
-  passed:
-    type: File
-    outputSource: screen/unaligned
-  
-  
+    passed:
+        type: File
+        outputSource: untruncateScreen/file
+
 steps:
-    
-  truncate:
-    run: ../Tools/seqUtil.tool.cwl
-    in:
-      sequences: sequences
-      bowtie_truncate:
-        default: true
-      output:  
-        source: [jobid,stage]
-        valueFrom: $(self[0]).$(self[1]).screen.truncated.fasta         
-    out: [file]
- 
-  # Create zero sized file, only important for bookkeeping and if subworkflows are chained together  
-  screen:
-    run: ../Tools/bowtie2.tool.cwl       
-    in:
-      sequences: truncate/file
-      indexDir: indexDir
-      indexName: indexName
-      outUnaligned: 
-        source: [jobid,stage]
-        valueFrom: $(self[0]).$(self[1]).preprocess.passed.fasta             
-    out: [unaligned]
-      
+    truncate:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: sequences
+            bowtieTruncate:
+                default: true
+            output:
+                source: sequences
+                valueFrom: $(self.basename).truncate
+        out: [file]
+    screen:
+        run: ../Tools/bowtie2.tool.cwl
+        in:
+            sequences: truncate/file
+            indexDir: indexDir
+            indexName: indexName
+            outUnaligned:
+                source: truncate/file
+                valueFrom: $(self.basename).unaligned
+        out: [unaligned]
+    sortInput:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: sequences
+            sortbyid:
+                default: true
+            output:
+                source: sequences
+                valueFrom: $(self.basename).sort
+        out: [file]
+    sortScreenID:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: screen/unaligned
+            sortbyid2id:
+                default: true
+            output:
+                source: screen/unaligned
+                valueFrom: $(self.basename).ids
+        out: [file]
+    untruncateScreen:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: sortInput/file
+            subsetList: sortScreenID/file
+            subsetSeqs:
+                default: true
+            output:
+                source: jobid
+                valueFrom: $(self).299.screen.passed.fna
+        out: [file]

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import shutil
 import hashlib
 import subprocess
 from Bio import SeqIO
@@ -70,7 +71,7 @@ def remove_reps(rep_file, pass_file, fail_file, o_format):
     pass_hdl.close()
     fail_hdl.close()
 
-usage = "usage: %prog [options] input_fasta output_name\n"
+usage = "usage: %prog [options] input_fasta output_prefix\n"
 
 def main(args):
     global TMP_DIR
@@ -91,7 +92,7 @@ def main(args):
     if opts.seq_type == 'fasta' and opts.o_format == 'fastq':
         parser.error("[error] cannot output fastq format from fasta input")
         return 1
-
+    
     (in_seq, out_name) = args
     TMP_DIR = opts.tmpdir
     
@@ -101,8 +102,16 @@ def main(args):
     if opts.o_format == 'fastq':
         pass_file = out_name+'.passed.fastq'
         fail_file = out_name+'.removed.fastq'
-    create_prefix_file(in_seq, rep_file, opts.prefix_length, opts.memory, opts.seq_type)
-    remove_reps(rep_file, pass_file, fail_file, opts.o_format)
+    
+    if opts.prefix_length <= 0:
+        # no dereplication actually done - they all pass
+        shutil.copyfile(in_seq, pass_file)
+        open(fail_file, 'a').close()
+        open(rep_file, 'a').close()
+    else:
+        create_prefix_file(in_seq, rep_file, opts.prefix_length, opts.memory, opts.seq_type)
+        remove_reps(rep_file, pass_file, fail_file, opts.o_format)
+    
     return 0
 
 if __name__ == "__main__":

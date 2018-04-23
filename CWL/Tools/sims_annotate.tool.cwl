@@ -4,8 +4,7 @@ class: CommandLineTool
 label: annotate sims
 doc: |
     create expanded annotated sims files from input md5 sim file and m5nr db
-    prot mode: sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000
-    rna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000
+    sims_annotate.pl --verbose --in_sim <input> --in_scg <scgs> --ann_file <database> --format <seqFormat> --out_filter <outFilter> --out_expand <outExpand> -out_lca <outLca> --frag_num 5000
 
 hints:
     DockerRequirement:
@@ -26,11 +25,26 @@ inputs:
         inputBinding:
             prefix: --in_sim
     
+    scgs:
+        type: File?
+        doc: md5 single copy gene file
+        format:
+            - Formats:json
+        inputBinding:
+            prefix: --in_scg
+    
     database:
         type: File
         doc: BerkelyDB of condensed M5NR 
         inputBinding:
             prefix: --ann_file
+    
+    seqFormat:
+        type: string
+        doc: Type of sequences data in input file, rna or protein
+        default: protein
+        inputBinding:
+            prefix: --format
     
     outFilterName:
         type: string
@@ -39,25 +53,13 @@ inputs:
             prefix: --out_filter
     
     outExpandName:
-        type: string?
+        type: string
         doc: Output expanded protein sim file (protein mode only)
         inputBinding:
             prefix: --out_expand
     
-    outOntologyName:
-        type: string?
-        doc: Output expanded ontology sim file (protein mode only)
-        inputBinding:
-            prefix: --out_ontology
-    
-    outRnaName:
-        type: string?
-        doc: Output expanded rna sim file (rna mode only)
-        inputBinding:
-            prefix: --out_rna
-    
     outLcaName:
-        type: string?
+        type: string
         doc: Output expanded LCA file (protein and rna mode)
         inputBinding:
             prefix: --out_lca
@@ -89,23 +91,13 @@ outputs:
         outputBinding: 
             glob: $(inputs.outFilterName)
     outExpand:
-        type: File?
-        doc: Output expanded protein sim file (protein mode only)
+        type: File
+        doc: Output expanded sim file
         outputBinding: 
             glob: $(inputs.outExpandName)
-    outOntology:
-        type: File?
-        doc: Output expanded ontology sim file (protein mode only)
-        outputBinding: 
-            glob: $(inputs.outOntologyName)
-    outRna:
-        type: File?
-        doc: Output expanded rna sim file (rna mode only)
-        outputBinding: 
-            glob: $(inputs.outRnaName)
     outLca:
-        type: File?
-        doc: Output expanded LCA file (protein and rna mode)
+        type: File
+        doc: Output expanded LCA file
         outputBinding: 
             glob: $(inputs.outLcaName)
 

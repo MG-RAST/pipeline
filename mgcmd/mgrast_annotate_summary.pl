@@ -6,6 +6,7 @@ no warnings('once');
 
 use PipelineAWE;
 use Getopt::Long;
+use Cwd;
 umask 000;
 
 # options
@@ -23,6 +24,7 @@ my $in_index  = "";
 my $in_assemb = "";
 my $output  = "";
 my $type    = "";
+my $scgs    = "";
 my $help    = 0;
 my $options = GetOptions (
 		"in_expand=s"  => \@in_expand,
@@ -31,6 +33,7 @@ my $options = GetOptions (
 		"in_assemb=s"  => \$in_assemb,
 		"output=s"     => \$output,
 		"type=s"       => \$type,
+        "scgs=s"       => \$scgs,
 		"help!"        => \$help
 );
 
@@ -57,6 +60,44 @@ if ($help){
     exit 1;
 }
 
+# use this for contig LCA
+# temp hack using filenames
+# need both expand and map files
+if ( $scgs && (-s $scgs) && ($type eq 'lca') &&
+     (scalar(@in_expand) == 2) && (scalar(@in_maps) == 2) &&
+     (-s $in_expand[0]) && (-s $in_expand[1]) &&
+     (-s $in_maps[0]) && (-s $in_maps[1])
+   ) {
+    my $run_dir = getcwd;
+    my ($rna_lca, $prot_lca, $rna_map, $prot_map);
+    if ($in_expand[0] =~ /450\.rna\.expand/) {
+        $rna_lca = $in_expand[0];
+        $prot_lca = $in_expand[1];
+    } else {
+        $rna_lca = $in_expand[1];
+        $prot_lca = $in_expand[0];
+    }
+    if ($in_maps[0] =~ /440\.cluster\.rna/) {
+        $rna_map = $in_maps[0];
+        $prot_map = $in_maps[1];
+    } else {
+        $rna_map = $in_maps[1];
+        $prot_map = $in_maps[0];
+    }
+    PipelineAWE::run_cmd("uncluster_sims.py -v -p 2 -c $rna_map -i $rna_lca -o $rna_lca.unclust");
+    PipelineAWE::run_cmd("uncluster_sims.py -v -p 2 -c $prot_map -i $prot_lca -o $prot_lca.unclust");
+    PipelineAWE::run_cmd("sort -T $run_dir -S 8192M -t \t -k 2,2 -o $rna_lca.sort $rna_lca.unclust");
+    PipelineAWE::run_cmd("sort -T $run_dir -S 8192M -t \t -k 2,2 -o $prot_lca.sort $prot_lca.unclust");
+    PipelineAWE::run_cmd("find_contig_lca.py -v --rna $rna_lca.sort --prot $prot_lca.sort --scg $scgs -o $output.expand");
+    
+    my $cmd = "sims_abundance.py -i $output.expand -o $output -t lca";
+    if ($in_assemb && (-s $in_assemb)) {
+        $cmd .= " --coverage $in_assemb";
+    }
+    PipelineAWE::run_cmd($cmd);
+    exit 0;
+}
+
 # temp files
 my $expand_file = "expand.".time();
 my $map_file = "mapping.".time();
@@ -76,7 +117,7 @@ if (@in_maps > 1) {
 }
 
 # summary for type
-my $cmd = "expanded_sims2overview_no_sort_required_less_memory_used.py -i $expand_file -o $output -t $type --cluster $map_file";
+my $cmd = "sims_abundance.py -i $expand_file -o $output -t $type --cluster $map_file";
 if ($in_index && (-s $in_index)) {
     $cmd .= " --md5_index $in_index";
 }

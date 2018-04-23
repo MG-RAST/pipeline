@@ -93,11 +93,15 @@ while (my $line = <SBLAST>) {
         $id =~ s/^\s+|\s+$//g;
     }
     my ($cstart, $cstop, $clen) = parse_cigar($cigar, $qstart);
-    my $seq_match = substr($seq, $cstart, $clen);
-    if (length($seq_match) < $clen) {
-        $cstop = $cstop - ($clen - length($seq_match));
+    if (length($seq) > $cstart) {
+        my $seq_match = substr($seq, $cstart, $clen);
+        if (length($seq_match) > 0) {
+            if (length($seq_match) < $clen) {
+                $cstop = $cstop - ($clen - length($seq_match));
+            }
+            print OUT ">${qname}_${cstart}_${cstop}_${strand}\n$seq_match\n";
+        }
     }
-    print OUT ">${qname}_${cstart}_${cstop}_${strand}\n$seq_match\n";
 }
 
 close(SBLAST);

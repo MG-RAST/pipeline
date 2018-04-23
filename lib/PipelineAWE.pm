@@ -11,14 +11,15 @@ use DateTime::Format::ISO8601;
 use Data::Dumper;
 use LWP::UserAgent;
 use HTTP::Request;
-use Net::SMTP;
 use Capture::Tiny qw(:all);
 
 our $post_attempt = 0;
 our $debug = 1;
 our $layout = '[%d] [%-5p] %m%n';
-our $shock_api = "http://shock.metagenomics.anl.gov";
-our $default_api = "http://api.metagenomics.anl.gov";
+our $shock_api = "http://shock-internal.metagenomics.anl.gov";
+our $default_api = "http://api-internal.metagenomics.anl.gov";
+our $proxy_url = "http://proxy.metagenomics.anl.gov";
+our $host_api = "api-internal.metagenomics.anl.gov";
 our $mg_email = '"Metagenomics Analysis Server" <mg-rast@mcs.anl.gov>';
 our $mg_smtp = 'smtp.mcs.anl.gov';
 our $global_attr = "userattr.json";
@@ -108,10 +109,30 @@ sub file_to_array {
     return $data;
 }
 
+sub fix_api_url {
+    my ($url) = @_;
+    
+    my $new_url = undef;
+    
+    if ($url =~ /^http:\/\/api.+?(\/.*)/) {
+        $new_url = $proxy_url.$1;
+    } elsif ($url =~ /^http:\/\/proxy/) {
+        $new_url = $url;
+    }
+    return ($new_url, $host_api);
+}
+
 sub obj_from_url {
     my ($url, $token) = @_;
     
     my @args = $token ? ('authorization', "mgrast $token") : ();
+    
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+        push @args, ('host', $host);
+    }
+    
     my $result = $agent->get($url, @args);
     unless ($result) {
         logger('error', "unable to connect to $url");
@@ -138,11 +159,19 @@ sub obj_from_url {
 
 sub async_obj_from_url {
     my ($url, $token, $try) = @_;
+    
     if ($try > 3) {
         logger('error', "async process for $url failed $try times");
         exit 1;
     }
     my @args = $token ? ('authorization', "mgrast $token") : ();
+    
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+        push @args, ('host', $host);
+    }
+    
     my $content = undef;
     eval {
         my $result = $agent->get( $url."&retry=".$try, @args );
@@ -155,7 +184,14 @@ sub async_obj_from_url {
         logger('info', "status: ".$content->{url});
         while ($content->{status} ne 'done') {
             sleep 120;
-            $result = $agent->get( $content->{url} );
+            my $status_url = $content->{url};
+            my @status_args = ();
+            my ($new_url, $host) = fix_api_url($status_url);
+            if ($new_url) {
+                $status_url = $new_url;
+                push @status_args, ('host', $host);
+            }
+            $result = $agent->get( $status_url, @status_args );
             $content = $json->decode( $result->content );
             if ($content->{ERROR}) {
                 logger('error', "from $url: ".$content->{'ERROR'}." - trying again");
@@ -187,15 +223,23 @@ sub shock_time {
 }
 
 sub post_data {
-    my ($url, $token, $data) = @_;
+    my ($url, $token, $data, $no_die) = @_;
+    
+    my ($new_url, $host) = fix_api_url($url);
+    if ($new_url) {
+        $url = $new_url;
+    }
     
     my $req = HTTP::Request->new(POST => $url);
     $req->header('content-type' => 'application/json');
     if ($token) {
         $req->header('authorization' => "mgrast $token");
     }
-    $req->content($json->encode($data));
+    if ($new_url) {
+        $req->header('host' => $host);
+    }
     
+    $req->content($json->encode($data));
     my $resp = $agent->request($req);
     
     # try 3 times
@@ -215,10 +259,18 @@ sub post_data {
         exit 1;
     } elsif ($content->{'ERROR'}) {
         logger('error', "from $url: ".$content->{'ERROR'});
-        exit 1;
+        if ($no_die) {
+            return $content;
+        } else {
+            exit 1;
+        }
     } elsif ($content->{'error'}) {
         logger('error', "from $url: ".$content->{'error'});
-        exit 1;
+        if ($no_die) {
+            return $content;
+        } else {
+            exit 1;
+        }
     } else {
         return $content;
     }
@@ -231,33 +283,6 @@ sub get_user_info {
     }
     my $get_url = $base_url.'/user/'.$user_id;
     return obj_from_url($get_url, $key);
-}
-
-sub send_mail {
-    my ($body, $subject, $user_info) = @_;
-    my $owner_name = ($user_info->{firstname} || "")." ".($user_info->{lastname} || "");
-    if ($user_info->{email}) {
-        my $smtp = Net::SMTP->new($mg_smtp, Hello => $mg_smtp);
-        if (! $smtp) {
-            logger('error', "net::smtp failed to create object ($!; $@)");
-        }
-        my $receiver = "\"$owner_name\" <".$user_info->{email}.">";
-        $smtp->mail('mg-rast');
-        my @data = (
-            "To: $receiver\n",
-            "From: $mg_email\n",
-            "Date: ".strftime("%a, %d %b %Y %H:%M:%S %z", localtime)."\n",
-            "Subject: $subject\n\n",
-            $body
-        );
-        $smtp->mail('mg-rast');
-        if ($smtp->to($receiver)) {
-            $smtp->data(@data);
-        } else {
-            logger('error', $smtp->message());
-        }
-        $smtp->quit;
-    }
 }
 
 ######### JSON Functions ##########

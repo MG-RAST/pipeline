@@ -204,7 +204,7 @@ def main(args):
     return 1
 
   ohdl = open(opts.output, 'w')
-  if opts.ranked:
+  if opts.ranked and (opts.format == 'histo'):
     extra_data = ranked_histo(sout)
     for row in extra_data:
       line = "\t".join( map(lambda x: str(x), row) ) + "\n"

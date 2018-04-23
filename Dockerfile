@@ -1,4 +1,4 @@
-# MG-RAST dockerfiles
+# MG-RAST pipeline Dockerfile
 
 FROM debian
 MAINTAINER The MG-RAST team
@@ -12,13 +12,13 @@ ENV LC_ALL C.UTF-8
 RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
 
 RUN apt-get update && apt-get install -y \
-	bowtie2 	\
 	cdbfasta 	\
 	cd-hit		\
-	cmake \
+	cmake       \
 	dh-autoreconf \
 	git 		\
 	jellyfish 	\
+    libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y \
 	python-sphinx \
 	unzip \
 	wget \
+    vim \
 	curl
 
 #### install BLAT from src
@@ -88,15 +89,6 @@ RUN cd /root \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root ; rm -rf diamond
 
-### install swarm 2.1.9
-RUN cd /root \
-	&& git clone https://github.com/torognes/swarm.git \
-	&& cd swarm/src/ \
-	&& make \
-	&& install -m755 -s bin/* /usr/local/bin \
-	&& install -m755 scripts/* /usr/local/bin \
-	&& cd /root ; rm -rf swarm
-
 ### install ea-utils
 RUN cd /root \
 	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
@@ -109,7 +101,7 @@ RUN cd /root \
 	&& install -m755 -s fastq-mcf /usr/local/bin \
 	&& cd /root ; rm -rf ea-utils
 
-### install sortmerna
+### install sortmerna 2.1b
 RUN cd /root \
 	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
 	&& tar xvf 2*.tar.gz \
@@ -120,9 +112,9 @@ RUN cd /root \
     && make clean \
     && cd /root ; rm -rf sortmerna-2* 2*.tar.gz
 
-### install vsearch 2.43
+### install vsearch 2.7.1
 RUN cd /root \
-    && wget https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz \
+    && wget https://github.com/torognes/vsearch/archive/v2.7.1.tar.gz \
 	&& tar xzf v2*.tar.gz \
 	&& cd vsearch-2* \
 	&& sh ./autogen.sh \
@@ -131,6 +123,14 @@ RUN cd /root \
 	&& make install \
 	&& make clean \
 	&& cd /root ; rm -rf vsearch-2* v2*.tar.gz
+
+### install bowtie2 2.3.4.1
+RUN cd /root \
+    && wget -O bowtie2-2.3.4.1-linux-x86_64.zip 'https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.3.4.1/bowtie2-2.3.4.1-linux-x86_64.zip/download' \
+    && unzip bowtie2-*.zip \
+    && rm -f bowtie2-*.zip \
+    && cd bowtie2-* \
+    && cp bowtie2* /usr/local/bin/.
 
 ### install skewer
 RUN cd /root \
@@ -151,7 +151,12 @@ ENV PATH /root/autoskewer/:$PATH
 ### install CWL runner
 RUN pip install cwlref-runner
 
+# node.js version 7
+RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - ; \
+    apt-get install -y nodejs
+
 # copy files into image
+COPY CWL /CWL/
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
 COPY superblat /usr/local/bin/

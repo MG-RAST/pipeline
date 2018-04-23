@@ -31,7 +31,7 @@ baseCommand: [cat]
 
 outputs:
     error: 
-        type: stderr  
+        type: stderr
     output:
         type: File
         doc: Concatenated file

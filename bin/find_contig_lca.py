@@ -36,16 +36,31 @@ def process_line(line):
         return "", None
     return id_match.group(1), [ md5.split(';'), frag, ident.split(';'), length.split(';'), e_val.split(';'), lca.split(';'), lvl ]
 
-def merge_rows(cid, rows):
+def merge_rows(cid, rows, scgs=set()):
     md5, ident, length, e_val = (set() for i in range(4))
     lca = ["-"] * 8
     lvl = 0
+    lca_scg = []   # [ [length, lca] ]
+    lcamatrix = [] # [ lcas ]
+    
     for row in rows:
+        # get scg lcas if any
+        if scgs and any(m in scgs for m in row[0]):
+            lca_scg.append([max(row[3]), row[5]])
         md5.update(row[0])
         ident.update(row[2])
         length.update(row[3])
         e_val.update(row[4])
-    lcamatrix = [row[5] for row in rows]
+    
+    if len(lca_scg) == 0:
+        # no SCGs, use all LCAs
+        lcamatrix = [row[5] for row in rows]
+    else:
+        # get LCA for best hit SCG
+        maxlen = max([x[0] for x in lca_scg])
+        lcamatrix = [x[1] for x in filter(lambda y: y[0] == maxlen, lca_scg)]
+    
+    # find LCA of LCAs
     lcarotate = zip(*lcamatrix)
     for i, x in enumerate(lcarotate):
         if all_equal(x):
@@ -68,20 +83,29 @@ def print_row(hdl, row):
             row[i] = str(r)
     hdl.write("\t".join(row)+"\n")
 
+def load_scgs(fname):
+    md5s = set()
+    try:
+        data = json.load(open(fname, 'r'))
+        md5s = set(data.keys())
+    except:
+        pass
+    return md5s
 
 usage = "usage: %prog [options]\n" + __doc__
 def main(args):
     parser = OptionParser(usage=usage)
-    parser.add_option("--in_rna", dest="in_rna", default=None, help="input file: expanded rna lca")
-    parser.add_option("--in_prot", dest="in_prot", default=None, help="input file: expanded protein lca")
+    parser.add_option("--rna", dest="rna", default=None, help="input file: expanded rna lca")
+    parser.add_option("--prot", dest="prot", default=None, help="input file: expanded protein lca")
+    parser.add_option("--scg", dest="scg", default=None, help="input file: json format map of md5s that are SCGs")
     parser.add_option("-o", "--output", dest="output", default=None, help="output file: expanded contig lca")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", help="Print informational messages.")
     
     (opts, args) = parser.parse_args()
-    if not (opts.in_rna and os.path.isfile(opts.in_rna)):
+    if not (opts.rna and os.path.isfile(opts.rna)):
         logger.error("missing required input rna lca file")
         return 1
-    if not (opts.in_prot and os.path.isfile(opts.in_prot)):
+    if not (opts.prot and os.path.isfile(opts.prot)):
         logger.error("missing required input protein lca file")
         return 1
     if not opts.output:
@@ -90,11 +114,11 @@ def main(args):
     
     rna_contigs = set()
     ohdl = open(opts.output, 'w')   
-    rhdl = open(opts.in_rna, 'rU')
+    rhdl = open(opts.rna, 'rU')
     
     # create contig LCAs for RNA features first, take precidence over protein features
     if opts.verbose:
-        print "Reading file %s ... "%(opts.in_rna)
+        print "Reading file %s ... "%(opts.rna)
     
     # get first parsable line
     prev = ""
@@ -127,8 +151,8 @@ def main(args):
     
     # process last contig
     if len(data) > 0:
-        mrow = merge_rows(cid, data)
-        rna_contigs.add(cid)
+        mrow = merge_rows(prev, data)
+        rna_contigs.add(prev)
         print_row(ohdl, mrow)
         rctg += 1
     
@@ -136,9 +160,10 @@ def main(args):
     if opts.verbose:
         print "Done: %d contigs with %d rRNAs processed"%(rctg, rrna)
     
-    phdl = open(opts.in_prot, 'rU')
+    md5_scgs = load_scgs(opts.scg)
+    phdl = open(opts.prot, 'rU')
     if opts.verbose:
-        "Reading file %s ... "%(opts.in_prot)
+        "Reading file %s ... "%(opts.prot)
     
     # get first parsable line
     prev = ""
@@ -160,7 +185,7 @@ def main(args):
             continue
         if cid != prev:
             # new contig found, process old
-            mrow = merge_rows(prev, data)
+            mrow = merge_rows(prev, data, md5_scgs)
             print_row(ohdl, mrow)
             # reset
             prev = cid
@@ -171,7 +196,7 @@ def main(args):
     
     # process last contig
     if len(data) > 0:
-        mrow = merge_rows(cid, data)
+        mrow = merge_rows(prev, data)
         print_row(ohdl, mrow)
         prot += 1
     

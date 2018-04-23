@@ -1,0 +1,28 @@
+jobid: amp_fq_test
+
+sequences:
+    class: File
+    format: fastq
+    path: ../Inputs/sequences.amplicon.fastq
+
+minQual: 15
+
+maxLqb: 5
+
+m5nrBDB:
+    class: File
+    path: ../Inputs/DBs/m5nr_v1.bdb
+
+m5rnaFull:
+    class: File
+    path: ../Inputs/DBs/md5rna
+
+m5rnaClust:
+    class: File
+    path: ../Inputs/DBs/md5rna.clust
+
+m5rnaIndex:
+    class: Directory
+    path: ../Inputs/DBs/
+
+m5rnaPrefix: m5rna.clust.index
