@@ -282,7 +282,11 @@ my $solrdata = {
 PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
 # ES metadata update
-PipelineAWE::obj_from_url($api_url."/search/$mgid", $api_key);
+my $response = PipelineAWE::obj_from_url($api_url."/search/$mgid", $api_key);
+unless ($response && $response->{'status'} && ($response->{'status'} eq 'updated')) {
+    PipelineAWE::logger('error', "failed to load metadata into elastic search");
+    exit 1;
+}
 
 # done done !!
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
