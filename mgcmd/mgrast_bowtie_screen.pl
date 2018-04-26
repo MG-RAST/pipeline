@@ -26,15 +26,15 @@ my $run_bowtie  = 1;
 my $index       = "";
 my $proc        = 8;
 my $help        = 0;
-my $do_not_create_index_files = 0 ;
+my $do_not_create_index_files = 0;
 
 my $options = GetOptions (
-    "input=s"  => \$fasta,
+        "input=s"  => \$fasta,
 		"output=s" => \$output,
 		"index=s"  => \$index,
 		"proc=i"   => \$proc,
 		"bowtie=i" => \$run_bowtie,
-    "no-shock" => \$do_not_create_index_files,
+        "no-shock" => \$do_not_create_index_files,
 		"help!"    => \$help
 );
 
@@ -51,6 +51,9 @@ if ($help){
     PipelineAWE::logger('error', "input sequence file [$fasta] does not exist");
     exit 1;
 }
+
+# get api variable
+my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 
 # skip it
 if ($run_bowtie == 0) {
@@ -90,7 +93,28 @@ else {
         $tmp_input_var = $unaligned;
     }
     PipelineAWE::run_cmd("mv $tmp_input_var $output");
+    
+    # die if nothing passed
+    if (-z $output) {
+        # send email
+        if ($api_key) {
+            my $user_attr = PipelineAWE::get_userattr();
+            my $job_name  = $user_attr->{name};
+            my $job_id    = $user_attr->{id};
+            my $proj_name = $user_attr->{project_name};
+            my $subject   = "MG-RAST Job Failed";
+            my $body_txt  = qq(
+The annotation job that you submitted for $job_name ($job_id) belonging to study $proj_name has failed.
+No sequences passed our QC screening steps. Either your sequences were too short or your pipeline QC settings were to stringent.
 
+This is an automated message.  Please contact mg-rast\@mcs.anl.gov if you have any questions or concerns.
+);
+            PipelineAWE::post_data($PipelineAWE::default_api."/user/".$user_attr->{owner}."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});
+        }
+        PipelineAWE::logger('error', "pipeline failed, no sequences passed bowtie screening, index=".$index);
+        # exit failed-permanent
+        exit 42;
+    }
     
     # create subset record list
     # note: parent and child files in same order
