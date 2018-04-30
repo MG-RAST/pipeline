@@ -152,7 +152,7 @@ ENV PATH /root/autoskewer/:$PATH
 RUN pip install cwlref-runner
 
 # node.js version 7
-RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - ; \
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
     apt-get install -y nodejs
 
 # copy files into image
