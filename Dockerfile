@@ -147,6 +147,7 @@ RUN cd /root \
 ENV PATH /root/autoskewer/:$PATH
 
 ### install CWL runner
+RUN pip install --upgrade pip
 RUN pip install cwlref-runner
 
 # node.js version 7
