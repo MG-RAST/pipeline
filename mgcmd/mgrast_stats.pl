@@ -228,8 +228,6 @@ PipelineAWE::logger('info', "Building metagenome statistics file");
 my $u_stats = PipelineAWE::read_json($upload);
 my $q_stats = PipelineAWE::read_json($qc);
 my $s_stats = PipelineAWE::read_json($source);
-my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
-my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
 
 # get qc stats - input stats may be from done stage if this is a rerun job
 my $up_gc_hist  = undef;
@@ -258,7 +256,7 @@ my $mgstats = {
         post_qc => PipelineAWE::file_to_array("$post_qc.stats.lens")
     },
     qc => $qc_all_stat,
-    source => \%s_data,
+    source => $s_stats,
     taxonomy => $taxa_abund_obj,
     function => $func_abund_obj,
     ontology => $ont_abund_obj,

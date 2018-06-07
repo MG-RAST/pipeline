@@ -10,6 +10,7 @@ parser.add_option('-o', '--out', dest="out_file", help="bleached sims output. us
 parser.add_option('-m', '--min', type="int", dest="min", help="minimum # of results per query, default=20", default=20)
 parser.add_option('-r', '--range', type="int", dest="range", help="best evalue plus this exponent that will be returned (0 means no range), default=10", default=10)
 parser.add_option('-c', '--cutoff', type="int", dest="cutoff", help="remove all evalues with an exponent lower than cutoff, default=3", default=3)
+parser.add_option('', '--eval_only', dest="eval_only", action="store_true", default=False, help="only filter by evalue cutoff")
 
 (options, args) = parser.parse_args()
 if not ( options.sims_file and options.out_file ):
@@ -65,8 +66,14 @@ if __name__ == "__main__":
 
     curid = None
     cursims = []
+    eval_max = float("1e-%d"%(options.cutoff))
+    
     for l in sims_handle:
-        v = l[:-1].split("\t")
+        v = l.strip().split("\t")
+        if options.eval_only:
+            if float(v[10]) <= eval_max:
+                out_handle.write(l)
+            continue
         if curid == None:
             curid = v[0]
         if v[0] == curid:
@@ -76,7 +83,7 @@ if __name__ == "__main__":
             curid = v[0]
             cursims = [v]
 
-    if len(cursims) > 0:
+    if (not options.eval_only) and (len(cursims) > 0):
         bleach(cursims, out_handle)
 
     sims_handle.close()
