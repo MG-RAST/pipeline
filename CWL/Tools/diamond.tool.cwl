@@ -26,8 +26,6 @@ inputs:
     query:
         type: File
         doc: Query fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             prefix: -q
     
