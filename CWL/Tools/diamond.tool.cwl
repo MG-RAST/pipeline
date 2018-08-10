@@ -69,9 +69,8 @@ inputs:
 baseCommand: [diamond]
 
 arguments:
-    command:
-        position: 0
-        valueFrom: blastp
+    - valueFrom: blastp
+      position: 0
 
 outputs:
     info:

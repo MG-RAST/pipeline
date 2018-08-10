@@ -27,7 +27,7 @@ steps:
         scatter: ["#diamond/database", "#diamond/outName"]
         scatterMethod: dotproduct
         in:
-            query: protCluster/outSeq
+            query: sequences
             database: m5nrFull
             outName:
                 source: m5nrFull
@@ -37,10 +37,8 @@ steps:
         run: ../Tools/sort.tool.cwl
         in:
             input: diamond/output
-            key: 
-                - valueFrom: "1,1"
-                - valueFrom: "12,12nr"
-                - valueFrom: "3,3nr"
+            key:
+                valueFrom: $(["1,1", "12,12nr", "3,3nr"])
             outName:
                 source: jobid
                 valueFrom: $(self).diamond.sims.merge

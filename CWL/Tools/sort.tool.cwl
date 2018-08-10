@@ -65,7 +65,7 @@ outputs:
     error: 
         type: stderr  
     output:
-        type: File?
+        type: File
         doc: The sorted file
         outputBinding: 
             glob: $(inputs.outName)
