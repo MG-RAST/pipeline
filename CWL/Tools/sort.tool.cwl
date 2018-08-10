@@ -18,34 +18,35 @@ inputs:
     input:
         type: File
         doc: File to sort
-        format:
-            - Formats:tsv
+        inputBinding:
+            position: 2
+    
+    key:
+        type:
+            type: array
+            items: string 
+            inputBinding:
+                prefix: -k
+        doc: start a key at POS1, end it at POS2 (origin 1)
         inputBinding:
             position: 1
     
-    key:
-        type: string 
-        inputBinding:
-            prefix: -k
-        doc: |
-            -k, --key=POS1[,POS2]
-            start a key at POS1, end it at POS2 (origin 1)
-    
     field:
         type: string?
-        doc: |
-            -t, --field-separator=SEP
-            use SEP instead of non-blank to blank transition
-            default is tab
+        doc: use SEP instead of non-blank to blank transition, default is tab
         inputBinding:
             prefix: -t
             valueFrom: $("\u0009")
     
+    merge:
+        type: boolean?
+        doc: merge only, the input files are assumed to be pre-sorted
+        inputBinding:
+            prefix: -m
+    
     outName:
         type: string
-        doc: |
-            -o, --output=FILE
-            write result to FILE instead of standard output
+        doc: write result to FILE instead of standard output
         inputBinding:
             prefix: -o
 
@@ -68,7 +69,4 @@ outputs:
         doc: The sorted file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 
