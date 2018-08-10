@@ -20,8 +20,6 @@ inputs:
     database:
         type: File
         doc: Database fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             prefix: -d
     
@@ -38,6 +36,20 @@ inputs:
         doc: Output name
         inputBinding:
             prefix: -o
+    
+    maxTarget:
+        type: int?
+        doc: Maximum target sequences per query to keep
+        default: 20
+        inputBinding:
+          prefix: -k
+    
+    evalue:
+        type: float?
+        doc: Maximum expected value to report
+        default: 0.001
+        inputBinding:
+          prefix: -e
     
     blockSize:
         type: float?
@@ -71,7 +83,4 @@ outputs:
         doc: Output tab separated similarity file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

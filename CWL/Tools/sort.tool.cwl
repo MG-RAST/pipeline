@@ -19,7 +19,6 @@ inputs:
         type: File[]
         doc: Files to sort
         inputBinding:
-            itemSeparator: " "
             position: 2
     
     key:

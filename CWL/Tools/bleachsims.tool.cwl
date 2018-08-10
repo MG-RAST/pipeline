@@ -20,8 +20,6 @@ inputs:
     input:
         type: File
         doc: Input similarity blast-m8 file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: -s
     
@@ -66,6 +64,4 @@ outputs:
         outputBinding: 
             glob: $(inputs.outName)
 
-$namespaces:
-    Formats: FileFormats.cv.yaml
 
