@@ -20,7 +20,7 @@ usage = "usage: %prog -i <input> -o <out> <options>"
 parser = OptionParser(usage)
 parser.add_option('-i', '--input', dest="input", help="input file: must be fasta for truncate|stdfasta|sortbyseq|sortbyid|remove_seqs|subset_seqs, tabfile for tab2fasta")
 parser.add_option('-o', '--output', dest="out", help="output file")
-parser.add_option('--fastq', dest="fastq", action="store_true", default=False, help="input file is fastq: for fasta2tab|sortbyid2tab|sortbyid2id|uniquefasta|random_subset")
+parser.add_option('--fastq', dest="fastq", action="store_true", default=False, help="input file is fastq: for fasta2tab|sortbyid2tab|sortbyid2id|uniquefasta|random_subset|splitfasta")
 parser.add_option("--minimum", dest="minimum", type="int", default=1, help="remove sequences less than minimum length (default 1): for stdfasta|remove_seqs|subset_seqs|random_subset")
 
 cmdGroup = OptionGroup(parser, "Command Options")
@@ -40,6 +40,7 @@ cmdGroup.add_option('--sortbyid2id', dest="sortbyid2id", action="store_true", de
 cmdGroup.add_option('--remove_seqs', dest="remove_seqs", action="store_true", default=False, help="remove a list of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
 cmdGroup.add_option('--subset_seqs', dest="subset_seqs", action="store_true", default=False, help="return a subset of sequences from a fasta file.      NOTE: list and sequences files must be sorted by id")
 cmdGroup.add_option('--random_subset', dest="random_subset", type="int", default=0, help="return a random subset of sequences")
+cmdGroup.add_option('--splitfasta', dest="splitfasta", type="int", default=0, help="split input sequence file into equally sized number of output files")
 parser.add_option_group(cmdGroup)
 
 stdGroup = OptionGroup(parser, "Standard Convert Options")
@@ -102,6 +103,18 @@ def tab2fasta(input, output, has_len=False):
 
 def fastq2fasta(input, output):
     SeqIO.convert(input, "fastq", output, "fasta")
+
+def splitfasta(input, output, count, is_fastq=False):
+    seqtype = 'fastq' if is_fastq else 'fasta'
+    output_handles = map(lambda x: open("%s.%d.%s"%(output, x+1, seqtype), 'w'), range(count))
+    num = 0
+    for rec in SeqIO.parse(input, seqtype):
+        if num == count:
+            num = 0
+        output_handles[num].write(rec.format(seqtype))
+        num += 1
+    for o in output_handles:
+        o.close()
 
 def truncate(input, output, bps, uniqid_flag):
     try:
@@ -359,6 +372,8 @@ if __name__ == '__main__':
         subset_seqs(opts.input, opts.list, opts.out, opts.check, opts.minimum)
     elif opts.random_subset > 0:
         random_subset(opts.input, opts.out, opts.random_subset, opts.seq_count, opts.minimum, opts.fastq)
+    elif opts.splitfasta > 0:
+        splitfasta(opts.input, opts.out, opts.splitfasta, opts.fastq)
     else:
         parser.print_help()
         sys.stderr.write("[error] must give valid command\n")
