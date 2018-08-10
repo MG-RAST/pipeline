@@ -16,9 +16,10 @@ stderr: sort.error
 
 inputs:
     input:
-        type: File
-        doc: File to sort
+        type: File[]
+        doc: Files to sort
         inputBinding:
+            itemSeparator: " "
             position: 2
     
     key:
