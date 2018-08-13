@@ -39,6 +39,8 @@ steps:
             input: diamond/output
             key:
                 valueFrom: $(["1,1", "12,12nr", "3,3nr"])
+            merge:
+                default: true
             outName:
                 source: jobid
                 valueFrom: $(self).diamond.sims.merge
@@ -47,6 +49,8 @@ steps:
         run: ../Tools/bleachsims.tool.cwl
         in:
             input: mergeSims/output
+            minHitOnly:
+                default: true
             outName:
                 source: jobid
                 valueFrom: $(self).650.diamond.sims
