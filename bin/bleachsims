@@ -11,6 +11,10 @@ parser.add_option('-m', '--min', type="int", dest="min", help="minimum # of resu
 parser.add_option('-r', '--range', type="int", dest="range", help="best evalue plus this exponent that will be returned (0 means no range), default=10", default=10)
 parser.add_option('-c', '--cutoff', type="int", dest="cutoff", help="remove all evalues with an exponent lower than cutoff, default=3", default=3)
 parser.add_option('', '--eval_only', dest="eval_only", action="store_true", default=False, help="only filter by evalue cutoff")
+parser.add_option('', '--min_hit_only', dest="min_hit_only", action="store_true", default=False, help="only filter by minimum hits per query")
+
+ID_RE = re.compile(r'^(\S+)\t')
+EVAL_RE = re.compile(r'^(\d\.\d)e([-+])(\d+)$')
 
 (options, args) = parser.parse_args()
 if not ( options.sims_file and options.out_file ):
@@ -18,8 +22,14 @@ if not ( options.sims_file and options.out_file ):
     print "sims file and/or output file name required"
     sys.exit(0)
 
+def minHit(sims, out):
+    min_num = options.min
+    if len(sims) > min_num:
+        sims = sims[:min_num]
+    for s in sims:
+        out.write(s)
+
 def bleach(sims, out):
-    eval    = re.compile(r"^(\d\.\d)e([-+])(\d+)$")
     count   = 0
     no_zero = 1
     min_num = options.min
@@ -29,8 +39,10 @@ def bleach(sims, out):
     if options.range > 0:
         e_range = options.range
 
+    # split columns than re-sort
+    sims = map(lambda x: x.strip().split("\t"), sims)
     sims.sort(cmp=lambda a,b: cmp(float(a), float(b)), key=operator.itemgetter(11), reverse=True)
-    e_match = eval.match(sims[0][10])
+    e_match = EVAL_RE.match(sims[0][10])
     if not e_match:
         return
 
@@ -68,27 +80,40 @@ if __name__ == "__main__":
     cursims = []
     eval_max = float("1e-%d"%(options.cutoff))
     
-    for l in sims_handle:
-        v = l.strip().split("\t")
-        if options.eval_only:
+    if options.eval_only:
+        # evalue only filter
+        for l in sims_handle:
+            v = l.strip().split("\t")
             if float(v[10]) <= eval_max:
                 out_handle.write(l)
-            continue
-        if curid == None:
-            curid = v[0]
-        if v[0] == curid:
-            cursims.append(v)
+    else:
+        for l in sims_handle:
+            # group by ID blocks
+            idmatch = ID_RE.match(l)
+            if idmatch == None:
+                continue
+            thisid = idmatch.group(1)
+            if curid == None:
+                curid = thisid
+        
+            if thisid == curid:
+                cursims.append(l)
+            else:
+                if opts.min_hit_only:
+                    # min hit only filter
+                    minHit(cursims, out_handle)
+                else:
+                    # full bleach
+                    bleach(cursims, out_handle)
+                curid = thisid
+                cursims = [l]
+    
+        if opts.min_hit_only:
+            minHit(cursims, out_handle)
         else:
             bleach(cursims, out_handle)
-            curid = v[0]
-            cursims = [v]
-
-    if (not options.eval_only) and (len(cursims) > 0):
-        bleach(cursims, out_handle)
-
+    
     sims_handle.close()
     out_handle.close()
 
-        
-            
-        
+

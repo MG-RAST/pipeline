@@ -25,7 +25,7 @@ inputs:
     
     min:
         type: int?
-        doc: Minimum # of results per query, default 20
+        doc: Minimum number of hits per query, default 20
         default: 20
         inputBinding:
             prefix: -m
@@ -43,6 +43,18 @@ inputs:
         default: 3
         inputBinding:
             prefix: -c
+    
+    cutoffOnly:
+        type: boolean?
+        doc: only apply cutoff filter
+        inputBinding:
+            prefix: --eval_only
+    
+    minHitOnly:
+        type: boolean?
+        doc: only apply cutoff filter
+        inputBinding:
+            prefix: --min_hit_only
     
     outName:
         type: string
