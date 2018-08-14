@@ -13,17 +13,23 @@ use Digest::MD5;
 umask 000;
 
 # options
-my $input_file = "";
-my $input_json_file = "";
+my $input_file       = "";
+my $input_json_file  = "";
 my $output_json_file = "";
-my $type = "fasta";
-my $help = "";
-my $options = GetOptions ("input=s" => \$input_file,
-                          "input_json=s" => \$input_json_file,
-                          "output_json=s" => \$output_json_file,
-                          "type=s" => \$type,
-                          "help!" => \$help
-                         );
+my $type             = "fasta";
+my $stats_only       = 0;
+my $is_protein       = 0;
+my $help             = "";
+
+my $options = GetOptions (
+    "input=s"       => \$input_file,
+    "input_json=s"  => \$input_json_file,
+    "output_json=s" => \$output_json_file,
+    "stats_only"    => \$stats_only,
+    "is_protein"    => \$is_protein,
+    "type=s"        => \$type,
+    "help!"         => \$help
+);
 
 # Validate input file path.
 if ($help) {
@@ -43,6 +49,12 @@ if ($type ne 'fasta' && $type ne 'fastq') {
 
 # Validate other input and output file paths.
 my $data = PipelineAWE::read_json($input_json_file);
+
+if ($stats_only) {
+    $data->{statistics} = PipelineAWE::get_seq_stats($input_file, $type, $is_protein);
+    PipelineAWE::print_json($output_json_file, $data);
+    exit 0;
+}
 
 # Get file info if missing
 if (! exists($data->{stats_info})) {

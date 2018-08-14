@@ -56,7 +56,7 @@ outputs:
     info:
         type: stdout
     error: 
-        type: stderr  
+        type: stderr
     output:
         type: File
         doc: Output tab separated similarity file
