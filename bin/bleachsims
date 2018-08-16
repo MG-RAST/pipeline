@@ -99,7 +99,7 @@ if __name__ == "__main__":
             if thisid == curid:
                 cursims.append(l)
             else:
-                if opts.min_hit_only:
+                if options.min_hit_only:
                     # min hit only filter
                     minHit(cursims, out_handle)
                 else:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 curid = thisid
                 cursims = [l]
     
-        if opts.min_hit_only:
+        if options.min_hit_only:
             minHit(cursims, out_handle)
         else:
             bleach(cursims, out_handle)
