@@ -54,7 +54,7 @@ def bleach(sims, out):
 
     best_exp = int(best_exp)
     for s in sims:
-        cur_match = eval.match(s[10])
+        cur_match = EVAL_RE.match(s[10])
         if not cur_match:
             continue
         cur_exp = int(cur_match.group(3))
