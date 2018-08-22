@@ -39,7 +39,7 @@ steps:
         in:
             input: unclusterSims/output
             key: 
-                valueFrom: "1,1"
+                valueFrom: $(["1,1"])
             outName:
                 source: unclusterSims/output
                 valueFrom: $(self.basename).sort
@@ -76,7 +76,7 @@ steps:
         in:
             input: addSeq2Sim/output
             key: 
-                valueFrom: "2,2"
+                valueFrom: $(["2,2"])
             outName:
                 source: jobid
                 valueFrom: $(self).700.annotation.sims.filter.seq

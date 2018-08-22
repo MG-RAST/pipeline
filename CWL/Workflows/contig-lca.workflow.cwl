@@ -46,8 +46,8 @@ steps:
         run: ../Tools/sort.tool.cwl
         in:
             input: unclusterRna/output
-            key: 
-                valueFrom: "2,2"
+            key:
+                valueFrom: $(["2,2"])
             outName:
                 source: unclusterRna/output
                 valueFrom: $(self.basename).sort
@@ -72,7 +72,7 @@ steps:
         in:
             input: unclusterProt/output
             key: 
-                valueFrom: "2,2"
+                valueFrom: $(["2,2"])
             outName:
                 source: unclusterProt/output
                 valueFrom: $(self.basename).sort
