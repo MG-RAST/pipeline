@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger()
 
 def sortandbleach(sim_files, out_file, sort_dir):
-    logger.info("sortandbleach - started")
+    start = datetime.datetime.utcnow()
     merge_file = "%s.merge"%(out_file)
     # sort merge files
     cmd  = "sort -m -t '\t' -k 1,1 -k 12,12nr -k 3,3nr -T %s -o %s %s"%(sort_dir, merge_file, " ".join(sim_files))
@@ -53,7 +53,7 @@ def sortandbleach(sim_files, out_file, sort_dir):
     out_handle.close()
     os.remove(merge_file)
        
-    logger.info("sortandbleach - finished")
+    logger.info("sortandbleach - finished - time: %s m"%((datetime.datetime.utcnow() - start).seconds / 60))
     return
 
 def printLines(lines, out):
@@ -81,7 +81,7 @@ def runDiamondProcess(infile, nr, parts, size, output):
                     time.sleep(5)
             result_files.append(tmp_out)
 
-        logger.info("runDiamondProcess - finished - time: %s m\n"%((datetime.datetime.utcnow() - start).seconds / 60))
+        logger.info("runDiamondProcess - finished - time: %s m"%((datetime.datetime.utcnow() - start).seconds / 60))
         return result_files
     except (KeyboardInterrupt, SystemExit):
         logger.error("runBlatProcess - killed")
