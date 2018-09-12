@@ -39,9 +39,14 @@ def bleach(sims, out):
     if options.range > 0:
         e_range = options.range
 
-    # split columns than re-sort
+    # split columns than re-sort, remove bad lines
     sims = map(lambda x: x.strip().split("\t"), sims)
+    sims = filter(lambda x: len(x) == 12, sims)
+    if len(sims) == 0:
+        return
     sims.sort(cmp=lambda a,b: cmp(float(a), float(b)), key=operator.itemgetter(11), reverse=True)
+
+    # get top eval
     e_match = EVAL_RE.match(sims[0][10])
     if not e_match:
         return
