@@ -96,7 +96,7 @@ steps:
         in:
             input: catSims/output
             key: 
-                valueFrom: "1,1"
+                valueFrom: $(["1,1"])
             outName:
                 source: jobid
                 valueFrom: $(self).superblat.sims.sort
