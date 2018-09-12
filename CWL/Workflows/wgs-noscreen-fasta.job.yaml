@@ -2,7 +2,6 @@ jobid: wgs_nos_fna_test
 
 sequences:
     class: File
-    format: fasta
     path: ../Inputs/sequences.wgs.fasta
 
 filterLn: true
