@@ -20,9 +20,6 @@ inputs:
     input:
         type: File
         doc: Input sequence file
-        format:
-            - Formats:fastq
-            - Formats:fasta
         inputBinding:
             prefix: -i
     
@@ -59,7 +56,4 @@ outputs:
         doc: Optional output trimmed log file
         outputBinding:
             glob: $(inputs.outLog)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

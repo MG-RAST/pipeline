@@ -21,8 +21,6 @@ inputs:
     input:
         type: File
         doc: Input fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             prefix: -i
     
@@ -72,7 +70,4 @@ outputs:
         doc: Output cluster mapping file
         outputBinding: 
             glob: $(inputs.outName).clstr
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

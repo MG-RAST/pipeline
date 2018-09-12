@@ -1,12 +1,9 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-
-
 hints:
   DockerRequirement:
     dockerPull: mgrast/pipeline:4.03
-    # dockerPull: mgrast/drisee:1.0
     
 requirements:
   InlineJavascriptRequirement: {}
@@ -18,9 +15,6 @@ stderr: drisee.error
 inputs:
   sequences:
     type: File
-    format:
-      - Formats:fasta
-      - Formats:fastq
     inputBinding:
       position: 1
   
@@ -49,11 +43,5 @@ outputs:
   stats:
     type: File
     outputBinding: 
-      glob: drisee.stats 
-    
+      glob: drisee.stats
 
-$namespaces:
-  Formats: FileFormats.cv.yaml
-#
-# s:license: "https://www.apache.org/licenses/LICENSE-2.0"
-# s:copyrightHolder: "MG-RAST"

@@ -14,9 +14,6 @@ stderr: assembly_coverage.error
 inputs:
     sequences:
         type: File
-        format:
-            - Formats:fasta
-            - Formats:fastq
         inputBinding:
             prefix: --input
     outName:
@@ -43,6 +40,3 @@ outputs:
         type: File
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-  Formats: FileFormats.cv.yaml

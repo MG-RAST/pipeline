@@ -20,8 +20,6 @@ inputs:
     input:
         type: File
         doc: Input source profile file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --input
     
@@ -44,7 +42,4 @@ outputs:
         doc: Output json format file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

@@ -20,16 +20,12 @@ inputs:
     input:
         type: File
         doc: input fasta sequence file
-        format:
-            - Formats:fasta
         inputBinding:
             prefix: -input
     
     stats:
         type: File
         doc: input sequence stats file, json format
-        format:
-            - Formats:json
         inputBinding:
             prefix: -stats
     
@@ -89,7 +85,4 @@ outputs:
         type: File
         outputBinding:
             glob: $(inputs.outRemoved)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

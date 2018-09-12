@@ -43,6 +43,3 @@ outputs:
         outputBinding: 
             glob: $(inputs.outName)
 
-$namespaces:
-    Formats: FileFormats.cv.yaml
-

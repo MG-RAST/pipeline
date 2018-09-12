@@ -20,16 +20,12 @@ inputs:
     input:
         type: File
         doc: Input similarity blast-m8 file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --in_sim
     
     scgs:
         type: File?
         doc: md5 single copy gene file
-        format:
-            - Formats:json
         inputBinding:
             prefix: --in_scg
     
@@ -100,7 +96,4 @@ outputs:
         doc: Output expanded LCA file
         outputBinding: 
             glob: $(inputs.outLcaName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 
