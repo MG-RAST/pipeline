@@ -17,9 +17,6 @@ stderr: dereplication.error
 inputs:
     sequences:
         type: File
-        format:
-            - Formats:fastq
-            - Formats:fasta
         inputBinding:
             position: 1
 
@@ -69,20 +66,14 @@ outputs:
         type: stderr  
     passed:
         type: File
-        format: $(inputs.outFormat)
         outputBinding: 
             glob: $(inputs.outPrefix).passed.*
     removed:
         type: File
-        format: $(inputs.outFormat)
         outputBinding: 
             glob: $(inputs.outPrefix).removed.*    
     derep:
         type: File
-        format: tsv
         outputBinding: 
-            glob: $(inputs.outPrefix).derep    
-
-$namespaces:
-  Formats: FileFormats.cv.yaml
+            glob: $(inputs.outPrefix).derep
 

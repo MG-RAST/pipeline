@@ -1,9 +1,0 @@
-sequences:
-  class: File
-  format: fasta
-  path: ../Data/Inputs/sequences.all.fasta
-stats:
-  class: File
-  format: tsv
-  path: ../Data/Inputs/seq_length_stats.stats
-output: consensus.txt  

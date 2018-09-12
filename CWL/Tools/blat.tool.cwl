@@ -20,16 +20,12 @@ inputs:
     database:
         type: File
         doc: Database fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             position: 1
     
     query:
         type: File
         doc: Query fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             position: 2
     
@@ -42,10 +38,6 @@ inputs:
     dbType:
         type: string
         doc: Database type
-        format:
-            - Types:dna
-            - Types:prot
-            - Types:dnax
         inputBinding:
             prefix: -t=
             separate: False
@@ -53,12 +45,6 @@ inputs:
     queryType:
         type: string
         doc: Query type
-        format:
-            - Types:dna
-            - Types:rna
-            - Types:prot
-            - Types:dnax
-            - Types:rnax
         inputBinding:
             prefix: -q=
             separate: False
@@ -85,8 +71,4 @@ outputs:
         doc: Output tab separated similarity file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
-    Types: BlatTypes.cv.yaml
 

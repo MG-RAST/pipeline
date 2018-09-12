@@ -2,7 +2,6 @@ jobid: mb_fq_test
 
 sequences:
     class: File
-    format: fastq
     path: ../Inputs/sequences.metabarcode.fastq
 
 minQual: 15

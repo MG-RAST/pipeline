@@ -27,10 +27,6 @@ inputs:
     sequences:
         type: File
         doc: Input file, sequence (fasta/fastq) or binary count hash (hash).
-        format: 
-            - Formats:fasta
-            - Formats:fastq
-            - Formats:hash
         inputBinding:
             prefix: --input
 
@@ -95,8 +91,5 @@ outputs:
                 - name: file 
                   type: File 
                   outputBinding:
-                      glob: $(inputs.prefix).kmer.$(inputs.length).stats 
-
-$namespaces:
-  format: FileFormats.cv.yaml
+                      glob: $(inputs.prefix).kmer.$(inputs.length).stats
 

@@ -18,10 +18,6 @@ inputs:
   sequences:
     type: File
     doc: Input file, sequence (fasta/fastq).
-    format: 
-      - Formats:fasta
-      - Formats:fastq
-
     inputBinding:
       prefix: --input
   
@@ -63,6 +59,4 @@ outputs:
     type: File
     outputBinding: 
       glob: $(inputs.output)
-    
-$namespaces:
-  Formats: FileFormats.cv.yaml
+

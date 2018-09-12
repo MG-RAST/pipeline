@@ -1,9 +1,0 @@
-myDir:
-  class: Directory
-  path: /pipeline/CWL/Data/Inputs
-myFile:
-  class: File
-  path: /pipeline/CWL/Tools/ls.tool.yaml  
-exclusive_parameters:
-  sortBySize: true
-
