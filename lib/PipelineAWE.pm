@@ -85,6 +85,10 @@ sub run_cmd {
         if ($stderr) {
             logger('debug', "STDERR: ".$stderr);
         }
+        # special case, sortmerna runs OOM, exit failed-permanent
+        if (($parts[0] eq "sortmerna") && ($stderr =~ /Segmentation/)) {
+            exit 42;
+        }
         if (defined($status) && ($status != 0)) {
             logger('error', $parts[0]." returns value $status");
             exit $status >> 8;
