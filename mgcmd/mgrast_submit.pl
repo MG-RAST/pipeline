@@ -80,28 +80,26 @@ my $no_metadata = {}; # file_name
 # check that input files in inbox and right sizes
 foreach my $file (@{$params->{input}{files}}) {
     my $fname = $file->{filename};
-    unless (exists($file->{stats_info}{sequence_count}) && exists($file->{stats_info}{bp_count})) {
+    unless (exists($seq_files{$fname}) && exists($seq_files{$fname}{stats_info})) {
         $no_inbox->{$fname} = 1;
         next;
     }
-    if (int($file->{stats_info}{sequence_count}) < 100) {
+    my $stats = $seq_files{$fname}{stats_info};
+    my $basename = fileparse($fname, qr/\.[^.]*/);
+    $is_valid->{$basename} = $fname;
+
+    if (int($stats->{sequence_count}) < 100) {
         $min_seq->{$fname} = 1;
         next;
     }
-    if (int($file->{stats_info}{bp_count}) < 1000000) {
+    if (int($stats->{bp_count}) < 1000000) {
         $min_bp->{$fname} = 1;
         next;
     }
-    if (int($file->{stats_info}{length_max}) > 500000) {
+    if (int($stats->{length_max}) > 500000) {
         $max_length->{$fname} = 1;
         next;
     }
-    if (exists $seq_files{$fname}) {
-        my $basename = fileparse($fname, qr/\.[^.]*/);
-        $is_valid->{$basename} = $fname;
-        next;
-    }
-    $no_inbox->{$fname} = 1;
 }
 foreach my $miss (keys %$no_inbox) {
     print STDOUT "not_in_inbox\t$miss\n";
