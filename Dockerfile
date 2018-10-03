@@ -132,7 +132,7 @@ RUN cd /root \
 
 ### install skewer
 RUN cd /root \
-    && git clone https://github.com/wltrimbl/skewer \
+    && git clone https://github.com/teharrison/skewer \
     && cd skewer \
     && make \
     && make install \
