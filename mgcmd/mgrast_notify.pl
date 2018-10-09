@@ -50,7 +50,7 @@ Your submitted annotation job $job_name belonging to study $proj_name has comple
 Log in to MG-RAST ($site) to view your results. Your completed data is available through the My Studies section on your My Data page.
 PLEASE NOTE: Your data has NOT been made public and ONLY you can currently view the data and results.
 If you wish to publicly share the link to your results, you will need to make the data public yourself. This is needed even if you selected that the data is going to be made public immediately after completion.
-This is an automated message. Please contact mg-rast\@mcs.anl.gov if you have any questions or concerns.
+This is an automated message. Please contact help\@mg-rast.org if you have any questions or concerns.
 );
 
 PipelineAWE::post_data($api_url."/user/".$user."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});

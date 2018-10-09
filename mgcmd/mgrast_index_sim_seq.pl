@@ -93,7 +93,7 @@ if (-z $sim_file) {
 The annotation job that you submitted for $job_name ($job_id) belonging to study $proj_name has failed.
 No similarities were found using blat against our M5NR database.
 
-This is an automated message.  Please contact mg-rast\@mcs.anl.gov if you have any questions or concerns.
+This is an automated message.  Please contact help\@mg-rast.org if you have any questions or concerns.
 );
     PipelineAWE::post_data($api_url."/user/".$user_attr->{owner}."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});
     PipelineAWE::logger('error', "pipeline failed, no similarities found");

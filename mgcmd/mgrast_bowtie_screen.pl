@@ -107,7 +107,7 @@ else {
 The annotation job that you submitted for $job_name ($job_id) belonging to study $proj_name has failed.
 No sequences passed our QC screening steps. Either your sequences were too short or your pipeline QC settings were to stringent.
 
-This is an automated message.  Please contact mg-rast\@mcs.anl.gov if you have any questions or concerns.
+This is an automated message.  Please contact help\@mg-rast.org if you have any questions or concerns.
 );
             PipelineAWE::post_data($PipelineAWE::default_api."/user/".$user_attr->{owner}."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});
         }
