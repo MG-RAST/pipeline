@@ -30,9 +30,6 @@
                 {
                     "type": "File", 
                     "doc": "Input tabbed sequence file", 
-                    "format": [
-                        "#add_seq2sims.tool.cwl/sequences/tsv"
-                    ], 
                     "inputBinding": {
                         "prefix": "--seq_file"
                     }, 
@@ -41,9 +38,6 @@
                 {
                     "type": "File", 
                     "doc": "Input similarity file", 
-                    "format": [
-                        "#add_seq2sims.tool.cwl/similarity/tsv"
-                    ], 
                     "inputBinding": {
                         "prefix": "--in_sim"
                     }, 
@@ -99,10 +93,6 @@
                 {
                     "type": "File", 
                     "doc": "Input sequence file", 
-                    "format": [
-                        "#autoskewer.tool.cwl/input/FileFormats.cv.yamlfastq", 
-                        "#autoskewer.tool.cwl/input/FileFormats.cv.yamlfasta"
-                    ], 
                     "inputBinding": {
                         "prefix": "-i"
                     }, 
@@ -197,11 +187,19 @@
                     "id": "#bleachsims.tool.cwl/cutoff"
                 }, 
                 {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "doc": "only apply cutoff filter", 
+                    "inputBinding": {
+                        "prefix": "--eval_only"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/cutoffOnly"
+                }, 
+                {
                     "type": "File", 
                     "doc": "Input similarity blast-m8 file", 
-                    "format": [
-                        "#bleachsims.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ], 
                     "inputBinding": {
                         "prefix": "-s"
                     }, 
@@ -212,12 +210,23 @@
                         "null", 
                         "int"
                     ], 
-                    "doc": "Minimum", 
+                    "doc": "Minimum number of hits per query, default 20", 
                     "default": 20, 
                     "inputBinding": {
                         "prefix": "-m"
                     }, 
                     "id": "#bleachsims.tool.cwl/min"
+                }, 
+                {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "doc": "only apply cutoff filter", 
+                    "inputBinding": {
+                        "prefix": "--min_hit_only"
+                    }, 
+                    "id": "#bleachsims.tool.cwl/minHitOnly"
                 }, 
                 {
                     "type": "string", 
@@ -349,9 +358,6 @@
                 {
                     "type": "File", 
                     "doc": "Input fasta format file", 
-                    "format": [
-                        "#cdhit.tool.cwl/input/FileFormats.cv.yamlfasta"
-                    ], 
                     "inputBinding": {
                         "prefix": "-i"
                     }, 
@@ -461,10 +467,6 @@
                 {
                     "type": "File", 
                     "doc": "Input file, sequence (fasta/fastq).", 
-                    "format": [
-                        "#consensus.tool.cwl/sequences/FileFormats.cv.yamlfasta", 
-                        "#consensus.tool.cwl/sequences/FileFormats.cv.yamlfastq"
-                    ], 
                     "inputBinding": {
                         "prefix": "--input"
                     }, 
@@ -530,10 +532,6 @@
             "inputs": [
                 {
                     "type": "File", 
-                    "format": [
-                        "#drisee.tool.cwl/sequences/FileFormats.cv.yamlfasta", 
-                        "#drisee.tool.cwl/sequences/FileFormats.cv.yamlfastq"
-                    ], 
                     "inputBinding": {
                         "position": 1
                     }, 
@@ -603,9 +601,6 @@
                 {
                     "type": "File", 
                     "doc": "Input fastq sequence file", 
-                    "format": [
-                        "#fastq-mcf.tool.cwl/input/FileFormats.cv.yamlfastq"
-                    ], 
                     "inputBinding": {
                         "position": 1
                     }, 
@@ -955,7 +950,6 @@
                 }, 
                 {
                     "type": "File", 
-                    "format": "file:///Users/travis/Packages/pipeline/CWL/Tools/json", 
                     "outputBinding": {
                         "glob": "$(inputs.output_prefix).seq.stats"
                     }, 
@@ -997,9 +991,6 @@
                 {
                     "type": "File", 
                     "doc": "Input fasta format file", 
-                    "format": [
-                        "#fraggenescan.tool.cwl/input/FileFormats.cv.yamlfasta"
-                    ], 
                     "inputBinding": {
                         "prefix": "--genome"
                     }, 
@@ -1020,16 +1011,6 @@
                     ], 
                     "doc": "Training model to use, default is 454_30", 
                     "default": "454_30", 
-                    "format": [
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yamlcomplete", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yamlsanger_5", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yamlsanger_10", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yaml454_5", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yaml454_10", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yaml454_30", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yamlillumina_5", 
-                        "#fraggenescan.tool.cwl/train/FragGeneScanTypes.cv.yamlillumina_10"
-                    ], 
                     "inputBinding": {
                         "prefix": "--train"
                     }, 
@@ -1088,9 +1069,6 @@
                 {
                     "type": "File", 
                     "doc": "Input similarity blast-m8 file", 
-                    "format": [
-                        "#index_sims_file_md5.tool.cwl/input/tsv"
-                    ], 
                     "inputBinding": {
                         "prefix": "--in_file"
                     }, 
@@ -1211,11 +1189,6 @@
                 {
                     "type": "File", 
                     "doc": "Input file, sequence (fasta/fastq) or binary count hash (hash).", 
-                    "format": [
-                        "#kmer-tool.tool.cwl/sequences/fasta", 
-                        "#kmer-tool.tool.cwl/sequences/fastq", 
-                        "#kmer-tool.tool.cwl/sequences/hash"
-                    ], 
                     "inputBinding": {
                         "prefix": "--input"
                     }, 
@@ -1341,10 +1314,6 @@
                 {
                     "type": "File", 
                     "doc": "Input sequence file", 
-                    "format": [
-                        "#seqUtil.tool.cwl/sequences/FileFormats.cv.yamlfastq", 
-                        "#seqUtil.tool.cwl/sequences/FileFormats.cv.yamlfasta"
-                    ], 
                     "inputBinding": {
                         "prefix": "--input"
                     }, 
@@ -1538,10 +1507,6 @@
                 {
                     "type": "File", 
                     "doc": "Input file, sequence (fasta/fastq)", 
-                    "format": [
-                        "#seq_length_stats.tool.cwl/sequences/FileFormats.cv.yamlfasta", 
-                        "#seq_length_stats.tool.cwl/sequences/FileFormats.cv.yamlfastq"
-                    ], 
                     "inputBinding": {
                         "prefix": "--input"
                     }, 
@@ -1675,27 +1640,10 @@
                 {
                     "type": "string", 
                     "doc": "Profile type", 
-                    "format": [
-                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamlmd5", 
-                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamllca", 
-                        "#sims_abundance.tool.cwl/profileType/ProfileTypes.cv.yamlsource"
-                    ], 
                     "inputBinding": {
                         "prefix": "-t"
                     }, 
                     "id": "#sims_abundance.tool.cwl/profileType"
-                }, 
-                {
-                    "type": [
-                        "null", 
-                        "int"
-                    ], 
-                    "doc": "Number of sources in m5nr, default 18", 
-                    "default": 18, 
-                    "inputBinding": {
-                        "prefix": "-s"
-                    }, 
-                    "id": "#sims_abundance.tool.cwl/sourceNum"
                 }
             ], 
             "baseCommand": [
@@ -1724,7 +1672,7 @@
         {
             "class": "CommandLineTool", 
             "label": "annotate sims", 
-            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nprot mode: sims_annotate.pl --verbose --in_sim <input> --in_scg <scgs> --ann_file <database> --out_filter <outFilter> --out_expand <outExpand> --out_ontology <outOntology> -out_lca <outLca> --frag_num 5000\nrna mode:  sims_annotate.pl --verbose --in_sim <input> --ann_file <database> --out_filter <outFilter> --out_rna <outRna> --out_lca <outLca> --frag_num 5000\n", 
+            "doc": "create expanded annotated sims files from input md5 sim file and m5nr db\nsims_annotate.pl --verbose --in_sim <input> --in_scg <scgs> --ann_file <database> --format <seqFormat> --out_filter <outFilter> --out_expand <outExpand> -out_lca <outLca> --frag_num 5000\n", 
             "hints": [
                 {
                     "dockerPull": "mgrast/pipeline:4.03", 
@@ -1762,19 +1710,13 @@
                 {
                     "type": "File", 
                     "doc": "Input similarity blast-m8 file", 
-                    "format": [
-                        "#sims_annotate.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ], 
                     "inputBinding": {
                         "prefix": "--in_sim"
                     }, 
                     "id": "#sims_annotate.tool.cwl/input"
                 }, 
                 {
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
+                    "type": "string", 
                     "doc": "Output expanded protein sim file (protein mode only)", 
                     "inputBinding": {
                         "prefix": "--out_expand"
@@ -1790,10 +1732,7 @@
                     "id": "#sims_annotate.tool.cwl/outFilterName"
                 }, 
                 {
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
+                    "type": "string", 
                     "doc": "Output expanded LCA file (protein and rna mode)", 
                     "inputBinding": {
                         "prefix": "--out_lca"
@@ -1803,38 +1742,22 @@
                 {
                     "type": [
                         "null", 
-                        "string"
-                    ], 
-                    "doc": "Output expanded ontology sim file (protein mode only)", 
-                    "inputBinding": {
-                        "prefix": "--out_ontology"
-                    }, 
-                    "id": "#sims_annotate.tool.cwl/outOntologyName"
-                }, 
-                {
-                    "type": [
-                        "null", 
-                        "string"
-                    ], 
-                    "doc": "Output expanded rna sim file (rna mode only)", 
-                    "inputBinding": {
-                        "prefix": "--out_rna"
-                    }, 
-                    "id": "#sims_annotate.tool.cwl/outRnaName"
-                }, 
-                {
-                    "type": [
-                        "null", 
                         "File"
                     ], 
                     "doc": "md5 single copy gene file", 
-                    "format": [
-                        "#sims_annotate.tool.cwl/scgs/FileFormats.cv.yamljson"
-                    ], 
                     "inputBinding": {
                         "prefix": "--in_scg"
                     }, 
                     "id": "#sims_annotate.tool.cwl/scgs"
+                }, 
+                {
+                    "type": "string", 
+                    "doc": "Type of sequences data in input file, rna or protein", 
+                    "default": "protein", 
+                    "inputBinding": {
+                        "prefix": "--format"
+                    }, 
+                    "id": "#sims_annotate.tool.cwl/seqFormat"
                 }, 
                 {
                     "type": [
@@ -1861,11 +1784,8 @@
                     "id": "#sims_annotate.tool.cwl/info"
                 }, 
                 {
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "doc": "Output expanded protein sim file (protein mode only)", 
+                    "type": "File", 
+                    "doc": "Output expanded sim file", 
                     "outputBinding": {
                         "glob": "$(inputs.outExpandName)"
                     }, 
@@ -1880,37 +1800,12 @@
                     "id": "#sims_annotate.tool.cwl/outFilter"
                 }, 
                 {
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "doc": "Output expanded LCA file (protein and rna mode)", 
+                    "type": "File", 
+                    "doc": "Output expanded LCA file", 
                     "outputBinding": {
                         "glob": "$(inputs.outLcaName)"
                     }, 
                     "id": "#sims_annotate.tool.cwl/outLca"
-                }, 
-                {
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "doc": "Output expanded ontology sim file (protein mode only)", 
-                    "outputBinding": {
-                        "glob": "$(inputs.outOntologyName)"
-                    }, 
-                    "id": "#sims_annotate.tool.cwl/outOntology"
-                }, 
-                {
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
-                    "doc": "Output expanded rna sim file (rna mode only)", 
-                    "outputBinding": {
-                        "glob": "$(inputs.outRnaName)"
-                    }, 
-                    "id": "#sims_annotate.tool.cwl/outRna"
                 }
             ], 
             "id": "#sims_annotate.tool.cwl"
@@ -1938,7 +1833,7 @@
                         "null", 
                         "string"
                     ], 
-                    "doc": "-t, --field-separator=SEP\nuse SEP instead of non-blank to blank transition\n", 
+                    "doc": "use SEP instead of non-blank to blank transition, default is tab", 
                     "inputBinding": {
                         "prefix": "-t", 
                         "valueFrom": "$(\"\\u0009\")"
@@ -1946,27 +1841,44 @@
                     "id": "#sort.tool.cwl/field"
                 }, 
                 {
-                    "type": "File", 
-                    "doc": "File to sort", 
-                    "format": [
-                        "#sort.tool.cwl/input/FileFormats.cv.yamltsv"
-                    ], 
+                    "type": {
+                        "type": "array", 
+                        "items": "File"
+                    }, 
+                    "doc": "Files to sort", 
                     "inputBinding": {
-                        "position": 1
+                        "position": 2
                     }, 
                     "id": "#sort.tool.cwl/input"
                 }, 
                 {
-                    "type": "string", 
-                    "inputBinding": {
-                        "prefix": "-k"
+                    "type": {
+                        "type": "array", 
+                        "items": "string", 
+                        "inputBinding": {
+                            "prefix": "-k"
+                        }
                     }, 
-                    "doc": "-k, --key=POS1[,POS2]\nstart a key at POS1, end it at POS2 (origin 1)\n", 
+                    "doc": "start a key at POS1, end it at POS2 (origin 1)", 
+                    "inputBinding": {
+                        "position": 1
+                    }, 
                     "id": "#sort.tool.cwl/key"
                 }, 
                 {
+                    "type": [
+                        "null", 
+                        "boolean"
+                    ], 
+                    "doc": "merge only, the input files are assumed to be pre-sorted", 
+                    "inputBinding": {
+                        "prefix": "-m"
+                    }, 
+                    "id": "#sort.tool.cwl/merge"
+                }, 
+                {
                     "type": "string", 
-                    "doc": "-o, --output=FILE\nwrite result to FILE instead of standard output\n", 
+                    "doc": "write result to FILE instead of standard output", 
                     "inputBinding": {
                         "prefix": "-o"
                     }, 
@@ -1996,10 +1908,7 @@
                     "id": "#sort.tool.cwl/info"
                 }, 
                 {
-                    "type": [
-                        "null", 
-                        "File"
-                    ], 
+                    "type": "File", 
                     "doc": "The sorted file", 
                     "outputBinding": {
                         "glob": "$(inputs.outName)"
@@ -2030,9 +1939,6 @@
                 {
                     "type": "File", 
                     "doc": "Database fasta format file", 
-                    "format": [
-                        "#superblat.tool.cwl/database/FileFormats.cv.yamlfasta"
-                    ], 
                     "inputBinding": {
                         "position": 1
                     }, 
@@ -2060,9 +1966,6 @@
                 {
                     "type": "File", 
                     "doc": "Query fasta format file", 
-                    "format": [
-                        "#superblat.tool.cwl/query/FileFormats.cv.yamlfasta"
-                    ], 
                     "inputBinding": {
                         "position": 2
                     }, 
@@ -2513,7 +2416,7 @@
                             "id": "#index_sim_seq.workflow.cwl/sortSimSeq/input"
                         }, 
                         {
-                            "valueFrom": "2,2", 
+                            "valueFrom": "$([\"2,2\"])", 
                             "id": "#index_sim_seq.workflow.cwl/sortSimSeq/key"
                         }, 
                         {
@@ -2535,7 +2438,7 @@
                             "id": "#index_sim_seq.workflow.cwl/sortSims/input"
                         }, 
                         {
-                            "valueFrom": "1,1", 
+                            "valueFrom": "$([\"1,1\"])", 
                             "id": "#index_sim_seq.workflow.cwl/sortSims/key"
                         }, 
                         {
@@ -2778,8 +2681,7 @@
                         "#main/annotate/protSimsOut", 
                         "#main/annotate/protFilterOut", 
                         "#main/annotate/protExpandOut", 
-                        "#main/annotate/protLCAOut", 
-                        "#main/annotate/protOntologyOut"
+                        "#main/annotate/protLCAOut"
                     ], 
                     "id": "#main/annotate"
                 }, 
@@ -3107,12 +3009,7 @@
                 }, 
                 {
                     "type": "File", 
-                    "outputSource": "#protein-annotation.workflow.cwl/annotateSims/outOntology", 
-                    "id": "#protein-annotation.workflow.cwl/protOntologyOut"
-                }, 
-                {
-                    "type": "File", 
-                    "outputSource": "#protein-annotation.workflow.cwl/catSims/output", 
+                    "outputSource": "#protein-annotation.workflow.cwl/bleachSims/output", 
                     "id": "#protein-annotation.workflow.cwl/protSimsOut"
                 }
             ], 
@@ -3125,7 +3022,7 @@
                             "id": "#protein-annotation.workflow.cwl/annotateSims/database"
                         }, 
                         {
-                            "source": "#protein-annotation.workflow.cwl/catSims/output", 
+                            "source": "#protein-annotation.workflow.cwl/bleachSims/output", 
                             "id": "#protein-annotation.workflow.cwl/annotateSims/input"
                         }, 
                         {
@@ -3144,38 +3041,31 @@
                             "id": "#protein-annotation.workflow.cwl/annotateSims/outLcaName"
                         }, 
                         {
-                            "source": "#protein-annotation.workflow.cwl/jobid", 
-                            "valueFrom": "$(self).650.aa.expand.ontology", 
-                            "id": "#protein-annotation.workflow.cwl/annotateSims/outOntologyName"
-                        }, 
-                        {
                             "source": "#protein-annotation.workflow.cwl/m5nrSCG", 
                             "id": "#protein-annotation.workflow.cwl/annotateSims/scgs"
+                        }, 
+                        {
+                            "valueFrom": "protein", 
+                            "id": "#protein-annotation.workflow.cwl/annotateSims/seqFormat"
                         }
                     ], 
                     "out": [
                         "#protein-annotation.workflow.cwl/annotateSims/outFilter", 
                         "#protein-annotation.workflow.cwl/annotateSims/outExpand", 
-                        "#protein-annotation.workflow.cwl/annotateSims/outLca", 
-                        "#protein-annotation.workflow.cwl/annotateSims/outOntology"
+                        "#protein-annotation.workflow.cwl/annotateSims/outLca"
                     ], 
                     "id": "#protein-annotation.workflow.cwl/annotateSims"
                 }, 
                 {
                     "run": "#bleachsims.tool.cwl", 
-                    "scatter": [
-                        "#protein-annotation.workflow.cwl/bleachSims/input", 
-                        "#protein-annotation.workflow.cwl/bleachSims/outName"
-                    ], 
-                    "scatterMethod": "dotproduct", 
                     "in": [
                         {
-                            "source": "#protein-annotation.workflow.cwl/superblat/output", 
+                            "source": "#protein-annotation.workflow.cwl/sortSims/output", 
                             "id": "#protein-annotation.workflow.cwl/bleachSims/input"
                         }, 
                         {
-                            "source": "#protein-annotation.workflow.cwl/superblat/output", 
-                            "valueFrom": "$(self.basename).trim", 
+                            "source": "#protein-annotation.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).650.superblat.sims", 
                             "id": "#protein-annotation.workflow.cwl/bleachSims/outName"
                         }
                     ], 
@@ -3188,12 +3078,12 @@
                     "run": "#cat.tool.cwl", 
                     "in": [
                         {
-                            "source": "#protein-annotation.workflow.cwl/bleachSims/output", 
+                            "source": "#protein-annotation.workflow.cwl/superblat/output", 
                             "id": "#protein-annotation.workflow.cwl/catSims/files"
                         }, 
                         {
                             "source": "#protein-annotation.workflow.cwl/jobid", 
-                            "valueFrom": "$(self).650.superblat.sims", 
+                            "valueFrom": "$(self).superblat.sims.raw", 
                             "id": "#protein-annotation.workflow.cwl/catSims/outName"
                         }
                     ], 
@@ -3260,6 +3150,28 @@
                         "#protein-annotation.workflow.cwl/protFeature/outProt"
                     ], 
                     "id": "#protein-annotation.workflow.cwl/protFeature"
+                }, 
+                {
+                    "run": "#sort.tool.cwl", 
+                    "in": [
+                        {
+                            "source": "#protein-annotation.workflow.cwl/catSims/output", 
+                            "id": "#protein-annotation.workflow.cwl/sortSims/input"
+                        }, 
+                        {
+                            "valueFrom": "$([\"1,1\"])", 
+                            "id": "#protein-annotation.workflow.cwl/sortSims/key"
+                        }, 
+                        {
+                            "source": "#protein-annotation.workflow.cwl/jobid", 
+                            "valueFrom": "$(self).superblat.sims.sort", 
+                            "id": "#protein-annotation.workflow.cwl/sortSims/outName"
+                        }
+                    ], 
+                    "out": [
+                        "#protein-annotation.workflow.cwl/sortSims/output"
+                    ], 
+                    "id": "#protein-annotation.workflow.cwl/sortSims"
                 }, 
                 {
                     "run": "#superblat.tool.cwl", 
