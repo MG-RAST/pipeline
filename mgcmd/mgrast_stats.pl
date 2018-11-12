@@ -286,23 +286,15 @@ my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
 PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
 PipelineAWE::post_data($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
 
-# just POST ES metadata for old DB
-PipelineAWE::logger('info', "add metadata to ES");
-my $esdata1 = {
-    type => 'metadata',
-    index => 'metagenome_index'
-};
-PipelineAWE::post_data($api_url."/search/$mgid", $api_key, $esdata1);
-
-# POST ES data to new DB
+# POST ES data
 PipelineAWE::logger('info', "POSTing ES data");
-my $esdata2 = {
+my $esdata = {
     type => 'all',
-    index => 'metagenome_index_20180705',
+    index => 'metagenome_index',
     taxonomy => $taxa_abund_obj,
     function => $func_abund_obj
 };
-PipelineAWE::post_data($api_url."/search/$mgid", $api_key, $esdata2);
+PipelineAWE::post_data($api_url."/search/$mgid", $api_key, $esdata);
 
 exit 0;
 
