@@ -14,7 +14,7 @@ my $md5     = "";
 my $lca     = "";
 my $api_url = "";
 my $ann_ver = 1;
-my $chunk   = 5000;
+my $chunk   = 2000;
 my $help    = 0;
 my $options = GetOptions (
 		"job=s"     => \$job_id,
