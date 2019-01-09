@@ -1,3 +1,0 @@
-type: enum
-name: BlatType
-symbols: [dna, rna, prot, dnax, rnax]

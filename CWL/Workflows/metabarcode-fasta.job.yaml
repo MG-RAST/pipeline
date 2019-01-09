@@ -2,7 +2,6 @@ jobid: mb_fna_test
 
 sequences:
     class: File
-    format: fasta
     path: ../Inputs/sequences.metabarcode.fasta
 
 filterLn: true

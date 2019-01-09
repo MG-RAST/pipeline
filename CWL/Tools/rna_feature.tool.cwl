@@ -20,16 +20,12 @@ inputs:
     sequence:
         type: File
         doc: Tab separated sequence file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --seq
     
     aligned:
         type: File
         doc: Tab separated similarity file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --sim
     
@@ -59,7 +55,4 @@ outputs:
         doc: Output fasta format file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

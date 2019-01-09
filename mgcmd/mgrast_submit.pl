@@ -69,25 +69,52 @@ unless ($auth && $api) {
 my $inbox = PipelineAWE::obj_from_url($api."/inbox", $auth);
 my %seq_files = map { $_->{filename}, $_ } grep { exists($_->{data_type}) && ($_->{data_type} eq 'sequence') } @{$inbox->{files}};
 
+my $is_valid    = {}; # file_name w/o extension => file_name
 my $to_submit   = {}; # file_name => [ mg_name, sequence_type ]
 my $no_inbox    = {}; # file_name
+my $min_seq     = {}; # file_name
+my $min_bp      = {}; # file_name
+my $max_length  = {}; # file_name
 my $no_metadata = {}; # file_name
 
-# check that input files in inbox
-my $in_inbox = {}; # file_name w/o extension => file_name
-foreach my $fname (@{$params->{files}}) {
-    if (exists $seq_files{$fname}) {
-        my $basename = fileparse($fname, qr/\.[^.]*/);
-        $in_inbox->{$basename} = $fname;
-    } else {
+# check that input files in inbox and right sizes
+foreach my $file (@{$params->{input}{files}}) {
+    my $fname = $file->{filename};
+    unless (exists($seq_files{$fname}) && exists($seq_files{$fname}{stats_info})) {
         $no_inbox->{$fname} = 1;
+        next;
+    }
+    my $stats = $seq_files{$fname}{stats_info};
+    my $basename = fileparse($fname, qr/\.[^.]*/);
+    $is_valid->{$basename} = $fname;
+
+    if (int($stats->{sequence_count}) < 100) {
+        $min_seq->{$fname} = 1;
+        next;
+    }
+    if (int($stats->{bp_count}) < 1000000) {
+        $min_bp->{$fname} = 1;
+        next;
+    }
+    if (int($stats->{length_max}) > 500000) {
+        $max_length->{$fname} = 1;
+        next;
     }
 }
 foreach my $miss (keys %$no_inbox) {
-    print STDOUT "no_inbox\t$miss\n";
+    print STDOUT "not_in_inbox\t$miss\n";
+}
+foreach my $miss (keys %$min_seq) {
+    print STDOUT "below_min_seq_count\t$miss\n";
+}
+foreach my $miss (keys %$min_bp) {
+    print STDOUT "below_min_bp_count\t$miss\n";
+}
+foreach my $miss (keys %$max_length) {
+    print STDOUT "above_max_seq_length\t$miss\n";
 }
 
-# populate to_submit from in_inbox or mg_names
+# populate to_submit from is_valid
 # if metadata, check that input files in metadata
 # extract metagenome names
 # need to create project before submitted
@@ -127,7 +154,7 @@ if ($mdata && $params->{metadata}) {
             }
         }
     }
-    while (my ($basename, $fname) = each %$in_inbox) {
+    while (my ($basename, $fname) = each %$is_valid) {
         if (exists $md_names{$basename}) {
             $to_submit->{$fname} = $md_names{$basename};
         } else {
@@ -140,7 +167,7 @@ if ($mdata && $params->{metadata}) {
 }
 if ($project) {
     unless ($mdata && $params->{metadata}) {
-        while (my ($basename, $file_name) = each %$in_inbox) {
+        while (my ($basename, $file_name) = each %$is_valid) {
             $to_submit->{$file_name} = [$basename, undef];
         }
     }
@@ -184,7 +211,12 @@ FILES: foreach my $fname (keys %$to_submit) {
                         PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg->{id}, project_id => $project});
                     }
                     # fully created but not in pipeline, submit it
-                    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg->{id}, input_id => $info->{id}});
+                    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg->{id}, input_id => $info->{id}}, 1);
+                    # some error, record it and skip to next
+                    if ($submit_job->{'ERROR'}) {
+                        print STDOUT $submit_job->{'ERROR'}."\t".$mg->{id}."\n";
+                        next FILES;
+                    }
                     $awe_id = $submit_job->{awe_id};
                 }
                 # submitted: add to set and process next
@@ -205,11 +237,21 @@ FILES: foreach my $fname (keys %$to_submit) {
     if ($sequence_type) {
         $create_data->{sequence_type} = $sequence_type;
     }
-    my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data);
+    my $create_job = PipelineAWE::post_data($api."/job/create", $auth, $create_data, 1);
+    # some error, record it and skip to next
+    if ($create_job->{'ERROR'}) {
+        print STDOUT $create_job->{'ERROR'}."\t".$mg_id."\n";
+        next FILES;
+    }
     # project
     PipelineAWE::post_data($api."/job/addproject", $auth, {metagenome_id => $mg_id, project_id => $project});
     # submit it
-    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}});
+    my $submit_job = PipelineAWE::post_data($api."/job/submit", $auth, {metagenome_id => $mg_id, input_id => $info->{id}}, 1);
+    # some error, record it and skip to next
+    if ($submit_job->{'ERROR'}) {
+        print STDOUT $submit_job->{'ERROR'}."\t".$mg_id."\n";
+        next FILES;
+    }
     $submitted->{$fname} = [$metagenome_name, $submit_job->{awe_id}, $mg_id];
     print STDOUT join("\t", ("submitted", $fname, $metagenome_name, $submit_job->{awe_id}, $mg_id))."\n";
     push @$mgids, $mg_id;
@@ -217,7 +259,7 @@ FILES: foreach my $fname (keys %$to_submit) {
 
 if (@$mgids == 0) {
     PipelineAWE::logger('error', "no metagenomes created for submission");
-    exit 1;
+    exit 42;
 }
 
 # apply metadata
@@ -231,7 +273,7 @@ if ($mdata && $params->{metadata}) {
         } else {
             PipelineAWE::logger('error', "unable to import any metadata");
         }
-        exit 1;
+        exit 42;
     }
     # partial success
     if (scalar(@{$result->{added}}) < scalar(@$mgids)) {

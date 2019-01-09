@@ -20,8 +20,6 @@ inputs:
     input:
         type: File
         doc: Input fastq sequence file
-        format:
-            - Formats:fastq
         inputBinding:
             position: 1
     
@@ -84,7 +82,4 @@ outputs:
         doc: Output skipped fastq sequences
         outputBinding: 
             glob: $(inputs.outName).skip
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

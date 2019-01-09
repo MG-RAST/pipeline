@@ -13,19 +13,21 @@ use Cwd;
 umask 000;
 
 # options
-my @in_sims  = ();
-my @in_maps  = ();
-my @in_seqs  = ();
-my $output   = "";
-my $memory   = 16;
-my $help     = 0;
-my $options  = GetOptions (
-		"in_sims=s"  => \@in_sims,
-		"in_maps=s"  => \@in_maps,
-		"in_seqs=s"  => \@in_seqs,
-		"output=s"   => \$output,
-		"memory=i"   => \$memory,
-		"help!"      => \$help
+my $api_url = "";
+my @in_sims = ();
+my @in_maps = ();
+my @in_seqs = ();
+my $output  = "";
+my $memory  = 16;
+my $help    = 0;
+my $options = GetOptions (
+    "api_url=s"  => \$api_url,
+    "in_sims=s"  => \@in_sims,
+    "in_maps=s"  => \@in_maps,
+    "in_seqs=s"  => \@in_seqs,
+    "output=s"   => \$output,
+    "memory=i"   => \$memory,
+    "help!"      => \$help
 );
 
 if ($help){
@@ -43,6 +45,10 @@ if ($help){
 }elsif (length($output)==0){
     PipelineAWE::logger('error', "output file was not specified");
     exit 1;
+}
+
+unless ($api_url) {
+    $api_url = $PipelineAWE::default_api;
 }
 
 # get api variable
@@ -79,11 +85,17 @@ my $run_dir = getcwd;
 # file is empty !!!
 if (-z $sim_file) {
     my $user_attr = PipelineAWE::get_userattr();
-    my $user_info = PipelineAWE::get_user_info($user_attr->{owner}, undef, $api_key);
-    my $body_txt = "The annotation job that you submitted for '".$user_attr->{name}."' (".$user_attr->{id}.") has failed.\n".
-                   "No similarities were found using blat against our M5NR database.\n\n".
-                   'This is an automated message.  Please contact mg-rast@mcs.anl.gov if you have any questions or concerns.';
-    PipelineAWE::send_mail($body_txt, "MG-RAST Job Failed", $user_info);
+    my $job_name  = $user_attr->{name};
+    my $job_id    = $user_attr->{id};
+    my $proj_name = $user_attr->{project_name};
+    my $subject   = "MG-RAST Job Failed";
+    my $body_txt  = qq(
+The annotation job that you submitted for $job_name ($job_id) belonging to study $proj_name has failed.
+No similarities were found using blat against our M5NR database.
+
+This is an automated message.  Please contact help\@mg-rast.org if you have any questions or concerns.
+);
+    PipelineAWE::post_data($api_url."/user/".$user_attr->{owner}."/notify", $api_key, {'subject' => $subject, 'body' => $body_txt});
     PipelineAWE::logger('error', "pipeline failed, no similarities found");
     # exit failed-permanent
     exit 42;

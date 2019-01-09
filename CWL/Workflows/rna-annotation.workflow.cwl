@@ -70,7 +70,7 @@ steps:
         in:
             input: sortmerna/output
             key: 
-                valueFrom: "1,1"
+                valueFrom: $(["1,1"])
             outName:
                 source: sortmerna/output
                 valueFrom: $(self.basename).sort

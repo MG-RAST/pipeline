@@ -20,8 +20,6 @@ inputs:
     geneSeq:
         type: File
         doc: Input gene sequence file
-        format:
-            - Formats:fasta
         inputBinding:
             prefix: -i
 
@@ -60,7 +58,4 @@ outputs:
         doc: Output darkmatter sequence file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Types: ProfileTypes.cv.yaml
 

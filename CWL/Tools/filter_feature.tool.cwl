@@ -20,16 +20,12 @@ inputs:
     sequences:
         type: File
         doc: Input tabbed protein sequence file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --seq
 
     similarity:
         type: File
         doc: Input RNA similarity file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --sim
 
@@ -71,7 +67,4 @@ outputs:
         doc: Output filtered protein fasta file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Types: ProfileTypes.cv.yaml
 

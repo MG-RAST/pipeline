@@ -31,6 +31,7 @@ my $rna_map   = "";
 my $genecall  = "";
 my $aa_clust  = "";
 my $aa_map    = "";
+my $ontol     = "";
 my $filter    = "";
 my $md5_abund = "";
 my $dark      = "";
@@ -56,6 +57,7 @@ my $options   = GetOptions (
 		"genecall=s"  => \$genecall,
 		"aa_clust=s"  => \$aa_clust,
 		"aa_map=s"    => \$aa_map,
+        "ontol=s"     => \$ontol,
 		"filter=s"    => \$filter,
 		"md5_abund=s" => \$md5_abund,
         "dark=s"      => \$dark,
@@ -71,6 +73,10 @@ if ($help){
 }elsif (length($job_id)==0){
     PipelineAWE::logger('error', "job ID is required");
     exit 1;
+}
+
+unless ($api_url) {
+    $api_url = $PipelineAWE::default_api;
 }
 
 # get api variable
@@ -180,6 +186,7 @@ my $func_abund_file = $md5_abund.".function";
 my $taxa_abund_file = $md5_abund.".taxonomy";
 my $ont_abund_file  = $md5_abund.".ontology";
 my $md5_list_file   = $md5_abund.".md5";
+
 PipelineAWE::logger('info', "Building / computing annotation abundance profiles");
 PipelineAWE::run_cmd("md5_to_annotation.py -d $m5nr_db --tax_map $taxa_hier --ont_map $ont_hier -i $md5_abund -f $func_abund_file -t $taxa_abund_file -o $ont_abund_file -m md5_list_file");
 eval {
@@ -222,8 +229,6 @@ PipelineAWE::logger('info', "Building metagenome statistics file");
 my $u_stats = PipelineAWE::read_json($upload);
 my $q_stats = PipelineAWE::read_json($qc);
 my $s_stats = PipelineAWE::read_json($source);
-my %s_map   = map { $_->{source_id}, $_->{source} } @{PipelineAWE::obj_from_url($api_url."/m5nr/sources?version=".$ann_ver)->{data}};
-my %s_data  = map { $s_map{$_}, $s_stats->{$_} } keys %$s_stats;
 
 # get qc stats - input stats may be from done stage if this is a rerun job
 my $up_gc_hist  = undef;
@@ -252,7 +257,7 @@ my $mgstats = {
         post_qc => PipelineAWE::file_to_array("$post_qc.stats.lens")
     },
     qc => $qc_all_stat,
-    source => \%s_data,
+    source => $s_stats,
     taxonomy => $taxa_abund_obj,
     function => $func_abund_obj,
     ontology => $ont_abund_obj,
@@ -265,23 +270,31 @@ PipelineAWE::logger('info', "Outputing statistics file");
 PipelineAWE::print_json($job_id.".statistics.json", $mgstats);
 PipelineAWE::create_attr($job_id.".statistics.json.attr", undef, {data_type => "statistics", file_format => "json"});
 
+####### depricated, now use elasticsearch
 # upload of solr data
-PipelineAWE::logger('info', "POSTing solr data");
-my $solrdata = {
-    sequence_stats => $mgstats->{sequence_stats},
-    function => [ map {$_->[0]} @$func_abund_obj ],
-    organism => [ map {$_->[0]} @{$taxa_abund_obj->{species}} ],
-    md5 => $md5_list_obj
-};
-PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
+#PipelineAWE::logger('info', "POSTing solr data");
+#my $solrdata = {
+#    sequence_stats => $mgstats->{sequence_stats},
+#    function => [ map {$_->[0]} @$func_abund_obj ],
+#    organism => [ map {$_->[0]} @{$taxa_abund_obj->{species}} ],
+#    md5 => $md5_list_obj
+#};
+#PipelineAWE::post_data($api_url."/job/solr", $api_key, {metagenome_id => $mgid, solr_data => $solrdata});
 
-# ES metadata update
-PipelineAWE::obj_from_url($api_url."/search/$mgid", $api_key);
-
-# done done !!
+# set database to complete before ES load
 my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
 PipelineAWE::post_data($api_url."/job/attributes", $api_key, {metagenome_id => $mgid, attributes => {completedtime => $now}});
 PipelineAWE::post_data($api_url."/job/viewable", $api_key, {metagenome_id => $mgid, viewable => 1});
+
+# POST ES data
+PipelineAWE::logger('info', "POSTing ES data");
+my $esdata = {
+    type => 'all',
+    index => 'metagenome_index',
+    taxonomy => $taxa_abund_obj,
+    function => $func_abund_obj
+};
+PipelineAWE::post_data($api_url."/search/$mgid", $api_key, $esdata);
 
 exit 0;
 

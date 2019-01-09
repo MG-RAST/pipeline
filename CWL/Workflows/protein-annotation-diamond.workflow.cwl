@@ -9,6 +9,7 @@ requirements:
     - class: InlineJavascriptRequirement
     - class: ScatterFeatureRequirement
     - class: MultipleInputFeatureRequirement
+    - class: SubworkflowFeatureRequirement
 
 inputs:
     jobid: string
@@ -33,7 +34,7 @@ outputs:
         outputSource: formatCluster/output
     protSimsOut:
         type: File
-        outputSource: bleachSims/output
+        outputSource: runDiamond/protSimsOut
     protFilterOut:
         type: File
         outputSource: annotateSims/outFilter
@@ -70,45 +71,13 @@ steps:
                 source: jobid
                 valueFrom: $(self).550.cluster.aa90.mapping
         out: [output]
-    superblat:
-        run: ../Tools/superblat.tool.cwl
-        scatter: ["#superblat/database", "#superblat/outName"]
-        scatterMethod: dotproduct
+    runDiamond:
+        run: ../Workflows/protein-diamond.workflow.cwl
         in:
-            query: protCluster/outSeq
-            database: m5nrFull
-            fastMap:
-                default: true
-            outName:
-                source: m5nrFull
-                valueFrom: $(self.basename).superblat.sims
-        out: [output]
-    catSims:
-        run: ../Tools/cat.tool.cwl
-        in:
-            files: superblat/output
-            outName:
-                source: jobid
-                valueFrom: $(self).superblat.sims.raw
-        out: [output]
-    sortSims:
-        run: ../Tools/sort.tool.cwl
-        in:
-            input: catSims/output
-            key: 
-                valueFrom: $(["1,1"])
-            outName:
-                source: jobid
-                valueFrom: $(self).superblat.sims.sort
-        out: [output]
-    bleachSims:
-        run: ../Tools/bleachsims.tool.cwl
-        in:
-            input: sortSims/output
-            outName:
-                source: jobid
-                valueFrom: $(self).650.superblat.sims
-        out: [output]
+            jobid: jobid
+            sequences: sequences
+            m5nrFull: m5nrFull
+        out: [protSimsOut]
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:

@@ -57,6 +57,7 @@ if ($aa) {
         $cmd .= " --in_scg $scgs";
     }
     push @out_files, "$out_prefix.$type.expand.protein";
+    PipelineAWE::run_cmd("touch $out_prefix.$type.expand.ontology");
 } elsif ($rna) {
     $type = 'rna';
     $cmd .= " --format rna --out_expand $out_prefix.$type.expand.rna";

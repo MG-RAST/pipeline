@@ -21,8 +21,6 @@ inputs:
     input:
         type: File
         doc: Input similarity blast-m8 file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --in_file
 
@@ -55,7 +53,4 @@ outputs:
         doc: Output index file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Types: ProfileTypes.cv.yaml
 

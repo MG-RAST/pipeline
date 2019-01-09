@@ -20,8 +20,6 @@ inputs:
     input:
         type: File
         doc: Input fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             prefix: --genome
     
@@ -39,15 +37,6 @@ inputs:
         type: string?
         doc: Training model to use, default is 454_30
         default: "454_30"
-        format:
-            - Types:complete
-            - Types:sanger_5
-            - Types:sanger_10
-            - Types:454_5
-            - Types:454_10
-            - Types:454_30
-            - Types:illumina_5
-            - Types:illumina_10
         inputBinding:
             prefix: --train
     
@@ -75,8 +64,4 @@ outputs:
         doc: Output .faa (protein) file
         outputBinding: 
             glob: $(inputs.outName).faa
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
-    Types: FragGeneScanTypes.cv.yaml
 

@@ -51,10 +51,6 @@ inputs:
     profileType:
         type: string
         doc: Profile type
-        format:
-            - Types:md5
-            - Types:lca
-            - Types:source
         inputBinding:
             prefix: -t
     
@@ -77,8 +73,4 @@ outputs:
         doc: Output abundance profile file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
-    Types: ProfileTypes.cv.yaml
 

@@ -2,7 +2,6 @@ jobid: assem_test
 
 sequences:
     class: File
-    format: fasta
     path: ../Inputs/sequences.assembled.fasta
 
 m5nrBDB:

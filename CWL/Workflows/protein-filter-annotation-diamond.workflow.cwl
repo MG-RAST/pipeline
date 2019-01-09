@@ -2,17 +2,20 @@ cwlVersion: v1.0
 class: Workflow
 
 label: protein annotation
-doc: Proteins - predict, cluster, identify, annotate
+doc: Proteins - predict, filter, cluster, identify, annotate
 
 requirements:
     - class: StepInputExpressionRequirement
     - class: InlineJavascriptRequirement
     - class: ScatterFeatureRequirement
     - class: MultipleInputFeatureRequirement
+    - class: SubworkflowFeatureRequirement
 
 inputs:
     jobid: string
     sequences: File
+    rnaSims: File
+    rnaClustMap: File
     protIdentity:
         type: float?
         default: 0.9
@@ -25,6 +28,9 @@ outputs:
     protFeatureOut:
         type: File
         outputSource: protFeature/outProt
+    protFilterFeatureOut:
+        type: File
+        outputSource: protFilter/output
     protClustSeqOut:
         type: File
         outputSource: protCluster/outSeq
@@ -33,7 +39,7 @@ outputs:
         outputSource: formatCluster/output
     protSimsOut:
         type: File
-        outputSource: bleachSims/output
+        outputSource: runDiamond/protSimsOut
     protFilterOut:
         type: File
         outputSource: annotateSims/outFilter
@@ -53,10 +59,30 @@ steps:
                 source: jobid
                 valueFrom: $(self).350.genecalling.coding
         out: [outProt]
+    sortProt:
+        run: ../Tools/seqUtil.tool.cwl
+        in:
+            sequences: protFeature/outProt
+            sortbyid2tab:
+                default: true
+            output:
+                source: protFeature/outProt
+                valueFrom: $(self.basename).sort.tab
+        out: [file]
+    protFilter:
+        run: ../Tools/filter_feature.tool.cwl
+        in:
+            sequences: sortProt/file
+            similarity: rnaSims
+            cluster: rnaClustMap
+            outName:
+                source: jobid
+                valueFrom: $(self).375.filtering.faa
+        out: [output]
     protCluster:
         run: ../Tools/cdhit.tool.cwl
         in:
-            input: protFeature/outProt
+            input: protFilter/output
             identity: protIdentity
             outName:
                 source: jobid
@@ -70,45 +96,13 @@ steps:
                 source: jobid
                 valueFrom: $(self).550.cluster.aa90.mapping
         out: [output]
-    superblat:
-        run: ../Tools/superblat.tool.cwl
-        scatter: ["#superblat/database", "#superblat/outName"]
-        scatterMethod: dotproduct
+    runDiamond:
+        run: ../Workflows/protein-diamond.workflow.cwl
         in:
-            query: protCluster/outSeq
-            database: m5nrFull
-            fastMap:
-                default: true
-            outName:
-                source: m5nrFull
-                valueFrom: $(self.basename).superblat.sims
-        out: [output]
-    catSims:
-        run: ../Tools/cat.tool.cwl
-        in:
-            files: superblat/output
-            outName:
-                source: jobid
-                valueFrom: $(self).superblat.sims.raw
-        out: [output]
-    sortSims:
-        run: ../Tools/sort.tool.cwl
-        in:
-            input: catSims/output
-            key: 
-                valueFrom: $(["1,1"])
-            outName:
-                source: jobid
-                valueFrom: $(self).superblat.sims.sort
-        out: [output]
-    bleachSims:
-        run: ../Tools/bleachsims.tool.cwl
-        in:
-            input: sortSims/output
-            outName:
-                source: jobid
-                valueFrom: $(self).650.superblat.sims
-        out: [output]
+            jobid: jobid
+            sequences: sequences
+            m5nrFull: m5nrFull
+        out: [protSimsOut]
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:

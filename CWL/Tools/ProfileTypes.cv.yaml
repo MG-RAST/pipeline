@@ -1,3 +1,0 @@
-type: enum
-name: ProfileType
-symbols: [md5, lca, source]

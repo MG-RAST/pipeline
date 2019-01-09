@@ -20,16 +20,12 @@ inputs:
     database:
         type: File
         doc: Database fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             position: 1
     
     query:
         type: File
         doc: Query fasta format file
-        format:
-            - Formats:fasta
         inputBinding:
             position: 2
     
@@ -56,13 +52,10 @@ outputs:
     info:
         type: stdout
     error: 
-        type: stderr  
+        type: stderr
     output:
         type: File
         doc: Output tab separated similarity file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Formats: FileFormats.cv.yaml
 

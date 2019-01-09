@@ -20,16 +20,12 @@ inputs:
     sequences:
         type: File
         doc: Input tabbed sequence file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --seq_file
 
     similarity:
         type: File
         doc: Input similarity file
-        format:
-            - Formats:tsv
         inputBinding:
             prefix: --in_sim
 
@@ -55,7 +51,4 @@ outputs:
         doc: Output merged sims and seq file
         outputBinding: 
             glob: $(inputs.outName)
-
-$namespaces:
-    Types: ProfileTypes.cv.yaml
 
