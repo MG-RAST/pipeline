@@ -158,5 +158,5 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
 COPY CWL /CWL/
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
-COPY superblat /usr/local/bin/
+COPY bin/superblat /usr/local/bin/
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
