@@ -3,17 +3,17 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
-                sh 'docker built -t mgrast/pipeline:testing .' 
+                sh 'sudo docker built -t mgrast/pipeline:testing .' 
             }
         }
         stage('Test') { 
             steps {
-                sh 'echo Test Step' 
+                sh 'sudo docker run -t --rm mgrast/pipeline:testing ' 
             }
         }
         stage('Deploy') { 
             steps {
-                sh 'echo Deploy Step'
+                sh 'echo No deployment'
             }
         }
     }
