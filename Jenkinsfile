@@ -3,6 +3,7 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
+                sh 'pwd ; ls ; echo Done' 
                 sh 'sudo docker build -t mgrast/pipeline:testing .' 
             }
         }
