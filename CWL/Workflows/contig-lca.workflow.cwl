@@ -50,7 +50,7 @@ steps:
                 valueFrom: $(["2,2"])
             outName:
                 source: unclusterRna/output
-                valueFrom: $(self.basename).sort
+                valueFrom: $(self[0].basename).sort
         out: [output]
     unclusterProt:
         run: ../Tools/uncluster_sims.tool.cwl
@@ -75,7 +75,7 @@ steps:
                 valueFrom: $(["2,2"])
             outName:
                 source: unclusterProt/output
-                valueFrom: $(self.basename).sort
+                valueFrom: $(self[0].basename).sort
         out: [output]
     expandLca:
         run: ../Tools/find_contig_lca.tool.cwl

@@ -150,6 +150,8 @@ ENV PATH /root/autoskewer/:$PATH
 RUN pip install --upgrade pip
 RUN pip install cwlref-runner
 
+RUN apt-get clean && apt-get update
+
 # node.js version 7
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
     apt-get install -y nodejs
