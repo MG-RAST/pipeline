@@ -8,7 +8,7 @@ doc: |
 
 hints:
     DockerRequirement:
-        dockerPull: mgrast/pipeline:4.03
+        dockerPull: mgrast/pipeline:4.04
     
 requirements:
     InlineJavascriptRequirement: {}
