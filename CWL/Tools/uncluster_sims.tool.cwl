@@ -60,7 +60,7 @@ outputs:
     error: 
         type: stderr  
     output:
-        type: File
+        type: File[]
         doc: Output unclustered similarity file
         outputBinding: 
             glob: $(inputs.outName)

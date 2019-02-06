@@ -1,5 +1,5 @@
 # Run Test Data
-
+```
 cd /CWL/Inputs/DBs
 bash getpredata.sh
 
@@ -42,3 +42,4 @@ cwl-runner --debug --no-container /CWL/Workflows/wgs-noscreen-fasta.workflow.cwl
 mkdir -p /data/wgs-noqc-fasta
 cd /data/wgs-noqc-fasta
 cwl-runner --debug --no-container /CWL/Workflows/wgs-noscreen-fasta.workflow.cwl /CWL/Workflows/wgs-noqc-fasta.job.yaml
+```

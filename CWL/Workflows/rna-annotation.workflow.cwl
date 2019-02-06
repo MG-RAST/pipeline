@@ -73,7 +73,7 @@ steps:
                 valueFrom: $(["1,1"])
             outName:
                 source: sortmerna/output
-                valueFrom: $(self.basename).sort
+                valueFrom: $(self[0].basename).sort
         out: [output]
     rnaFeature:
         run: ../Tools/rna_feature.tool.cwl

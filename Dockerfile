@@ -150,6 +150,8 @@ ENV PATH /root/autoskewer/:$PATH
 RUN pip install --upgrade pip
 RUN pip install cwlref-runner
 
+RUN apt-get clean && apt-get update
+
 # node.js version 7
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
     apt-get install -y nodejs
@@ -158,5 +160,5 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
 COPY CWL /CWL/
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
-COPY superblat /usr/local/bin/
+COPY bin/superblat /usr/local/bin/
 RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat

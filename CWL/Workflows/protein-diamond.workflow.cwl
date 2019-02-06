@@ -43,7 +43,7 @@ steps:
                 default: true
             outName:
                 source: jobid
-                valueFrom: $(self).diamond.sims.merge
+                valueFrom: $(self[0]).diamond.sims.merge
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl

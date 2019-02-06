@@ -119,12 +119,14 @@ steps:
     sortSims:
         run: ../Tools/sort.tool.cwl
         in:
-            input: catSims/output
+            input:
+              source: catSims/output
+              valueFrom: $(self[0])
             key: 
                 valueFrom: $(["1,1"])
             outName:
                 source: jobid
-                valueFrom: $(self).superblat.sims.sort
+                valueFrom: $(self[0]).superblat.sims.sort
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
