@@ -37,6 +37,7 @@ outputs:
 steps:
     md5Profile:
         run: ../Tools/sims_abundance.tool.cwl
+        label: Abundance Profile
         in:
             input: filterSims
             cluster:
@@ -53,6 +54,7 @@ steps:
         out: [output]
     lcaProfile:
         run: ../Workflows/contig-lca.workflow.cwl
+        label: LCA Profile
         in:
             jobid: jobid
             rnaExpandLca: rnaExpandLca
