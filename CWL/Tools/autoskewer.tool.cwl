@@ -12,6 +12,9 @@ hints:
     
 requirements:
     InlineJavascriptRequirement: {}
+    InitialWorkDirRequirement:
+        listing:
+            - $(inputs.input)
 
 stdout: autoskewer.log
 stderr: autoskewer.error
