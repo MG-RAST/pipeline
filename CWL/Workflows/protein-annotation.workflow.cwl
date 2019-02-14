@@ -99,7 +99,7 @@ steps:
                 valueFrom: $(["1,1"])
             outName:
                 source: jobid
-                valueFrom: $(self[0]).superblat.sims.sort
+                valueFrom: $(self).superblat.sims.sort
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
