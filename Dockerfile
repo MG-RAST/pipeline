@@ -143,8 +143,7 @@ RUN cd /root \
 RUN cd /root \
     && git clone http://github.com/MG-RAST/autoskewer \
     && cd autoskewer \
-    && make
-ENV PATH /root/autoskewer/:$PATH
+    && make install
 
 ### install CWL runner
 RUN pip install --upgrade pip

@@ -13,9 +13,20 @@ stderr: assembly_coverage.error
 
 inputs:
     sequences:
+        doc: sequence file in fasta or fastq format
         type: File
         inputBinding:
             prefix: --input
+    # format:
+    #     doc: fasta or fastq
+    #     type: 
+    #         type: enum
+    #         symbols:
+    #             - fasta
+    #             - fastq
+    #     inputBinding:
+    #         prefix: --type        
+    #     default: fasta            
     outName:
         type: string
         doc: Output file name
@@ -24,12 +35,12 @@ inputs:
 
 baseCommand: [assembly_coverage.py]
 
-arguments: 
-    - prefix: --type
-      valueFrom: |
-          ${
-              return inputs.sequences.format.split("/").slice(-1)[0]
-          } 
+# arguments: 
+#     - prefix: --type
+#       valueFrom: |
+#           ${
+#               return inputs.sequences.format.split("/").slice(-1)[0]
+#           } 
 
 outputs:
     info:
