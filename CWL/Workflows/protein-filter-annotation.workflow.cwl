@@ -121,7 +121,7 @@ steps:
         in:
             input:
               source: catSims/output
-            #   valueFrom: $(self[0])
+              valueFrom: $([self])
             key: 
                 valueFrom: $(["1,1"])
             outName:
