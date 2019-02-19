@@ -116,7 +116,7 @@ steps:
         in:
             input:
               source: bleachSims/output
-              valueFrom: $(self[0])
+            #   valueFrom: $(self[0])
             scgs: m5nrSCG
             database: m5nrBDB
             seqFormat:
