@@ -1,5 +1,7 @@
 pipeline {
-    agent { 'bare-metal'} 
+    agent { 
+        node {label 'bare-metal' }
+    } 
     stages {
         stage('Build') { 
             steps {
