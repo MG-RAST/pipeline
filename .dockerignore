@@ -2,4 +2,5 @@
 .git/*
 .gitmodules/*
 CWL/Data/*
+CWL/Inputs/DBs/*
 tmp/*
