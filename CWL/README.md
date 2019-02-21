@@ -21,10 +21,12 @@ This directory contains tool and workflow definitions in CWL. Tests scripts and 
   - wgs-noscreen-fastq.job.yaml
 
 ## Running tests
-Download large reference files for tests and pipeline:
+
+1. Download large reference files for tests and pipeline:
 ```bash
-bash CWL/Inputs/DBs/getpredata.sh
+CWL/Inputs/DBs/getpredata.sh
 ```
+
 
 ## Working commands
 ```bash
