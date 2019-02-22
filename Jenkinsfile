@@ -1,6 +1,6 @@
 pipeline {
     agent { 
-        // node {label 'bare-metal' }
+        node {label 'bare-metal' }
     } 
     stages {
         stage('Build') { 
