@@ -9,7 +9,6 @@ CWL/tmp/*
 CWL/Data/Inputs/DBs/*
 
 # binaries
-superblat
 usearch
 
 # ignore files with # and ~

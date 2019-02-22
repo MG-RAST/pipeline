@@ -93,7 +93,7 @@ arguments:
     - prefix: --type
       valueFrom: |
           ${
-              return inputs.sequences.format.split("/").slice(-1)[0]
+              return inputs.sequences.basename.split(".").slice(-1)[0]
           }
 
 outputs:

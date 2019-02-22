@@ -63,6 +63,8 @@ steps:
         out: [stats]
     consensus:
         run: ../Tools/consensus.tool.cwl
+        label: Nucleotide Histogram 
+        doc: Compute nucleotide histogram for all reads
         in:
             sequences: sequences
             stats: sequenceStats/statOut

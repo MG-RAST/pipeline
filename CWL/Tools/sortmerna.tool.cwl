@@ -63,8 +63,8 @@ outputs:
     error: 
         type: stderr  
     output:
-        type: File?
+        type: File[]
         doc: Output tab separated aligned file
         outputBinding: 
-            glob: $(inputs.input.basename).blast
+            glob: [$(inputs.input.basename).blast]
 

@@ -99,7 +99,7 @@ steps:
                 valueFrom: $(["1,1"])
             outName:
                 source: jobid
-                valueFrom: $(self).superblat.sims.sort
+                valueFrom: $(self[0]).superblat.sims.sort
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
@@ -112,7 +112,9 @@ steps:
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:
-            input: bleachSims/output
+            input:
+              source: bleachSims/output
+              valueFrom: $(self[0])
             scgs: m5nrSCG
             database: m5nrBDB
             seqFormat:
