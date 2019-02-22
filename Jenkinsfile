@@ -6,7 +6,7 @@ pipeline {
         stage('Build') { 
             steps {
                 sh 'pwd ; ls ; echo Done' 
-                // sh 'docker build -t mgrast/pipeline:testing .' 
+                sh 'docker build -t mgrast/pipeline:testing .' 
             }
         }
         stage('Test') { 
