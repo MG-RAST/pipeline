@@ -5,7 +5,8 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
-                sh 'pwd ; ls ; echo Done' 
+                sh 'pwd ; ls ; echo Staring Build'
+                sh 'CWL/Inputs/DBs/getpredata.sh' 
                 sh 'docker build -t mgrast/pipeline:testing .' 
             }
         }
