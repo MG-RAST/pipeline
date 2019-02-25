@@ -12,7 +12,7 @@ pipeline {
         }
         stage('Test') { 
             steps {
-                sh 'sudo docker run --rm  -v `pwd`:/pipeline mgrast/pipeline:testing /pipeline/CWL/Tests/testTools.py' 
+                sh 'docker run --rm  -v `pwd`:/pipeline mgrast/pipeline:testing /pipeline/CWL/Tests/testWorkflows.py' 
             }
         }
         stage('Deploy') { 
