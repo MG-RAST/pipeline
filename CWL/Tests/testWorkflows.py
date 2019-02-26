@@ -57,7 +57,7 @@ def generate_check_exists_baseline(tool , name, path) :
 
 def generate_check_tool_output(tool, name , path) :
   def test(self):
-      """Compare baseline"""
+      """Run tool or workflow and compare output to baseline"""
       
       # set job  
       job = workflowDir + name + ".job.yaml"
@@ -70,37 +70,37 @@ def generate_check_tool_output(tool, name , path) :
         print [tool , name , path]
         print ['cwl-runner' , '--outdir ' + outputDir, docker , workflowDir + tool  , job] 
    
-     
-   
       # execute tool
       session = subprocess.Popen([ cwlTool , '--outdir' , outputDir, docker , workflowDir + tool , job ] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
       stdout, stderr = session.communicate()
-      
-      self.assertTrue( re.search( stderr , "Final process status is success")	)
-      
-      if stderr and debug :
-          print('ERROR:')
-          print(stderr)
-    
-      if CREATE_BASELINE and re.search(stderr , "Final process status is success") :
-          
-          if not os.path.exists( baselineDir + "/" + name + ".receipt" ) :
-            print ("Creating baseline file for " + name )
-            compFile = open( baselineDir + "/" + name + ".receipt" , 'w')
-            compFile.write(stdout)
-            compFile.close()
-          else:
-            print ("Baseline already exists, no overwrite option")
+      setattr(self , name , stdout)
 
-      # Test here    
-      compFile = open( baselineDir + "/" + name + ".receipt" , 'r')
-      baseline = compFile.read()
-  
+      success = re.search( "Final process status is success" , stderr )
+
       if debug :
-          print('Baseline:')
-          print(baseline)
-          print('Output:' + stdout)
-      self.assertTrue( cmp_cwl_receipts(baseline , stdout) , msg= " ".join(['cwl-runner' , '--outdir ' + outputDir, docker , workflowDir + tool  , job , "\n" , stderr ]) )
+        if re.search("permanentFail" , stderr) :
+          print("Regex permantFail worked")
+          print stderr
+        else:
+          print stderr[-40:]  
+
+      if CREATE_BASELINE and success : 
+        if not os.path.exists( baselineDir):
+           sys.stderr.write('No baseline dir :' + baselineDir)
+           sys.exit()
+        if not os.path.exists( baselineDir + "/" + name + ".receipt" ) :
+          print ("Creating baseline file for " + name )
+          compFile = open( baselineDir + "/" + name + ".receipt" , 'w')
+          compFile.write(receipt)
+          compFile.close()
+        else:
+          print ("Baseline already exists, no overwrite option")
+
+     
+      self.assertTrue( success	, msg= " ".join(['cwl-runner' , '--outdir ' + outputDir, docker , workflowDir + tool  , job , "\n" , stderr ]) )
+
+      if success :
+        self.assertTrue( cmp_cwl_receipts(baseline , receipt) , msg= "Receipt not identical with baseline receipt for " + tool )   
     
   return test
 
@@ -229,9 +229,14 @@ if __name__ == '__main__':
         test = generate_check_exists_baseline(tool , name, f)
         setattr(TestCwlTool, test_name, test)
         
-        # baseline test
-        test_name = 'test_cwl_compare_baseline_%s' % name
+        # run tool/workflow test and compare to workflow
+        test_name = 'test_cwl_execute_%s' % name
         test = generate_check_tool_output(tool , name, f)
         setattr(TestCwlTool, test_name, test)
+
+        # # compare to baseline
+        # test_name = 'test_cwl_compare_baseline_%s' % name
+        # test = generate_compare_to_baseline(tool , name , f)
+        # setattr(TestCwlTool, test_name, test)
   
     unittest.main()
