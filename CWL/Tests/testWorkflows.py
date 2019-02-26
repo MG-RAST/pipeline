@@ -14,6 +14,7 @@ import json
 
 debug =  int(os.environ.get('DEBUG' , 0))
 CREATE_BASELINE = int(os.environ.get('CREATE_BASELINE' , 0))
+CHECK_BASELINE = int(os.environ.get('CREATE_BASELINE' , 0))
 # print "DEBUG: " + str(debug)
 
 disable_docker = 1
@@ -91,7 +92,7 @@ def generate_check_tool_output(tool, name , path) :
         if not os.path.exists( baselineDir + "/" + name + ".receipt" ) :
           print ("Creating baseline file for " + name )
           compFile = open( baselineDir + "/" + name + ".receipt" , 'w')
-          compFile.write(receipt)
+          compFile.write(stdout)
           compFile.close()
         else:
           print ("Baseline already exists, no overwrite option")
@@ -99,8 +100,12 @@ def generate_check_tool_output(tool, name , path) :
      
       self.assertTrue( success	, msg= " ".join(['cwl-runner' , '--outdir ' + outputDir, docker , workflowDir + tool  , job , "\n" , stderr ]) )
 
-      if success :
-        self.assertTrue( cmp_cwl_receipts(baseline , receipt) , msg= "Receipt not identical with baseline receipt for " + tool )   
+      if success and CHECK_BASELINE :
+        compFile = open( baselineDir + "/" + name + ".receipt" , 'r')
+        baseline = compFile.read()
+        compFile.close()
+        print("Testing against baseline")
+        self.assertTrue( cmp_cwl_receipts(baseline , stdout) , msg= "Receipt not identical with baseline receipt for " + tool )   
     
   return test
 
@@ -112,7 +117,8 @@ def cmp_cwl_receipts(json_a , json_b) :
     a = json.loads(json_a)
     b = json.loads(json_b)
   except Exception as e :
-    sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... " + "a=" + type(json_a) + " b=" + type(json_b) + " ...") 
+    print(repr(e))
+    sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... " + "a=" + str(type(json_a)) + " b=" + str(type(json_b)) + " ...") 
 
   try:  
     for k, v in a.iteritems():
@@ -137,6 +143,8 @@ def cmp_cwl_receipts(json_a , json_b) :
         sys.stderr.write('Size not identical for ' + k +  "\n") 
         
   except Exception as e :
+    print("error in second try")
+    print(repr(e))
     sys.stderr.write("Error comparing dicts ... " + repr(e) + " ... ") 
     identical = 0
   
