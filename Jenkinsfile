@@ -5,8 +5,7 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
-                sh '
-                    echo Checking for database volume
+                sh 'echo Checking for database volume
                     volume=`docker volume ls | grep pipeline-pre-data`
                     if [[ "$volume" == "" ]] 
                     then
