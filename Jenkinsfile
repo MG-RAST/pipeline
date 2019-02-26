@@ -5,16 +5,7 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
-                sh 'echo Checking for database volume
-                    volume=`docker volume ls | grep pipeline-pre-data`
-                    if [[ "$volume" == "" ]] 
-                    then
-                        echo Can not find docker volume pipeline-pre-data, creating volume
-                        docker run -t -v pipeline-pre-data:/DBs -v `pwd`:/pipeline mgrast/pipeline:testing  /pipeline/CWL/Inputs/DBs/getpredata.sh /DBs/
-                    else
-                        echo Found volume pipeline-pre-data, using it
-                    fi    
-                    '
+                sh 'Setup/check-and-load-docker-volume.sh'
                 // sh 'CWL/Inputs/DBs/getpredata.sh CWL/Inputs/DBs/' 
                 sh 'docker build -t mgrast/pipeline:testing .' 
             }
