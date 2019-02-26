@@ -63,10 +63,10 @@ def generate_check_tool_output(tool, name , path) :
       job = workflowDir + name + ".job.yaml"
        
       if debug :
-        print "\nDEBUG:"
-        print "workflowDir: " + workflowDir
-        print "OutputDir: " + outputDir
-        print "Tool: " + tool
+        print("\nDEBUG:")
+        print("workflowDir: " + workflowDir)
+        print("OutputDir: " + outputDir)
+        print("Tool: " + tool)
         print [tool , name , path]
         print ['cwl-runner' , '--outdir ' + outputDir, docker , workflowDir + tool  , job] 
    
@@ -75,12 +75,12 @@ def generate_check_tool_output(tool, name , path) :
       # execute tool
       session = subprocess.Popen([ cwlTool , '--outdir' , outputDir, docker , workflowDir + tool , job ] , stdin=None , stdout=PIPE, stderr=PIPE , shell=False)
       stdout, stderr = session.communicate()
-     
-			self.assertTrue( re.search(stderr , "Final process status is success"))
-		
+      
+      self.assertTrue( re.search( stderr , "Final process status is success")	)
+      
       if stderr and debug :
-          print 'ERROR:'
-          print stderr
+          print('ERROR:')
+          print(stderr)
     
       if CREATE_BASELINE and re.search(stderr , "Final process status is success") :
           
@@ -97,9 +97,9 @@ def generate_check_tool_output(tool, name , path) :
       baseline = compFile.read()
   
       if debug :
-          print 'Baseline:'
-          print baseline
-          print 'Output:' + stdout
+          print('Baseline:')
+          print(baseline)
+          print('Output:' + stdout)
       self.assertTrue( cmp_cwl_receipts(baseline , stdout) , msg= " ".join(['cwl-runner' , '--outdir ' + outputDir, docker , workflowDir + tool  , job , "\n" , stderr ]) )
     
   return test
@@ -112,7 +112,7 @@ def cmp_cwl_receipts(json_a , json_b) :
     a = json.loads(json_a)
     b = json.loads(json_b)
   except Exception as e :
-		sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... " + "a=" + type(json_a) + " b=" + type(json_b) + " ...") 
+    sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... " + "a=" + type(json_a) + " b=" + type(json_b) + " ...") 
 
   try:  
     for k, v in a.iteritems():
