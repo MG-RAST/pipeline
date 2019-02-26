@@ -48,6 +48,8 @@ def generate_check_exists_job(tool , name, path) :
   return test
   
 def generate_check_exists_baseline(tool , name, path) :
+  @unittest.skipUnless(CHECK_BASELINE ,
+                     "not enabled")
   def test(self):
       """Does baseline data exists"""
       baseline_file = baselineDir + name + ".receipt"
