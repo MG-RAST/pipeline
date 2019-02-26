@@ -1,3 +1,4 @@
+#! /usr/bin/env sh
 echo Checking for database volume
 volume=`docker volume ls | grep pipeline-pre-data`
 if [[ "$volume" == "" ]] 
