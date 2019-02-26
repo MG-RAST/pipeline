@@ -12,7 +12,7 @@ pipeline {
         }
         stage('Test') { 
             steps {
-                sh 'docker run -t --rm  -e CREATE_BASELINE=1 -v `pwd`:/pipeline -v pipeline-pre-data:/pipeline/CWL/Inputs/DBs mgrast/pipeline:testing /pipeline/CWL/Tests/testWorkflows.py' 
+                sh 'docker run -t --rm  -e CREATE_BASELINE=1 -v `pwd`:/pipeline -v pipeline-pre-data:/pipeline/CWL/Inputs/DBs mgrast/pipeline:testing /pipeline/CWL/Tests/testWorkflows.py -v' 
             }
         }
     }
