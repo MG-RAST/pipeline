@@ -94,12 +94,14 @@ steps:
     sortSims:
         run: ../Tools/sort.tool.cwl
         in:
-            input: catSims/output
+            input: 
+                source: catSims/output
+                valueFrom: $([self])
             key: 
                 valueFrom: $(["1,1"])
             outName:
                 source: jobid
-                valueFrom: $(self[0]).superblat.sims.sort
+                valueFrom: $(self).superblat.sims.sort
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
@@ -114,7 +116,7 @@ steps:
         in:
             input:
               source: bleachSims/output
-              valueFrom: $(self[0])
+            #   valueFrom: $(self[0])
             scgs: m5nrSCG
             database: m5nrBDB
             seqFormat:

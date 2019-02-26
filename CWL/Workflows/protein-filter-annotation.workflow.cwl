@@ -121,12 +121,12 @@ steps:
         in:
             input:
               source: catSims/output
-              valueFrom: $(self[0])
+              valueFrom: $([self])
             key: 
                 valueFrom: $(["1,1"])
             outName:
                 source: jobid
-                valueFrom: $(self[0]).superblat.sims.sort
+                valueFrom: $(self).superblat.sims.sort
         out: [output]
     bleachSims:
         run: ../Tools/bleachsims.tool.cwl
