@@ -14,7 +14,7 @@ import json
 
 debug =  int(os.environ.get('DEBUG' , 0))
 CREATE_BASELINE = int(os.environ.get('CREATE_BASELINE' , 0))
-CHECK_BASELINE = int(os.environ.get('CREATE_BASELINE' , 0))
+CHECK_BASELINE = int(os.environ.get('CHECK_BASELINE' , 0))
 # print "DEBUG: " + str(debug)
 
 disable_docker = 1
