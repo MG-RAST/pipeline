@@ -7,6 +7,7 @@ pipeline {
             steps {
                 sh 'Setup/check-and-load-docker-volume.sh'
                 // sh 'CWL/Inputs/DBs/getpredata.sh CWL/Inputs/DBs/' 
+                sh 'mkdir -p CWL/Data/Baseline'
                 sh 'docker build -t mgrast/pipeline:testing .' 
             }
         }
