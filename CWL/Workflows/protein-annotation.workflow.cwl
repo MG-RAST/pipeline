@@ -94,7 +94,9 @@ steps:
     sortSims:
         run: ../Tools/sort.tool.cwl
         in:
-            input: catSims/output
+            input: 
+                source: catSims/output
+                valueFrom: $([self])
             key: 
                 valueFrom: $(["1,1"])
             outName:
@@ -112,7 +114,9 @@ steps:
     annotateSims:
         run: ../Tools/sims_annotate.tool.cwl
         in:
-            input: bleachSims/output
+            input:
+              source: bleachSims/output
+            #   valueFrom: $(self[0])
             scgs: m5nrSCG
             database: m5nrBDB
             seqFormat:

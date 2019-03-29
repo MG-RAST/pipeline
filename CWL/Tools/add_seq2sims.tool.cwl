@@ -47,8 +47,8 @@ outputs:
     error: 
         type: stderr  
     output:
-        type: File
+        type: File[]
         doc: Output merged sims and seq file
         outputBinding: 
-            glob: $(inputs.outName)
+            glob: $([inputs.outName])
 

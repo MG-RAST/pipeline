@@ -42,7 +42,7 @@ steps:
                 valueFrom: $(["1,1"])
             outName:
                 source: unclusterSims/output
-                valueFrom: $(self.basename).sort
+                valueFrom: $(self[0].basename).sort
         out: [output]
     catSeqs:
         run: ../Tools/cat.tool.cwl
@@ -79,7 +79,7 @@ steps:
                 valueFrom: $(["2,2"])
             outName:
                 source: jobid
-                valueFrom: $(self).700.annotation.sims.filter.seq
+                valueFrom: $(self[0]).700.annotation.sims.filter.seq
         out: [output]
     indexSimSeq:
         run: ../Tools/index_sims_file_md5.tool.cwl

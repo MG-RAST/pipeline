@@ -8,10 +8,13 @@ doc: |
 
 hints:
     DockerRequirement:
-        dockerPull: mgrast/pipeline:4.03
+        dockerPull: mgrast/pipeline:4.04
     
 requirements:
     InlineJavascriptRequirement: {}
+    InitialWorkDirRequirement:
+        listing:
+            - $(inputs.input)
 
 stdout: autoskewer.log
 stderr: autoskewer.error

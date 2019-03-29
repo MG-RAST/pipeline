@@ -113,6 +113,7 @@ outputs:
 steps:
     qcBasic:
         run: ../Workflows/qc-basic.workflow.cwl
+        label: Sequence quality assessment 
         in:
             jobid: jobid
             sequences: sequences
@@ -121,6 +122,8 @@ steps:
         out: [seqStatFile, seqBinFile, qcStatFile, qcSummaryFile]
     preProcess:
         run: ../Workflows/preprocess-fastq.workflow.cwl
+        label: Sequence preprocessing
+        doc: Remove adapters and low quality reads
         in:
             jobid: jobid
             sequences: sequences
@@ -129,6 +132,7 @@ steps:
         out: [trimmed, passed, removed]
     dereplication:
         run: ../Tools/dereplication.tool.cwl
+        label: Dereplication
         in:
             sequences: preProcess/passed
             prefixLength: derepPrefix
@@ -142,6 +146,7 @@ steps:
         out: [passed, removed]
     orgScreen:
         run: ../Workflows/organism-screening.workflow.cwl
+        label: Host Screening
         in:
             jobid: jobid
             sequences: dereplication/passed
@@ -150,6 +155,7 @@ steps:
         out: [passed]
     rnaAnnotate:
         run: ../Workflows/rna-annotation.workflow.cwl
+        label: RNA identification and annotation 
         in:
             jobid: jobid
             sequences: preProcess/passed
@@ -161,6 +167,7 @@ steps:
         out: [rnaFeatureOut, rnaClustSeqOut, rnaClustMapOut, rnaSimsOut, rnaFilterOut, rnaExpandOut, rnaLCAOut]
     protAnnotate:
         run: ../Workflows/protein-filter-annotation.workflow.cwl
+        label: Feature identification and annotation 
         in:
             jobid: jobid
             sequences: orgScreen/passed
@@ -172,6 +179,7 @@ steps:
         out: [protFeatureOut, protFilterFeatureOut, protClustSeqOut, protClustMapOut, protSimsOut, protFilterOut, protExpandOut, protLCAOut]
     indexSimSeq:
         run: ../Workflows/index_sim_seq.workflow.cwl
+        label: Indexing
         in:
             jobid: jobid
             featureSeqs:
@@ -189,6 +197,7 @@ steps:
         out: [simSeqOut, indexOut]
     abundance:
         run: ../Workflows/abundance-clca.workflow.cwl
+        label: Abundance profiles computation
         in:
             jobid: jobid
             md5index: indexSimSeq/indexOut
@@ -208,6 +217,7 @@ steps:
         out: [md5ProfileOut, lcaProfileOut, sourceStatsOut]
     darkmatter:
         run: ../Tools/extract_darkmatter.tool.cwl
+        label: Darkmatter
         in:
             geneSeq: protAnnotate/protFilterFeatureOut
             simHit:

@@ -221,7 +221,7 @@ def subset_seqs(fasta_input, list, output, check, minimum):
     output_handle = open(output, "w")
     current = list_handle.readline()[:-1]
     for r in SeqIO.parse(fasta_handle, "fasta"):
-        if len(record.seq) < minimum:
+        if len(r.seq) < minimum:
             continue
         if check:
             if cmp(r.id, current) == 0:

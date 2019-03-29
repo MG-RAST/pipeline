@@ -119,7 +119,9 @@ steps:
     sortSims:
         run: ../Tools/sort.tool.cwl
         in:
-            input: catSims/output
+            input:
+              source: catSims/output
+              valueFrom: $([self])
             key: 
                 valueFrom: $(["1,1"])
             outName:

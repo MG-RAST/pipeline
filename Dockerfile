@@ -143,12 +143,13 @@ RUN cd /root \
 RUN cd /root \
     && git clone http://github.com/MG-RAST/autoskewer \
     && cd autoskewer \
-    && make
-ENV PATH /root/autoskewer/:$PATH
+    && make install
 
 ### install CWL runner
 RUN pip install --upgrade pip
 RUN pip install cwlref-runner
+
+RUN apt-get clean && apt-get update
 
 # node.js version 7
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
