@@ -12,6 +12,11 @@ hints:
 
 requirements:
     InlineJavascriptRequirement: {}
+    InitialWorkDirRequirement:
+      listing:
+        - $(inputs.sequences)
+        - $(inputs.similarity)
+        - $(inputs.cluster)
 
 stdout: filter_feature.log
 stderr: filter_feature.error
