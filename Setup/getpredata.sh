@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#! /usr/bin/env bash
 set -e
 
 DBDIR=$1
@@ -14,7 +14,7 @@ SHOCK="http://shock.metagenomics.anl.gov/node"
 
 
 while read line; do
-  if [[ ${line}_ == _ ]] ; then
+  if [[ "${line}_" == "_" ]] ; then
     # empty line
     continue
   fi
