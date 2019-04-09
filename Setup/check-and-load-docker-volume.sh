@@ -7,4 +7,6 @@ then
     docker run -t -v pipeline-pre-data:/DBs -v `pwd`:/pipeline mgrast/pipeline:test  /pipeline/Setup/getpredata.sh /DBs/
 else
     echo Found volume pipeline-pre-data, using it
+    # getpredata.sh changed - tests if data exists
+    docker run -t -v pipeline-pre-data:/DBs -v `pwd`:/pipeline mgrast/pipeline:test  /pipeline/Setup/getpredata.sh /DBs/
 fi    
