@@ -18,4 +18,16 @@ pipeline {
             }
         }
     }
+     post {
+        always {
+             // shutdown container and network
+                sh '''
+                    set +e
+                    docker stop mgrast/pipeline:testing 
+                    docker rmi mgrast/pipeline:testing
+                    set -e
+                    echo Cleanup done
+                    '''
+        }
+    }
 }
