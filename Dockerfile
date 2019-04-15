@@ -1,13 +1,10 @@
 # MG-RAST pipeline Dockerfile
 
-FROM debian
+FROM ubuntu
+#debian
 MAINTAINER The MG-RAST team
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qq && apt-get install -y locales -qq && locale-gen en_US.UTF-8 en_us && dpkg-reconfigure locales && dpkg-reconfigure locales && locale-gen C.UTF-8 && /usr/sbin/update-locale LANG=C.UTF-8
-ENV LANG C.UTF-8
-ENV LANGUAGE C.UTF-8
-ENV LC_ALL C.UTF-8
 
 RUN apt-get update && apt-get install -y \
 	cdbfasta 	\
@@ -16,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 	dh-autoreconf \
 	git 		\
 	jellyfish 	\
-    libtbb-dev \
+  libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
@@ -42,18 +39,19 @@ RUN apt-get update && apt-get install -y \
 	liblog-log4perl-perl \
 	libcapture-tiny-perl \
 	make 		\
+	nodejs \
 	python-biopython \
 	python-dev \
 	python-leveldb \
 	perl-modules \
-   	python-numpy \
+  python-numpy \
 	python-pika \
-    python-pip \
+  python-pip \
 	python-scipy \
 	python-sphinx \
 	unzip \
 	wget \
-    vim \
+  vim \
 	curl
 
 #### install BLAT from src
@@ -64,7 +62,7 @@ RUN cd /root \
 	&& cd blatSrc \
 	&& make BINDIR=/usr/local/bin/ \
 	&& strip /usr/local/bin/blat \
-	&& cd /root ; rm -rf blatSrc blatSrc35.zip
+	&& cd /root ; rm -rf blatSrc*
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
@@ -74,10 +72,9 @@ RUN cd /root \
 	&& mkdir bin \
 	&& mv train bin/. \
 	&& mv *.pl bin/. \
-	&& install -s -m555 FragGeneScan bin/. \
+	&& install -s -m555 FragGeneScan /usr/local/bin/. \
 	&& make clean \
-	&& rm -rf example .git
-ENV PATH /root/FragGeneScan/bin:$PATH
+	&& cd /root ; rm -rf FragGeneScan
 
 ### install DIAMOND
 RUN cd /root \
@@ -101,34 +98,35 @@ RUN cd /root \
 
 ### install sortmerna 2.1b
 RUN cd /root \
-	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
-	&& tar xvf 2*.tar.gz \
+	&& wget -O sortmerna-2.tar.gz https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
+	&& tar xvf sortmerna-2.tar.gz \
 	&& cd sortmerna-2* \
 	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
 	&& ./configure \
-    && make install \
-    && make clean \
-    && cd /root ; rm -rf sortmerna-2* 2*.tar.gz
+  && make install \
+  && make clean \
+  && cd /root ; rm -rf sortmerna-2*
 
-### install vsearch 2.7.1
+### install vsearch 2.12.0
 RUN cd /root \
-    && wget https://github.com/torognes/vsearch/archive/v2.7.1.tar.gz \
-	&& tar xzf v2*.tar.gz \
+  && wget -O vsearch-2.tar.gz https://github.com/torognes/vsearch/archive/v2.12.0.tar.gz \
+	&& tar xzf vsearch-2.tar.gz  \
 	&& cd vsearch-2* \
 	&& sh ./autogen.sh \
 	&& ./configure --prefix=/usr/local/ \
 	&& make \
 	&& make install \
 	&& make clean \
-	&& cd /root ; rm -rf vsearch-2* v2*.tar.gz
+	&& cd /root ; rm -rf vsearch-2*
 
-### install bowtie2 2.3.4.1
+### install bowtie2 2.3.5
 RUN cd /root \
-    && wget -O bowtie2-2.3.4.1-linux-x86_64.zip 'https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.3.4.1/bowtie2-2.3.4.1-linux-x86_64.zip/download' \
-    && unzip bowtie2-*.zip \
-    && rm -f bowtie2-*.zip \
+		&& wget -O bowtie2.zip https://github.com/BenLangmead/bowtie2/releases/download/v2.3.5/bowtie2-2.3.5-linux-x86_64.zip \
+    && unzip bowtie2.zip \
+    && rm -f bowtie2.zip \
     && cd bowtie2-* \
-    && cp bowtie2* /usr/local/bin/.
+    && cp bowtie2* /usr/local/bin/ \
+    && cd /root ; rm -rf bowtie2*
 
 ### install skewer
 RUN cd /root \
@@ -139,21 +137,29 @@ RUN cd /root \
     && make clean \
     && cd /root ; rm -rf skewer
 
+### install prodigal
+RUN cd /root \
+    && wget -O Prodigal.tar.gz https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz \
+    && tar xf Prodigal.tar.gz \
+    && cd Prodigal* \
+    && make \
+    && make install \
+    && make clean \
+    && cd /root ; rm -rf Prodigal*
+
+
 ### install autoskewer
 RUN cd /root \
     && git clone http://github.com/MG-RAST/autoskewer \
     && cd autoskewer \
-    && make install
+    && make install \
+    && cd /root ; rm -rf autoskewer
 
 ### install CWL runner
 RUN pip install --upgrade pip
 RUN pip install cwlref-runner
 
 RUN apt-get clean && apt-get update
-
-# node.js version 7
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - ; \
-    apt-get install -y nodejs
 
 # copy files into image
 COPY CWL /CWL/
