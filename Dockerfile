@@ -52,7 +52,8 @@ RUN apt-get update && apt-get install -y \
 	unzip \
 	wget \
   vim \
-	curl
+	curl \
+	&& apt-get clean
 
 #### install BLAT from src
 RUN cd /root \
@@ -157,9 +158,7 @@ RUN cd /root \
 
 ### install CWL runner
 RUN pip install --upgrade pip
-RUN pip install cwlref-runner
-
-RUN apt-get clean && apt-get update
+RUN pip install --upgrade cwlref-runner typing
 
 # copy files into image
 COPY CWL /CWL/
