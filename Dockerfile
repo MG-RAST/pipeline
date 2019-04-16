@@ -52,8 +52,12 @@ RUN apt-get update && apt-get install -y \
 	wget \
   vim \
 	curl \
+<<<<<<< HEAD
 	&& strip /usr/local/bin/* ; exit 0 && \\
 	apt-get clean
+=======
+	&& apt-get clean
+>>>>>>> 8a5ded15fad8ee1a4315aef1fdc1d53cdcdc12b8
 
 #### install BLAT from src
 RUN cd /root \
@@ -161,8 +165,7 @@ RUN cd /root \
     && cd /root ; rm -rf autoskewer
 
 ### install CWL runner
-RUN pip install --upgrade pip
-RUN pip install cwlref-runner
+RUN pip install --upgrade pip && pip install --upgrade cwlref-runner typing
 
 # copy files into image
 COPY CWL /CWL/
