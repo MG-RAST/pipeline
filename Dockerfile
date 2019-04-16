@@ -1,8 +1,7 @@
 # MG-RAST pipeline Dockerfile
 
 FROM ubuntu
-#debian
-MAINTAINER The MG-RAST team
+MAINTAINER The MG-RAST team (folker@mg-rast.org)
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -52,7 +51,9 @@ RUN apt-get update && apt-get install -y \
 	unzip \
 	wget \
   vim \
-	curl
+	curl \
+	&& strip /usr/local/bin/* ; exit 0 && \\
+	apt-get clean
 
 #### install BLAT from src
 RUN cd /root \
@@ -105,6 +106,7 @@ RUN cd /root \
 	&& ./configure \
   && make install \
   && make clean \
+  && strip /usr/local/bin/sortmerna* \
   && cd /root ; rm -rf sortmerna-2*
 
 ### install vsearch 2.12.0
@@ -117,6 +119,7 @@ RUN cd /root \
 	&& make \
 	&& make install \
 	&& make clean \
+	&& strip /usr/local/bin/vsearch* \
 	&& cd /root ; rm -rf vsearch-2*
 
 ### install bowtie2 2.3.5
@@ -126,6 +129,7 @@ RUN cd /root \
     && rm -f bowtie2.zip \
     && cd bowtie2-* \
     && cp bowtie2* /usr/local/bin/ \
+    && strip /usr/local/bin/bowtie2* \
     && cd /root ; rm -rf bowtie2*
 
 ### install skewer
@@ -144,6 +148,7 @@ RUN cd /root \
     && cd Prodigal* \
     && make \
     && make install \
+    && strip /usr/local/bin/prodigal \
     && make clean \
     && cd /root ; rm -rf Prodigal*
 
@@ -159,11 +164,7 @@ RUN cd /root \
 RUN pip install --upgrade pip
 RUN pip install cwlref-runner
 
-RUN apt-get clean && apt-get update
-
 # copy files into image
 COPY CWL /CWL/
 COPY mgcmd/* bin/* /usr/local/bin/
 COPY lib/* /usr/local/lib/site_perl/
-COPY bin/superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
