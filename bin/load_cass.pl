@@ -17,6 +17,7 @@ $json->max_size(0);
 $json->allow_nonref;
 
 my $agent = LWP::UserAgent->new();
+$agent->env_proxy;
 $agent->timeout(3600);
 
 my $post_attempt = 0;
