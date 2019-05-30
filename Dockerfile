@@ -52,8 +52,7 @@ RUN apt-get update && apt-get install -y \
 	wget \
   vim \
 	curl \
-	&& strip /usr/local/bin/* ; exit 0 && \\
-	apt-get clean
+	&& apt-get clean
 
 
 #### install BLAT from src
@@ -75,8 +74,10 @@ RUN cd /root \
 	&& mv train bin/. \
 	&& mv *.pl bin/. \
 	&& install -s -m555 FragGeneScan /usr/local/bin/. \
+	&& install -m555 -t /usr/local/bin/. bin/*.pl \
 	&& make clean \
 	&& cd /root ; rm -rf FragGeneScan
+	
 
 ### install DIAMOND
 RUN cd /root \
