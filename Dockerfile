@@ -68,7 +68,7 @@ RUN cd /root \
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
-	&& git clone https://github.com/wltrimbl/FGS.git FragGeneScan \
+	&& git clone https://github.com/MG-RAST/FGS.git FragGeneScan \
 	&& cd FragGeneScan \
 	&& make \
 	&& mkdir bin \
