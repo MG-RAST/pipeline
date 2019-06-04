@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
 	cmake       \
 	dh-autoreconf \
 	git 		\
-	jellyfish 	\
   libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
@@ -54,30 +53,26 @@ RUN apt-get update && apt-get install -y \
 	curl \
 	&& apt-get clean
 
+### alphabetically sorted builds from source
 
-#### install BLAT from src
+### install bowtie2 2.3.5
 RUN cd /root \
-	&& wget "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip" \
-	&& unzip blatSrc35.zip && export C_INCLUDE_PATH=/root/include \
-	&& export MACHTYPE=x86_64-pc-linux-gnu \
-	&& cd blatSrc \
-	&& make BINDIR=/usr/local/bin/ \
-	&& strip /usr/local/bin/blat \
-	&& cd /root ; rm -rf blatSrc*
+		&& wget -O bowtie2.zip https://github.com/BenLangmead/bowtie2/releases/download/v2.3.5/bowtie2-2.3.5-linux-x86_64.zip \
+    && unzip bowtie2.zip \
+    && rm -f bowtie2.zip \
+    && cd bowtie2-* \
+    && install bowtie2* /usr/local/bin/ \
+    && cd /root \
+    && rm -rf bowtie2*
 
-### install FragGeneScan from our patched source in github
+### install autoskewer (requires bowtie)
 RUN cd /root \
-	&& git clone https://github.com/MG-RAST/FGS.git FragGeneScan \
-	&& cd FragGeneScan \
-	&& make \
-	&& mkdir bin \
-	&& mv train bin/. \
-	&& mv *.pl bin/. \
-	&& install -s -m555 FragGeneScan /usr/local/bin/. \
-	&& install -m555 -t /usr/local/bin/. bin/*.pl \
-	&& make clean \
-	&& cd /root ; rm -rf FragGeneScan
-	
+    && git clone http://github.com/MG-RAST/autoskewer \
+    && cd autoskewer \
+    && make install \
+    && cd /root \
+    && rm -rf autoskewer
+
 
 ### install DIAMOND
 RUN cd /root \
@@ -85,7 +80,8 @@ RUN cd /root \
 	&& cd diamond \
 	&& sh ./build_simple.sh \
 	&& install -s -m555 diamond /usr/local/bin \
-	&& cd /root ; rm -rf diamond
+	&& cd /root \
+	&& rm -rf diamond
 
 ### install ea-utils
 RUN cd /root \
@@ -99,49 +95,27 @@ RUN cd /root \
 	&& install -m755 -s fastq-mcf /usr/local/bin \
 	&& cd /root ; rm -rf ea-utils
 
-### install sortmerna 2.1b
+### install FragGeneScan from our patched source in github
 RUN cd /root \
-	&& wget -O sortmerna-2.tar.gz https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
-	&& tar xvf sortmerna-2.tar.gz \
-	&& cd sortmerna-2* \
-	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
-	&& ./configure \
-  && make install \
-  && make clean \
-  && strip /usr/local/bin/sortmerna* \
-  && cd /root ; rm -rf sortmerna-2*
+		&& git clone https://github.com/MG-RAST/FGS.git FragGeneScan \
+		&& cd FragGeneScan \
+		&& make \
+		&& mkdir bin \
+		&& mv train bin/. \
+		&& mv *.pl bin/. \
+		&& install -s -m555 FragGeneScan /usr/local/bin/. \
+		&& install -m555 -t /usr/local/bin/. bin/*.pl \
+		&& make clean \
+		&& cd /root ; rm -rf FragGeneScan
 
-### install vsearch 2.12.0
+### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
 RUN cd /root \
-  && wget -O vsearch-2.tar.gz https://github.com/torognes/vsearch/archive/v2.12.0.tar.gz \
-	&& tar xzf vsearch-2.tar.gz  \
-	&& cd vsearch-2* \
-	&& sh ./autogen.sh \
-	&& ./configure --prefix=/usr/local/ \
-	&& make \
-	&& make install \
-	&& make clean \
-	&& strip /usr/local/bin/vsearch* \
-	&& cd /root ; rm -rf vsearch-2*
-
-### install bowtie2 2.3.5
-RUN cd /root \
-		&& wget -O bowtie2.zip https://github.com/BenLangmead/bowtie2/releases/download/v2.3.5/bowtie2-2.3.5-linux-x86_64.zip \
-    && unzip bowtie2.zip \
-    && rm -f bowtie2.zip \
-    && cd bowtie2-* \
-    && cp bowtie2* /usr/local/bin/ \
-    && strip /usr/local/bin/bowtie2* \
-    && cd /root ; rm -rf bowtie2*
-
-### install skewer
-RUN cd /root \
-    && git clone https://github.com/teharrison/skewer \
-    && cd skewer \
-    && make \
+    && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.2.6/jellyfish-2.2.6.tar.gz \
+    && tar xfvz jellyfish.tar.gz \
+    && cd jelly*  \
+    && ./configure \
     && make install \
-    && make clean \
-    && cd /root ; rm -rf skewer
+    && cd /root ; rm -rf jelly*
 
 ### install prodigal
 RUN cd /root \
@@ -154,13 +128,39 @@ RUN cd /root \
     && make clean \
     && cd /root ; rm -rf Prodigal*
 
-
-### install autoskewer
+### install sortmerna 2.1b
 RUN cd /root \
-    && git clone http://github.com/MG-RAST/autoskewer \
-    && cd autoskewer \
+	&& wget -O sortmerna-2.tar.gz https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
+	&& tar xvf sortmerna-2.tar.gz \
+	&& cd sortmerna-2* \
+	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
+	&& ./configure \
+  && make install \
+  && make clean \
+  && strip /usr/local/bin/sortmerna* \
+  && cd /root ; rm -rf sortmerna-2*
+
+### install skewer
+RUN cd /root \
+    && git clone https://github.com/teharrison/skewer \
+    && cd skewer \
+    && make \
     && make install \
-    && cd /root ; rm -rf autoskewer
+    && make clean \
+    && cd /root ; rm -rf skewer
+
+### install vsearch 2.12.0
+RUN cd /root \
+	  && wget -O vsearch-2.tar.gz https://github.com/torognes/vsearch/archive/v2.12.0.tar.gz \
+		&& tar xzf vsearch-2.tar.gz  \
+		&& cd vsearch-2* \
+		&& sh ./autogen.sh \
+		&& ./configure --prefix=/usr/local/ \
+		&& make \
+		&& make install \
+		&& make clean \
+		&& strip /usr/local/bin/vsearch* \
+		&& cd /root ; rm -rf vsearch-2*
 
 ### install CWL runner
 RUN pip install --upgrade pip
