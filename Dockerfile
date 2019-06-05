@@ -2,7 +2,6 @@
 
 FROM ubuntu
 MAINTAINER The MG-RAST team (folker@mg-rast.org)
-
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
