@@ -105,16 +105,19 @@ RUN cd /root \
 		&& install -s -m555 FragGeneScan /usr/local/bin/. \
 		&& install -m555 -t /usr/local/bin/. bin/*.pl \
 		&& make clean \
-		&& cd /root ; rm -rf FragGeneScan
+		&& cd /root \
+		&& rm -rf FragGeneScan
 
 ### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
 RUN cd /root \
     && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.2.6/jellyfish-2.2.6.tar.gz \
     && tar xfvz jellyfish.tar.gz \
+    && rm -f jellyfish.tar.gz \
     && cd jelly*  \
     && ./configure \
     && make install \
-    && cd /root ; rm -rf jelly*
+    && cd /root \
+    #&& rm -rf jelly*
 
 ### install prodigal
 RUN cd /root \
@@ -164,6 +167,10 @@ RUN cd /root \
 ### install CWL runner
 RUN pip install --upgrade pip
 RUN pip install --upgrade cwlref-runner typing
+
+
+# for jellyfish (ugly)
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
 # copy files into image
 COPY CWL /CWL/
