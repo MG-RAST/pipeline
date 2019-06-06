@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
 	cd-hit		\
 	cmake       \
 	dh-autoreconf \
+	emacs \
 	git 		\
   libtbb-dev \
 	libcwd-guard-perl \
@@ -96,17 +97,18 @@ RUN cd /root \
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
-		&& git clone https://github.com/MG-RAST/FGS.git FragGeneScan \
-		&& cd FragGeneScan \
-		&& make \
-		&& mkdir bin \
-		&& mv train bin/. \
-		&& mv *.pl bin/. \
-		&& install -s -m555 FragGeneScan /usr/local/bin/. \
-		&& install -m555 -t /usr/local/bin/. bin/*.pl \
-		&& make clean \
-		&& cd /root \
-		&& rm -rf FragGeneScan
+	&& git clone https://github.com/MG-RAST/FGS.git FragGeneScan \
+	&& cd FragGeneScan \
+	&& make \
+	&& mkdir bin \
+	&& mv train bin/. \
+	&& mv *.pl bin/. \
+	&& cp -r bin/train /usr/local/bin/ \
+	&& install -s -m555 FragGeneScan /usr/local/bin/. \
+	&& install -m555 -t /usr/local/bin/. bin/*.pl \
+	&& make clean \
+	&& cd /root ; rm -rf FragGeneScan
+	
 
 ### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
 RUN cd /root \
