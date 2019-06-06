@@ -2,7 +2,6 @@
 
 FROM ubuntu
 MAINTAINER The MG-RAST team (folker@mg-rast.org)
-
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
@@ -12,7 +11,6 @@ RUN apt-get update && apt-get install -y \
 	dh-autoreconf \
 	emacs \
 	git 		\
-	jellyfish 	\
   libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
@@ -55,16 +53,47 @@ RUN apt-get update && apt-get install -y \
 	curl \
 	&& apt-get clean
 
+### alphabetically sorted builds from source
 
-#### install BLAT from src
+### install bowtie2 2.3.5
 RUN cd /root \
-	&& wget "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip" \
-	&& unzip blatSrc35.zip && export C_INCLUDE_PATH=/root/include \
-	&& export MACHTYPE=x86_64-pc-linux-gnu \
-	&& cd blatSrc \
-	&& make BINDIR=/usr/local/bin/ \
-	&& strip /usr/local/bin/blat \
-	&& cd /root ; rm -rf blatSrc*
+		&& wget -O bowtie2.zip https://github.com/BenLangmead/bowtie2/releases/download/v2.3.5/bowtie2-2.3.5-linux-x86_64.zip \
+    && unzip bowtie2.zip \
+    && rm -f bowtie2.zip \
+    && cd bowtie2-* \
+    && install bowtie2* /usr/local/bin/ \
+    && cd /root \
+    && rm -rf bowtie2*
+
+### install autoskewer (requires bowtie)
+RUN cd /root \
+    && git clone http://github.com/MG-RAST/autoskewer \
+    && cd autoskewer \
+    && make install \
+    && cd /root \
+    && rm -rf autoskewer
+
+
+### install DIAMOND
+RUN cd /root \
+	&& git clone https://github.com/bbuchfink/diamond.git \
+	&& cd diamond \
+	&& sh ./build_simple.sh \
+	&& install -s -m555 diamond /usr/local/bin \
+	&& cd /root \
+	&& rm -rf diamond
+
+### install ea-utils
+RUN cd /root \
+	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
+	&& cd ea-utils/clipper \
+	&& make fastq-multx \
+	&& make fastq-join \
+	&& make fastq-mcf \
+	&& install -m755 -s fastq-multx /usr/local/bin \
+	&& install -m755 -s fastq-join /usr/local/bin \
+	&& install -m755 -s fastq-mcf /usr/local/bin \
+	&& cd /root ; rm -rf ea-utils
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
@@ -81,25 +110,27 @@ RUN cd /root \
 	&& cd /root ; rm -rf FragGeneScan
 	
 
-### install DIAMOND
+### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
 RUN cd /root \
-	&& git clone https://github.com/bbuchfink/diamond.git \
-	&& cd diamond \
-	&& sh ./build_simple.sh \
-	&& install -s -m555 diamond /usr/local/bin \
-	&& cd /root ; rm -rf diamond
+    && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.2.6/jellyfish-2.2.6.tar.gz \
+    && tar xfvz jellyfish.tar.gz \
+    && rm -f jellyfish.tar.gz \
+    && cd jelly*  \
+    && ./configure \
+    && make install \
+    && cd /root \
+    #&& rm -rf jelly*
 
-### install ea-utils
+### install prodigal
 RUN cd /root \
-	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
-	&& cd ea-utils/clipper \
-	&& make fastq-multx \
-	&& make fastq-join \
-	&& make fastq-mcf \
-	&& install -m755 -s fastq-multx /usr/local/bin \
-	&& install -m755 -s fastq-join /usr/local/bin \
-	&& install -m755 -s fastq-mcf /usr/local/bin \
-	&& cd /root ; rm -rf ea-utils
+    && wget -O Prodigal.tar.gz https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz \
+    && tar xf Prodigal.tar.gz \
+    && cd Prodigal* \
+    && make \
+    && make install \
+    && strip /usr/local/bin/prodigal \
+    && make clean \
+    && cd /root ; rm -rf Prodigal*
 
 ### install sortmerna 2.1b
 RUN cd /root \
@@ -113,29 +144,6 @@ RUN cd /root \
   && strip /usr/local/bin/sortmerna* \
   && cd /root ; rm -rf sortmerna-2*
 
-### install vsearch 2.12.0
-RUN cd /root \
-  && wget -O vsearch-2.tar.gz https://github.com/torognes/vsearch/archive/v2.12.0.tar.gz \
-	&& tar xzf vsearch-2.tar.gz  \
-	&& cd vsearch-2* \
-	&& sh ./autogen.sh \
-	&& ./configure --prefix=/usr/local/ \
-	&& make \
-	&& make install \
-	&& make clean \
-	&& strip /usr/local/bin/vsearch* \
-	&& cd /root ; rm -rf vsearch-2*
-
-### install bowtie2 2.3.5
-RUN cd /root \
-		&& wget -O bowtie2.zip https://github.com/BenLangmead/bowtie2/releases/download/v2.3.5/bowtie2-2.3.5-linux-x86_64.zip \
-    && unzip bowtie2.zip \
-    && rm -f bowtie2.zip \
-    && cd bowtie2-* \
-    && cp bowtie2* /usr/local/bin/ \
-    && strip /usr/local/bin/bowtie2* \
-    && cd /root ; rm -rf bowtie2*
-
 ### install skewer
 RUN cd /root \
     && git clone https://github.com/teharrison/skewer \
@@ -145,28 +153,26 @@ RUN cd /root \
     && make clean \
     && cd /root ; rm -rf skewer
 
-### install prodigal
+### install vsearch 2.12.0
 RUN cd /root \
-    && wget -O Prodigal.tar.gz https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz \
-    && tar xf Prodigal.tar.gz \
-    && cd Prodigal* \
-    && make \
-    && make install \
-    && strip /usr/local/bin/prodigal \
-    && make clean \
-    && cd /root ; rm -rf Prodigal*
-
-
-### install autoskewer
-RUN cd /root \
-    && git clone http://github.com/MG-RAST/autoskewer \
-    && cd autoskewer \
-    && make install \
-    && cd /root ; rm -rf autoskewer
+	  && wget -O vsearch-2.tar.gz https://github.com/torognes/vsearch/archive/v2.12.0.tar.gz \
+		&& tar xzf vsearch-2.tar.gz  \
+		&& cd vsearch-2* \
+		&& sh ./autogen.sh \
+		&& ./configure --prefix=/usr/local/ \
+		&& make \
+		&& make install \
+		&& make clean \
+		&& strip /usr/local/bin/vsearch* \
+		&& cd /root ; rm -rf vsearch-2*
 
 ### install CWL runner
 RUN pip install --upgrade pip
 RUN pip install --upgrade cwlref-runner typing
+
+
+# for jellyfish (ugly)
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
 # copy files into image
 COPY CWL /CWL/
