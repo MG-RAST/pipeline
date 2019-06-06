@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
 	cd-hit		\
 	cmake       \
 	dh-autoreconf \
+	emacs \
 	git 		\
 	jellyfish 	\
   libtbb-dev \
@@ -73,6 +74,7 @@ RUN cd /root \
 	&& mkdir bin \
 	&& mv train bin/. \
 	&& mv *.pl bin/. \
+	&& cp -r bin/train /usr/local/bin/ \
 	&& install -s -m555 FragGeneScan /usr/local/bin/. \
 	&& install -m555 -t /usr/local/bin/. bin/*.pl \
 	&& make clean \
