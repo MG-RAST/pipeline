@@ -31,6 +31,11 @@ while read line; do
   set -x
   curl "$SHOCK/${node}?download" -o "$DBDIR/${file}_part"
   mv "$DBDIR/${file}_part" "$DBDIR/${file}"
+  
+  md5sum "$DBDIR/${file}" > "$DBDIR/${file}.md5"
+  # osx: md5 -r "$DBDIR/${file}" > "$DBDIR/${file}.md5"
+  
+  
   set +x
 done << '___HERE'
 66fe2976-80fd-4d67-a5cd-051018c49c2b e_coli.1.bt2
