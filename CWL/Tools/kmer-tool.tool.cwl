@@ -51,6 +51,13 @@ inputs:
         inputBinding:
             prefix: --max
 
+    hashSize:
+        type: float?
+        doc: Size of hash, used to limit memory consumption for testing.
+        default: 1.0
+        inputBinding:
+            prefix: --size
+
     prefix:
         type: string?
         doc: Prefix for output file(s)

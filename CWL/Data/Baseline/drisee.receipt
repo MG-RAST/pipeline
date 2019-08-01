@@ -1,0 +1,26 @@
+{
+    "error": {
+        "location": "file:///Users/wltrimbl/git/MG-RAST/pipeline/CWL/Data/Outputs/drisee.error",
+        "basename": "drisee.error",
+        "class": "File",
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "size": 0,
+        "path": "/Users/wltrimbl/git/MG-RAST/pipeline/CWL/Data/Outputs/drisee.error"
+    },
+    "info": {
+        "location": "file:///Users/wltrimbl/git/MG-RAST/pipeline/CWL/Data/Outputs/drisee.log",
+        "basename": "drisee.log",
+        "class": "File",
+        "checksum": "sha1$8f8556f60c1df6f94d0a7dc35ba5aa790f49d5bf",
+        "size": 443,
+        "path": "/Users/wltrimbl/git/MG-RAST/pipeline/CWL/Data/Outputs/drisee.log"
+    },
+    "stats": {
+        "location": "file:///Users/wltrimbl/git/MG-RAST/pipeline/CWL/Data/Outputs/drisee.stats",
+        "basename": "drisee.stats",
+        "class": "File",
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "size": 0,
+        "path": "/Users/wltrimbl/git/MG-RAST/pipeline/CWL/Data/Outputs/drisee.stats"
+    }
+}
