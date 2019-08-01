@@ -15,7 +15,7 @@ import json
 debug =  int(os.environ.get('DEBUG' , 0))
 # print "DEBUG: " + str(debug)
 
-disable_docker = 1
+disable_docker = 0
 
 testDir     = os.path.abspath( os.path.dirname( __file__ )  )
 baselineDir = testDir + "/../Data/Baseline/"
@@ -23,7 +23,7 @@ toolDir     = testDir + "/../Tools/"
 workflowDir = testDir + "/../Workflows/"
 inputDir    = testDir + "/../Data/Inputs/"
 outputDir   = testDir + "/../Data/Outputs/"
-docker      = None
+docker      = "--strict"
 cwlTool     = "cwltool" # "cwl-runner"
 
 if disable_docker :
@@ -98,8 +98,11 @@ def cmp_cwl_receipts(json_a , json_b) :
   try:
     a = json.loads(json_a)
     b = json.loads(json_b)
-    
-    for k, v in a.iteritems():
+  except Exception as e:
+    sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... ") 
+    identical = 0
+    return
+  for k, v in a.iteritems():
       if 'format' in v :
         if debug:
           sys.stderr.write('Found \'format\' key.\n')
@@ -110,20 +113,19 @@ def cmp_cwl_receipts(json_a , json_b) :
         else:
             if debug:
               sys.stderr.write('Found \'json\' value. Not comparing checksum for ' + v['basename'] + "\n")
-      elif  v['checksum'] != b[k]["checksum"] :
-        identical = 0
-        sys.stderr.write('Checksum not identical for ' + k + "(" + v['basename'] + ")\n")
-      if v['basename'] != b[k]["basename"] :
-        identical = 0
-        sys.stderr.write('Basename not identical for ' + k +  "\n")
-      if v['size'] != b[k]["size"] :
-        identical = 0 
-        sys.stderr.write('Size not identical for ' + k +  "\n") 
+      if  "checksum" in v:
+        if v['checksum'] != b[k]["checksum"] :
+            identical = 0
+            sys.stderr.write('Checksum not identical for ' + k + "(" + v['basename'] + ")\n")
+      if "basname" in v:
+        if v['basename'] != b[k]["basename"] :
+          identical = 0
+          sys.stderr.write('Basename not identical for ' + k +  "\n")
+      if "size" in v:
+        if v['size'] != b[k]["size"] :
+          identical = 0 
+          sys.stderr.write('Size not identical for ' + k +  "\n") 
         
-  except Exception as e :
-    sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... ") 
-    identical = 0
-  
   return identical   
     
     # "summary": {

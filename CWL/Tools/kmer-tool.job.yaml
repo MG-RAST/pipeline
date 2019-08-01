@@ -1,0 +1,10 @@
+jobid: kmer21_test
+
+sequences:
+    class: File
+    path: ../Inputs/sequences.wgs.fasta
+
+length: 21
+
+hashSize: 100000000
+

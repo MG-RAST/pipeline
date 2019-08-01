@@ -1,0 +1,29 @@
+{
+    "error": {
+        "location": "file:///Users/wltrimbl/git/MG-RAST/pipeline/CWL/outdir/kmer-tool.error",
+        "basename": "kmer-tool.error",
+        "class": "File",
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "size": 0,
+        "path": "/Users/wltrimbl/git/MG-RAST/pipeline/CWL/outdir/kmer-tool.error"
+    },
+    "stats": {
+        "length": 21,
+        "file": {
+            "location": "file:///Users/wltrimbl/git/MG-RAST/pipeline/CWL/outdir/qc.kmer.21.stats",
+            "basename": "qc.kmer.21.stats",
+            "class": "File",
+            "checksum": "sha1$d8025ac54c11b0a89534045cf8f7129172d1698f",
+            "size": 5527,
+            "path": "/Users/wltrimbl/git/MG-RAST/pipeline/CWL/outdir/qc.kmer.21.stats"
+        }
+    },
+    "summary": {
+        "location": "file:///Users/wltrimbl/git/MG-RAST/pipeline/CWL/outdir/kmer-tool.log",
+        "basename": "kmer-tool.log",
+        "class": "File",
+        "checksum": "sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "size": 0,
+        "path": "/Users/wltrimbl/git/MG-RAST/pipeline/CWL/outdir/kmer-tool.log"
+    }
+}
