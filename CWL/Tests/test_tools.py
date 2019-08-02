@@ -74,7 +74,8 @@ def generate_check_tool_output(tool, name, path):
       # execute tool
         session = subprocess.Popen([cwlTool, '--outdir', outputDir, docker, toolDir + tool, job], stdin=None, stdout=PIPE, stderr=PIPE, shell=False)
         stdout, stderr = session.communicate()
-
+        stdout = stdout.decode("utf-8")  # have to explicitly decode bytes since python2 subprocess.Popen does not take encoding 
+        stderr = stderr.decode("utf-8")
         if stderr and debug:
             print('ERROR:')
             print(stderr)
@@ -87,15 +88,16 @@ def generate_check_tool_output(tool, name, path):
             print('Baseline:')
             print(baseline)
             print('Output:' + stdout)
-        self.assertTrue(cmp_cwl_receipts(baseline, stdout), msg=" ".join(['cwl-runner', '--outdir ' + outputDir, docker, toolDir + tool, job, "\n", stderr]))
+        testresult = cmp_cwl_receipts(baseline, stdout)
+        self.assertTrue(testresult, msg=" ".join(['cwl-runner', '--outdir ' + outputDir, docker, toolDir + tool, job, "\n", stderr]))
 
-        return test
+        return testresult
 
 def cmp_cwl_receipts(json_a, json_b):
 
     identical = 1
-    assert type(json_a) is str
-    assert type(json_b) is str
+    assert type(json_a) is str or type(json_a) is unicode
+    assert type(json_b) is str or type(json_b) is unicode
   
     try:
         a = json.loads(json_a)
@@ -104,7 +106,7 @@ def cmp_cwl_receipts(json_a, json_b):
         sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... ")
         identical = 0
         return
-    for k, v in a.iteritems():
+    for k, v in a.items():
         if 'format' in v:
             if debug:
                 sys.stderr.write('Found \'format\' key.\n')
@@ -166,6 +168,8 @@ class TestCWL(unittest.TestCase):
 
         session = subprocess.Popen([cwlTool, '--version'], stdout=PIPE, stderr=PIPE)
         stdout, stderr = session.communicate()
+        stdout = stdout.decode("utf-8")
+        stderr = stderr.decode("utf-8")
 
         if stderr:
             raise Exception("Error "+str(stderr))
@@ -193,7 +197,7 @@ class TestDrisee(unittest.TestCase):
         pass
 
     def test_cwl_drisee(self):
-      	"""Is receipt for drisee identical to baseline receipt"""
+        """Is receipt for drisee identical to baseline receipt"""
 
 
         if debug:
@@ -204,6 +208,8 @@ class TestDrisee(unittest.TestCase):
   
         session = subprocess.Popen([cwlTool, '--outdir', outputDir, docker, toolDir + 'drisee.tool.cwl', toolDir + 'drisee.job.yaml'], stdin=None, stdout=PIPE, stderr=PIPE, shell=False)
         stdout, stderr = session.communicate()
+        stdout = stdout.decode("utf-8")
+        stderr = stderr.decode("utf-8")
   
         if stderr and debug:
             print('ERROR:')
@@ -238,6 +244,8 @@ class TestKmerTool(unittest.TestCase):
     
         session = subprocess.Popen([cwlTool, '--outdir', outputDir, docker, toolDir + 'kmer-tool.tool.cwl', toolDir + 'kmer-tool.job.yaml'], stdin=None, stdout=PIPE, stderr=PIPE, shell=False)
         stdout, stderr = session.communicate()
+        stdout = stdout.decode("utf-8")
+        stderr = stderr.decode("utf-8")
     
         if stderr and debug:
             print('ERROR:')
@@ -270,7 +278,6 @@ if __name__ == '__main__':
         m = re.split("/", f)
         tool = m.pop()
         [name, cwl_type, suffix] = tool.split(".")
-
         # test tool exists - should be always true for obvious reasons
         test_name = 'test_cwl_tool_%s' % name
         test = generate_check_exists_tool(tool, name, f)
