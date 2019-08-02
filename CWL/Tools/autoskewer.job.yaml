@@ -1,0 +1,9 @@
+jobid: autoskewer_test
+
+input:
+    class: File
+    path: ../Inputs/sequences.wgs.fasta
+
+outName:  autoskewer.out
+    
+
