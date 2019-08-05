@@ -1,32 +1,22 @@
-# MG-RAST dockerfiles
+# MG-RAST pipeline Dockerfile
 
-FROM	debian
-MAINTAINER The MG-RAST team
-
-ENV DEBIAN_FRONTEND noninteractive
-<<<<<<< HEAD
-
-=======
-RUN apt-get update -qq && apt-get install -y locales -qq && locale-gen en_US.UTF-8 en_us && dpkg-reconfigure locales && dpkg-reconfigure locales && locale-gen C.UTF-8 && /usr/sbin/update-locale LANG=C.UTF-8
-ENV LANG C.UTF-8
-ENV LANGUAGE C.UTF-8
-ENV LC_ALL C.UTF-8
-
-RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
->>>>>>> MG-RAST/master
+FROM ubuntu:18.10
+MAINTAINER The MG-RAST team (folker@mg-rast.org)
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
-	bowtie2 	\
 	cdbfasta 	\
 	cd-hit		\
+	cmake       \
 	dh-autoreconf \
+	emacs \
 	git 		\
-	subversion  \
-	jellyfish 	\
+  libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
 	libdatetime-perl \
+	libdatetime-format-iso8601-perl \
 	libdbi-perl 	\
 	libdigest-md5-perl \
 	libdigest-md5-file-perl \
@@ -40,108 +30,166 @@ RUN apt-get update && apt-get install -y \
 	libpng-dev \
 	libposix-strptime-perl \
 	libstring-random-perl \
+	libtbb-dev \
 	libtemplate-perl \
 	liburi-encode-perl \
 	libunicode-escape-perl \
 	libwww-perl \
 	liblog-log4perl-perl \
-<<<<<<< HEAD
-	locales \
-=======
-	libcapture-tiny-perl \
->>>>>>> MG-RAST/master
 	make 		\
+	nodejs \
 	python-biopython \
 	python-dev \
 	python-leveldb \
 	perl-modules \
-   	python-numpy \
+  python-numpy \
+	python-pika \
+  python-pip \
 	python-scipy \
 	python-sphinx \
 	unzip \
-	wget
-	
+	wget \
+  vim \
+	curl \
+	&& apt-get clean
 
-RUN echo 'DEBIAN_FRONTEND=noninteractive' >> /etc/environment
-RUN locale-gen en_US.UTF-8 && dpkg-reconfigure locales
+### alphabetically sorted builds from source
 
-# ###########
-# copy files into image
-COPY awecmd/* bin/* /usr/local/bin/
-COPY lib/* /usr/local/lib/site_perl/
-COPY superblat /usr/local/bin/
-RUN chmod 555 /usr/local/bin/* && strip /usr/local/bin/superblat
-
-#### install BLAT from src
+### install latest bowtie2 release
 RUN cd /root \
-	&& wget "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip" \
-	&& unzip blatSrc35.zip && export C_INCLUDE_PATH=/root/include \
-	&& export MACHTYPE=x86_64-pc-linux-gnu \
-	&& cd blatSrc \
-	&& make BINDIR=/usr/local/bin/ \
-	&& strip /usr/local/bin/blat \
-	&& cd .. \
-	&& rm -rf blatSrc blatSrc35.zip
+		&& 	curl -s https://api.github.com/repos/BenLangmead/bowtie2/releases/latest  \
+		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+		&& tar xzfp download.tar.gz \
+    && rm -f download.tar.gz \
+    && cd * \
+    && make \
+    && install bowtie2* /usr/local/bin/ \
+    && cd /root \
+    && rm -rf *bowtie2*
+
+### install autoskewer (requires bowtie)
+RUN cd /root \
+    && git clone http://github.com/MG-RAST/autoskewer \
+    && cd autoskewer \
+    && make install \
+    && cd /root \
+    && rm -rf autoskewer
+
+### install latest DIAMOND release
+RUN cd /root \
+	&& 	curl -s https://api.github.com/repos/bbuchfink/diamond/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+  && cd * \
+	&& sh ./build_simple.sh \
+	&& install -s -m555 diamond /usr/local/bin \
+	&& cd /root \
+	&& rm -rf
+
+### install latest ea-utils release
+RUN cd /root \
+	&& curl -s https://api.github.com/repos/ExpressionAnalysis/ea-utils/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+  && cd * \
+	&& make fastq-multx \
+	&& make fastq-join \
+	&& make fastq-mcf \
+	&& install -m755 -s fastq-multx /usr/local/bin \
+	&& install -m755 -s fastq-join /usr/local/bin \
+	&& install -m755 -s fastq-mcf /usr/local/bin \
+	&& cd /root ; rm -rf ea-utils
 
 ### install FragGeneScan from our patched source in github
 RUN cd /root \
-	&& git clone https://github.com/wltrimbl/FGS.git FragGeneScan \
+	&& git clone https://github.com/MG-RAST/FGS.git FragGeneScan \
 	&& cd FragGeneScan \
 	&& make \
 	&& mkdir bin \
 	&& mv train bin/. \
 	&& mv *.pl bin/. \
-	&& install -s -m555 FragGeneScan bin/. \
+	&& cp -r bin/train /usr/local/bin/ \
+	&& install -s -m555 FragGeneScan /usr/local/bin/. \
+	&& install -m555 -t /usr/local/bin/. bin/*.pl \
 	&& make clean \
-	&& rm -rf example .git
-ENV PATH /root/FragGeneScan/bin:$PATH
+	&& cd /root ; rm -rf FragGeneScan
 
-### install DIAMOND
+
+### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
 RUN cd /root \
-	&& git clone https://github.com/bbuchfink/diamond.git \
-	&& mkdir -p /root/diamond \
-	&& cd /root/diamond \
-	# && cat build_simple.sh | sed s/-static//g > build_simple.sh \
-	&& sh ./build_simple.sh \
-	&& install -s -m555 diamond /usr/local/bin \
-	&& rm -rf /root/diamond
-	
-### install vsearch 2.02
+    && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.2.6/jellyfish-2.2.6.tar.gz \
+    && tar xfvz jellyfish.tar.gz \
+    && rm -f jellyfish.tar.gz \
+    && cd jelly*  \
+    && ./configure \
+    && make install \
+    && cd /root \
+    #&& rm -rf jelly*
+
+### install latest prodigal release
 RUN cd /root \
-	&& wget https://github.com/torognes/vsearch/archive/v2.0.2.tar.gz \
-	&& tar xzf v2.0.2.tar.gz \
-	&& cd vsearch-2.0.2 \
-	&& ./autogen.sh \
-	&& ./configure --prefix=/usr/local/ \
-	&& make \
-	&& make install \
-	&& make clean \
-	&& cd .. \
-    && rm -rf /root/vsearch-2.02 /root/v2.0.2.tar.gz
+		&& curl -s https://api.github.com/repos/hyattpd/Prodigal/releases/latest  \
+		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+		&& tar xzfp download.tar.gz \
+		&& rm -f download.tar.gz \
+		&& cd * \
+    && make \
+    && make install \
+    && strip /usr/local/bin/prodigal \
+    && make clean \
+    && cd /root ; rm -rf Prodigal*
 
-### install Qiime licensed uclust
-RUN wget -O /usr/local/bin/uclust http://www.drive5.com/uclust/uclustq1.2.22_i86linux64 \
-    && chmod +x /usr/local/bin/uclust
+### install latest sortmerna 2.1b release
+RUN cd /root \
+	&& curl -s https://api.github.com/repos/biocore/sortmerna/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+	&& cd * \
+	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
+	&& ./configure \
+  && make install \
+  && make clean \
+  && strip /usr/local/bin/sortmerna* \
+  && cd /root ; rm -rf sortmerna-2*
 
-### install Qiime python libs
-RUN svn co https://svn.code.sf.net/p/pprospector/code/trunk pprospector \
-	&& git clone git://github.com/pycogent/pycogent.git \
-	&& git clone git://github.com/biocore/pynast.git \
-	&& git clone git://github.com/biocore/qiime.git \
-	&& git clone git://github.com/biocore/biom-format.git \
-	&& cd pycogent \
-	&& git checkout c77e75ebf42c4a6379693cb792034efb9acd5891 \
-	&& python setup.py install \
-	&& cd ../pprospector \
-	&& python setup.py install \
-	&& cd ../pynast \
-	&& git checkout 262acb14982c0fa48047c1e14ace950e77442169 \
-	&& python setup.py install \
-	&& cd ../qiime \
-	&& git checkout d4333e2ea06af942f1f61148c4ccb02ffc438d6b \
-	&& python setup.py install \
-	&& cd ../biom-format \
-	&& git checkout d5b85a85498783f45b7e1ab9c66aaa9460e1d10a \
-	&& python setup.py install \
-	&& cd .. \
-	&& rm -rf pycogent pprospector pynast qiime biom-format
+### install skewer
+RUN cd /root \
+    && git clone https://github.com/teharrison/skewer \
+    && cd skewer \
+    && make \
+    && make install \
+    && make clean \
+    && cd /root ; rm -rf skewer
+
+### install latest vsearch release
+RUN cd /root \
+		&& curl -s https://api.github.com/repos/torognes/vsearch/releases/latest  \
+		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+		&& tar xzfp download.tar.gz \
+		&& rm -f download.tar.gz \
+		&& cd * \
+		&& sh ./autogen.sh \
+		&& ./configure --prefix=/usr/local/ \
+		&& make \
+		&& make install \
+		&& make clean \
+		&& strip /usr/local/bin/vsearch* \
+		&& cd /root ; rm -rf vsearch-2*
+
+
+
+### install CWL runner
+RUN pip install --upgrade pip
+RUN pip install --upgrade cwlref-runner typing
+
+
+# for jellyfish (ugly)
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+# copy files into image
+COPY CWL /CWL/
+COPY mgcmd/* bin/* /usr/local/bin/
+COPY lib/* /usr/local/lib/site_perl/

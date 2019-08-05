@@ -60,10 +60,12 @@ def split_fastq(in_file, fhdl_set, max_size):
   curr_buff = 0
   curr_file = 0
   strbuffer = ''
+  line_num  = 0
   with open(in_file) as f:
     for lines in itertools.izip_longest(*[f]*4, fillvalue=''):
       if not lines:
         continue
+      line_num += 4
       if (curr_size + curr_buff) >= max_size:
         fhdl_set[curr_file].write(strbuffer)
         curr_size = 0
@@ -76,6 +78,9 @@ def split_fastq(in_file, fhdl_set, max_size):
         curr_buff = 0
         strbuffer = ''
       rec_str = ''.join(lines)
+      if not rec_str.startswith('@'):
+        sys.stderr.write("[error] input file contains corrupt record at line %d\n"%(line_num-3))
+        sys.exit(0)
       strbuffer += rec_str
       curr_buff += len(rec_str)
   if strbuffer != '':
@@ -199,7 +204,7 @@ def main(args):
     return 1
 
   ohdl = open(opts.output, 'w')
-  if opts.ranked:
+  if opts.ranked and (opts.format == 'histo'):
     extra_data = ranked_histo(sout)
     for row in extra_data:
       line = "\t".join( map(lambda x: str(x), row) ) + "\n"

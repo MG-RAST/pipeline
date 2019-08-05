@@ -1,11 +1,14 @@
 # git ignore file 
+*.pyc
+.ipynb_checkpoints
 
 # ignore all generated files
 conf/Pipeline_Conf.pm
 conf/env.sh
+CWL/tmp/*
+CWL/Data/Inputs/DBs/*
 
 # binaries
-superblat
 usearch
 
 # ignore files with # and ~
