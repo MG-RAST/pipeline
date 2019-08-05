@@ -66,7 +66,7 @@ RUN cd /root \
     && make \
     && install bowtie2* /usr/local/bin/ \
     && cd /root \
-    && rm -rf bowtie2*
+    && rm -rf *bowtie2*
 
 ### install autoskewer (requires bowtie)
 RUN cd /root \
