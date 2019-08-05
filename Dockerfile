@@ -1,6 +1,6 @@
 # MG-RAST pipeline Dockerfile
 
-FROM ubuntu
+FROM ubuntu:18.10
 MAINTAINER The MG-RAST team (folker@mg-rast.org)
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
 	libpng-dev \
 	libposix-strptime-perl \
 	libstring-random-perl \
+	libtbb-dev \
 	libtemplate-perl \
 	liburi-encode-perl \
 	libunicode-escape-perl \
@@ -55,12 +56,14 @@ RUN apt-get update && apt-get install -y \
 
 ### alphabetically sorted builds from source
 
-### install bowtie2 2.3.5
+### install latest bowtie2 release
 RUN cd /root \
-		&& wget -O bowtie2.zip https://github.com/BenLangmead/bowtie2/releases/download/v2.3.5/bowtie2-2.3.5-linux-x86_64.zip \
-    && unzip bowtie2.zip \
-    && rm -f bowtie2.zip \
-    && cd bowtie2-* \
+		&& 	curl -s https://api.github.com/repos/BenLangmead/bowtie2/releases/latest  \
+		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+		&& tar xzfp download.tar.gz \
+    && rm -f download.tar.gz \
+    && cd * \
+    && make \
     && install bowtie2* /usr/local/bin/ \
     && cd /root \
     && rm -rf bowtie2*
@@ -73,20 +76,25 @@ RUN cd /root \
     && cd /root \
     && rm -rf autoskewer
 
-
-### install DIAMOND
+### install latest DIAMOND release
 RUN cd /root \
-	&& git clone https://github.com/bbuchfink/diamond.git \
-	&& cd diamond \
+	&& 	curl -s https://api.github.com/repos/bbuchfink/diamond/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+  && cd * \
 	&& sh ./build_simple.sh \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root \
-	&& rm -rf diamond
+	&& rm -rf
 
-### install ea-utils
+### install latest ea-utils release
 RUN cd /root \
-	&& git clone https://github.com/ExpressionAnalysis/ea-utils.git  \
-	&& cd ea-utils/clipper \
+	&& curl -s https://api.github.com/repos/ExpressionAnalysis/ea-utils/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+  && cd * \
 	&& make fastq-multx \
 	&& make fastq-join \
 	&& make fastq-mcf \
@@ -108,7 +116,7 @@ RUN cd /root \
 	&& install -m555 -t /usr/local/bin/. bin/*.pl \
 	&& make clean \
 	&& cd /root ; rm -rf FragGeneScan
-	
+
 
 ### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
 RUN cd /root \
@@ -121,22 +129,26 @@ RUN cd /root \
     && cd /root \
     #&& rm -rf jelly*
 
-### install prodigal
+### install latest prodigal release
 RUN cd /root \
-    && wget -O Prodigal.tar.gz https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz \
-    && tar xf Prodigal.tar.gz \
-    && cd Prodigal* \
+		&& curl -s https://api.github.com/repos/hyattpd/Prodigal/releases/latest  \
+		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+		&& tar xzfp download.tar.gz \
+		&& rm -f download.tar.gz \
+		&& cd * \
     && make \
     && make install \
     && strip /usr/local/bin/prodigal \
     && make clean \
     && cd /root ; rm -rf Prodigal*
 
-### install sortmerna 2.1b
+### install latest sortmerna 2.1b release
 RUN cd /root \
-	&& wget -O sortmerna-2.tar.gz https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
-	&& tar xvf sortmerna-2.tar.gz \
-	&& cd sortmerna-2* \
+	&& curl -s https://api.github.com/repos/biocore/sortmerna/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+	&& cd * \
 	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
 	&& ./configure \
   && make install \
@@ -153,11 +165,13 @@ RUN cd /root \
     && make clean \
     && cd /root ; rm -rf skewer
 
-### install vsearch 2.12.0
+### install latest vsearch release
 RUN cd /root \
-	  && wget -O vsearch-2.tar.gz https://github.com/torognes/vsearch/archive/v2.12.0.tar.gz \
-		&& tar xzf vsearch-2.tar.gz  \
-		&& cd vsearch-2* \
+		&& curl -s https://api.github.com/repos/torognes/vsearch/releases/latest  \
+		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+		&& tar xzfp download.tar.gz \
+		&& rm -f download.tar.gz \
+		&& cd * \
 		&& sh ./autogen.sh \
 		&& ./configure --prefix=/usr/local/ \
 		&& make \
@@ -165,6 +179,8 @@ RUN cd /root \
 		&& make clean \
 		&& strip /usr/local/bin/vsearch* \
 		&& cd /root ; rm -rf vsearch-2*
+
+
 
 ### install CWL runner
 RUN pip install --upgrade pip
