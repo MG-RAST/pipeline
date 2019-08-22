@@ -1,0 +1,6 @@
+jobid: drisee_test
+
+sequences:
+    class: File
+    path: ../Inputs/sequences.wgs.fasta
+
