@@ -160,7 +160,7 @@ RUN cd /root \
 
 ### install skewer
 RUN cd /root \
-    && git clone https://github.com/teharrison/skewer \
+    && git clone --branch 0.2.2 https://github.com/relipmoc/skewer \
     && cd skewer \
     && make \
     && make install \
