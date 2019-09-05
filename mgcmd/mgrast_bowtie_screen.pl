@@ -17,7 +17,8 @@ my $index_ids = {
     'm_musculus'     => 206,
     's_scrofa'       => 207,
     'r_norvegicus'   => 208,
-    'd_rerio'        => 209
+    'd_rerio'        => 209,
+    'p_maniculatus'  => 210
 };
 
 # options
