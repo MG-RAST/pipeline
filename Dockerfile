@@ -188,7 +188,7 @@ RUN cd /root \
 
 ### install CWL runner
 RUN pip install --upgrade pip
-RUN pip install --upgrade cwlref-runner typing
+RUN pip install --upgrade cwlref-runner typing statistics
 
 
 # for jellyfish (ugly)
