@@ -45,16 +45,15 @@ inputs:
             prefix: --format
 
     maxSize:
-        type: float?
+        type: int?
         doc: Maximum size (in Gb) to count, files larger are split, default 10.0
-        default: 10.0
+        default: 10
         inputBinding:
             prefix: --max
 
     hashSize:
-        type: float?
+        type: int?
         doc: Size of hash, used to limit memory consumption for testing.
-        default: 1.0
         inputBinding:
             prefix: --size
 
