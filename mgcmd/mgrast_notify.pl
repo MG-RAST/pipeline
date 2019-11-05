@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use Encode qw(encode_utf8);
 no warnings('once');
 
 use PipelineAWE;
@@ -39,8 +40,8 @@ my $api_key = $ENV{'MGRAST_WEBKEY'} || undef;
 
 # get info
 my $job_info  = PipelineAWE::get_userattr();
-my $job_name  = $job_info->{name};
-my $proj_name = $job_info->{project_name};
+my $job_name  = encode_utf8($job_info->{name});
+my $proj_name = encode_utf8($job_info->{project_name});
 
 # email owner on completion
 my $subject  = "MG-RAST Job Completed";
