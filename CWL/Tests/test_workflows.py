@@ -76,6 +76,8 @@ def generate_check_tool_output(tool, name, path):
       # execute tool
       session = subprocess.Popen([cwlTool, '--outdir', outputDir, docker, workflowDir + tool, job], stdin=None, stdout=PIPE, stderr=PIPE, shell=False)
       stdout, stderr = session.communicate()
+      stdout = stdout.decode("utf-8")
+      stderr = stderr.decode("utf-8")
       setattr(self, name, stdout)
 
       success = re.search("Final process status is success", stderr)
@@ -123,7 +125,7 @@ def cmp_cwl_receipts(json_a, json_b):
     sys.stderr.write("Can't parse json strings ... " + repr(e)  + " ... " + "a=" + str(type(json_a)) + " b=" + str(type(json_b)) + " ...")
 
   try:
-    for k, v in a.iteritems():
+    for k, v in a.items():
       if 'format' in v:
         if debug:
           sys.stderr.write('Found \'format\' key.\n')
@@ -160,6 +162,8 @@ class TestCWL(unittest.TestCase):
 
         session = subprocess.Popen([cwlTool, '--version'], stdout=PIPE, stderr=PIPE)
         stdout, stderr = session.communicate()
+        stdout = stdout.decode("utf-8")
+        stderr = stderr.decode("utf-8")
 
         if stderr:
             raise Exception("Error "+str(stderr))
