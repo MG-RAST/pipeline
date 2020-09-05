@@ -244,17 +244,26 @@ sub post_data {
     #     $req->header('host' => $host);
     # }
     
+    # try 3 times
+
+    $post_attempt = 0; 
     $req->content($json->encode($data));
     my $resp = $agent->request($req);
     
-    # try 3 times
-    if (($post_attempt < 3) && (! $resp->is_success)) {
+    while( ($post_attempt < 3) && (! $resp->is_success) ) {
+        logger('error', "posting to $url ($post_attempt): ". $resp->decoded_content );
         $post_attempt += 1;
-        post_data($url, $token, $data);
+        sleep(5 * $post_attempt); 
+        $resp = $agent->request($req);
     }
+
+    # if (($post_attempt < 3) && (! $resp->is_success)) {
+    #     $post_attempt += 1;
+    #     post_data($url, $token, $data);
+    # }
     
     # success or gave up
-    $post_attempt = 0;    
+   
     my $content = undef;
     eval {
         $content = $json->decode( $resp->decoded_content );
