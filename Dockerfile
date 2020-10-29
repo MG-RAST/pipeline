@@ -1,6 +1,6 @@
 # MG-RAST pipeline Dockerfile
 
-FROM ubuntu:18.10
+FROM ubuntu:18.04
 MAINTAINER The MG-RAST team (folker@mg-rast.org)
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -11,9 +11,10 @@ RUN apt-get update && apt-get install -y \
 	dh-autoreconf \
 	emacs \
 	git 		\
-  libtbb-dev \
+  	libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
+	libcapture-tiny-perl \
 	libdata-dump-streamer-perl \
 	libdatetime-perl \
 	libdatetime-format-iso8601-perl \
@@ -42,14 +43,23 @@ RUN apt-get update && apt-get install -y \
 	python-dev \
 	python-leveldb \
 	perl-modules \
-  python-numpy \
+  	python-numpy \
 	python-pika \
-  python-pip \
+  	python-pip \
 	python-scipy \
 	python-sphinx \
+	python3-biopython \
+	python3-dev \
+	python3-leveldb \
+	# perl3-modules \
+  	python3-numpy \
+	python3-pika \
+  	python3-pip \
+	python3-scipy \
+	python3-sphinx \
 	unzip \
 	wget \
-  vim \
+  	vim \
 	curl \
 	&& apt-get clean
 
@@ -73,7 +83,20 @@ RUN cd /root \
     && cd autoskewer \
     && make install \
     && cd /root \
-    && rm -rf autoskewer
+    && rm -rf autoskewer \
+	&& ln -s /usr/local/lib/python2.7/dist-packages/autoskewer-1.2-py2.7.egg/data /usr/local/lib/python2.7/dist-packages/autoskewer-1.2-py2.7.egg/EGG-INFO/data
+
+### install latest DIAMOND release
+# RUN cd /root \
+# 	&& 	curl -s https://api.github.com/repos/bbuchfink/diamond/releases/latest  \
+# 	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+# 	&& tar xzfp download.tar.gz \
+# 	&& rm -f download.tar.gz \
+#   && cd * \
+# 	&& sh ./build_simple.sh \
+# 	&& install -s -m555 diamond /usr/local/bin \
+# 	&& cd /root \
+# 	&& rm -rf *diamond*
 
 ### install latest DIAMOND release
 RUN cd /root \
@@ -81,11 +104,14 @@ RUN cd /root \
 	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
 	&& tar xzfp download.tar.gz \
 	&& rm -f download.tar.gz \
-  && cd * \
-	&& sh ./build_simple.sh \
+  	&& cd * \
+	&& cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_MARCH=nehalem . \
+	&& make && make install \
 	&& install -s -m555 diamond /usr/local/bin \
 	&& cd /root \
 	&& rm -rf *diamond*
+
+
 
 ### install latest ea-utils release
 RUN cd /root \
