@@ -186,8 +186,9 @@ RUN cd /root \
 
 ### install skewer
 RUN cd /root \
-    && git clone --branch 0.2.2 https://github.com/relipmoc/skewer \
+    && git clone https://github.com/MG-RAST/skewer \
     && cd skewer \
+    && git reset cc009ae16159146551758f11f87957fe5e2513c2 \
     && make \
     && make install \
     && make clean \
