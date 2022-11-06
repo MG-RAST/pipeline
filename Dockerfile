@@ -1,10 +1,11 @@
 # MG-RAST pipeline Dockerfile
 
-FROM ubuntu:18.10
-MAINTAINER The MG-RAST team (folker@mg-rast.org)
+FROM ubuntu:22.04
+LABEL Maintainer="wilke@anl.gov"
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN apt update -y 
+RUN apt-get install -y \
 	cdbfasta 	\
 	cd-hit		\
 	cmake       \
@@ -120,15 +121,17 @@ RUN cd /root \
 
 
 ### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
-RUN cd /root \
-    && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.2.6/jellyfish-2.2.6.tar.gz \
-    && tar xfvz jellyfish.tar.gz \
-    && rm -f jellyfish.tar.gz \
-    && cd jelly*  \
-    && ./configure \
-    && make install \
-    && cd /root \
-    && rm -rf *jelly*
+RUN apt install jellyfish
+
+# cd /root \
+#     && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz \
+#     && tar xfvz jellyfish.tar.gz \
+#     && rm -f jellyfish.tar.gz \
+#     && cd jelly*  \
+#     && ./configure \
+#     && make install \
+#     && cd /root \
+#     && rm -rf *jelly*
 
 ### install latest prodigal release
 RUN cd /root \
@@ -156,6 +159,9 @@ RUN cd /root \
   && cd /root \
 	&& rm -rf sortmerna-2* 2*.tar.gz
 
+	# get the distro
+RUN wget https://github.com/biocore/sortmerna/releases/download/v4.3.6/sortmerna-4.3.6-Linux.sh && sortmerna-4.3.6-Linux.sh --skip-license
+ 
 
 
 ### install skewer
