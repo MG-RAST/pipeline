@@ -1,18 +1,18 @@
 # MG-RAST pipeline Dockerfile
 
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 LABEL Maintainer="wilke@anl.gov"
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt update -y 
-RUN apt install -y \
-	cdbfasta 	\
-	cd-hit		\
-	cmake       \
-	dh-autoreconf \
-	emacs \
-	git 		\
-  libtbb-dev \
+
+RUN apt install -y 	cdbfasta 	
+RUN apt install -y	cd-hit		
+RUN apt install -y	cmake       
+RUN apt install -y	dh-autoreconf 
+RUN apt install -y	emacs 
+RUN apt install -y	git 	
+RUN apt install -y  libtbb-dev \
 	libcwd-guard-perl \
 	libberkeleydb-perl \
 	libdata-dump-streamer-perl \
@@ -38,35 +38,40 @@ RUN apt install -y \
 	libwww-perl \
 	liblog-log4perl-perl \
 	make 		\
-	nodejs \
-	python-biopython \
-	python-dev \
-	python-leveldb \
+	nodejs 
+
+RUN apt install -y \
+	python3-biopython \
+	python3-dev \
+	# python3-leveldb \
 	perl-modules \
-  python-numpy \
-	python-pika \
-  python-pip \
-	python-scipy \
-	python-sphinx \
+  	python3-numpy \
+	python3-pika \
+  	python3-pip \
+	python3-scipy \
+	python3-sphinx \
 	unzip \
 	wget \
-  vim \
+  	vim \
 	curl \
+	python-is-python3 \
 	&& apt-get clean
+
+RUN pip3 install leveldb
 
 ### alphabetically sorted builds from source
 
 ### install latest bowtie2 release
 RUN cd /root \
-		&& 	curl -s https://api.github.com/repos/BenLangmead/bowtie2/releases/latest  \
+	&& curl -s https://api.github.com/repos/BenLangmead/bowtie2/releases/latest  \
 		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
-		&& tar xzfp download.tar.gz \
-    && rm -f download.tar.gz \
-    && cd * \
-    && make \
-    && install bowtie2* /usr/local/bin/ \
-    && cd /root \
-    && rm -rf *bowtie2*
+	&& tar xzfp download.tar.gz \
+    	&& rm -f download.tar.gz \
+    	&& cd * \
+    	&& make \
+    	&& install bowtie2* /usr/local/bin/ \
+    	&& cd /root \
+    	&& rm -rf *bowtie2*
 
 ### install autoskewer (requires bowtie)
 RUN cd /root \
@@ -77,16 +82,16 @@ RUN cd /root \
     && rm -rf autoskewer
 
 ### install latest DIAMOND release
-RUN cd /root \
-	&& 	curl -s https://api.github.com/repos/bbuchfink/diamond/releases/latest  \
-	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
-	&& tar xzfp download.tar.gz \
-	&& rm -f download.tar.gz \
-  && cd * \
-	&& sh ./build_simple.sh \
-	&& install -s -m555 diamond /usr/local/bin \
-	&& cd /root \
-	&& rm -rf *diamond*
+RUN wget http://github.com/bbuchfink/diamond/archive/v2.0.15.tar.gz \
+	&& tar xzf v2.0.15.tar.gz \ 
+	&& cd diamond-2.0.15 \ 
+	&& mkdir bin \ 
+	&& cd bin \ 
+	&& cmake .. \
+	&& make -j4 \
+	&& make install
+
+#	&& install -s -m555 diamond /usr/local/bin \
 
 ### install latest ea-utils release
 RUN cd /root \
@@ -121,7 +126,7 @@ RUN cd /root \
 
 
 ### install jellyfish 2.2.6 from source (2.2.8 from repo is broken)
-RUN apt install jellyfish
+RUN apt install -y jellyfish
 
 # cd /root \
 #     && wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz \
@@ -135,61 +140,50 @@ RUN apt install jellyfish
 
 ### install latest prodigal release
 RUN cd /root \
-		&& curl -s https://api.github.com/repos/hyattpd/Prodigal/releases/latest  \
-		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
-		&& tar xzfp download.tar.gz \
-		&& rm -f download.tar.gz \
-		&& cd *Prodigal* \
-    && make \
-    && make install \
-    && strip /usr/local/bin/prodigal \
-    && make clean \
-    && cd /root  \
-		&& rm -rf *Prodigal*
+	&& curl -s https://api.github.com/repos/hyattpd/Prodigal/releases/latest  \
+	| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
+	&& tar xzfp download.tar.gz \
+	&& rm -f download.tar.gz \
+	&& cd *Prodigal* \
+    	&& make \
+    	&& make install \
+    	&& strip /usr/local/bin/prodigal \
+    	&& make clean \
+    	&& cd /root  \
+	&& rm -rf *Prodigal*
 
-	### install sortmerna 2.1b
-	RUN cd /root \
-	&& wget https://github.com/biocore/sortmerna/archive/2.1b.tar.gz \
-	&& tar xvf 2*.tar.gz \
-	&& cd sortmerna-2* \
-	&& sed -i 's/^\#define READLEN [0-9]*/#define READLEN 500000/' include/common.hpp \
-	&& ./configure \
-	&& make install \
-  && make clean \
-  && cd /root \
-	&& rm -rf sortmerna-2* 2*.tar.gz
+### install sortmerna 
+RUN cd /root && wget https://github.com/biocore/sortmerna/releases/download/v4.3.6/sortmerna-4.3.6-Linux.sh \
+	&& mkdir build \
+	&& bash ./sortmerna-4.3.6-Linux.sh --skip-license --prefix=/root/build \
+	&& install ./build/bin/sortmerna /usr/local/bin \
+	&& cd /root \
+	&& rm -rf sortmerna*
 
-	# get the distro
-RUN wget https://github.com/biocore/sortmerna/releases/download/v4.3.6/sortmerna-4.3.6-Linux.sh && sortmerna-4.3.6-Linux.sh --skip-license
- 
+
 
 
 ### install skewer
-RUN cd /root \
-    && git clone --branch 0.2.2 https://github.com/relipmoc/skewer \
+RUN apt update -y && apt-cache policy g++-8 && apt-cache show g++-8 && apt install -y  g++-8
+# RUN cd /root \
+#     && git clone https://github.com/relipmoc/skewer 
+RUN cd /root && git clone https://github.com/wltrimbl/skewer.git \
     && cd skewer \
     && make \
     && make install \
     && make clean \
     && cd /root \
-		&& rm -rf skewer
+    && rm -rf skewer
 
 ### install latest vsearch release
 RUN cd /root \
-		&& curl -s https://api.github.com/repos/torognes/vsearch/releases/latest  \
-		| grep tarball_url | cut -f4 -d\" | wget -O download.tar.gz -qi - \
-		&& tar xzfp download.tar.gz \
-		&& rm -f download.tar.gz \
-		&& cd * \
-		&& sh ./autogen.sh \
-		&& ./configure --prefix=/usr/local/ \
-		&& make \
-		&& make install \
-		&& make clean \
-		&& strip /usr/local/bin/vsearch* \
-		&& cd /root \
-		&& rm -rf *vsearch*
-
+	&& wget https://github.com/torognes/vsearch/archive/v2.22.1.tar.gz \
+	&& tar xzf v2.22.1.tar.gz \
+	&& cd vsearch-2.22.1 \
+	&& ./autogen.sh \
+	&& ./configure CFLAGS="-O3" CXXFLAGS="-O3" \
+	&& make \
+	&& make install  # as root or sudo make install
 
 
 ### install CWL runner
